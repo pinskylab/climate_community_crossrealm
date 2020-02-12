@@ -1,0 +1,59 @@
+---
+title: "Turnover vs. temperature exploration"
+output: html_notebook
+---
+
+```{r setup}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
+```
+
+### Load libraries and data
+```{r}
+library(data.table)
+library(ggplot2)
+
+# BioTime
+load('data/biotime_blowes/bt.Rdata')
+bt <- data.table(bt_malin); rm(bt_malin)
+
+# Temperature trends from CRU TS (on land)
+tmptrendbyyr <- fread('gunzip -c output/cruts_tmptrend_byyear.csv.gz', drop = 1)
+tmptrendallyr <- fread('gunzip -c output/cruts_tmptrend_allyear.csv.gz', drop = 1)
+```
+
+### Assemble dataset of trends (turnover and temperature)
+```{r}
+trends <- bt[, .(Jtutrend = coef(lm(Jtu_base ~ YEAR))[2], nyrBT = length(YEAR)), by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID)] # calculate trend in Jaccard turnover from first year
+trends <- merge(trends, tmptrendbyyr, all.x = TRUE, by = 'rarefyID') # add temperature trend (years that match biotime)
+trends <- merge(trends, tmptrendallyr[, .(rarefyID, tmptrendallyr)], all.x = TRUE, by = 'rarefyID') # add temperature trend (all years from first to last of each time-series)
+```
+
+Do some basic checks
+```{r}
+# basic checks
+trends
+trends[, .(min = min(Jtutrend), max = max(Jtutrend)), by = REALM]
+trends[Jtutrend < 0, .(nlessthanzero = .N), by = REALM] # why are some turnover trends < 0?
+trends[Jtutrend > 0, .(nmorethanzero = .N), by = REALM]
+
+# are the temperature trends correlated?
+# compare trends calculated from all sampled years in BioTime vs. all years from min to max year in BioTime
+ggplot(trends, aes(tmptrendallyr, tmptrendbyyr)) +
+    geom_point() +
+    geom_smooth()
+```
+
+### Plot turnover vs. temperature trends (for now, just have data on land).
+Trends are impressively symmetric around no trend in temperature. Instead, abs(trend) looks better.
+There are very odd values for marine at 0, making me think the Jtu_base values are incorrect there.
+```{r}
+# Jaccard turnover trend vs. temperature trend (across all years)
+ggplot(trends, aes(tmptrendallyr, Jtutrend, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth()
+
+# Jaccard turnover trend vs. abs temperature trend (across all years)
+ggplot(trends, aes(abs(tmptrendallyr), Jtutrend, group = REALM, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth()
+```
