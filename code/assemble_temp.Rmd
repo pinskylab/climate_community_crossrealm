@@ -1,0 +1,91 @@
+---
+title: "Assemble temperature dataset"
+output: html_notebook
+---
+```{r setup}
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
+```
+
+```{r}
+require(data.table)
+require(ncdf4)
+require(ggplot2)
+```
+
+### Read in BioTime and temperature data
+Using average daily temperature by month from CRU TS
+```{r}
+# biotime
+load('data/biotime_blowes/bt.Rdata')
+bt <- data.table(bt_malin); rm(bt_malin)
+
+# CRU TS mean temp by year
+n = nc_open('dataDL/cruts/cru_ts4.03.1901.2018.tmp.dat.nc') # Open the netCDF file. Won't work on .gz for some reason
+# print(n) # get information about the file format
+tmp = ncvar_get(n, 'tmp') # dim order: 720 lon x 360 lat x 1416 time (observations are month, time measured in days since Jan 1, 1900). 0 lon is at date line.
+# dim(tmp)
+dates <- format(as.Date(as.numeric(ncvar_get(n, 'time')), origin=as.Date('1900-01-01')), format='%Y%m')
+dimnames(tmp) <- list(lon=ncvar_get(n, 'lon'), lat=ncvar_get(n, 'lat'), time=dates)
+nc_close(n)
+```
+
+Check the temperature data read in correctly: should be Dec. 2018
+```{r}
+tail(dimnames(tmp)[[3]]) # good
+```
+
+Average temperature by year
+```{r}
+tmpmelt <- data.table(melt(tmp, value.name='tmp')) # reshape so month is a separate dimension
+tmpmelt[, YEAR := as.numeric(substr(time, 1,4))] # extract year
+tmpyr <- tmpmelt[, .(tmp = mean(tmp, na.rm=TRUE)), by = .(lat, lon, YEAR)]
+```
+
+Plot to make sure it worked
+```{r}
+ggplot(tmpyr[YEAR == 1901,], aes(lon, lat, color = tmp)) + geom_point(size = 0.1) # plot to make sure it worked
+```
+
+### Merge temperature with biotime by year/lat/lon
+```{r}
+bt[, lat := floor(rarefyID_y*2)/2 + 0.25] # find nearest CRU TS lat and lon grid values (0.5)
+bt[, lon := floor(rarefyID_x*2)/2 + 0.25]
+bt <- merge(bt, tmpyr, by = c('lat', 'lon', 'YEAR'), all.x = TRUE)
+```
+Check for missing temperature data in terrestrial, freshwater and marine. na is # missing values. n is # values with  data. Mostly missing in marine, as expected. Study 293 and 216 start before 1900.
+```{r}
+bt[REALM == 'Terrestrial', .(na = sum(is.na(tmp)), n = sum(!is.na(tmp))), by = .(STUDY_ID, rarefyID)][na > 0,]
+bt[REALM == 'Freshwater', .(na = sum(is.na(tmp)), n = sum(!is.na(tmp))), by = .(STUDY_ID, rarefyID)][na > 0,]
+bt[REALM == 'Marine', .(na = sum(is.na(tmp)), n = sum(!is.na(tmp))), by = .(STUDY_ID, rarefyID)][na > 0, .N]
+```
+### Write out temperature values that match BioTime by year/lat/lon
+Only write years/lats/lons with temperature
+```{r}
+out <- bt[!is.na(tmp), .(rarefyID, YEAR, tmp)]
+write.csv(out, file = gzfile('output/cruts_tmp_byyear.csv.gz'))
+```
+
+### Write out temperature trends calculated from values that match BioTime by year/lat/lon
+Calculate trend only over those years that match sampled years in BioTime
+```{r}
+out2 <- bt[!is.na(tmp), .(tmptrendbyyr = coef(lm(tmp ~ YEAR))[2], YEAR_min = min(YEAR), YEAR_max = max(YEAR)), 
+          by = .(rarefyID)]
+write.csv(out2, file = gzfile('output/cruts_tmptrend_byyear.csv.gz'))
+```
+
+### Calculate and write out temperature trends for all years from first to last in BioTime
+As opposed to previous block, don't skip years not sampled in BioTime
+```{r}
+# make a data.table of all years from first to last for each BioTime dataset with tmp data
+btallyrs <- bt[!is.na(tmp), .(YEAR = seq(min(YEAR), max(YEAR), by = 1)), by = .(rarefyID, lat, lon)]
+
+# merge the data.table with tmp values
+btallyrs <- merge(btallyrs, tmpyr, by = c('lat', 'lon', 'YEAR'), all.x = TRUE)
+
+# calculate trends
+out3 <- btallyrs[, .(tmptrendallyr = coef(lm(tmp ~ YEAR))[2], YEAR_min = min(YEAR), YEAR_max = max(YEAR)), 
+          by = .(rarefyID)]
+
+# write out
+write.csv(out3, file = gzfile('output/cruts_tmptrend_allyear.csv.gz'))
+```
