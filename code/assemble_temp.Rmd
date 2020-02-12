@@ -23,7 +23,7 @@ bt <- data.table(bt_malin); rm(bt_malin)
 n = nc_open('dataDL/cruts/cru_ts4.03.1901.2018.tmp.dat.nc') # Open the netCDF file. Won't work on .gz for some reason
 # print(n) # get information about the file format
 tmp = ncvar_get(n, 'tmp') # dim order: 720 lon x 360 lat x 1416 time (observations are month, time measured in days since Jan 1, 1900). 0 lon is at date line.
-# dim(tmp)
+dim(tmp)
 dates <- format(as.Date(as.numeric(ncvar_get(n, 'time')), origin=as.Date('1900-01-01')), format='%Y%m')
 dimnames(tmp) <- list(lon=ncvar_get(n, 'lon'), lat=ncvar_get(n, 'lat'), time=dates)
 nc_close(n)
@@ -36,7 +36,9 @@ tail(dimnames(tmp)[[3]]) # good
 
 Average temperature by year
 ```{r}
+# this took 37GB RAM on a Macbook Pro. May need to set R_MAX_VSIZE=64Gb in .Renviron
 tmpmelt <- data.table(melt(tmp, value.name='tmp')) # reshape so month is a separate dimension
+# remove NA rows here? would probably make the rest faster
 tmpmelt[, YEAR := as.numeric(substr(time, 1,4))] # extract year
 tmpyr <- tmpmelt[, .(tmp = mean(tmp, na.rm=TRUE)), by = .(lat, lon, YEAR)]
 ```
@@ -44,6 +46,18 @@ tmpyr <- tmpmelt[, .(tmp = mean(tmp, na.rm=TRUE)), by = .(lat, lon, YEAR)]
 Plot to make sure it worked
 ```{r}
 ggplot(tmpyr[YEAR == 1901,], aes(lon, lat, color = tmp)) + geom_point(size = 0.1) # plot to make sure it worked
+```
+
+Calculate seasonality by year (SD)
+```{r}
+tmpmelt[, mo := as.numeric(substr(time, 5,6))] # extract month
+tmpmo <- tmpmelt[, .(tmp = mean(tmp, na.rm = TRUE)), by = .(lat, lon, mo)] # average by month
+tmpseas <- tmpmo[, .(seas_cruts = sd(tmp, na.rm = TRUE)), by = .(lat, lon)]
+```
+
+Plot to make sure seasonality worked
+```{r}
+ggplot(tmpseas, aes(lon, lat, color = seas_cruts)) + geom_point(size = 0.1) # plot to make sure it worked
 ```
 
 ### Merge temperature with biotime by year/lat/lon
@@ -88,4 +102,13 @@ out3 <- btallyrs[, .(tmptrendallyr = coef(lm(tmp ~ YEAR))[2], YEAR_min = min(YEA
 
 # write out
 write.csv(out3, file = gzfile('output/cruts_tmptrend_allyear.csv.gz'))
+```
+
+### Write out seasonality values
+```{r}
+# merge bt with seasonality values
+btseas <- merge(bt[!duplicated(rarefyID), .(rarefyID, lat, lon)], tmpseas, by = c('lat', 'lon'), all.x = TRUE)
+
+# write out
+write.csv(btseas, file = gzfile('output/cruts_seas.csv.gz'))
 ```
