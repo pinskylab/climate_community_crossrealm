@@ -23,7 +23,7 @@ tmptrendallyr <- fread('gunzip -c output/cruts_tmptrend_allyear.csv.gz', drop = 
 
 ### Assemble dataset of trends (turnover and temperature)
 ```{r}
-trends <- bt[, .(Jtutrend = coef(lm(Jtu_base ~ YEAR))[2], nyrBT = length(YEAR)), by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID)] # calculate trend in Jaccard turnover from first year
+trends <- bt[, .(Jtutrend = coef(lm(Jtu_base ~ YEAR))[2], Strend = coef(lm(S ~ YEAR))[2], nyrBT = length(YEAR)), by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID)] # calculate trend in Jaccard turnover from first year
 trends <- merge(trends, tmptrendbyyr, all.x = TRUE, by = 'rarefyID') # add temperature trend (years that match biotime)
 trends <- merge(trends, tmptrendallyr[, .(rarefyID, tmptrendallyr)], all.x = TRUE, by = 'rarefyID') # add temperature trend (all years from first to last of each time-series)
 ```
@@ -32,9 +32,9 @@ Do some basic checks
 ```{r}
 # basic checks
 trends
-trends[, .(min = min(Jtutrend), max = max(Jtutrend)), by = REALM]
-trends[Jtutrend < 0, .(nlessthanzero = .N), by = REALM] # why are some turnover trends < 0?
-trends[Jtutrend > 0, .(nmorethanzero = .N), by = REALM]
+trends[, .(minJ = min(Jtutrend), maxJ = max(Jtutrend), minS = min(Strend), maxS = max(Strend)), by = REALM]
+trends[, .(nJ = sum(Jtutrend < 0), nS = sum(Strend < 0)), by = REALM] # why are some turnover trends < 0?
+trends[, .(nJ = sum(Jtutrend > 0), nS = sum(Strend > 0)), by = REALM]
 
 # are the temperature trends correlated?
 # compare trends calculated from all sampled years in BioTime vs. all years from min to max year in BioTime
@@ -43,7 +43,7 @@ ggplot(trends, aes(tmptrendallyr, tmptrendbyyr)) +
     geom_smooth()
 ```
 
-### Plot turnover vs. temperature trends (for now, just have data on land).
+### Plot turnover vs. temperature trends (for now, just have temperature data on land).
 Trends are impressively symmetric around no trend in temperature. Instead, abs(trend) looks better.
 There are very odd values for marine at 0, making me think the Jtu_base values are incorrect there.
 ```{r}
@@ -54,6 +54,19 @@ ggplot(trends, aes(tmptrendallyr, Jtutrend, color = REALM)) +
 
 # Jaccard turnover trend vs. abs temperature trend (across all years)
 ggplot(trends, aes(abs(tmptrendallyr), Jtutrend, group = REALM, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth()
+```
+
+### Plot Richness trend vs. temperature trends (for now, just have temperature data on land).
+```{r}
+# Richness trend vs. temperature trend (across all years)
+ggplot(trends, aes(tmptrendallyr, Strend, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth()
+
+# Richness trend vs. abs temperature trend (across all years)
+ggplot(trends, aes(abs(tmptrendallyr), Strend, group = REALM, color = REALM)) +
     geom_point(size = 0.2, alpha = 0.5) + 
     geom_smooth()
 ```
