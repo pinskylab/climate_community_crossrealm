@@ -56,3 +56,16 @@ for(i in 642:nrow(btaqua)){
 }
 
 write.csv(modis.aqua, file = 'data/modis_npp/NPPaqua.csv')
+
+
+######################
+# basic plots
+
+library(ggplot2)
+library(RColorBrewer)
+modis.terra <- fread('data/modis_npp/NPPTerr.csv', drop = 1)
+
+ggplot(modis.terra, aes(longitude, latitude, color = npp.mean)) +
+    borders("world", size = 0.1) +
+    geom_point(size = 0.5) +
+    scale_color_gradientn(colours = brewer.pal(9, 'YlOrRd'))
