@@ -1,71 +1,64 @@
 # Assemble temperature dataset
 
 require(data.table)
-require(MODISTools)
 
-### Read in biotime data
-load('data/biotime_blowes/bt.Rdata')
-bt <- data.table(bt_malin); rm(bt_malin)
+###########################
+# Read in and average NPP
+###########################
+
+### Read in biotime data for location
+load('data/biotime_blowes/bt.Rdata'); bt <- data.table(bt_malin); rm(bt_malin)
 
 # trim to locations
-#btterra <- bt[!duplicated(rarefyID), ][REALM %in% c('Terrestrial', 'Freshwater'), .(site_name = rarefyID, lon = rarefyID_x, lat = rarefyID_y)]
-btaqua <- bt[!duplicated(rarefyID), ][REALM == 'Marine', .(site_name = rarefyID, lon = rarefyID_x, lat = rarefyID_y)]
+bt <- bt[!duplicated(rarefyID), .(rarefyID, lon = rarefyID_x, lat = rarefyID_y)]
 
-### Add in MODIS data on land
-# tempterra <- mt_batch_subset(df = btterra,
-#                               product = "MOD17A3H",
-#                               band = "Npp_500m",
-#                               internal = TRUE,
-#                               start = "2004-01-01",
-#                               end = "2018-12-31",
-#                               out_dir = "temp")
-# missing some processing steps from Helmut here
-# write.csv(modis.terra, file = 'data/modis_npp/NPPterr.csv')
-
-### Add in MODIS data in the ocean
-for(i in 642:nrow(btaqua)){
-    print(paste0(i, ' of ', nrow(btaqua)))
-    temp <- tryCatch({
-        mt_subset(lat = btaqua[i, lat],
-                  lon = btaqua[i, lon],
-                  site_name = btaqua[i, site_name],
-                  product = "MOD17A3H",
-                  band = "Npp_500m",
-                  internal = TRUE,
-                  start = "2004-01-01",
-                  end = "2018-12-31",
-                  out_dir = "temp",
-                  progress = FALSE)
-    }, warning = function(w) {
-        print(paste0('i=', i, ': ', w))
-        return(data.frame(value = numeric(0)))
-    }, error = function(e) {
-        print(paste0('i=', i, ': ', e))
-        return(data.frame(value = numeric(0)))
-    }, finally = {
-        
-    })
-    
-    temp$value[temp$value > 32700] <- NA # valid range is up to 32700
-    tempsum <- btaqua[i, .(latitude = lat, longitude = lon, site = site_name)]
-    tempsum[, ':='(N = nrow(temp), N.na = sum(is.na(temp$value)), npp.mean = mean(temp$value, na.rm = TRUE), npp.sd = sd(temp$value, na.rm = TRUE))]
-    tempsum[, npp.cv := npp.sd/npp.mean]
-    
-    if(i == 1) modis.aqua <- tempsum
-    if(i > 1) modis.aqua <- rbind(modis.aqua, tempsum)
+### read in NPP data from land/ocean merge
+# units are mgC m-2 day-1
+files <- list.files('dataDL/ocean_productivity/', pattern = '.csv')
+for(i in 1:length(files)){
+    print(i)
+    temp <- fread(paste0('dataDL/ocean_productivity/', files[i]))
+    if(i == 1){
+        npp <- array(data = NA, dim = c(nrow(temp), ncol(temp), length(files)))
+        npp[,,i] <- as.matrix(temp)
+    }
+    if(i > 1) npp[,,i] <- as.matrix(temp)
+                 
 }
 
-write.csv(modis.aqua, file = 'data/modis_npp/NPPaqua.csv')
+# turn missing to NA
+npp[npp == -9999] <- NA
+
+# average by location
+nppave <- apply(npp, MARGIN = c(1,2), FUN = mean, na.rm = TRUE)
+dim(nppave)
+
+# label rows and columns by lat/lon
+nppave <- data.table(nppave)
+setnames(nppave, 1:ncol(nppave), as.character(seq(-180, 180 - 360/ncol(nppave), by = 360/ncol(nppave)) + 360/ncol(nppave)/2))
+nppave[, lat := seq(90, -90 + 180/nrow(nppave), by = -180/nrow(nppave)) - 180/nrow(nppave)/2]
+
+# long format
+nppavel <- melt(nppave, id.vars = 'lat', measure.vars = 1:(ncol(nppave)-1), variable.name = 'lon', value.name = 'npp')
+
+# remove NAs
+nppavel <- nppavel[!is.na(npp),]
+
+# write out
+write.csv(nppavel, file = gzfile('data/npp/landoceannpp.csv.gz'), row.names = FALSE)
+
 
 
 ######################
 # basic plots
 
+library(data.table)
 library(ggplot2)
 library(RColorBrewer)
-modis.terra <- fread('data/modis_npp/NPPTerr.csv', drop = 1)
+nppavel <- fread('data/npp/landoceannpp.csv.gz')
 
-ggplot(modis.terra, aes(longitude, latitude, color = npp.mean)) +
+# slow to plot because so many points
+ggplot(nppavel, aes(lon, lat, color = npp)) +
     borders("world", size = 0.1) +
-    geom_point(size = 0.5) +
+    geom_point(size = 0.2) +
     scale_color_gradientn(colours = brewer.pal(9, 'YlOrRd'))
