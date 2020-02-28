@@ -1,6 +1,8 @@
 # Assemble temperature dataset
 
 require(data.table)
+library(ggplot2)
+library(RColorBrewer)
 
 ###########################
 # Read in and average NPP
@@ -40,25 +42,60 @@ nppave[, lat := seq(90, -90 + 180/nrow(nppave), by = -180/nrow(nppave)) - 180/nr
 
 # long format
 nppavel <- melt(nppave, id.vars = 'lat', measure.vars = 1:(ncol(nppave)-1), variable.name = 'lon', value.name = 'npp')
+nppavel[, lon := as.numeric(as.character(lon))]
 
-# remove NAs
-nppavel <- nppavel[!is.na(npp),]
+# plot: slow to plot because so many points
+ggplot(nppavel, aes(lon, lat, color = npp)) +
+    borders("world", size = 0.1) +
+    geom_point(size = 0.2) +
+    scale_color_gradientn(colours = brewer.pal(9, 'YlOrRd'))
+
+ggsave('figures/npp.png')
+
+# add npp to biotime locations
+# npp data are on 1/12 deg grids, upper-left grid corner is at -180°W, 90°N
+# round to 5 decimal points to ensure accurate merging
+bt[, latgrid := round(floor(lat*12)/12 + 1/24, 3)]
+bt[, longrid := round(floor(lon*12)/12 + 1/24, 3)]
+nppavel[, latgrid := round(lat, 3)]
+nppavel[, longrid := round(lon, 3)]
+
+bt <- merge(bt, nppavel[, .(latgrid, longrid, npp)], by = c('latgrid', 'longrid'), all.x = TRUE)
+
+bt[is.na(npp), .N] # 2180
+bt[is.na(npp), hist(latgrid)]
+ggplot(bt[is.na(npp),], aes(longrid, latgrid)) +
+    borders("world", size = 0.1) +
+    geom_point(size = 0.5)
+
+# for the missing data points, fill in as average from surrounding 25 cells
+missing <- bt[, which(is.na(npp))]
+length(missing)
+for(i in 1:length(missing)){
+    if(i %% 100 == 0) print(i)
+    lats <- bt[missing[i], round(latgrid + c(2/12, 1/12, 0, -1/12, -2/12), 3)]
+    lons <- bt[missing[i], round(longrid + c(2/12, 1/12, 0, -1/12, -2/12), 3)]
+    bt[missing[i], npp := nppavel[latgrid %in% lats & longrid %in% lons, mean(npp, na.rm = TRUE)]]
+}
+
+bt[is.na(npp), .N] # 153 (761 if 9x9)
+bt[is.na(npp), hist(latgrid)]
+ggplot(bt[is.na(npp),], aes(longrid, latgrid)) +
+    borders("world", size = 0.1) +
+    geom_point(size = 0.5)
+
+# turn NaNs to NAs
+bt[is.nan(npp), npp := NA]
+
+# drop lat/lon columns
+bt[, ':='(lat = NULL, lon = NULL, latgrid = NULL, longrid = NULL)]
 
 # write out
-write.csv(nppavel, file = gzfile('data/npp/landoceannpp.csv.gz'), row.names = FALSE)
+write.csv(bt, file = gzfile('data/npp/landoceannpp.csv.gz'), row.names = FALSE)
+
 
 
 
 ######################
 # basic plots
 
-library(data.table)
-library(ggplot2)
-library(RColorBrewer)
-nppavel <- fread('data/npp/landoceannpp.csv.gz')
-
-# slow to plot because so many points
-ggplot(nppavel, aes(lon, lat, color = npp)) +
-    borders("world", size = 0.1) +
-    geom_point(size = 0.2) +
-    scale_color_gradientn(colours = brewer.pal(9, 'YlOrRd'))
