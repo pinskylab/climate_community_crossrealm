@@ -86,7 +86,7 @@ bms.final = bms.final[!is.na(bms.final)] = blowes.bms.genus[!is.na(bms.final)]
 
 
 ####################### add biomass information to the data: ######################################
-bt_grid_spp_list$mass = bms.final
+bt_grid_spp_list$mass_gateway = bms.final
 
 
 
