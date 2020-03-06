@@ -77,11 +77,6 @@ average_genus = function(genus, gateway){
 
 blowes.bms.genus = sapply(genus.blowes, average_genus, db.masses, USE.NAMES = FALSE)
 
-# -------------------------------------------------------------------------------------------
-# -------------------------------------- DONE -----------------------------------------------
-# -------------------------------------------------------------------------------------------
-
-
 
 # association with priority (first species level, then genus level)
 
@@ -96,9 +91,6 @@ sum(!is.na(bms.final))
 
 ####################### add biomass information to the data: ######################################
 bt_grid_spp_list$mass_gateway = bms.final
-
-
-
 
 # -------------------------------------------------------------------------------------------
 # -------------------------------------- DONE -----------------------------------------------
@@ -115,7 +107,7 @@ bt_grid_spp_list$mass_gateway = bms.final
 is.it.almost.in.genus = function(g.name, gateway, max.distance){
     dists = adist(g.name, gateway)
     # i might need to add a parameter to use the length of the string (to be more permissive with large strings)
-    a = which(dists < max.distance)
+    a = which(dists < max.distance & dists > 0)
     if (length(a)>0){
         return(cbind(rep(g.name), gateway[a]))
     }
@@ -129,27 +121,22 @@ is.it.almost.in.genus = function(g.name, gateway, max.distance){
 library("future.apply")
 nb.threads = 6
 
-# don't know if there is a default behaviour here, but a moderate value for chunks might increase speed
+# don't know if there is a default behaviour here, but a moderate value for chunks should increase speed
 chunk.size = 50 
+# (it seems to reduce cpu (each core is not working at 100%) usage though, so maybe not the optimal approach?)
 
 # maximum distance for the fuzzy matching
 max.dists = 3
 
 plan(multiprocess, workers = nb.threads)
-almost.in = future_sapply(genus.blowes, FUN = is.it.almost.in.genus, db.masses$genus.names, max.distance = max.dists,  future.chunk.size = chunk.size)
+almost.in = future_sapply(unique(genus.blowes), FUN = is.it.almost.in.genus, unique(db.masses$genus.names), max.distance = max.dists,  future.chunk.size = chunk.size)
 # should be possible to directly obtain an array from future_sapply, but here it returns a list.... (maybe beacuse of return(NULL) in the function)
 # so the list needs to be changed in an array
 almost.in = do.call(rbind.data.frame, almost.in)
 row.names(almost.in) = NULL
 names(almost.in) = c("blowes", "gateway")
-almost.in = subset(almost.in, !(as.character(blowes) == gateway))
+# simplify results (are several species of same genus in gateway)
 almost.in = unique(almost.in)
 
 library(rbenchmark)
 benchmark(is.it.almost.in.genus(genus.blowes[1], db.masses$genus.names), replications = 1000)
-
-yy = adist(genus.blowes[1], db.masses$genus.names)
-xx = agrep(genus.blowes[1], db.masses$genus.names, max.distance = 3)
-tt = aregexec(genus.blowes[1], db.masses$genus.names, max.distance = 1)
-length(xx)
-
