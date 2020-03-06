@@ -20,11 +20,6 @@ genus.blowes = strsplit(species.blowes.space, ' ')
 genus.blowes = sapply(genus.blowes, `[[`, 1)
 
 
-# check for dbs 'proximity'
-sum(species.blowes.space %in% species.gateway)
-sum(species.gateway %in% species.blowes.space)
-
-sum(genus.blowes %in% genus.gateway)
 
 
 
@@ -37,7 +32,18 @@ genus.gateway = strsplit(as.character(db.masses$species.names), ' ')
 genus.gateway = sapply(genus.gateway, `[[`, 1)
 
 db.masses$genus.names = genus.gateway
-db.masses = subset(db.masses, mass<=0)
+
+# some species bodymasses have been coded as -999 (I guess in absence of information). That might change species' average bodymasses...
+db.masses = subset(db.masses, mass>0)
+
+
+# check for dbs 'proximity'
+sum(species.blowes.space %in% db.masses$species.names)
+sum(species.blowes.space %in% species.gateway)
+db.masses[db.masses$species.names %in% species.blowes.space,]
+
+sum(genus.blowes %in% genus.gateway)
+
 
 #####################################################
 ############## incorporate BMs ######################
@@ -81,9 +87,12 @@ blowes.bms.genus = sapply(genus.blowes, average_genus, db.masses, USE.NAMES = FA
 
 bms.final = blowes.bms.species
 # if species level biomass is na, take the genus level information (even if NA)
-bms.final = bms.final[!is.na(bms.final)] = blowes.bms.genus[!is.na(bms.final)]
+bms.final[is.na(bms.final)] = blowes.bms.genus[is.na(bms.final)]
 
-
+# number of values from a match at the species level
+sum(!is.na(blowes.bms.species))
+# number of values from a match at the species level OR at genus level
+sum(!is.na(bms.final))
 
 ####################### add biomass information to the data: ######################################
 bt_grid_spp_list$mass_gateway = bms.final
