@@ -27,64 +27,138 @@ dim(tmp)
 dates <- format(as.Date(as.numeric(ncvar_get(n, 'time')), origin=as.Date('1900-01-01')), format='%Y%m')
 dimnames(tmp) <- list(lon=ncvar_get(n, 'lon'), lat=ncvar_get(n, 'lat'), time=dates)
 nc_close(n)
+
+# ERSST temp by month
+n = nc_open('dataDL/ersst/sst.mnmean.nc') # Open the netCDF file
+# print(n) # get information about the file format
+sst = ncvar_get(n, 'sst') # dim order: 180 lon x 89 lat x 1994 time (observations are month, time measured in days since Jan 1, 1800). 0 lon is at greenwhich mean.
+dim(tmp)
+dates <- format(as.Date(as.numeric(ncvar_get(n, 'time')), origin=as.Date('1800-01-01')), format='%Y%m')
+dimnames(sst) <- list(lon=ncvar_get(n, 'lon'), lat=ncvar_get(n, 'lat'), time=dates)
+nc_close(n)
+
 ```
 
-Check the temperature data read in correctly: should be Dec. 2018
+Check the temperature data read in correctly
 ```{r}
-tail(dimnames(tmp)[[3]]) # good
+# CTU TS
+head(dimnames(tmp)[[3]]) # 
+tail(dimnames(tmp)[[3]]) # should be Dec. 2018: good
+
+# ERSST
+head(dimnames(sst)[[3]]) # should be Jan. 1854: good
+tail(dimnames(sst)[[3]]) # should be Feb. 2020: good
+
 ```
 
 Average temperature by year
 ```{r}
+# CRU TS
 # this took 37GB RAM on a Macbook Pro. May need to set R_MAX_VSIZE=64Gb in .Renviron
 tmpmelt <- data.table(melt(tmp, value.name='tmp')) # reshape so month is a separate dimension
 # remove NA rows here? would probably make the rest faster
 tmpmelt[, YEAR := as.numeric(substr(time, 1,4))] # extract year
 tmpyr <- tmpmelt[, .(tmp = mean(tmp, na.rm=TRUE)), by = .(lat, lon, YEAR)]
+
+# ERSST
+sstmelt <- as.data.table(sst, value.name = 'sst') # reshape so month is a separate dimension
+sstmelt[, YEAR := as.numeric(substr(time, 1,4))] # extract year
+sstyr <- sstmelt[, .(sst = mean(sst, na.rm=TRUE)), by = .(lat = as.numeric(lat), lon = as.numeric(lon), YEAR)]
+
 ```
 
-Plot to make sure it worked
+Plot CRU TS to make sure it worked
 ```{r}
 ggplot(tmpyr[YEAR == 1901,], aes(lon, lat, color = tmp)) + geom_point(size = 0.1) # plot to make sure it worked
+```
+Plot ERSST to make sure it worked
+```{r}
+ggplot(sstyr[YEAR == 1901,], aes(lon, lat, color = sst)) + geom_point(size = 0.1) # plot to make sure it worked
 ```
 
 Calculate seasonality by year (SD)
 ```{r}
+# CRU TS
 tmpmelt[, mo := as.numeric(substr(time, 5,6))] # extract month
 tmpmo <- tmpmelt[, .(tmp = mean(tmp, na.rm = TRUE)), by = .(lat, lon, mo)] # average by month
 tmpseas <- tmpmo[, .(seas_cruts = sd(tmp, na.rm = TRUE)), by = .(lat, lon)]
+
+# ERSST
+sstmelt[, mo := as.numeric(substr(time, 5,6))] # extract month
+sstmo <- sstmelt[, .(sst = mean(sst, na.rm = TRUE)), by = .(lat = as.numeric(lat), lon = as.numeric(lon), mo)] # average by month
+sstseas <- sstmo[, .(seas_ersst = sd(sst, na.rm = TRUE)), by = .(lat, lon)]
+
 ```
 
-Plot to make sure seasonality worked
+Plot CRU TS to make sure seasonality worked
 ```{r}
 ggplot(tmpseas, aes(lon, lat, color = seas_cruts)) + geom_point(size = 0.1) # plot to make sure it worked
 ```
-
+Plot ERSST to make sure seasonality worked
+```{r}
+ggplot(sstseas, aes(lon, lat, color = seas_ersst)) + geom_point(size = 0.1) # plot to make sure it worked
+```
 ### Merge temperature with biotime by year/lat/lon
 ```{r}
+# CRU TS
 bt[, lat := floor(rarefyID_y*2)/2 + 0.25] # find nearest CRU TS lat and lon grid values (0.5)
 bt[, lon := floor(rarefyID_x*2)/2 + 0.25]
-bt <- merge(bt, tmpyr, by = c('lat', 'lon', 'YEAR'), all.x = TRUE)
+bt <- merge(bt, tmpyr, by = c('lat', 'lon', 'YEAR'), all.x = TRUE) # CRU TS
+
+# ERSST
+bt[, lat_ersst := floor((rarefyID_y - 1)*0.5 + 1)/0.5] # find nearest ERSST lat and lon grid values (2).
+bt[, lon_ersst := floor((rarefyID_x + 1)*0.5 + 1)/0.5]
+sstyr[, lat_ersst := lat]
+sstyr[, lon_ersst := lon]
+sstyr[lon_ersst > 180, lon_ersst := lon_ersst - 360] # convert to -180 to 180
+btsst <- merge(bt, sstyr, by = c('lat_ersst', 'lon_ersst', 'YEAR'), all.x = TRUE) # ERSST
+
 ```
-Check for missing temperature data in terrestrial, freshwater and marine. na is # missing values. n is # values with  data. Mostly missing in marine, as expected. Study 293 and 216 start before 1900.
+
+Check for missing CRU TS data in terrestrial, freshwater and marine. na is # missing values. n is # values with  data. Mostly missing in marine, as expected. Study 293 and 216 start before 1900.
 ```{r}
 bt[REALM == 'Terrestrial', .(na = sum(is.na(tmp)), n = sum(!is.na(tmp))), by = .(STUDY_ID, rarefyID)][na > 0,]
 bt[REALM == 'Freshwater', .(na = sum(is.na(tmp)), n = sum(!is.na(tmp))), by = .(STUDY_ID, rarefyID)][na > 0,]
 bt[REALM == 'Marine', .(na = sum(is.na(tmp)), n = sum(!is.na(tmp))), by = .(STUDY_ID, rarefyID)][na > 0, .N]
 ```
+
+Check for missing ERSST data in terrestrial, freshwater and marine. na is # missing values. n is # values with  data. Mostly missing in marine, as expected. Study 293 and 216 start before 1900.
+```{r}
+btsst[REALM == 'Terrestrial', .(na = sum(is.na(sst)), n = sum(!is.na(sst))), by = .(STUDY_ID, rarefyID)][na > 0, .N]
+btsst[REALM == 'Freshwater', .(na = sum(is.na(sst)), n = sum(!is.na(sst))), by = .(STUDY_ID, rarefyID)][na > 0, .N]
+btsst[REALM == 'Marine', .(na = sum(is.na(sst)), n = sum(!is.na(sst))), by = .(STUDY_ID, rarefyID, lat_ersst, lon_ersst)][na > 0, ]
+btsst[REALM == 'Marine' & is.na(sst), ][, .(na = sum(is.na(sst))), by = .(lat_ersst, lon_ersst)]
+
+ggplot(btsst[is.na(sst) & REALM == 'Marine', ], aes(rarefyID_x, rarefyID_y, color = YEAR)) +
+    geom_point()
+```
+
 ### Write out temperature values that match BioTime by year/lat/lon
 Only write years/lats/lons with temperature
 ```{r}
+# CRU TS
 out <- bt[!is.na(tmp), .(rarefyID, YEAR, tmp)]
 write.csv(out, file = gzfile('output/cruts_tmp_byyear.csv.gz'))
+
+# ERSST
+out2 <- btsst[!is.na(sst), .(rarefyID, YEAR, sst)]
+write.csv(out2, file = gzfile('output/ersst_byyear.csv.gz'))
+
 ```
 
 ### Write out temperature trends calculated from values that match BioTime by year/lat/lon
 Calculate trend only over those years that match sampled years in BioTime
 ```{r}
+# CRU TS
 out2 <- bt[!is.na(tmp), .(tmptrendbyyr = coef(lm(tmp ~ YEAR))[2], YEAR_min = min(YEAR), YEAR_max = max(YEAR)), 
           by = .(rarefyID)]
 write.csv(out2, file = gzfile('output/cruts_tmptrend_byyear.csv.gz'))
+
+# ERSST
+out3 <- btsst[!is.na(sst), .(ssttrendbyyr = coef(lm(sst ~ YEAR))[2], YEAR_min = min(YEAR), YEAR_max = max(YEAR)), 
+          by = .(rarefyID)]
+write.csv(out3, file = gzfile('output/ersst_ssttrend_byyear.csv.gz'))
+
 ```
 
 ### Calculate and write out temperature trends for all years from first to last in BioTime
