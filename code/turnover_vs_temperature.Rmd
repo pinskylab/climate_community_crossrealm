@@ -4,21 +4,26 @@ output: html_notebook
 ---
 
 ```{r setup}
+library(data.table)
+library(ggplot2)
+
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
 ```
 
 ### Load libraries and data
 ```{r}
-library(data.table)
-library(ggplot2)
-
 # BioTime
 load('data/biotime_blowes/bt.Rdata')
 bt <- data.table(bt_malin); rm(bt_malin)
 
 # Temperature trends from CRU TS (on land)
-tmptrendbyyr <- fread('gunzip -c output/cruts_tmptrend_byyear.csv.gz', drop = 1)
-tmptrendallyr <- fread('gunzip -c output/cruts_tmptrend_allyear.csv.gz', drop = 1)
+tmptrendbyyr <- fread('output/cruts_tmptrend_byyear.csv.gz', drop = 1)
+tmptrendallyr <- fread('output/cruts_tmptrend_allyear.csv.gz', drop = 1)
+
+# Temperature trends from ERSST (ocean)
+ssttrendbyyr <- fread('output/ersst_ssttrend_byyear.csv.gz', drop = 1)
+ssttrendallyr <- fread('output/ersst_ssttrend_allyear.csv.gz', drop = 1)
+
 ```
 
 ### Assemble dataset of trends (turnover and temperature)
@@ -26,6 +31,8 @@ tmptrendallyr <- fread('gunzip -c output/cruts_tmptrend_allyear.csv.gz', drop = 
 trends <- bt[, .(Jtutrend = coef(lm(Jtu_base ~ YEAR))[2], Strend = coef(lm(S ~ YEAR))[2], nyrBT = length(YEAR)), by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID)] # calculate trend in Jaccard turnover from first year
 trends <- merge(trends, tmptrendbyyr, all.x = TRUE, by = 'rarefyID') # add temperature trend (years that match biotime)
 trends <- merge(trends, tmptrendallyr[, .(rarefyID, tmptrendallyr)], all.x = TRUE, by = 'rarefyID') # add temperature trend (all years from first to last of each time-series)
+trends <- merge(trends, ssttrendbyyr[, .(rarefyID, ssttrendbyyr)], all.x = TRUE, by = 'rarefyID') # sst
+trends <- merge(trends, ssttrendallyr[, .(rarefyID, ssttrendallyr)], all.x = TRUE, by = 'rarefyID')
 ```
 
 Do some basic checks
@@ -41,32 +48,63 @@ trends[, .(nJ = sum(Jtutrend > 0), nS = sum(Strend > 0)), by = REALM]
 ggplot(trends, aes(tmptrendallyr, tmptrendbyyr)) +
     geom_point() +
     geom_smooth()
+
+ggplot(trends, aes(ssttrendallyr, ssttrendbyyr)) +
+    geom_point() +
+    geom_smooth()
+
+# compare temperature trends from CRU TS vs ERSST
+ggplot(trends, aes(tmptrendallyr, ssttrendbyyr)) +
+    geom_point() +
+    geom_smooth()
+
 ```
 
-### Plot turnover vs. temperature trends (for now, just have temperature data on land).
+### Combine CRU TS and ERSST
+```{r}
+trends[ , temptrend_comb_allyr := tmptrendallyr] # CRU TS for land and freshwater
+trends[REALM == 'Marine', temptrend_comb_allyr := ssttrendallyr] # ERSST for marine
+```
+
+### Plot turnover vs. temperature trends
 Trends are impressively symmetric around no trend in temperature. Instead, abs(trend) looks better.
 There are very odd values for marine at 0, making me think the Jtu_base values are incorrect there.
 ```{r}
 # Jaccard turnover trend vs. temperature trend (across all years)
-ggplot(trends, aes(tmptrendallyr, Jtutrend, color = REALM)) +
+ggplot(trends, aes(temptrend_comb_allyr, Jtutrend, color = REALM)) +
     geom_point(size = 0.2, alpha = 0.5) + 
     geom_smooth()
 
 # Jaccard turnover trend vs. abs temperature trend (across all years)
-ggplot(trends, aes(abs(tmptrendallyr), Jtutrend, group = REALM, color = REALM)) +
+ggplot(trends, aes(abs(temptrend_comb_allyr), Jtutrend, group = REALM, color = REALM)) +
     geom_point(size = 0.2, alpha = 0.5) + 
-    geom_smooth()
+    geom_smooth() +
+    geom_smooth(method = 'lm')
 ```
 
 ### Plot Richness trend vs. temperature trends (for now, just have temperature data on land).
 ```{r}
 # Richness trend vs. temperature trend (across all years)
-ggplot(trends, aes(tmptrendallyr, Strend, color = REALM)) +
+ggplot(trends, aes(temptrend_comb_allyr, Strend, color = REALM)) +
     geom_point(size = 0.2, alpha = 0.5) + 
     geom_smooth()
 
 # Richness trend vs. abs temperature trend (across all years)
-ggplot(trends, aes(abs(tmptrendallyr), Strend, group = REALM, color = REALM)) +
+ggplot(trends, aes(abs(temptrend_comb_allyr), Strend, group = REALM, color = REALM)) +
     geom_point(size = 0.2, alpha = 0.5) + 
     geom_smooth()
+```
+
+### Model choice
+Realm interaction is strongly supported
+Baseline turnover is slowest in freshwater, fastest in marine
+Freshwater turnover is fastest with temperature, terrestrial slowest
+```{r}
+# Jaccard turnover trend vs. temperature trend (across all years)
+mod1 <- lm(Jtutrend ~ abs(temptrend_comb_allyr) + REALM, data = trends)
+mod2 <- lm(Jtutrend ~ abs(temptrend_comb_allyr)*REALM, data = trends)
+
+summary(mod1)
+summary(mod2)
+AIC(mod1, mod2)
 ```
