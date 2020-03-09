@@ -32,7 +32,7 @@ nc_close(n)
 n = nc_open('dataDL/ersst/sst.mnmean.nc') # Open the netCDF file
 # print(n) # get information about the file format
 sst = ncvar_get(n, 'sst') # dim order: 180 lon x 89 lat x 1994 time (observations are month, time measured in days since Jan 1, 1800). 0 lon is at greenwhich mean.
-dim(tmp)
+dim(sst)
 dates <- format(as.Date(as.numeric(ncvar_get(n, 'time')), origin=as.Date('1800-01-01')), format='%Y%m')
 dimnames(sst) <- list(lon=ncvar_get(n, 'lon'), lat=ncvar_get(n, 'lat'), time=dates)
 nc_close(n)
@@ -141,8 +141,8 @@ out <- bt[!is.na(tmp), .(rarefyID, YEAR, tmp)]
 write.csv(out, file = gzfile('output/cruts_tmp_byyear.csv.gz'))
 
 # ERSST
-out2 <- btsst[!is.na(sst), .(rarefyID, YEAR, sst)]
-write.csv(out2, file = gzfile('output/ersst_byyear.csv.gz'))
+outsst <- btsst[!is.na(sst), .(rarefyID, YEAR, sst)]
+write.csv(outsst, file = gzfile('output/ersst_byyear.csv.gz'))
 
 ```
 
@@ -155,34 +155,39 @@ out2 <- bt[!is.na(tmp), .(tmptrendbyyr = coef(lm(tmp ~ YEAR))[2], YEAR_min = min
 write.csv(out2, file = gzfile('output/cruts_tmptrend_byyear.csv.gz'))
 
 # ERSST
-out3 <- btsst[!is.na(sst), .(ssttrendbyyr = coef(lm(sst ~ YEAR))[2], YEAR_min = min(YEAR), YEAR_max = max(YEAR)), 
+out2sst <- btsst[!is.na(sst), .(ssttrendbyyr = coef(lm(sst ~ YEAR))[2], YEAR_min = min(YEAR), YEAR_max = max(YEAR)), 
           by = .(rarefyID)]
-write.csv(out3, file = gzfile('output/ersst_ssttrend_byyear.csv.gz'))
+write.csv(out2sst, file = gzfile('output/ersst_ssttrend_byyear.csv.gz'))
 
 ```
 
 ### Calculate and write out temperature trends for all years from first to last in BioTime
 As opposed to previous block, don't skip years not sampled in BioTime
 ```{r}
-# make a data.table of all years from first to last for each BioTime dataset with tmp data
-btallyrs <- bt[!is.na(tmp), .(YEAR = seq(min(YEAR), max(YEAR), by = 1)), by = .(rarefyID, lat, lon)]
-
-# merge the data.table with tmp values
-btallyrs <- merge(btallyrs, tmpyr, by = c('lat', 'lon', 'YEAR'), all.x = TRUE)
-
-# calculate trends
+# CRU TS
+btallyrs <- bt[!is.na(tmp), .(YEAR = seq(min(YEAR), max(YEAR), by = 1)), by = .(rarefyID, lat, lon)] # make a data.table of all years from first to last for each BioTime dataset with tmp data
+btallyrs <- merge(btallyrs, tmpyr, by = c('lat', 'lon', 'YEAR'), all.x = TRUE) # merge the data.table with tmp values
 out3 <- btallyrs[, .(tmptrendallyr = coef(lm(tmp ~ YEAR))[2], YEAR_min = min(YEAR), YEAR_max = max(YEAR)), 
-          by = .(rarefyID)]
+          by = .(rarefyID)] # calculate trends
+write.csv(out3, file = gzfile('output/cruts_tmptrend_allyear.csv.gz')) # write out
 
-# write out
-write.csv(out3, file = gzfile('output/cruts_tmptrend_allyear.csv.gz'))
+# ERSST
+btallyrssst <- btsst[!is.na(sst), .(YEAR = seq(min(YEAR), max(YEAR), by = 1)), by = .(rarefyID, lat, lon)]
+btallyrssst <- merge(btallyrssst, sstyr, by = c('lat', 'lon', 'YEAR'), all.x = TRUE)
+out3sst <- btallyrssst[, .(ssttrendallyr = coef(lm(sst ~ YEAR))[2], YEAR_min = min(YEAR), YEAR_max = max(YEAR)), 
+          by = .(rarefyID)] # calculate trends
+write.csv(out3sst, file = gzfile('output/ersst_ssttrend_allyear.csv.gz'))
+
 ```
 
 ### Write out seasonality values
 ```{r}
-# merge bt with seasonality values
-btseas <- merge(bt[!duplicated(rarefyID), .(rarefyID, lat, lon)], tmpseas, by = c('lat', 'lon'), all.x = TRUE)
+# CRU TS
+btseas <- merge(bt[!duplicated(rarefyID), .(rarefyID, lat, lon)], tmpseas, by = c('lat', 'lon'), all.x = TRUE) # merge bt with seasonality values
+write.csv(btseas, file = gzfile('output/cruts_seas.csv.gz')) # write out
 
-# write out
-write.csv(btseas, file = gzfile('output/cruts_seas.csv.gz'))
+# ERSST
+btseassst <- merge(btsst[!duplicated(rarefyID), .(rarefyID, lat, lon)], sstseas, by = c('lat', 'lon'), all.x = TRUE)
+write.csv(btseassst, file = gzfile('output/ersst_seas.csv.gz')) # write out
+
 ```
