@@ -82,6 +82,7 @@ tmpseas <- tmpmo[, .(seas_cruts = sd(tmp, na.rm = TRUE)), by = .(lat_cruts, lon_
 # ERSST
 sstmelt[, mo := as.numeric(substr(time, 5,6))] # extract month
 sstmo <- sstmelt[, .(sst = mean(sst, na.rm = TRUE)), by = .(lat_ersst = as.numeric(lat_ersst), lon_ersst = as.numeric(lon_ersst), mo)] # average by month
+sstmo[lon_ersst > 180, lon_ersst := lon_ersst - 360] # convert to -180 to 180
 sstseas <- sstmo[, .(seas_ersst = sd(sst, na.rm = TRUE)), by = .(lat_ersst, lon_ersst)]
 
 ```
@@ -196,11 +197,11 @@ write.csv(out4sst, file = gzfile('output/ersst_sstave_allyear.csv.gz'))
 ### Write out seasonality values
 ```{r}
 # CRU TS
-btseastmp <- merge(bttmp[!duplicated(rarefyID), .(rarefyID, lat_cruts, lon_cruts)], tmpseas, by = c('lat_cruts', 'lon_cruts')) # merge bt with seasonality values
+btseastmp <- merge(bt[!duplicated(rarefyID), .(rarefyID, lat_cruts, lon_cruts)], tmpseas, by = c('lat_cruts', 'lon_cruts'), all.x = TRUE) # merge bt with seasonality values
 write.csv(btseastmp, file = gzfile('output/cruts_seas.csv.gz')) # write out
 
 # ERSST
-btseassst <- merge(btsst[!duplicated(rarefyID), .(rarefyID, lat_ersst, lon_ersst)], sstseas, by = c('lat_ersst', 'lon_ersst'))
+btseassst <- merge(bt[!duplicated(rarefyID), .(rarefyID, lat_ersst, lon_ersst)], sstseas, by = c('lat_ersst', 'lon_ersst'), all.x = TRUE)
 write.csv(btseassst, file = gzfile('output/ersst_seas.csv.gz')) # write out
 
 ```
