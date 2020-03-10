@@ -91,7 +91,7 @@ bt[is.nan(npp), npp := NA]
 bt[, ':='(lat = NULL, lon = NULL, latgrid = NULL, longrid = NULL)]
 
 # write out
-write.csv(bt, file = gzfile('data/npp/landoceannpp.csv.gz'), row.names = FALSE)
+write.csv(bt, file = gzfile('output/npplandocean.csv.gz'), row.names = FALSE)
 
 
 
