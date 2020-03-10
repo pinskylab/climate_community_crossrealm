@@ -1,6 +1,7 @@
 ---
 title: "Turnover vs. temperature exploration"
-output: html_notebook #github_document # latter for displaying on github, but turning it on disables auto-update of the html notebbok
+output: html_notebook 
+#github_document # latter for displaying on github, but turning it on (or even putting this comment on the same line) disables auto-update of the html notebook
 ---
 
 ```{r setup}
@@ -28,6 +29,10 @@ ssttrendallyr <- fread('output/ersst_ssttrend_allyear.csv.gz', drop = 1)
 seascru <- fread('output/cruts_seas.csv.gz', drop = 1)
 seasersst <- fread('output/ersst_seas.csv.gz', drop = 1)
 
+# Average temperature
+tavecru <- fread('output/cruts_tmpave_allyear.csv.gz', drop = 1)
+taveersst <- fread('output/ersst_sstave_allyear.csv.gz', drop = 1)
+
 # NPP
 npp <- fread('output/npplandocean.csv.gz')
 
@@ -36,7 +41,7 @@ npp <- fread('output/npplandocean.csv.gz')
 ### Assemble dataset of trends (turnover and temperature) and covariates
 ```{r assemble trends and covariates}
 # calculate temporal turnover
-trends <- bt[, .(Jtutrend = coef(lm(Jtu_base ~ YEAR))[2], Strend = coef(lm(S ~ YEAR))[2], nyrBT = length(YEAR)), by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover from first year
+trends <- bt[, .(Jtutrend = coef(lm(Jtu_base ~ YEAR))[2], Strend = coef(lm(I(log(S)) ~ YEAR))[2], nyrBT = length(YEAR)), by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover from first year. also trend in log(S)
 
 # add temperature trends
 trends <- merge(trends, tmptrendbyyr, all.x = TRUE, by = 'rarefyID') # add temperature trend (years that match biotime)
@@ -47,6 +52,8 @@ trends <- merge(trends, ssttrendallyr[, .(rarefyID, ssttrendallyr)], all.x = TRU
 # add covariates
 trends <- merge(trends, seascru[, .(rarefyID, seas_cruts)], all.x = TRUE, by = 'rarefyID') # seasonality from CRU TS
 trends <- merge(trends, seasersst[, .(rarefyID, seas_ersst)], all.x = TRUE, by = 'rarefyID') # seasonality from ERSST
+trends <- merge(trends, tavecru[, .(rarefyID, tmpaveallyr)], all.x = TRUE, by = 'rarefyID')
+trends <- merge(trends, taveersst[, .(rarefyID, sstaveallyr)], all.x = TRUE, by = 'rarefyID')
 trends <- merge(trends, npp, all.x = TRUE, by = 'rarefyID')
 ```
 
@@ -73,8 +80,13 @@ ggplot(trends, aes(tmptrendallyr, ssttrendbyyr)) + # ERSST more muted at fastest
     geom_point() +
     geom_smooth()
 
+# average temperature from CRU TS and ERSST
+ggplot(trends, aes(tmpaveallyr, sstaveallyr, color = rarefyID_y)) + # ERSST more muted at fastest rates of change in CRU TS
+    geom_point() +
+    geom_smooth()
+
 # compare seasonality from CRU TS and ERSST
-ggplot(trends, aes(seas_cruts, seas_ersst, color = rarefyID_x)) + # ERSST more muted at fastest rates of change in CRU TS
+ggplot(trends, aes(seas_cruts, seas_ersst, color = rarefyID_y)) + # ERSST more muted at fastest rates of change in CRU TS
     geom_point() +
     geom_smooth()
 
@@ -85,6 +97,10 @@ ggplot(trends, aes(seas_cruts, seas_ersst, color = rarefyID_x)) + # ERSST more m
 # temperature trend
 trends[ , temptrend_comb_allyr := tmptrendallyr] # CRU TS for land and freshwater
 trends[REALM == 'Marine', temptrend_comb_allyr := ssttrendallyr] # ERSST for marine
+
+# average temperature
+trends[, tempave_comb := tmpaveallyr]
+trends[REALM == 'Marine', tempave_comb := sstaveallyr]
 
 # seasonality
 trends[, seas_comb := seas_cruts]
@@ -121,18 +137,26 @@ ggplot(trends, aes(abs(temptrend_comb_allyr), Strend, group = REALM, color = REA
     geom_smooth()
 ```
 
-### Model choice
-Realm interaction is strongly supported
-Baseline turnover is slowest in freshwater, fastest in marine
+### Model choice: Jaccard turnover trend vs. temperature trend (across all years)
+Baseline turnover is slowest in terrestrial, fastest in marine
 Freshwater turnover is fastest with temperature, terrestrial slowest
+Turnover lower with higher seasonality, turnover response to temperature is lower with more seasonality
+After accounting for seasonality, marine baseline turnover is lower than terrestrial, but marine response to temperature is stronger than on land
 ```{r model choice}
-# Jaccard turnover trend vs. temperature trend (across all years)
-mods <- vector('list', 0)
-mods[[1]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr) + REALM, data = trends)
-mods[[2]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr)*REALM, data = trends)
-mods[[3]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr)*seas_comb, data = trends)
-mods[[4]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr)*npp, data = trends)
+# the cases we can compare
+apply(trends[, .(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
+i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb)]; sum(i) 
 
-lapply(mods, summary)
+# fit models
+mods <- vector('list', 0)
+mods[[1]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr) + REALM, data = trends[i,])
+mods[[2]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr)*REALM, data = trends[i,])
+mods[[3]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr)*seas_comb, data = trends[i,])
+mods[[4]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr)*seas_comb + REALM, data = trends[i,])
+mods[[5]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr)*seas_comb + abs(temptrend_comb_allyr)*REALM, data = trends[i,])
+mods[[6]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr)*npp, data = trends[i,])
+
+# examine models
 sapply(mods, AIC) - min(sapply(mods, AIC))
+lapply(mods, summary)
 ```
