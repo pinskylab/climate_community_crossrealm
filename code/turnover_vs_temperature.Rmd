@@ -7,6 +7,7 @@ output: html_notebook
 ```{r setup}
 library(data.table)
 library(ggplot2)
+library(lme4)
 
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
 ```
@@ -41,7 +42,20 @@ npp <- fread('output/npplandocean.csv.gz')
 ### Assemble dataset of trends (turnover and temperature) and covariates
 ```{r assemble trends and covariates}
 # calculate temporal turnover
-trends <- bt[, .(Jtutrend = coef(lm(Jtu_base ~ YEAR))[2], Strend = coef(lm(I(log(S)) ~ YEAR))[2], nyrBT = length(YEAR)), by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover from first year. also trend in log(S)
+calctrend <- function(Jtu_base, YEAR){ # function to calc trends
+    mod <- lm(Jtu_base ~ YEAR)
+    list(Jtutrend = coef(mod)[2], # coef for the slope
+         Jtutrend_se = sqrt(diag(vcov(mod)))[2]) # SE
+    }
+
+setkey(bt, STUDY_ID, rarefyID, YEAR)
+trends <- bt[, calctrend(Jtu_base, YEAR), 
+    by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover from first year, plus SEs
+trends$nyrBT <-  bt[, .(length(YEAR)), by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)][, V1] # number of years in time-series
+minse <- trends[Jtutrend_se != 0 & nyrBT > 4 , min(Jtutrend_se)] # find smallest non-zero se with 5 or more datapoints (a decent sample size)
+trends[, Jtutrend_se_nz := pmax(Jtutrend_se, minse)] # create an SE that is not zero
+
+trends$Strend <- bt[, .(coef(lm(I(log(S)) ~ YEAR))[2]), by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)][, V1] # trend in log(S)
 
 # add temperature trends
 trends <- merge(trends, tmptrendbyyr, all.x = TRUE, by = 'rarefyID') # add temperature trend (years that match biotime)
@@ -54,7 +68,7 @@ trends <- merge(trends, seascru[, .(rarefyID, seas_cruts)], all.x = TRUE, by = '
 trends <- merge(trends, seasersst[, .(rarefyID, seas_ersst)], all.x = TRUE, by = 'rarefyID') # seasonality from ERSST
 trends <- merge(trends, tavecru[, .(rarefyID, tmpaveallyr)], all.x = TRUE, by = 'rarefyID')
 trends <- merge(trends, taveersst[, .(rarefyID, sstaveallyr)], all.x = TRUE, by = 'rarefyID')
-trends <- merge(trends, npp, all.x = TRUE, by = 'rarefyID')
+trends <- merge(trends, npp, all.x = TRUE, by = 'rarefyID') # npp, centered and scale
 ```
 
 Do some basic checks
@@ -108,6 +122,15 @@ trends[REALM == 'Marine', seas_comb := seas_ersst]
 
 ```
 
+### Center and scale covariates
+``` {r center and scale}
+trends[, temptrend_comb_allyr.sc := scale(temptrend_comb_allyr)]
+trends[, temptrend_comb_allyr_abs.sc := scale(abs(temptrend_comb_allyr))]
+trends[, seas_comb.sc := scale(seas_comb)]
+trends[, tempave_comb.sc := scale(tempave_comb)]
+trends[, npp.sc := scale(npp)]
+```
+
 ### Plot turnover vs. temperature trends
 Trends are impressively symmetric around no trend in temperature. Instead, abs(trend) looks better.
 There are very odd values for marine at 0, making me think the Jtu_base values are incorrect there.
@@ -144,19 +167,35 @@ Turnover lower with higher seasonality, turnover response to temperature is lowe
 After accounting for seasonality, marine baseline turnover is lower than terrestrial, but marine response to temperature is stronger than on land
 ```{r model choice}
 # the cases we can compare
+cat('Number of data points available:\n')
 apply(trends[, .(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
-i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb)]; sum(i) 
+i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb)]
+cat('Overall:\n')
+sum(i) 
 
 # fit models
 mods <- vector('list', 0)
-mods[[1]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr) + REALM, data = trends[i,])
-mods[[2]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr)*REALM, data = trends[i,])
-mods[[3]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr)*seas_comb, data = trends[i,])
-mods[[4]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr)*seas_comb + REALM, data = trends[i,])
-mods[[5]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr)*seas_comb + abs(temptrend_comb_allyr)*REALM, data = trends[i,])
-mods[[6]] <- lm(Jtutrend ~ abs(temptrend_comb_allyr)*npp, data = trends[i,])
+mods[[1]] <- lmer(Jtutrend ~ temptrend_comb_allyr.sc + REALM + (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
+mods[[2]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc + REALM + (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
+mods[[3]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*REALM + (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
+mods[[4]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*seas_comb.sc + (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
+mods[[5]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*seas_comb.sc + REALM + (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
+mods[[6]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*seas_comb.sc + 
+                      temptrend_comb_allyr_abs.sc*REALM + 
+                      (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
+mods[[7]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*seas_comb.sc + 
+                      temptrend_comb_allyr_abs.sc*REALM + 
+                      temptrend_comb_allyr_abs.sc*tempave_comb.sc + 
+                      (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
+mods[[8]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*npp.sc + 
+                      (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
+mods[[9]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*npp.sc + 
+                      REALM + 
+                      (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
 
 # examine models
+cat('AIC:\n')
 sapply(mods, AIC) - min(sapply(mods, AIC))
+cat('\nModel terms:\n')
 lapply(mods, summary)
 ```
