@@ -10,7 +10,7 @@ db = read.csv('../dataDL/VecTraits/vectraits.csv', header = TRUE)
 dim(db)
 load('../data/biotime_blowes/bt_grid_spp_list.Rdata')
 
-species.blowes = unique(bt_grid_spp_list$Species)
+species.blowes = bt_grid_spp_list$Species
 species.blowes.space = gsub('_', ' ', species.blowes)
 genus.blowes = strsplit(species.blowes.space, ' ')
 genus.blowes = sapply(genus.blowes, `[[`, 1) # don't make a unique on that, important to keep correspondences with species list
@@ -90,14 +90,14 @@ sum(!is.na(bms.species))
 bms.species[!is.na(bms.species)]
 db2[db2$species %in% 'meyeri',]
 
-
+bms.species[species.blowes.space %in% 'Protonemura  meyeri']
 ################# genus level extraction #############################
 # 
 db.genus = unique(db2[, - which(names(db2) == 'species')])
 genus.vectraits = db.genus$genus
 bms.genus = vapply(genus.blowes, FUN = get.species.info, FUN.VALUE = double(1), db.genus, genus.vectraits)
 
-# checks
+    # checks
 which(!is.na(bms.genus))
 sum(!is.na(bms.genus))
 bms.genus[!is.na(bms.genus)]
@@ -108,6 +108,9 @@ blowes = genus.blowes[12]
 
 # association with priority (first species level, then genus level)
 
+bms.species = bms.species * 1000
+bms.genus = bms.genus * 1000
+
 bms.final = bms.species
 # if species level biomass is na, take the genus level information (even if NA)
 bms.final[is.na(bms.final)] = bms.genus[is.na(bms.final)]
@@ -116,6 +119,21 @@ bms.final[is.na(bms.final)] = bms.genus[is.na(bms.final)]
 sum(!is.na(bms.species))
 # number of values from a match at the species level OR at genus level
 sum(!is.na(bms.final))
+
+
+final = data.frame(Species = species.blowes.space,
+                   rarefyID = bt_grid_spp_list$rarefyID,
+                   REALM = bt_grid_spp_list$REALM,
+                   STUDY_ID = bt_grid_spp_list$STUDY_ID,
+                   spp_fb2 = species.blowes.space,
+                   mass_genus = bms.genus,
+                   mass_species = bms.species,
+                   mass = bms.final)
+final = subset(final, !is.na(mass))
+
+write.csv(final, file = gzfile("../output/mass_BioTrait.csv.gz"))
+
+
 
 
 ##########3 fuzzy matching
