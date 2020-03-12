@@ -14,7 +14,7 @@ species.gateway = unique(c(as.character(db$con.taxonomy), as.character(db$res.ta
 genus.gateway = strsplit(species.gateway, ' ')
 genus.gateway = sapply(genus.gateway, `[[`, 1)
 
-species.blowes = unique(bt_grid_spp_list$Species)
+species.blowes = bt_grid_spp_list$Species
 species.blowes.space = gsub('_', ' ', species.blowes)
 genus.blowes = strsplit(species.blowes.space, ' ')
 genus.blowes = sapply(genus.blowes, `[[`, 1)
@@ -61,7 +61,7 @@ average_species = function(species, gateway){
     }
 }
 
-
+# a bit brutal to make that on duplicated species, but still ok
 blowes.bms.species = sapply(species.blowes.space, average_species, db.masses, USE.NAMES = FALSE)
 
 # 2) make attribution based on exact genus match (if no info from species level)
@@ -89,6 +89,7 @@ sum(!is.na(blowes.bms.species))
 # number of values from a match at the species level OR at genus level
 sum(!is.na(bms.final))
 
+
 ####################### add biomass information to the data: ######################################
 bt_grid_spp_list$mass_gateway = bms.final
 
@@ -96,6 +97,17 @@ bt_grid_spp_list$mass_gateway = bms.final
 # -------------------------------------- DONE -----------------------------------------------
 # -------------------------------------------------------------------------------------------
 
+final = data.frame(Species = species.blowes.space,
+                  rarefyID = bt_grid_spp_list$rarefyID,
+                  REALM = bt_grid_spp_list$REALM,
+                  STUDY_ID = bt_grid_spp_list$STUDY_ID,
+                  spp_fb2 = species.blowes.space,
+                  mass_genus = blowes.bms.genus,
+                  mass_species = blowes.bms.species,
+                  mass = bms.final)
+final = subset(final, !is.na(mass))
+
+write.csv(final, file = gzfile("../output/mass_gateway.csv.gz"))
 
 #####################################################
 ############## Fuzzy matching  ######################
