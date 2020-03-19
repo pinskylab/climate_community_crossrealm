@@ -1,7 +1,9 @@
 ---
 title: "Turnover vs. temperature exploration"
-output: html_notebook 
-#github_document # latter for displaying on github, but turning it on (or even putting this comment on the same line) disables auto-update of the html notebook
+output: 
+    #html_document: default
+    html_notebook: default
+    github_document: default # latter for displaying on github, but turning it on (or even putting this comment on the same line) disables auto-update of the html notebook
 ---
 
 ```{r setup}
@@ -15,7 +17,7 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStu
 ### Load data
 ```{r load data}
 # BioTime
-load('data/biotime_blowes/bt.Rdata')
+load('data/biotime_blowes/bt_malin.Rdata')
 bt <- data.table(bt_malin); rm(bt_malin)
 
 # Temperature trends from CRU TS (on land)
@@ -37,26 +39,55 @@ taveersst <- fread('output/ersst_sstave_allyear.csv.gz', drop = 1)
 # NPP
 npp <- fread('output/npplandocean.csv.gz')
 
+# Body size
+bs <- fread('output/mass_byrarefyid.csv.gz', drop = 1)
+bs[, ':='(STUDY_ID = NULL, REALM = NULL, taxa_mod = NULL)] # remove unnecessary columns 
 ```
 
 ### Assemble dataset of trends (turnover and temperature) and covariates
 ```{r assemble trends and covariates}
 # calculate temporal turnover
-calctrend <- function(Jtu_base, YEAR){ # function to calc trends
-    mod <- lm(Jtu_base ~ YEAR)
-    list(Jtutrend = coef(mod)[2], # coef for the slope
-         Jtutrend_se = sqrt(diag(vcov(mod)))[2]) # SE
-    }
+calctrend <- function(y, YEAR, nm = 'y'){ # function to calc trends
+    mod <- lm(y ~ YEAR)
+    out <- list(y = coef(mod)[2], # coef for the slope
+         y_se = sqrt(diag(vcov(mod)))[2]) # SE
+    names(out) <- c(nm, paste0(nm, '_se'))
+    return(out)
+}
 
 setkey(bt, STUDY_ID, rarefyID, YEAR)
-trends <- bt[, calctrend(Jtu_base, YEAR), 
+trends <- bt[, calctrend(Jtu_base, YEAR, 'Jtutrend'), 
     by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover from first year, plus SEs
-trends$nyrBT <-  bt[, .(length(YEAR)), by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)][, V1] # number of years in time-series
-minse <- trends[Jtutrend_se != 0 & nyrBT > 4 , min(Jtutrend_se)] # find smallest non-zero se with 5 or more datapoints (a decent sample size)
-trends[, Jtutrend_se_nz := pmax(Jtutrend_se, minse)] # create an SE that is not zero
+trends2 <- bt[, calctrend(Jbeta_base, YEAR, 'Jbetatrend'), 
+    by = .(rarefyID)] # calculate trend in total Jaccard' beta diversity's from first year, 
+trends3 <- bt[, calctrend(1-Horn_base, YEAR, 'Horntrend'), 
+    by = .(rarefyID)] # calculate trend in Horn-Morisita from first year. Convert to dissimilarity.
+trends4 <- bt[, .(Strend = coef(lm(I(log(S)) ~ YEAR))[2]), by = .(rarefyID)] # trend in log(S)
+nyrBT <-  bt[, .(nyrBT = length(YEAR)), by = .(rarefyID)] # number of years in time-series
 
-trends$Strend <- bt[, .(coef(lm(I(log(S)) ~ YEAR))[2]), by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)][, V1] # trend in log(S)
+trends <- merge(trends, trends2) # merge in total J and Horn-Morisita
+trends <- merge(trends, trends3)
+trends <- merge(trends, trends4)
+trends <- merge(trends, nyrBT)
+rm(trends2, trends3, trends4, nyrBT)
+```
 
+Find a minimum trend SE to use in cases where missing
+```{r find minse}
+trends[Jtutrend_se>0, hist(log10(Jtutrend_se))] # plot of SE on the trends
+trends[Jtutrend_se>0, plot(nyrBT, Jtutrend_se, log = 'y')]
+
+fillse <- trends[Jtutrend_se > 1e-10, mean(Jtutrend_se)] # find smallest non-zero se, avoiding the perfect fits
+trends[, Jtutrend_se_nz := Jtutrend_se] # create an SE that is not zero or NA
+trends[is.na(Jtutrend_se_nz), Jtutrend_se_nz := fillse] 
+trends[Jtutrend_se_nz < 1e-10, Jtutrend_se_nz := fillse] 
+
+trends[, hist(log10(1/(Jtutrend_se_nz^2)))] # inverse variance, used for weighting
+trends[, plot(nyrBT, 1/(Jtutrend_se_nz^2), log = 'y')]
+
+```
+
+```{r add temp data}
 # add temperature trends
 trends <- merge(trends, tmptrendbyyr, all.x = TRUE, by = 'rarefyID') # add temperature trend (years that match biotime)
 trends <- merge(trends, tmptrendallyr[, .(rarefyID, tmptrendallyr)], all.x = TRUE, by = 'rarefyID') # add temperature trend (all years from first to last of each time-series)
@@ -69,16 +100,32 @@ trends <- merge(trends, seasersst[, .(rarefyID, seas_ersst)], all.x = TRUE, by =
 trends <- merge(trends, tavecru[, .(rarefyID, tmpaveallyr)], all.x = TRUE, by = 'rarefyID')
 trends <- merge(trends, taveersst[, .(rarefyID, sstaveallyr)], all.x = TRUE, by = 'rarefyID')
 trends <- merge(trends, npp, all.x = TRUE, by = 'rarefyID') # npp, centered and scale
+trends <- merge(trends, bs, all.x = TRUE) # npp, centered and scale
 ```
 
 Do some basic checks
 ```{r basic checks}
 # basic checks
 trends
-trends[, .(minJ = min(Jtutrend), maxJ = max(Jtutrend), minS = min(Strend), maxS = max(Strend)), by = REALM]
-trends[, .(nJ = sum(Jtutrend < 0), nS = sum(Strend < 0)), by = REALM] # why are some turnover trends < 0?
+trends[, .(minJtu = min(Jtutrend), maxJtu = max(Jtutrend), minJbe = min(Jbetatrend), maxJbe = max(Jbetatrend), 
+           minHo = min(Horntrend, na.rm = TRUE), maxHo = max(Horntrend, na.rm = TRUE), minS = min(Strend), maxS = max(Strend)), by = REALM]
+trends[, .(nJtu = sum(Jtutrend < 0), nS = sum(Strend < 0)), by = REALM] # why are some turnover trends < 0?
 trends[, .(nJ = sum(Jtutrend > 0), nS = sum(Strend > 0)), by = REALM]
+```
 
+```{r basic graphs of turnover}
+# are turnover calculations correlated?
+ggplot(trends, aes(Jbetatrend, Jtutrend)) +
+    geom_point() +
+    geom_smooth()
+
+ggplot(trends, aes(Jbetatrend, Horntrend)) +
+    geom_point() +
+    geom_smooth()
+
+```
+
+```{r basic graphs of temperatures}
 # are the temperature trends correlated?
 # compare trends calculated from all sampled years in BioTime vs. all years from min to max year in BioTime
 ggplot(trends, aes(tmptrendallyr, tmptrendbyyr)) +
@@ -103,7 +150,6 @@ ggplot(trends, aes(tmpaveallyr, sstaveallyr, color = rarefyID_y)) + # ERSST more
 ggplot(trends, aes(seas_cruts, seas_ersst, color = rarefyID_y)) + # ERSST more muted at fastest rates of change in CRU TS
     geom_point() +
     geom_smooth()
-
 ```
 
 ### Combine CRU TS and ERSST
@@ -119,7 +165,6 @@ trends[REALM == 'Marine', tempave_comb := sstaveallyr]
 # seasonality
 trends[, seas_comb := seas_cruts]
 trends[REALM == 'Marine', seas_comb := seas_ersst]
-
 ```
 
 ### Center and scale covariates
@@ -129,11 +174,11 @@ trends[, temptrend_comb_allyr_abs.sc := scale(abs(temptrend_comb_allyr))]
 trends[, seas_comb.sc := scale(seas_comb)]
 trends[, tempave_comb.sc := scale(tempave_comb)]
 trends[, npp.sc := scale(npp)]
+trends[, mass_geomean.sc := scale(mass_geomean)]
 ```
 
 ### Plot turnover vs. temperature trends
-Trends are impressively symmetric around no trend in temperature. Instead, abs(trend) looks better.
-There are very odd values for marine at 0, making me think the Jtu_base values are incorrect there.
+Trends are pretty symmetric around no trend in temperature. Instead, abs(trend) looks better.
 ```{r plot turnover v temp trend}
 # Jaccard turnover trend vs. temperature trend (across all years)
 ggplot(trends, aes(temptrend_comb_allyr, Jtutrend, color = REALM)) +
@@ -145,6 +190,30 @@ ggplot(trends, aes(abs(temptrend_comb_allyr), Jtutrend, group = REALM, color = R
     geom_point(size = 0.2, alpha = 0.5) + 
     geom_smooth() +
     geom_smooth(method = 'lm')
+
+# Jaccard total trend vs. temperature trend (across all years)
+ggplot(trends, aes(temptrend_comb_allyr, Jbetatrend, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth()
+
+# Jaccard turnover trend vs. abs temperature trend (across all years)
+ggplot(trends, aes(abs(temptrend_comb_allyr), Jbetatrend, group = REALM, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth() +
+    geom_smooth(method = 'lm')
+
+# Jaccard turnover trend vs. temperature trend (across all years)
+ggplot(trends, aes(temptrend_comb_allyr, Jtutrend, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth()
+
+# Horn-Morisita turnover trend vs. abs temperature trend (across all years)
+ggplot(trends, aes(abs(temptrend_comb_allyr), Horntrend, group = REALM, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth() +
+    geom_smooth(method = 'lm')
+
+
 ```
 
 ### Plot Richness trend vs. temperature trends
@@ -162,40 +231,29 @@ ggplot(trends, aes(abs(temptrend_comb_allyr), Strend, group = REALM, color = REA
 
 ### Model choice: Jaccard turnover trend vs. temperature trend (across all years)
 Baseline turnover is slowest in terrestrial, fastest in marine
-Freshwater turnover is fastest with temperature, terrestrial slowest
-Turnover lower with higher seasonality, turnover response to temperature is lower with more seasonality
-After accounting for seasonality, marine baseline turnover is lower than terrestrial, but marine response to temperature is stronger than on land
-```{r model choice}
+In relation to temperature, freshwater turnover is fastest, terrestrial slowest
+Seasonality, baseline temperature, NPP, and organismal mass are not better explanatory factors than REALM
+```{r model choice for Jaccard turnover}
 # the cases we can compare
 cat('Number of data points available:\n')
-apply(trends[, .(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
-i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb)]
+apply(trends[, .(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, mass_geomean)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
+i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb, mass_geomean)]
 cat('Overall:\n')
 sum(i) 
 
 # fit models
 mods <- vector('list', 0)
-mods[[1]] <- lmer(Jtutrend ~ temptrend_comb_allyr.sc + REALM + (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
-mods[[2]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc + REALM + (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
-mods[[3]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*REALM + (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
-mods[[4]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*seas_comb.sc + (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
-mods[[5]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*seas_comb.sc + REALM + (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
-mods[[6]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*seas_comb.sc + 
-                      temptrend_comb_allyr_abs.sc*REALM + 
-                      (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
-mods[[7]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*seas_comb.sc + 
-                      temptrend_comb_allyr_abs.sc*REALM + 
-                      temptrend_comb_allyr_abs.sc*tempave_comb.sc + 
-                      (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
-mods[[8]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*npp.sc + 
-                      (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
-mods[[9]] <- lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*npp.sc + 
-                      REALM + 
-                      (1|STUDY_ID), data = trends[i,], weights = 1/trends$Jtutrend_se_nz[i])
+mods[[1]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr.sc + REALM + (1|STUDY_ID))]#, weights = 1/(Jtutrend_se_nz^2))]
+mods[[2]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc + REALM + (1|STUDY_ID))] 
+mods[[3]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*REALM + (1|STUDY_ID))]
+mods[[4]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*seas_comb.sc + (1|STUDY_ID))]
+mods[[5]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*tempave_comb.sc + (1|STUDY_ID))]
+mods[[6]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*npp.sc + (1|STUDY_ID))]
+mods[[7]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*mass_geomean.sc + (1|STUDY_ID))]
 
 # examine models
 cat('AIC:\n')
-sapply(mods, AIC) - min(sapply(mods, AIC))
+aics <- sapply(mods, AIC) - min(sapply(mods, AIC)); aics
 cat('\nModel terms:\n')
-lapply(mods, summary)
+summary(mods[[which.min(aics)]])
 ```
