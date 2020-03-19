@@ -1,0 +1,11 @@
+From: Shane Blowes <shane.blowes@idiv.de>
+Subject: Morisita-Horn
+Date: March 17, 2020 at 9:53:22 AM GMT+1
+To: Malin Pinsky <malin.pinsky@rutgers.edu>
+
+Hi Malin
+
+Here is an updated data frame with the Morisita-Horn index (called Horn_base); _base in these metrics refers to the comparison with the first year. Note that Horn_base is a similarity, so 1 - Horn_base gets you the dissimilarity for consistency with the Jaccard’s stuff. I also put total Jaccard’s in (Jbeta_base), as I think it will be more appropriate to compare total jaccard’s with the morisita horn if you go down that path.
+
+Cheers,
+Shane
