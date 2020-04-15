@@ -78,4 +78,39 @@ write.csv(phylo2, file=gzfile('../output/taxonomy.csv.gz'))
 
 
 
-  # -----------------------------------------------------------------------------------------------   
+  # --------------------------Extract BM from gateway for new names  --------------------------------------------------   
+# phylo2 = read.csv('../output/taxonomy.csv.gz')
+db= read.csv('../dataDL/GATEWay_brose/283_2_FoodWebDataBase_2018_12_10.csv', header = TRUE, sep = ",")
+
+# get species list form both dataset
+species.gateway = unique(c(as.character(db$con.taxonomy), as.character(db$res.taxonomy)))
+res.mass = db[,c("res.taxonomy", "res.mass.mean.g.")]; names(res.mass) = c('species.names', 'mass')
+con.mass = db[,c("con.taxonomy", "con.mass.mean.g.")]; names(con.mass) = c('species.names', 'mass')
+db.masses = unique(rbind.data.frame(res.mass, con.mass))
+
+# some species bodymasses have been coded as -999 (I guess in absence of information). That might change species' average bodymasses...
+db.masses = subset(db.masses, mass>0)
+
+average_species = function(species, gateway){
+    species.bms = gateway$mass[which(gateway$species.names %in% species)]
+    if (length(species.bms) == 0) {
+        return(NA)
+    }else{
+        return(mean(species.bms, na.rm = TRUE))
+    }
+}
+
+bms.species = sapply(phylo2$species, average_species, db.masses, USE.NAMES = FALSE)
+
+phylo2$gateway.masses = bms.species
+sum(!is.na(bms.species))
+sum(!is.na(bms.species) & !(phylo2$species %in% phylo2$original_name))
+
+write.csv(phylo2, file=gzfile('../output/taxonomy.csv.gz'))
+
+
+# --------------------------Extract BM from vectraits for new names  --------------------------------------------------
+
+
+
+
