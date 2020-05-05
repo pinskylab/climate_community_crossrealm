@@ -109,8 +109,19 @@ sum(!is.na(bms.species) & !(phylo2$species %in% phylo2$original_name))
 write.csv(phylo2, file=gzfile('../output/taxonomy.csv.gz'))
 
 
-# --------------------------Extract BM from vectraits for new names  --------------------------------------------------
+    # --------------------------adding information in mass.gaeway.csv  --------------------------------------------------
 
+bm.gateway = read.csv("../output/mass_gateway.csv.gz")
+correspondances  = match(phylo2$original_name, bm.gateway$Species)
+length(correspondances)
+correspondances[77]
+phylo2[77, ]
+bm.gateway$Species[1]
 
+phylo.in.gate =  match(phylo2$original_name, bm.gateway$Species)
+gate.in.phylo =  match(bm.gateway$Species, phylo2$original_name)
 
+cbind(mass.from.phylo, bm.gateway$mass_species)
+
+bm.gateway$Species
 
