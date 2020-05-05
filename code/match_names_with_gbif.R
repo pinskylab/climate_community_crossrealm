@@ -105,23 +105,38 @@ bms.species = sapply(phylo2$species, average_species, db.masses, USE.NAMES = FAL
 phylo2$gateway.masses = bms.species
 sum(!is.na(bms.species))
 sum(!is.na(bms.species) & !(phylo2$species %in% phylo2$original_name))
-
+sum(!(phylo2$species %in% phylo2$original_name))
 write.csv(phylo2, file=gzfile('../output/taxonomy.csv.gz'))
 
 
     # --------------------------adding information in mass.gaeway.csv  --------------------------------------------------
 
 bm.gateway = read.csv("../output/mass_gateway.csv.gz")
-correspondances  = match(phylo2$original_name, bm.gateway$Species)
-length(correspondances)
-correspondances[77]
-phylo2[77, ]
-bm.gateway$Species[1]
+bm.gateway$name_used = "Blowes"
 
-phylo.in.gate =  match(phylo2$original_name, bm.gateway$Species)
 gate.in.phylo =  match(bm.gateway$Species, phylo2$original_name)
+# checks
+# cbind(bm.gateway$mass_species, phylo2$gateway.masses[gate.in.phylo])
 
-cbind(mass.from.phylo, bm.gateway$mass_species)
+# get the BM from phylo2 in the order corresponding to the bm.gateway
+species.m.from.phylo2 = phylo2$gateway.masses[gate.in.phylo]
+bm.gateway$gbif_names = phylo2$species[gate.in.phylo]
 
-bm.gateway$Species
+# reaplce only values for which information is missing using non corrected names
+to.replace = is.na(bm.gateway$mass_species) & !is.na(species.m.from.phylo2)
+# sum(to.replace)
+# sum(!(bm.gateway$Species %in% bm.gateway$gbif_names)  & !is.na(species.m.from.phylo2))
+
+# replacing values
+bm.gateway$mass_species[to.replace] = species.m.from.phylo2[to.replace]
+
+# using genus estimated masses only for the remaining missing species masses
+bm.gateway$mass = bm.gateway$mass_species
+bm.gateway$mass[is.na(bm.gateway$mass)] = bm.gateway$mass_genus[is.na(bm.gateway$mass)]
+
+# information on the name used
+bm.gateway$name_used[to.replace] = 'gbif'
+
+write.csv(bm.gateway, file=gzfile('../output/mass_gateway.csv.gz'), row.names = FALSE)
+
 
