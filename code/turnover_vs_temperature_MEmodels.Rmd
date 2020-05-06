@@ -1,0 +1,103 @@
+---
+title: "Turnover vs. temperature ME models"
+output: 
+    html_notebook: default
+    #html_document: default
+    github_document: default # latter for displaying on github, but turning it on (or even putting this comment on the same line) disables auto-update of the html notebook
+---
+
+```{r setup}
+library(data.table)
+library(ggplot2)
+library(lme4)
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
+```
+
+### Load data
+```{r load data}
+# Turnover and covariates assembled by turnover_vs_temperature_prep.Rmd
+trends <- fread('output/turnover_w_covariates.csv.gz')
+```
+
+
+### Plot turnover vs. temperature trends
+Trends are pretty symmetric around no trend in temperature. Instead, abs(trend) looks better.
+```{r plot turnover v temp trend}
+# Jaccard turnover trend vs. temperature trend (across all years)
+ggplot(trends, aes(temptrend_comb_allyr, Jtutrend, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth()
+
+# Jaccard turnover trend vs. abs temperature trend (across all years)
+ggplot(trends, aes(abs(temptrend_comb_allyr), Jtutrend, group = REALM, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth() +
+    geom_smooth(method = 'lm')
+
+# Jaccard total trend vs. temperature trend (across all years)
+ggplot(trends, aes(temptrend_comb_allyr, Jbetatrend, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth()
+
+# Jaccard turnover trend vs. abs temperature trend (across all years)
+ggplot(trends, aes(abs(temptrend_comb_allyr), Jbetatrend, group = REALM, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth() +
+    geom_smooth(method = 'lm')
+
+# Jaccard turnover trend vs. temperature trend (across all years)
+ggplot(trends, aes(temptrend_comb_allyr, Jtutrend, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth()
+
+# Horn-Morisita turnover trend vs. abs temperature trend (across all years)
+ggplot(trends, aes(abs(temptrend_comb_allyr), Horntrend, group = REALM, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth() +
+    geom_smooth(method = 'lm')
+
+
+```
+
+### Plot Richness trend vs. temperature trends
+```{r richness trend v temp trend}
+# Richness trend vs. temperature trend (across all years)
+ggplot(trends, aes(temptrend_comb_allyr, Strend, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth()
+
+# Richness trend vs. abs temperature trend (across all years)
+ggplot(trends, aes(abs(temptrend_comb_allyr), Strend, group = REALM, color = REALM)) +
+    geom_point(size = 0.2, alpha = 0.5) + 
+    geom_smooth()
+```
+
+### Model choice: Jaccard turnover trend vs. temperature trend (across all years)
+Baseline turnover is slowest in terrestrial, fastest in marine
+In relation to temperature, freshwater turnover is fastest, terrestrial slowest
+Seasonality, baseline temperature, NPP, and organismal mass are not better explanatory factors than REALM
+```{r model choice for Jaccard turnover}
+# the cases we can compare
+cat('Number of data points available:\n')
+apply(trends[, .(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, mass_geomean)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
+i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb, mass_geomean)]
+cat('Overall:\n')
+sum(i) 
+
+# fit models
+mods <- vector('list', 0)
+mods[[1]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr.sc + REALM + (1|STUDY_ID))]#, weights = 1/(Jtutrend_se_nz^2))]
+mods[[2]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc + REALM + (1|STUDY_ID))] 
+mods[[3]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*REALM + (1|STUDY_ID))]
+mods[[4]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*seas_comb.sc + (1|STUDY_ID))]
+mods[[5]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*tempave_comb.sc + (1|STUDY_ID))]
+mods[[6]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*npp.sc + (1|STUDY_ID))]
+mods[[7]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*mass_geomean.sc + (1|STUDY_ID))]
+
+# examine models
+cat('AIC:\n')
+aics <- sapply(mods, AIC) - min(sapply(mods, AIC)); aics
+cat('\nModel terms:\n')
+summary(mods[[which.min(aics)]])
+```

@@ -27,7 +27,7 @@ eltonbirds <- fread('output/mass_eltonbirds.csv.gz', drop = 1)
 eltonmammals <- fread('output/mass_eltonmammals.csv.gz', drop = 1)
 
 # BioTime change (for taxa_mod) and species
-load('data/biotime_blowes/bt.Rdata')
+load('data/biotime_blowes/bt_malin.Rdata')
 bt <- data.table(bt_malin); rm(bt_malin) # rename to bt
 load('data/biotime_blowes/bt_grid_spp_list.Rdata') # loads bt_grid_spp_list. this has some studies not in bt.
 btspp <- data.table(bt_grid_spp_list); rm(bt_grid_spp_list) # rename to btspp
