@@ -6,8 +6,8 @@ rm(list = ls())
 library(rstudioapi)
 setwd(dirname(getActiveDocumentContext()$path))
 
-db= read.csv('../dataDL/GATEWay_brose/283_2_FoodWebDataBase_2018_12_10.csv', header = TRUE, sep = ",")
-load('../data/biotime_blowes/bt_grid_spp_list.Rdata')
+db= read.csv('dataDL/GATEWay_brose/283_2_FoodWebDataBase_2018_12_10.csv', header = TRUE, sep = ",")
+load('data/biotime_blowes/bt_grid_spp_list.Rdata')
 
 # get species list form both dataset
 species.gateway = unique(c(as.character(db$con.taxonomy), as.character(db$res.taxonomy)))
@@ -107,7 +107,7 @@ final = data.frame(Species = species.blowes.space,
                   mass = bms.final)
 final = subset(final, !is.na(mass))
 
-write.csv(final, file = gzfile("../output/mass_gateway.csv.gz"))
+write.csv(final, file = gzfile("output/mass_gateway.csv.gz"))
 
 #####################################################
 ############## Fuzzy matching  ######################
@@ -152,3 +152,70 @@ almost.in = unique(almost.in)
 
 library(rbenchmark)
 benchmark(is.it.almost.in.genus(genus.blowes[1], db.masses$genus.names), replications = 1000)
+
+
+#########################################################################################################################
+# --------------------------Extract BM from gateway for new names  --------------------------------------------------   
+# uses new scientific names found by match_names_with_gbif.R
+#########################################################################################################################
+phylo2 = read.csv('output/taxonomy.csv.gz')
+db= read.csv('dataDL/GATEWay_brose/283_2_FoodWebDataBase_2018_12_10.csv', header = TRUE, sep = ",")
+
+# get species list form both dataset
+species.gateway = unique(c(as.character(db$con.taxonomy), as.character(db$res.taxonomy)))
+res.mass = db[,c("res.taxonomy", "res.mass.mean.g.")]; names(res.mass) = c('species.names', 'mass')
+con.mass = db[,c("con.taxonomy", "con.mass.mean.g.")]; names(con.mass) = c('species.names', 'mass')
+db.masses = unique(rbind.data.frame(res.mass, con.mass))
+
+# some species bodymasses have been coded as -999 (I guess in absence of information). That might change species' average bodymasses...
+db.masses = subset(db.masses, mass>0)
+
+average_species = function(species, gateway){
+    species.bms = gateway$mass[which(gateway$species.names %in% species)]
+    if (length(species.bms) == 0) {
+        return(NA)
+    }else{
+        return(mean(species.bms, na.rm = TRUE))
+    }
+}
+
+bms.species = sapply(phylo2$species, average_species, db.masses, USE.NAMES = FALSE)
+
+phylo2$gateway.masses = bms.species
+sum(!is.na(bms.species))
+sum(!is.na(bms.species) & !(phylo2$species %in% phylo2$original_name))
+sum(!(phylo2$species %in% phylo2$original_name))
+
+
+# --------------------------adding information in mass.gaeway.csv  --------------------------------------------------
+
+bm.gateway = read.csv("output/mass_gateway.csv.gz")
+bm.gateway$name_used = "Blowes"
+
+gate.in.phylo =  match(bm.gateway$Species, phylo2$original_name)
+# checks
+# cbind(bm.gateway$mass_species, phylo2$gateway.masses[gate.in.phylo])
+
+# get the BM from phylo2 in the order corresponding to the bm.gateway
+species.m.from.phylo2 = phylo2$gateway.masses[gate.in.phylo]
+bm.gateway$gbif_names = phylo2$species[gate.in.phylo]
+
+# repalce only values for which information is missing using non corrected names
+to.replace = is.na(bm.gateway$mass_species) & !is.na(species.m.from.phylo2)
+# sum(to.replace)
+# sum(!(bm.gateway$Species %in% bm.gateway$gbif_names)  & !is.na(species.m.from.phylo2))
+
+# replacing values
+bm.gateway$mass_species[to.replace] = species.m.from.phylo2[to.replace]
+
+# using genus estimated masses only for the remaining missing species masses
+bm.gateway$mass = bm.gateway$mass_species
+bm.gateway$mass[is.na(bm.gateway$mass)] = bm.gateway$mass_genus[is.na(bm.gateway$mass)]
+
+# information on the name used
+bm.gateway$name_used[to.replace] = 'gbif'
+
+write.csv(bm.gateway, file=gzfile('output/mass_gateway.csv.gz'), row.names = FALSE)
+
+
+
