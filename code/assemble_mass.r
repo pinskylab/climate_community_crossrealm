@@ -111,8 +111,8 @@ btmass[!is.na(mass_eltonbirds) & !is.na(mass_eltonmammals), .(.N, length(unique(
 # merge mass values based on a decision tree
 btmass[, mass := NA_real_]
 btmass[, mass_source := NA_character_]
-btmass[!is.na(mass_eltonbirds), ':='(mass = mass_eltonbirds, mass_source = 'Elton traits')]
-btmass[!is.na(mass_eltonmammals), ':='(mass = mass_eltonmammals, mass_source = 'Elton traits')]
+btmass[!is.na(mass_eltonbirds), ':='(mass = mass_eltonbirds, mass_source = 'Elton birds')]
+btmass[!is.na(mass_eltonmammals), ':='(mass = mass_eltonmammals, mass_source = 'Elton mammals')]
 btmass[!is.na(mass_fishbase), ':='(mass = mass_fishbase, mass_source = 'Fishbase')]
 btmass[!is.na(mass_sealifebase) & is.na(mass), ':='(mass = mass_sealifebase, mass_source = 'Sealifebase')]
 btmass[!is.na(mass_try) & is.na(mass) & taxa_mod == "Plants", ':='(mass = mass_try, mass_source = 'TRY')]
@@ -139,7 +139,7 @@ btmass[, .(n = length(unique(Species)), val = sum(!is.na(mass))), by =
 # less thatn 50% species with data, at least 5 species in the study
 priorities <- btmass[rarefyID %in% bt[, rarefyID], .(n = length(unique(Species)), val = sum(!is.na(mass))), by = 
            .(rarefyID, STUDY_ID, taxa_mod)][, .(n = sum(n), val = sum(val)), by = .(STUDY_ID, taxa_mod)][(val/n) < 0.5 & n > 4, STUDY_ID]
-length(priorities) # 121
+length(priorities) # 121 studies
 
 
 
@@ -152,7 +152,7 @@ btmass.out <- btmass[!is.na(mass), .(Species, rarefyID, REALM, STUDY_ID, taxa_mo
 nrow(btmass)
 nrow(btmass.out) # 788698
 
-write.csv(btmass.out, gzfile('output/mass_byspecies.csv.gz'))
+write.csv(btmass.out, gzfile('output/mass_byspecies.csv.gz'), row.names = FALSE)
 
 # output average mass by rarefyID
 #see how we're doing (per rarefyID: # species with data, mean mass, sd mass, geometric mean mass, geometric standard deviation mass)
@@ -168,9 +168,9 @@ btmass.sum
 write.csv(btmass.sum, gzfile('output/mass_byrarefyID.csv.gz'))
 
 # output list of priority species
-priorities.out <- btmass[STUDY_ID %in% priorities & rarefyID %in% bt[, rarefyID], .(Species, REALM, taxa_mod)][!duplicated(cbind(Species, REALM, taxa_mod)), .(REALM, taxa_mod, Species)]
+priorities.out <- btmass[STUDY_ID %in% priorities & rarefyID %in% bt[, rarefyID] & is.na(mass), .(Species, REALM, taxa_mod)][!duplicated(cbind(Species, REALM, taxa_mod)), .(REALM, taxa_mod, Species)]
 setkey(priorities.out, REALM, taxa_mod, Species)
-nrow(priorities.out) # 16253
+nrow(priorities.out) # 12800
 priorities.out
 
 write.csv(priorities.out, gzfile('output/mass_prioritymissing.csv.gz'))
