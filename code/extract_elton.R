@@ -23,11 +23,11 @@ btspp <- data.table(bt_grid_spp_list); rm(bt_grid_spp_list) # rename to btspp
 btspp <- merge(btspp, bt[!duplicated(rarefyID), .(rarefyID, taxa_mod)], by = 'rarefyID')
 nrow(btspp) # 1034700
 
-# load Elton traits birds
+# load Elton traits birds. mass in g
 birds <- fread('dataDL/eltontraits/BirdFuncDat.txt')
 setnames(birds, "BodyMass-Value", "mass")
 
-# load Elton traits mammals
+# load Elton traits mammals. mass in g
 mams <- fread('dataDL/eltontraits/MamFuncDat.txt')
 setnames(mams, "BodyMass-Value", "mass")
 
@@ -146,5 +146,5 @@ nrow(btmams) # 1,034,700
 btmams.out <- btmams[!is.na(mass), ]
 nrow(btmams.out) # 11,604
 
-### write out
+### write out. mass in g
 write.csv(btmams.out, file = gzfile('output/mass_eltonmammals.csv.gz'))

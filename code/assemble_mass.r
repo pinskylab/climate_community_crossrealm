@@ -18,13 +18,13 @@ geosd <- function(x){ # geometric standard deviation
 ##############
 
 ## read in trait data
-vectraits <- fread('output/mass_BioTrait.csv.gz', drop = 1)
-try <- fread('output/mass_tryplants.csv.gz', drop = 1)
-gateway <- fread('output/mass_gateway.csv.gz', drop = 1)
-fishbase <- fread('output/mass_fishbase.csv.gz', drop = 1)
-sealifebase <- fread('output/mass_sealifebase.csv.gz', drop = 1)
-eltonbirds <- fread('output/mass_eltonbirds.csv.gz', drop = 1)
-eltonmammals <- fread('output/mass_eltonmammals.csv.gz', drop = 1)
+vectraits <- fread('output/mass_BioTrait.csv.gz', drop = 1) # mass in g
+try <- fread('output/mass_tryplants.csv.gz', drop = 1) # mass in g
+gateway <- fread('output/mass_gateway.csv.gz', drop = 1) # appears to be mass in g
+fishbase <- fread('output/mass_fishbase.csv.gz', drop = 1) # mass in g
+sealifebase <- fread('output/mass_sealifebase.csv.gz', drop = 1) # mass in g
+eltonbirds <- fread('output/mass_eltonbirds.csv.gz', drop = 1) # mass in g
+eltonmammals <- fread('output/mass_eltonmammals.csv.gz', drop = 1) # mass in g
 
 # BioTime change (for taxa_mod) and species
 load('data/biotime_blowes/bt_malin.Rdata')
@@ -46,23 +46,25 @@ btmass <- merge(btmass, sealifebase[, .(Species, rarefyID, mass_sealifebase = ma
 btmass <- merge(btmass, eltonbirds[, .(Species, rarefyID, mass_eltonbirds = mass)], by = c('Species', 'rarefyID'), all.x = TRUE)
 btmass <- merge(btmass, eltonmammals[, .(Species, rarefyID, mass_eltonmammals = mass)], by = c('Species', 'rarefyID'), all.x = TRUE)
 
+##########################
 # compare among values
+##########################
 btmass[!is.na(mass_vectraits) & !is.na(mass_try), .(.N, length(unique(Species)))] # 74, 14
-    btmass[!is.na(mass_vectraits) & !is.na(mass_try), ][!duplicated(Species), plot(mass_vectraits, mass_try, log='xy')] # anti-correlated!
+    btmass[!is.na(mass_vectraits) & !is.na(mass_try), ][!duplicated(Species), plot(mass_vectraits, mass_try, log='xy')]; abline(0,1) # anti-correlated!
     btmass[!is.na(mass_vectraits) & !is.na(mass_try), table(taxa_mod)] # all Plants
     btmass[!is.na(mass_vectraits) & !is.na(mass_try), ][!duplicated(Species), ]
 btmass[!is.na(mass_vectraits) & !is.na(mass_gateway), .(.N, length(unique(Species)))] # 136731, 676
-    btmass[!is.na(mass_vectraits) & !is.na(mass_gateway), ][!duplicated(Species), plot(mass_vectraits, mass_gateway, log='xy')] # correlated
+    btmass[!is.na(mass_vectraits) & !is.na(mass_gateway), ][!duplicated(Species), plot(mass_vectraits, mass_gateway, log='xy')]; abline(0,1) # correlated
     btmass[!is.na(mass_vectraits) & !is.na(mass_gateway), table(taxa_mod)] # a wide mix
 btmass[!is.na(mass_vectraits) & !is.na(mass_fishbase), .(.N, length(unique(Species)))] # 57053, 110
-    btmass[!is.na(mass_vectraits) & !is.na(mass_fishbase), ][!duplicated(Species), plot(mass_vectraits, mass_fishbase, log='xy')] # uncorrelated
+    btmass[!is.na(mass_vectraits) & !is.na(mass_fishbase), ][!duplicated(Species), plot(mass_vectraits, mass_fishbase, log='xy')]; abline(0,1) # uncorrelated
     btmass[!is.na(mass_vectraits) & !is.na(mass_fishbase), table(taxa_mod)] # all Fish
 btmass[!is.na(mass_vectraits) & !is.na(mass_sealifebase), .(.N, length(unique(Species)))] # 5237, 9
-    btmass[!is.na(mass_vectraits) & !is.na(mass_sealifebase), ][!duplicated(Species), plot(mass_vectraits, mass_sealifebase, log='xy')] # correlated
+    btmass[!is.na(mass_vectraits) & !is.na(mass_sealifebase), ][!duplicated(Species), plot(mass_vectraits, mass_sealifebase, log='xy')]; abline(0,1) # correlated
     btmass[!is.na(mass_vectraits) & !is.na(mass_sealifebase), table(taxa_mod)] # All, Benthos, Inverts
     btmass[!is.na(mass_vectraits) & !is.na(mass_sealifebase), ][!duplicated(Species), ]
 btmass[!is.na(mass_vectraits) & !is.na(mass_eltonbirds), .(.N, length(unique(Species)))] # 10515, 58
-    btmass[!is.na(mass_vectraits) & !is.na(mass_eltonbirds), ][!duplicated(Species), plot(mass_vectraits, mass_eltonbirds, log='xy')] # mildly correlated
+    btmass[!is.na(mass_vectraits) & !is.na(mass_eltonbirds), ][!duplicated(Species), plot(mass_vectraits, mass_eltonbirds, log='xy')]; abline(0,1) # mildly correlated
     btmass[!is.na(mass_vectraits) & !is.na(mass_eltonbirds), table(taxa_mod)] # All, Birds
     btmass[!is.na(mass_vectraits) & !is.na(mass_eltonbirds), ][!duplicated(Species), .(Species, taxa_mod, mass_vectraits, mass_eltonbirds)]
 btmass[!is.na(mass_vectraits) & !is.na(mass_eltonmammals), .(.N, length(unique(Species)))] # 5, 2
@@ -78,17 +80,17 @@ btmass[!is.na(mass_try) & !is.na(mass_eltonbirds), .(.N, length(unique(Species))
 btmass[!is.na(mass_try) & !is.na(mass_eltonmammals), .(.N, length(unique(Species)))] # 0
 
 btmass[!is.na(mass_gateway) & !is.na(mass_fishbase), .(.N, length(unique(Species)))] # 207991, 1123
-    btmass[!is.na(mass_gateway) & !is.na(mass_fishbase), ][!duplicated(Species), plot(mass_gateway, mass_fishbase, log='xy')] # correlated
+    btmass[!is.na(mass_gateway) & !is.na(mass_fishbase), ][!duplicated(Species), plot(mass_gateway, mass_fishbase, log='xy')]; abline(0,1) # correlated
     btmass[!is.na(mass_gateway) & !is.na(mass_fishbase), table(taxa_mod)] # Fish
 btmass[!is.na(mass_gateway) & !is.na(mass_sealifebase), .(.N, length(unique(Species)))] # 11067, 88
-    btmass[!is.na(mass_gateway) & !is.na(mass_sealifebase), ][!duplicated(Species), plot(mass_gateway, mass_sealifebase, log='xy')] # correlated
+    btmass[!is.na(mass_gateway) & !is.na(mass_sealifebase), ][!duplicated(Species), plot(mass_gateway, mass_sealifebase, log='xy')]; abline(0,1) # correlated
     btmass[!is.na(mass_gateway) & !is.na(mass_sealifebase), table(taxa_mod)] # All, Benthos, Inverts
 btmass[!is.na(mass_gateway) & !is.na(mass_eltonbirds), .(.N, length(unique(Species)))] # 66048, 345
-    btmass[!is.na(mass_gateway) & !is.na(mass_eltonbirds), ][!duplicated(Species), plot(mass_gateway, mass_eltonbirds, log='xy')] # correlated
+    btmass[!is.na(mass_gateway) & !is.na(mass_eltonbirds), ][!duplicated(Species), plot(mass_gateway, mass_eltonbirds, log='xy')]; abline(0,1) # correlated
     btmass[!is.na(mass_gateway) & !is.na(mass_eltonbirds), table(taxa_mod)] # All, Benthos, Birds, Plants
     btmass[!is.na(mass_gateway) & !is.na(mass_eltonbirds) & taxa_mod != "Birds", ][!duplicated(Species), .(Species, taxa_mod, mass_gateway, mass_eltonbirds)]
 btmass[!is.na(mass_gateway) & !is.na(mass_eltonmammals), .(.N, length(unique(Species)))] # 5630, 62
-    btmass[!is.na(mass_gateway) & !is.na(mass_eltonmammals), ][!duplicated(Species), plot(mass_gateway, mass_eltonmammals, log='xy')] # correlated
+    btmass[!is.na(mass_gateway) & !is.na(mass_eltonmammals), ][!duplicated(Species), plot(mass_gateway, mass_eltonmammals, log='xy')]; abline(0,1) # correlated
     btmass[!is.na(mass_gateway) & !is.na(mass_eltonmammals), table(taxa_mod)] # All, Birds, Mammals
     btmass[!is.na(mass_gateway) & !is.na(mass_eltonmammals), ][!duplicated(Species), .(Species, taxa_mod, mass_gateway, mass_eltonmammals)]
 
@@ -131,15 +133,15 @@ btmass[, .(n = length(unique(Species)), val = sum(!is.na(mass))), by = rarefyID]
 btmass[, .(n = length(unique(Species)), val = sum(!is.na(mass))), by = 
            .(rarefyID, STUDY_ID)][, .(n = sum(n), val = sum(val)), by = STUDY_ID][, hist(val/n)] # a bit more than half have >50% of species represented!
 btmass[, .(n = length(unique(Species)), val = sum(!is.na(mass))), by = 
-           .(rarefyID, STUDY_ID, taxa_mod)][, .(n = sum(n), val = sum(val)), by = .(STUDY_ID, taxa_mod)][(val/n) < 0.5, ] #124 studies of 332 have <50% of species represented
+           .(rarefyID, STUDY_ID, taxa_mod)][, .(n = sum(n), val = sum(val)), by = .(STUDY_ID, taxa_mod)][(val/n) < 0.5, ] #125 studies of 332 have <50% of species represented
 btmass[, .(n = length(unique(Species)), val = sum(!is.na(mass))), by = 
-           .(rarefyID, STUDY_ID, taxa_mod)][, .(n = sum(n), val = sum(val)), by = .(STUDY_ID, taxa_mod)][(val/n) < 0.5, table(taxa_mod)] # 65 of studies <50% are plants, 34 inverts
+           .(rarefyID, STUDY_ID, taxa_mod)][, .(n = sum(n), val = sum(val)), by = .(STUDY_ID, taxa_mod)][(val/n) < 0.5, table(taxa_mod)] # 66 of studies <50% are plants, 34 inverts
 
 # make a list of priority studies for further mass finding
 # less thatn 50% species with data, at least 5 species in the study
 priorities <- btmass[rarefyID %in% bt[, rarefyID], .(n = length(unique(Species)), val = sum(!is.na(mass))), by = 
            .(rarefyID, STUDY_ID, taxa_mod)][, .(n = sum(n), val = sum(val)), by = .(STUDY_ID, taxa_mod)][(val/n) < 0.5 & n > 4, STUDY_ID]
-length(priorities) # 121 studies
+length(priorities) # 122 studies
 
 
 
@@ -150,7 +152,7 @@ length(priorities) # 121 studies
 # output mass values
 btmass.out <- btmass[!is.na(mass), .(Species, rarefyID, REALM, STUDY_ID, taxa_mod, mass, mass_source)]
 nrow(btmass)
-nrow(btmass.out) # 788698
+nrow(btmass.out) # 788694
 
 write.csv(btmass.out, gzfile('output/mass_byspecies.csv.gz'), row.names = FALSE)
 

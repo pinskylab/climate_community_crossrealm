@@ -13,7 +13,7 @@ require(stringi)
 # Load and merge data
 ############
 # BioTime change, useful to taxa_mod
-load('data/biotime_blowes/bt.Rdata')
+load('data/biotime_blowes/bt_malin.Rdata')
 bt <- data.table(bt_malin); rm(bt_malin) # rename to bt
 
 # BioTime species
@@ -80,22 +80,23 @@ trypl[TraitID == 3407, .(AccSpeciesName_clean, StdValue)][!duplicated(AccSpecies
 trypl[TraitID == 3407, .(AccSpeciesName_clean, OrigValueStr)][!duplicated(AccSpeciesName_clean), sum(!is.na(OrigValueStr))] # 20 species
 
 # summarize to one trait per species
+trypl[, genus := tolower(vapply(strsplit(AccSpeciesName_clean, " "), `[`, 1, FUN.VALUE=character(1)))] # genus name in lower case
+trypl[, speciesnm := tolower(vapply(strsplit(AccSpeciesName_clean, " "), `[`, 2, FUN.VALUE=character(1)))] # species
+
 trymass <- trypl[TraitID %in% c(700, 3407, 3451), .(mean = mean(StdValue, na.rm = TRUE), n = sum(!is.na(StdValue))), 
-                 by = .(TraitID, TraitName, AccSpeciesName_clean)]
+                 by = .(TraitID, TraitName, genus, speciesnm)]
 trymass[is.nan(mean), mean := NA] # convert nan to NA
 trymass[!is.na(mean) & TraitID == 700, ] # examine. 163 species for dry mass
 trymass[!is.na(mean) & TraitID == 3407, ] # examine. 20 species for fresh mass
 trymass[!is.na(mean) & TraitID == 3451, ] # examine. 277 species for mass
 
-trymass[, genus := tolower(vapply(strsplit(AccSpeciesName_clean, " "), `[`, 1, FUN.VALUE=character(1)))] # genus name in lower case
-trymass[, speciesnm := tolower(vapply(strsplit(AccSpeciesName_clean, " "), `[`, 2, FUN.VALUE=character(1)))] # species
-
+# calculate genera averages
 trymassgenu <- trymass[, .(mean = mean(mean), n = sum(n)), by = .(TraitID, TraitName, genus)] # genus-level averages
 
 # merge with plant traits by species
-btplants <- merge(btspp, trymass[TraitID == 700, .(genus, speciesnm, spp_try_mass_dry = AccSpeciesName_clean, mass_dry_species = mean)], by = c("genus", "speciesnm"), all.x = TRUE)
-btplants <- merge(btplants, trymass[TraitID == 3407, .(genus, speciesnm, spp_try_mass_fresh = AccSpeciesName_clean, mass_fresh_species = mean)], by = c("genus", "speciesnm"), all.x = TRUE)
-btplants <- merge(btplants, trymass[TraitID == 3451, .(genus, speciesnm, spp_try_mass = AccSpeciesName_clean, mass_species = mean)], by = c("genus", "speciesnm"), all.x = TRUE)
+btplants <- merge(btspp, trymass[TraitID == 700, .(genus, speciesnm, mass_dry_species = mean)], by = c("genus", "speciesnm"), all.x = TRUE)
+btplants <- merge(btplants, trymass[TraitID == 3407, .(genus, speciesnm, mass_fresh_species = mean)], by = c("genus", "speciesnm"), all.x = TRUE)
+btplants <- merge(btplants, trymass[TraitID == 3451, .(genus, speciesnm, mass_species = mean)], by = c("genus", "speciesnm"), all.x = TRUE)
 
 # look at the matches
 btplants[!is.na(mass_dry_species), ]
@@ -110,15 +111,10 @@ btplants[!is.na(mass_dry_species) | !is.na(mass_fresh_species) | !is.na(mass_spe
 btplants[(!is.na(mass_dry_species) | !is.na(mass_fresh_species) | !is.na(mass_species)) & taxa_mod != 'Plant', 
          .(Species, taxa_mod)][!duplicated(cbind(Species, taxa_mod)),] # one in Benthos. Looks correct.
 
-# check if we can merge the TRY species name columns from the 3 data types
-btplants[spp_try_mass_dry != spp_try_mass_fresh, .(spp_try_mass_dry, spp_try_mass_fresh)] # 0 don't match
-btplants[spp_try_mass_dry != spp_try_mass, .(spp_try_mass_dry, spp_try_mass)] # 1 spp doesn't match, has variant included. shouldn't merge
-btplants[spp_try_mass_fresh != spp_try_mass, .(spp_try_mass_fresh, spp_try_mass)] # 0 don't match. overall
-
 # check for missing
 btplants[taxa_mod == 'Plant' & (is.na(mass_dry_species) & is.na(mass_fresh_species) & is.na(mass_species)), length(unique(Species))] # 7292
 btplants[taxa_mod == 'Plant' & (is.na(mass_dry_species) & is.na(mass_fresh_species) & is.na(mass_species)), 
-         sort(unique(Species))] # mostly spcies names and genus names. Some common names.
+         sort(unique(Species))] # mostly species names and genus names. Some common names.
 
 
 # merge genus-values with species list
@@ -158,9 +154,9 @@ btplants[!is.na(mass_fresh) & !is.na(mass), plot(mass_fresh, mass, log='xy')] # 
 # trim to species with data
 nrow(btplants) # 1,034,700
 btplants.out <- btplants[!is.na(mass_dry) | !is.na(mass_fresh) | !is.na(mass), ]
-nrow(btplants.out) # 2746
+nrow(btplants.out) # 2742
 
-### write out
+### write out. mass in g
 write.csv(btplants.out, file = gzfile('output/mass_tryplants.csv.gz'))
 
 

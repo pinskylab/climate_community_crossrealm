@@ -194,5 +194,5 @@ nrow(btsppsl)
 btsppsl.out <- btsppsl[!is.na(mass), ]
 nrow(btsppsl.out)
 
-### write out
+### write out. mass in g
 write.csv(btsppsl.out, file = gzfile('output/mass_sealifebase.csv.gz'))
