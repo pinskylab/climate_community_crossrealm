@@ -94,7 +94,7 @@ mob[mode == 'stationary', speed := 0]
 
 # check coverage
 mob[, .(n = length(unique(original_name)), val = sum(!is.na(speed))), by = rarefyID][, hist(val/n)] # most have >50% of species represented!
-mob[, .(n = length(unique(original_name)), val = sum(!is.na(speed))), by = rarefyID][(val/n) < 0.5, ] # 5018 rarefyID with <50%
+mob[, .(n = length(unique(original_name)), val = sum(!is.na(speed))), by = rarefyID][(val/n) < 0.5, ] # 4159 rarefyID with <50%
 
 
 
@@ -104,12 +104,9 @@ priorities <- mob[!is.na(mass), .(n = length(unique(original_name)), val = sum(!
                          .(rarefyID, STUDY_ID, taxa_mod)][, .(n = sum(n), val = sum(val)), by = .(STUDY_ID, taxa_mod)][(val/n) < 0.5 & n > 4, STUDY_ID]
 length(priorities) # 13 studies
 priorities.out <- mob[STUDY_ID %in% priorities & is.na(speed), .(original_name, original_genus, REALM, taxa_mod)][!duplicated(cbind(original_name, REALM, taxa_mod)), .(REALM, taxa_mod, original_name, original_genus)] # 552 species
-nrow(priorities.out) # 1491 taxa
+nrow(priorities.out) # 1492 taxa
 
 priorities.out[, .(n = length(original_name)), by = original_genus][order(n, decreasing = TRUE)]
-
-priorities.out[original_genus == 'Isopoda',]
-
 
 
 
@@ -122,7 +119,7 @@ priorities.out[original_genus == 'Isopoda',]
 # output speed values
 mob.out <- mob[!is.na(speed), .(original_name, rarefyID, REALM, STUDY_ID, taxa_mod, speed, mode)]
 nrow(mob)
-nrow(mob.out) # 748734
+nrow(mob.out) # 765848
 
 write.csv(mob.out, gzfile('output/speed_byspecies.csv.gz'), row.names = FALSE)
 
@@ -143,7 +140,7 @@ write.csv(mob.sum, gzfile('output/speed_byrarefyID.csv.gz'))
 
 # output list of priority species
 setkey(priorities.out, REALM, taxa_mod, original_genus, original_name)
-nrow(priorities.out) # 1491
+nrow(priorities.out) # 1492
 priorities.out
 
 write.csv(priorities.out, gzfile('output/speed_prioritymissing.csv.gz'))
