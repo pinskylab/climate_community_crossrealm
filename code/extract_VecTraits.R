@@ -48,6 +48,9 @@ names(sp2) = c('mass_units_i', 'size_units', 'size_units_i', 'size', 'sizei', 'm
 
 db2 = rbind.data.frame(sp1, sp2)
 
+# look at all possible untis
+c(unique(as.character(db2$mass_units_i)), '///', unique(as.character(db2$size_units)), '///', unique(as.character(db2$size_units_i)))
+
 # keep lines with information on species bodymasses
 to.keep = db2$mass_units_i %in% 'kilogram (wet body mass)' |
   db2$size_units %in% c('kilogram', 'kg') |
@@ -59,8 +62,15 @@ dim(db2)
 
 species = paste(db2$genus, db2$species, sep = ' ')
 
+db2[species %in% c("Thalassiosira weissflogii", "Pinus radiata", "Ditylum brightwellii"), ]
+subset(db2, species %in% "Pinus radiata")
+sort(unique(species))
+
+c(unique(as.character(db2$mass_units_i)), unique(as.character(db2$size_units_i)))
+c(unique(as.character(db2$size_units)))
 
 get.species.info = function(blowes, vectraits, sp.list){
+  acceptable.indices = c("kilogram (wet body mass)", "kilogram (wet tissue mass)", "kilogram", "kilograms")
   index = which(sp.list %in% blowes)
   # if no info found return null
   if (length(index) == 0){return(NA)}
@@ -79,7 +89,7 @@ get.species.info = function(blowes, vectraits, sp.list){
   if (b) {return(mean(c(i.mass, i.mass2)))}
   
   # if this line is run, means that some info were found but not at individual level 
-  return(mean(vectraits$size))
+  return(mean(vectraits$size[index]))
 }
 
 ################# species level extraction #############################
@@ -121,6 +131,27 @@ sum(!is.na(bms.species))
 sum(!is.na(bms.final))
 
 
+# use of gbif corrected names
+
+gbif = read.csv(gzfile("../output/taxonomy.csv.gz"))
+
+gbif.names = paste(gbif$genus, gbif$species, sep = ' ')
+
+xx = match(gbif$original_name, species.blowes.space)
+# sum(xx != 1:length(species.blowes.space)) 
+# sum(species.blowes.space[xx] == gbif$original_name)
+# length(xx)
+
+bms.gbif = vapply(gbif.names, FUN = get.species.info, FUN.VALUE = double(1), db2, species)
+# length(bms.gbif) 
+# length(gbif.names)
+
+# is there something new?
+# check if I have some info from gbif where I had no info with uncorrected names
+bms.final[xx][is.na(bms.final[xx]) & !is.na(bms.gbif)]
+length(is.na(bms.final[xx]))
+# Nothing more, then stick to the old results
+
 final = data.frame(Species = species.blowes.space,
                    rarefyID = bt_grid_spp_list$rarefyID,
                    REALM = bt_grid_spp_list$REALM,
@@ -129,12 +160,8 @@ final = data.frame(Species = species.blowes.space,
                    mass_genus = bms.genus,
                    mass_species = bms.species,
                    mass = bms.final)
+
 final = subset(final, !is.na(mass))
 
 write.csv(final, file = gzfile("../output/mass_BioTrait.csv.gz"))
-
-
-
-
-##########3 fuzzy matching
 
