@@ -9,7 +9,10 @@ output:
 ```{r setup}
 library(data.table)
 library(ggplot2)
-library(lme4)
+#library(lme4)
+library(nlme)
+library(beanplot)
+library(maps)
 
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
 ```
@@ -18,6 +21,9 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStu
 ```{r load data}
 # Turnover and covariates assembled by turnover_vs_temperature_prep.Rmd
 trends <- fread('output/turnover_w_covariates.csv.gz')
+
+# set realm order
+trends[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = TRUE)]
 ```
 
 
@@ -27,35 +33,41 @@ Trends are pretty symmetric around no trend in temperature. Instead, abs(trend) 
 # Jaccard turnover trend vs. temperature trend (across all years)
 ggplot(trends, aes(temptrend_comb_allyr, Jtutrend, color = REALM)) +
     geom_point(size = 0.2, alpha = 0.5) + 
-    geom_smooth()
+    geom_smooth() +
+    scale_color_brewer(palette="Set1")
 
 # Jaccard turnover trend vs. abs temperature trend (across all years)
 ggplot(trends, aes(abs(temptrend_comb_allyr), Jtutrend, group = REALM, color = REALM)) +
     geom_point(size = 0.2, alpha = 0.5) + 
     geom_smooth() +
-    geom_smooth(method = 'lm')
+    geom_smooth(method = 'lm') +
+    scale_color_brewer(palette="Set1")
 
 # Jaccard total trend vs. temperature trend (across all years)
 ggplot(trends, aes(temptrend_comb_allyr, Jbetatrend, color = REALM)) +
     geom_point(size = 0.2, alpha = 0.5) + 
-    geom_smooth()
+    geom_smooth() +
+    scale_color_brewer(palette="Set1")
 
 # Jaccard turnover trend vs. abs temperature trend (across all years)
 ggplot(trends, aes(abs(temptrend_comb_allyr), Jbetatrend, group = REALM, color = REALM)) +
     geom_point(size = 0.2, alpha = 0.5) + 
     geom_smooth() +
-    geom_smooth(method = 'lm')
+    geom_smooth(method = 'lm') +
+    scale_color_brewer(palette="Set1")
 
-# Jaccard turnover trend vs. temperature trend (across all years)
-ggplot(trends, aes(temptrend_comb_allyr, Jtutrend, color = REALM)) +
+# Horn-Morisita turnover trend vs. temperature trend (across all years)
+ggplot(trends, aes(temptrend_comb_allyr, Horntrend, color = REALM)) +
     geom_point(size = 0.2, alpha = 0.5) + 
-    geom_smooth()
+    geom_smooth() +
+    scale_color_brewer(palette="Set1")
 
 # Horn-Morisita turnover trend vs. abs temperature trend (across all years)
 ggplot(trends, aes(abs(temptrend_comb_allyr), Horntrend, group = REALM, color = REALM)) +
     geom_point(size = 0.2, alpha = 0.5) + 
     geom_smooth() +
-    geom_smooth(method = 'lm')
+    geom_smooth(method = 'lm') +
+    scale_color_brewer(palette="Set1")
 
 
 ```
@@ -65,39 +77,121 @@ ggplot(trends, aes(abs(temptrend_comb_allyr), Horntrend, group = REALM, color = 
 # Richness trend vs. temperature trend (across all years)
 ggplot(trends, aes(temptrend_comb_allyr, Strend, color = REALM)) +
     geom_point(size = 0.2, alpha = 0.5) + 
-    geom_smooth()
+    geom_smooth() +
+    scale_color_brewer(palette="Set1")
 
 # Richness trend vs. abs temperature trend (across all years)
 ggplot(trends, aes(abs(temptrend_comb_allyr), Strend, group = REALM, color = REALM)) +
     geom_point(size = 0.2, alpha = 0.5) + 
-    geom_smooth()
+    geom_smooth() +
+    scale_color_brewer(palette="Set1")
+```
+
+### Compare across realms
+Map shows where we have data. Mostly northern hemisphere.
+Marine are in generally warmer locations (seawater doesn't freeze)
+Marine have much lower seasonality.
+Marine and freshwater have some very small masses (plankton), but much of dataset is similar to terrestrial.
+Marine has a lot of slow, crawling organisms, but land has plants. Land also has birds (fast).
+```{r compare across realms}
+world <- map_data('world')
+ggplot(world, aes(x = long, y = lat, group = group)) +
+    geom_polygon(fill = 'lightgray', color = 'white') +
+    geom_point(data = trends, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.5, alpha = 0.4)  +
+    scale_color_brewer(palette="Set1")
+
+i <- trends[, !duplicated(STUDY_ID)]; sum(i)
+beanplot(rarefyID_y ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Latitude (degN)', ll = 0.05)
+beanplot(tempave_comb ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature (degC)', ll = 0.05)
+beanplot(seas_comb ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Seasonality (degC)', ll = 0.05)
+beanplot(npp ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'NPP', ll = 0.05)
+beanplot(mass_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Mass (g)', ll = 0.05)
+beanplot(speed_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Speed (km/hr)', ll = 0.05, log = '')
+
 ```
 
 ### Model choice: Jaccard turnover trend vs. temperature trend (across all years)
-Baseline turnover is slowest in terrestrial, fastest in marine
-In relation to temperature, freshwater turnover is fastest, terrestrial slowest
-Seasonality, baseline temperature, NPP, and organismal mass are not better explanatory factors than REALM
-```{r model choice for Jaccard turnover}
+First examine how many data points are available
+```{r model setup for Jaccard turnover}
 # the cases we can compare
 cat('Number of data points available:\n')
-apply(trends[, .(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, mass_geomean)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
-i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb, mass_geomean)]
+apply(trends[, .(Jtutrend, temptrend_comb_allyr, tempave_comb, REALM, seas_comb, npp, mass_geomean, speed_geomean)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
+i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb, mass_geomean, speed_geomean)]
 cat('Overall:\n')
-sum(i) 
+sum(i)
+```
 
-# fit models
+*Log transform some variables here or previously in data assembly?*
+
+Then choose the variance structure
+```{r choose variance structure for Jacard turnover}
+# fit models for variance structure
+fixed <- formula(Jtutrend ~ temptrend_comb_allyr_abs.sc*REALM + 
+                     temptrend_comb_allyr_abs.sc*tempave_comb + 
+                     temptrend_comb_allyr_abs.sc*seas_comb + 
+                     temptrend_comb_allyr_abs.sc*npp + 
+                     temptrend_comb_allyr_abs.sc*mass_geomean + 
+                     temptrend_comb_allyr_abs.sc*speed_geomean)
+i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb, mass_geomean, speed_geomean)]
 mods <- vector('list', 0)
-mods[[1]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr.sc + REALM + (1|STUDY_ID))]#, weights = 1/(Jtutrend_se_nz^2))]
-mods[[2]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc + REALM + (1|STUDY_ID))] 
-mods[[3]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*REALM + (1|STUDY_ID))]
-mods[[4]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*seas_comb.sc + (1|STUDY_ID))]
-mods[[5]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*tempave_comb.sc + (1|STUDY_ID))]
-mods[[6]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*npp.sc + (1|STUDY_ID))]
-mods[[7]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*mass_geomean.sc + (1|STUDY_ID))]
+mods[[1]] <- gls(fixed, data = trends[i,])
+mods[[2]] <- gls(fixed, data = trends[i,], weights = varPower(-0.5, ~nyrBT))
+mods[[3]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, control = lmeControl(opt = "optim"))
+mods[[4]] <- lme(fixed, data = trends[i,], random = ~temptrend_comb_allyr_abs.sc | STUDY_ID)
+mods[[5]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, weights = varPower(-0.5, ~nyrBT))
+mods[[6]] <- lme(fixed, data = trends[i,], random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, weights = varPower(-0.5, ~nyrBT))
+aics <- sapply(mods, AIC)
+minaics <- aics - min(aics)
+minaics
+
+```
+Chooses the random slopes & intercents and variance scaled to number of years.
+We haven't dealt with any testing on the boundary issues here yet.
+
+Finally, compare among models
+```{r choose fixed effects for Jacard turnover}
+i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb, mass_geomean, speed_geomean)]
+mods <- vector('list', 0)
+mods[[1]] <- lme(Jtutrend ~ 1, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
+                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
+mods[[2]] <- lme(Jtutrend ~ temptrend_comb_allyr.sc, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
+                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
+mods[[3]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
+                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
+mods[[4]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * REALM, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
+                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
+mods[[5]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * tempave_comb, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
+                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
+mods[[6]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * seas_comb, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
+                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
+mods[[7]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * speed_geomean, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
+                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
+mods[[8]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * mass_geomean, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
+                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
+mods[[9]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * npp, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
+                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
 
 # examine models
 cat('AIC:\n')
 aics <- sapply(mods, AIC) - min(sapply(mods, AIC)); aics
+cat(paste0('\nChose model: ', paste0(mods[[which.min(aics)]]$call$fixed[c(2,1,3)], collapse = ' '), '\n'))
 cat('\nModel terms:\n')
 summary(mods[[which.min(aics)]])
+
+
 ```
+
+
+### Examine the chosen model
+```{r model examination}
+bmod <- update(mods[[7]], method = 'REML')
+hist(residuals(bmod))
+plot(fitted(bmod), resid(bmod, type = 'pearson'))
+plot(trends[i,nyrBT], residuals(bmod, type = 'normalized'), col = '#00000033', log = 'x')
+plot(trends[i,temptrend_comb_allyr_abs.sc], residuals(bmod, type = 'normalized'), col = '#00000033')
+plot(trends[i,speed_geomean], residuals(bmod, type = 'normalized'), col = '#00000033')
+
+```
+
+
+Still some heterogeneity (cone), but may be created by so few data points on the right
