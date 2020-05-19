@@ -1,21 +1,10 @@
-
-###Laura Antao
-###06-05-2020
-
-##first script to send to Malin using brms models to analyse turnover~Year trends from the BioTIME gridded data
-##note the models can take several days to run
-
-# DISCLAIMER: code is under development
-
 ##======================================================================
+# Laura Antao and Malin Pinsky
+
+## note the models can take several days to run
+
 ## The biodiversity data used originates from pre-processing steps from Blowes et al (https://github.com/sChange-workshop/BioGeo-BioDiv-Change)
-
 ## Code below follows from script in https://github.com/pinskylab/climate_community_crossrealm/blob/master/code/turnover_vs_temperature.Rmd
-
-
-## Input is object with turnover change estimates, temperature change estimates, and metadata for the time series
-## Will also add "microclimate" estimates from each grid cells used in the biodiversity data processing (accompanying script)
-
 
 ##======================================================================
 
@@ -27,38 +16,18 @@ library(brms)  ##v 2.6.0
 # library(ggExtra)
 # library(cowplot)
 
-# setwd("~/Project_collabs/Turnover_temperature_Pinsky/climate_community_crossrealm-master")
+###############
+# Load the data
+###############
 
-## Load data and run code as in "turnover_vs_temperature.Rmd"
-
-##======================================================================
-
-## then replicate the models at the end of the script (move from lmer to brms)
-
-# fit models
-# mods <- vector('list', 0)
-# mods[[1]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr.sc + REALM + (1|STUDY_ID))]#, weights = 1/(Jtutrend_se_nz^2))]
-# mods[[2]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc + REALM + (1|STUDY_ID))] 
-# mods[[3]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*REALM + (1|STUDY_ID))]
-# mods[[4]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*seas_comb.sc + (1|STUDY_ID))]
-# mods[[5]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*tempave_comb.sc + (1|STUDY_ID))]
-# mods[[6]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*npp.sc + (1|STUDY_ID))]
-# mods[[7]] <- trends[i, lmer(Jtutrend ~ temptrend_comb_allyr_abs.sc*mass_geomean.sc + (1|STUDY_ID))]
+trends <- read.csv(gzfile('output/turnover_w_covariates.csv.gz'))
 
 
-###data filtering steps (suggestions!!)
+#################
+## Set up models
+#################
 
-##remove cells (=rarefyID) with <5 years sampled
-##this should also allow to deal with the majority (all??) of the "perfect fits"
-names(trends)
-
-
-# trends <- trends %>%
-#   filter(nyrBT >5)  ##would have 18114 records
-
-
-
-##overall model strcuture examples to account for the data structure??
+##overall model structure examples to account for the data structure
 ##              Jtutrend ~ temptrend_comb_allyr_abs.sc * REALM + (1 | STUDY_ID)
 ##              Jtutrend ~ temptrend_comb_allyr_abs.sc * REALM + (1 | Taxa/STUDY_ID)   ##because we have multiple per taxa group?
 ##              Jtutrend ~ temptrend_comb_allyr_abs.sc * REALM + (temptrend_comb_allyr_abs.sc | Taxa/STUDY_ID)  ##varying responses per taxa?
@@ -73,33 +42,32 @@ names(trends)
 
 
 ###create formula for brms models
-formula1 <- bf(Jtutrend | se(Jtutrend_se, sigma = TRUE) ~ temptrend_comb_allyr_abs.sc * REALM + (1 | STUDY_ID))
-
 ##the syntax using se() allows to specify standard errors of the observations, thus allowing to perform meta-analysis
 ##https://rdrr.io/cran/brms/man/brmsformula.html
 ##https://vuorre.netlify.app/post/2016/09/29/meta-analysis-is-a-special-case-of-bayesian-multilevel-modeling/
 
-
-formula2 <- bf(Jtutrend | se(Jtutrend_se, sigma = TRUE) ~ temptrend_comb_allyr_abs.sc * seas_comb.sc + (1 | STUDY_ID))
-
+formula1 <- bf(Jtutrend | se(Jtutrend_se, sigma = TRUE) ~ temptrend_comb_allyr_abs.sc + (1 | STUDY_ID))
+formula2 <- bf(Jtutrend | se(Jtutrend_se, sigma = TRUE) ~ temptrend_comb_allyr_abs.sc * REALM + (1 | STUDY_ID))
 formula3 <- bf(Jtutrend | se(Jtutrend_se, sigma = TRUE) ~ temptrend_comb_allyr_abs.sc * tempave_comb.sc + (1 | STUDY_ID))
+formula4 <- bf(Jtutrend | se(Jtutrend_se, sigma = TRUE) ~ temptrend_comb_allyr_abs.sc * seas_comb.sc + (1 | STUDY_ID))
 
 #...
 
 ############################################################################
+# Fit models
 ############################################################################
 
 ##the code below is for the simplest model [1]
 
 ##run model
-mod_brms_1 <- brm(formula= formula1,
+##control is used to improve sampler behaviour
+##the remaining arguments were used as default; model as such uses non-informative flat priors
+##default for chains=4; iter= 2000; warmup= iter/2
+mod1 <- brm(formula= formula1,
                      data= trends,  ##na.omit(trends)
                      control = list(adapt_delta = 0.99),
                      iter = 4000)
 
-##control is used to improve sampler behaviour
-##the remaining arguments were used as default; model as such uses non-informative flat priors
-##default for chains=4; iter= 2000; warmup= iter/2
 
 ##we used 8k iter for the temperature analysis and running models for each realm separately
 
