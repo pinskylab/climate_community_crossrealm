@@ -177,18 +177,6 @@ trends[REALM == 'Marine', seas_comb := seas_ersst]
 
 
 
-
-### Center and scale covariates
-``` {r center and scale}
-trends[, temptrend_comb_allyr.sc := scale(temptrend_comb_allyr)]
-trends[, temptrend_comb_allyr_abs.sc := scale(abs(temptrend_comb_allyr))]
-trends[, seas_comb.sc := scale(seas_comb)]
-trends[, tempave_comb.sc := scale(tempave_comb)]
-trends[, npp.sc := scale(npp)]
-trends[, mass_geomean.sc := scale(mass_geomean)]
-trends[, speed_geomean.sc := scale(speed_geomean)]
-```
-
 ### Write out
 ```{r write out}
 write.csv(trends, gzfile('output/turnover_w_covariates.csv.gz'))

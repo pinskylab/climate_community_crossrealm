@@ -7,12 +7,13 @@ output:
 ---
 
 ```{r setup}
-library(data.table)
-library(ggplot2)
+library(data.table) # for handling large datasets
+library(ggplot2) # for some plotting
 #library(lme4)
-library(nlme)
-library(beanplot)
-library(maps)
+library(nlme) # for ME models
+library(beanplot) # for beanplots
+library(maps) # for map
+library(ggeffects) # marginal effect plots
 
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
 ```
@@ -24,6 +25,16 @@ trends <- fread('output/turnover_w_covariates.csv.gz')
 
 # set realm order
 trends[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = TRUE)]
+```
+
+### Where do we have data?
+Mostly northern hemisphere, but spread all over. Little in Africa.
+```{r map}
+world <- map_data('world')
+ggplot(world, aes(x = long, y = lat, group = group)) +
+    geom_polygon(fill = 'lightgray', color = 'white') +
+    geom_point(data = trends, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.5, alpha = 0.4)  +
+    scale_color_brewer(palette="Set1")
 ```
 
 
@@ -87,19 +98,13 @@ ggplot(trends, aes(abs(temptrend_comb_allyr), Strend, group = REALM, color = REA
     scale_color_brewer(palette="Set1")
 ```
 
-### Compare across realms
-Map shows where we have data. Mostly northern hemisphere.
+
+### Compare covariates across realms
 Marine are in generally warmer locations (seawater doesn't freeze)
 Marine have much lower seasonality.
 Marine and freshwater have some very small masses (plankton), but much of dataset is similar to terrestrial.
 Marine has a lot of slow, crawling organisms, but land has plants. Land also has birds (fast).
 ```{r compare across realms}
-world <- map_data('world')
-ggplot(world, aes(x = long, y = lat, group = group)) +
-    geom_polygon(fill = 'lightgray', color = 'white') +
-    geom_point(data = trends, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.5, alpha = 0.4)  +
-    scale_color_brewer(palette="Set1")
-
 i <- trends[, !duplicated(STUDY_ID)]; sum(i)
 beanplot(rarefyID_y ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Latitude (degN)', ll = 0.05)
 beanplot(tempave_comb ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature (degC)', ll = 0.05)
@@ -107,6 +112,27 @@ beanplot(seas_comb ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2
 beanplot(npp ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'NPP', ll = 0.05)
 beanplot(mass_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Mass (g)', ll = 0.05)
 beanplot(speed_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Speed (km/hr)', ll = 0.05, log = '')
+
+```
+
+### Center and scale covariates
+``` {r center and scale}
+trends[, temptrend_comb_allyr.sc := scale(temptrend_comb_allyr)]
+trends[, temptrend_comb_allyr_abs.sc := scale(log(abs(temptrend_comb_allyr)))]
+trends[, seas_comb.sc := scale(seas_comb)]
+trends[, tempave_comb.sc := scale(tempave_comb)]
+trends[, npp.sc := scale(npp)]
+trends[, mass_geomean.sc := scale(log(mass_geomean))]
+trends[, speed_geomean.sc := scale(log(speed_geomean+1))]
+
+# histograms to examine
+trends[, hist(temptrend_comb_allyr.sc)]
+trends[, hist(temptrend_comb_allyr_abs.sc)]
+trends[, hist(seas_comb.sc)]
+trends[, hist(tempave_comb.sc)]
+trends[, hist(npp.sc)]
+trends[, hist(mass_geomean.sc)]
+trends[, hist(speed_geomean.sc)]
 
 ```
 
@@ -121,8 +147,6 @@ cat('Overall:\n')
 sum(i)
 ```
 
-*Log transform some variables here or previously in data assembly?*
-
 Then choose the variance structure
 ```{r choose variance structure for Jacard turnover}
 # fit models for variance structure
@@ -136,62 +160,125 @@ i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, n
 mods <- vector('list', 0)
 mods[[1]] <- gls(fixed, data = trends[i,])
 mods[[2]] <- gls(fixed, data = trends[i,], weights = varPower(-0.5, ~nyrBT))
-mods[[3]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, control = lmeControl(opt = "optim"))
-mods[[4]] <- lme(fixed, data = trends[i,], random = ~temptrend_comb_allyr_abs.sc | STUDY_ID)
-mods[[5]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, weights = varPower(-0.5, ~nyrBT))
-mods[[6]] <- lme(fixed, data = trends[i,], random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, weights = varPower(-0.5, ~nyrBT))
+mods[[3]] <- gls(fixed, data = trends[i,], weights = varPower(0.5, ~ abs(temptrend_comb_allyr)))
+
+mods[[4]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, control = lmeControl(opt = "optim"))
+mods[[5]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID, control = lmeControl(opt = "optim"))
+
+mods[[6]] <- lme(fixed, data = trends[i,], random = ~temptrend_comb_allyr_abs.sc | STUDY_ID)
+mods[[7]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ temptrend_comb_allyr_abs.sc, rarefyID = ~1)) # includes overdispersion. new formula so that random slope is only for study level (not enough data to extend to rarefyID).
+
+mods[[8]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, weights = varPower(-0.5, ~nyrBT))
+mods[[9]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID, weights = varPower(-0.5, ~nyrBT))
+mods[[10]] <- lme(fixed, data = trends[i,], random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, weights = varPower(-0.5, ~nyrBT))
+mods[[11]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ temptrend_comb_allyr_abs.sc, rarefyID = ~1), weights = varPower(-0.5, ~nyrBT))
+
+mods[[12]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, weights = varPower(-0.5, ~abs(temptrend_comb_allyr)))
+mods[[13]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID, weights = varPower(-0.5, ~abs(temptrend_comb_allyr)))
+mods[[14]] <- lme(fixed, data = trends[i,], random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, weights = varPower(-0.5, ~abs(temptrend_comb_allyr)))
+mods[[15]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ temptrend_comb_allyr_abs.sc, rarefyID = ~1), weights = varPower(-0.5, ~abs(temptrend_comb_allyr)))
+
 aics <- sapply(mods, AIC)
 minaics <- aics - min(aics)
 minaics
 
 ```
-Chooses the random slopes & intercents and variance scaled to number of years.
-We haven't dealt with any testing on the boundary issues here yet.
+Chooses the random slopes & intercepts, overdispersion, and variance scaled to number of years.
+We haven't dealt with potential testing on the boundary issues here yet.
 
-Finally, compare among models
+Finally, compare fixed effects among models
 ```{r choose fixed effects for Jacard turnover}
 i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb, mass_geomean, speed_geomean)]
+
+randef <- list(STUDY_ID = ~ temptrend_comb_allyr_abs.sc, rarefyID = ~1)
+varef <- varPower(-0.5, ~nyrBT)
+
 mods <- vector('list', 0)
-mods[[1]] <- lme(Jtutrend ~ 1, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
-                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
-mods[[2]] <- lme(Jtutrend ~ temptrend_comb_allyr.sc, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
-                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
-mods[[3]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
-                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
-mods[[4]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * REALM, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
-                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
-mods[[5]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * tempave_comb, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
-                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
-mods[[6]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * seas_comb, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
-                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
-mods[[7]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * speed_geomean, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
-                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
-mods[[8]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * mass_geomean, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
-                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
-mods[[9]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * npp, random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, 
-                 weights = varPower(-0.5, ~nyrBT), data = trends[i,], method = 'ML')
+mods[[1]] <- lme(Jtutrend ~ 1, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods[[2]] <- lme(Jtutrend ~ temptrend_comb_allyr.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods[[3]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods[[4]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * REALM, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods[[5]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * tempave_comb.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods[[6]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * seas_comb.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods[[7]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * speed_geomean.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods[[8]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * mass_geomean.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods[[9]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * npp.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+
+mods[[10]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc + speed_geomean.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
 
 # examine models
 cat('AIC:\n')
 aics <- sapply(mods, AIC) - min(sapply(mods, AIC)); aics
-cat(paste0('\nChose model: ', paste0(mods[[which.min(aics)]]$call$fixed[c(2,1,3)], collapse = ' '), '\n'))
+cat(paste0('\nChose model ', which.min(aics), ': ', paste0(mods[[which.min(aics)]]$call$fixed[c(2,1,3)], collapse = ' '), '\n'))
 cat('\nModel terms:\n')
 summary(mods[[which.min(aics)]])
 
 
 ```
+Chooses a model with temperature trend and speed, but maybe not the interaction
 
 
-### Examine the chosen model
+### Validate the chosen model
 ```{r model examination}
-bmod <- update(mods[[7]], method = 'REML')
+bmod <- update(mods[[7]], method = 'REML') # re-fit with REML
+summary(bmod)
 hist(residuals(bmod))
-plot(fitted(bmod), resid(bmod, type = 'pearson'))
-plot(trends[i,nyrBT], residuals(bmod, type = 'normalized'), col = '#00000033', log = 'x')
-plot(trends[i,temptrend_comb_allyr_abs.sc], residuals(bmod, type = 'normalized'), col = '#00000033')
-plot(trends[i,speed_geomean], residuals(bmod, type = 'normalized'), col = '#00000033')
+qqnorm(bmod, ~ resid(., type = 'p'), abline = c(0,1))
+qqnorm(bmod, ~ ranef(., level = 1))
+qqnorm(bmod, ~ ranef(., level = 2))
+
+plot(fitted(bmod), resid(bmod, type = 'normalized'), col = '#00000033')
+plot(trends[i,nyrBT], residuals(bmod, type = 'normalized'), col = '#00000011', log = 'x')
+plot(trends[i,temptrend_comb_allyr_abs.sc], residuals(bmod, type = 'normalized'), col = '#00000011')
+plot(trends[i,speed_geomean.sc], residuals(bmod, type = 'normalized'), col = '#00000033')
 
 ```
 
 
-Still some heterogeneity (cone), but may be created by so few data points on the right
+Residuals may still be overdispersed despite the observation-level RE? Not sure what else to try.
+Still some heterogeneity (cone) for nyrBT and temperature trend, but may be created by so few data points in certain locations on the axis
+
+
+### Plot the chosen model
+```{r examine model}
+ggplot(data = trends[i,], aes(x = speed_geomean.sc, y = Jtutrend, color = REALM)) +
+    geom_point(shape = 16, alpha = 0.5) +
+    geom_smooth(method = 'lm') +
+    scale_color_brewer(palette="Set1")
+
+# fix temptrend at low or high
+newdat1 <- trends[i, .(STUDY_ID, rarefyID, REALM, temptrend_comb_allyr_abs.sc = quantile(temptrend_comb_allyr_abs.sc, 0.25), speed_geomean, speed_geomean.sc, grp = 1)]
+newdat2 <- trends[i, .(STUDY_ID, rarefyID, REALM, temptrend_comb_allyr_abs.sc = quantile(temptrend_comb_allyr_abs.sc, 0.75), speed_geomean, speed_geomean.sc, grp = 2)]
+newdat <- rbind(newdat1, newdat2)
+newdat$preds <- predict(bmod, newdata = newdat, level = 0)
+
+ggplot(newdat, aes(speed_geomean.sc, preds, color = grp, group = grp)) +
+    geom_line()
+ggplot(newdat, aes(speed_geomean, preds, color = grp, group = grp)) +
+    geom_line()
+
+# fix speed at low or high
+newdat1 <- trends[i, .(STUDY_ID, rarefyID, REALM, temptrend_comb_allyr, temptrend_comb_allyr_abs.sc, speed_geomean.sc = quantile(speed_geomean.sc, 0.25), grp = 1)]
+newdat2 <- trends[i, .(STUDY_ID, rarefyID, REALM, temptrend_comb_allyr, temptrend_comb_allyr_abs.sc, speed_geomean.sc = quantile(speed_geomean.sc, 0.75), grp = 2)]
+newdat <- rbind(newdat1, newdat2)
+newdat$preds <- predict(bmod, newdata = newdat, level = 0)
+
+ggplot(newdat, aes(temptrend_comb_allyr_abs.sc, preds, color = grp, group = grp)) +
+    geom_line()
+
+ggplot(newdat, aes(temptrend_comb_allyr, preds, color = grp, group = grp)) +
+    geom_line()
+
+```
+
+
