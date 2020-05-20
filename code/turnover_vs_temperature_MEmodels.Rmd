@@ -216,6 +216,9 @@ mods[[9]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * npp.sc, random = rande
 mods[[10]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc + speed_geomean.sc, random = randef, 
                  weights = varef, data = trends[i,], method = 'ML')
 
+mods[[11]] <- lme(Jtutrend ~ speed_geomean.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+
 # examine models
 cat('AIC:\n')
 aics <- sapply(mods, AIC) - min(sapply(mods, AIC)); aics
