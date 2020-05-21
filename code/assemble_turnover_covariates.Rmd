@@ -9,7 +9,6 @@ output:
 ```{r setup}
 library(data.table)
 library(ggplot2)
-library(lme4)
 
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
 ```
@@ -46,7 +45,6 @@ bs[, ':='(STUDY_ID = NULL, REALM = NULL, taxa_mod = NULL)] # remove unnecessary 
 # Mobility
 speed <- fread('output/speed_byrarefyID.csv.gz', drop = 1)
 speed[, ':='(STUDY_ID = NULL, REALM = NULL, taxa_mod = NULL)] # remove unnecessary columns 
-
 ```
 
 ### Assemble dataset of trends (turnover and temperature) and covariates
