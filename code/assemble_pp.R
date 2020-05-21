@@ -9,7 +9,7 @@ library(RColorBrewer)
 ###########################
 
 ### Read in biotime data for location
-load('data/biotime_blowes/bt.Rdata'); bt <- data.table(bt_malin); rm(bt_malin)
+load('data/biotime_blowes/bt_malin.Rdata'); bt <- data.table(bt_malin); rm(bt_malin)
 
 # trim to locations
 bt <- bt[!duplicated(rarefyID), .(rarefyID, lon = rarefyID_x, lat = rarefyID_y)]
