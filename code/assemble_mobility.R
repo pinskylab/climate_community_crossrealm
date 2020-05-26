@@ -4,6 +4,14 @@
 
 require(data.table)
 
+geomean = function(x){ # geometric mean. remove NAs and x<0
+    exp(sum(log(x[x > 0 & !is.na(x)])) / length(x[x > 0 & !is.na(x)]))
+}
+
+geosd <- function(x){ # geometric standard deviation
+    exp(sd(log(x[x > 0 & !is.na(x)])))
+}
+
 ##############
 # Load data
 ##############
@@ -51,22 +59,24 @@ mob[mass_source == 'Elton birds' & (order != 'Sphenisciformes' | is.na(order)), 
 mob[class == 'Aves' & order != 'Sphenisciformes', mode := 'flying']
 mob[class == 'Insecta' & !(order %in% c('Plecoptera', 'Trichoptera')), mode := 'flying'] # except stoneflies and caddisflies
 mob[original_genus %in% c('Cecidomyiidae'), mode := 'flying'] # gall midges
+mob[REALM == 'Terrestrial' & class == 'Insecta' & order %in% c('Plecoptera', 'Trichoptera'), mode := 'crawling'] # stoneflies and caddisflies
 
 mob[mass_source == 'Elton mammals' & !(order %in% c('Cetacea', 'Sirenia')) & !(family %in% c('Odobenidae', 'Otariidae', 'Phocidae')), mode := 'running']
 mob[class %in% c('Reptilia', 'Amphibia'), mode := 'running']
 mob[class %in% c('Arachnida', 'Entognatha'), mode := 'running'] # spiders, Entognaths
-mob[REALM == 'Terrestrial' & order %in% c('Isopoda'), mode := 'crawling'] # terrestrial isopods
-mob[REALM == 'Terrestrial' & original_genus %in% c('Isopoda'), mode := 'crawling'] # terrestrial isopods
-mob[original_genus %in% c('Acari', 'Cryptorhynchinae'), mode := 'crawling'] # mites & ticks, weevils
+mob[REALM == 'Terrestrial' & order %in% c('Isopoda'), mode := 'running'] # terrestrial isopods
+mob[REALM == 'Terrestrial' & original_genus %in% c('Isopoda'), mode := 'running'] # terrestrial isopods
+mob[original_genus %in% c('Acari', 'Cryptorhynchinae'), mode := 'running'] # mites & ticks, weevils
+mob[REALM == 'Freshwater' & class == 'Insecta' & order %in% c('Plecoptera', 'Trichoptera'), mode := 'running'] # stoneflies and caddisflies
+mob[class %in% c('Merostomata', 'Pycnogonida'), mode := 'running'] # horseshoe crabs, sea spiders
+mob[order %in% c('Cumacea', 'Decapoda', 'Stomatopoda'), mode := 'running'] # arthropods in mud/sand, crabs/lobsters, mantis shrimp
+mob[REALM == 'Marine' & order %in% c('Isopoda'), mode := 'running'] # marine isopods
+mob[REALM == 'Marine' & original_genus %in% c('Isopoda'), mode := 'running'] # marine isopods
 
 mob[phylum %in% c( 'Annelida', 'Echinodermata', 'Sipuncula', 'Cephalorhyncha', 'Nemertea'), mode := 'crawling'] # segmented worms, echinoderms, sipunculid worms, ribbon worms
 mob[class %in% c('Gastropoda'), mode := 'crawling'] # snails and slugs
-mob[class == 'Insecta' & order %in% c('Plecoptera', 'Trichoptera'), mode := 'crawling'] # stoneflies and caddisflies
-mob[class %in% c('Merostomata', 'Pycnogonida', 'Polyplacophora', 'Priapulida'), mode := 'crawling'] # horseshoe crabs, sea spiders, chitons, priapulid worms
-mob[order %in% c('Cumacea', 'Decapoda', 'Stomatopoda'), mode := 'crawling'] # arthropods in mud/sand, crabs/lobsters, mantis shrimp
-mob[REALM == 'Marine' & order %in% c('Isopoda'), mode := 'crawling'] # marine isopods
-mob[REALM == 'Marine' & original_genus %in% c('Isopoda'), mode := 'crawling'] # marine isopods
-mob[original_genus %in% c('Turbellaria', 'Valvata'), mode := 'crawling'] # flatworms, snails
+mob[class %in% c('Polyplacophora', 'Priapulida'), mode := 'crawling'] # chitons, priapulid worms
+mob[original_genus %in% c('Turbellaria', 'Valvata'), mode := 'crawling'] # flatworms (some can swim...), snails
 
 mob[mass_source == 'TRY', mode := 'stationary'] # plants
 mob[kingdom %in% c('Bacteria', 'Chromista', 'Fungi', 'Plantae'), mode := 'stationary']
