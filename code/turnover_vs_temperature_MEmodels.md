@@ -1,5 +1,88 @@
-Turnover vs. temperature ME models
+Drivers of variation in the community response to temperature change
+across realms
 ================
+
+Collaborators: Shane Blowes, Jon Chase, Helmut Hillebrand, Michael
+Burrows, Amanda Bates, Uli Brose, Benoit Gauzens, Laura Antao
+Assistance: Katherine Lew, Josef Hauser
+
+# Introduction
+
+  - Climate change is driving a widespread reorganization of ecological
+    communities around the world (Parmsesan & Yohe 2003, Poloczanska et
+    al. 2013),
+  - but the impacts of climate change vary substantially from one
+    location to another and among taxa (Molinos et al. 2016 NCC, Antao
+    et al. 2020 NEE).
+  - Community reorganization is substantially more common than an
+    aggregate loss or gain of species (Dornelas et al. 2014 Science,
+    Blowes et al. 2019 Science, Hillebrand et al. 2017 J Appl Ecol)
+  - There are many hypotheses for why some communities are more
+    sensitive to warming than others, including differences in
+      - metabolic rates (Dillon et al. 2010 Nature),
+      - thermal physiology (Deutsch et al. 2008 PNAS, Pinsky et al. 2019
+        Nature),
+      - microclimate availability (Burrows et al. 2019 NCC, Suggitt et
+        al. 2018 NCC),
+      - species mobility (Poloczanska et al. 2013 NCC, Burrows et
+        al. 2011 Science, Sunday et al. 2012 NCC)
+      - or generation time (Beaugrand et al. 2009 DSR II, Poloczanska et
+        al. 2013 NCC),
+      - consumers vs. producers (Petchey et al. 1999 Nature)
+      - community composition (Stuart-Smith et al. 2015 Nature,
+        Beaugrand et a. 2015 NCC, Trisos et al. 2020 Nature),
+      - ecosystem productivity (Thomas et al. 2017 GCB, Brett 1971 Am
+        Zoo),
+      - exposure to human impacts (White & Kerr 2006 Ecography)
+      - and among realms (Antao et al. 2020 NEE).
+  - Scaling up from organismal effects to whole ecological communities
+    is complex, and yet these scales are critical for ecosystem
+    functioning and human well-being.
+  - There is a need for a comprehensive test to understand where warming
+    is driving and is likely to drive the most dramatic community
+    turnover
+
+# Methods
+
+  - BioTime dataset, gridded to 96 km2 hexagons, summarized as temporal
+    turnover (Blowes)
+      - Temporal slope of Jaccard turnover compared to the first year
+      - Same for Jaccard total
+      - and Morisita-Horn turnover
+  - Tested explanatory variables for differences in rate of turnover:
+      - Temperature trend over the time-frame of each time-series (CRU
+        TS 4.03 on land and in freshwater, ERSST v5 in the ocean)
+      - Seasonality as a metric of thermal sensitivity (Deutsch et
+        al. 2008 PNAS). Standard deviation of monthly temperatures.
+      - Average temperature as a metric of metabolic rates (Dillon et
+        al. 2010 Nature, Antao et al. 2020 Nat E\&E)
+      - Mobility calculated from body mass and taxonomic group
+        classifications of mobility mode (fly, run, swim, crawl,
+        sessile). Fly/run/swim followed the allometric relationship in
+        Hirt et al. 2017 Nat E\&E. Crawl set at 0.1 km/hr, sessile set
+        to 0 km/hr. Then calculated averaged within each assemblage.
+      - Net primary productivity (NPP) from the merged land/ocean
+        product produced by the [Ocean
+        Productivity](http://www.science.oregonstate.edu/ocean.productivity/)
+        group at Oregon State using methods from Zhao et al. 2005 and
+        Behrenfeld & Falkowski 1997.
+  - TO DO:
+      - Generation time calculated from body mass and endotherm
+        vs. ectotherm classifications, following McCoy & Gillooly 2008
+        ELE. Averaged across species within each assemblage.
+      - Human impact calculated from Carsten Meyer’s ecosystem cube data
+      - Thermal bias calculated from Species Temperature Indices (Mike
+        Burrows)
+      - Microclimates calculated from WorldClim and BioOracle (Laura
+        Antao)
+      - Consumer vs. producer classification
+  - Maybe to do:
+      - Species pool richness
+  - Differences in temporal turnover (response variable) modeled with a
+    linear mixed effects model (nlme package, lme() function). See below
+    for details.
+
+<!-- end list -->
 
 ``` r
 library(data.table) # for handling large datasets
@@ -14,10 +97,12 @@ library(ggeffects) # marginal effect plots
     ## Warning: package 'ggeffects' was built under R version 3.6.2
 
 ``` r
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
-```
+library(gridExtra) # to combine ggplots together
+library(grid) # to combine ggplots together
 
-### Load data
+# tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
+```
 
 ``` r
 # Turnover and covariates assembled by turnover_vs_temperature_prep.Rmd
@@ -27,218 +112,7 @@ trends <- fread('output/turnover_w_covariates.csv.gz')
 trends[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = TRUE)]
 ```
 
-### Where do we have data?
-
-Mostly northern hemisphere, but spread all over. Little in Africa.
-
-``` r
-world <- map_data('world')
-ggplot(world, aes(x = long, y = lat, group = group)) +
-    geom_polygon(fill = 'lightgray', color = 'white') +
-    geom_point(data = trends, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.5, alpha = 0.4)  +
-    scale_color_brewer(palette="Set1")
-```
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/map-1.png)<!-- -->
-
-### Plot turnover vs. temperature trends
-
-Trends are pretty symmetric around no trend in temperature. Instead,
-abs(trend) looks better.
-
-``` r
-# Jaccard turnover trend vs. temperature trend (across all years)
-ggplot(trends, aes(temptrend_comb_allyr, Jtutrend, color = REALM)) +
-    geom_point(size = 0.2, alpha = 0.5) + 
-    geom_smooth() +
-    scale_color_brewer(palette="Set1")
-```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 3132 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 3132 rows containing missing values (geom_point).
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20turnover%20v%20temp%20trend-1.png)<!-- -->
-
-``` r
-# Jaccard turnover trend vs. abs temperature trend (across all years)
-ggplot(trends, aes(abs(temptrend_comb_allyr), Jtutrend, group = REALM, color = REALM)) +
-    geom_point(size = 0.2, alpha = 0.5) + 
-    geom_smooth() +
-    geom_smooth(method = 'lm') +
-    scale_color_brewer(palette="Set1")
-```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 3132 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 3132 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 3132 rows containing missing values (geom_point).
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20turnover%20v%20temp%20trend-2.png)<!-- -->
-
-``` r
-# Jaccard total trend vs. temperature trend (across all years)
-ggplot(trends, aes(temptrend_comb_allyr, Jbetatrend, color = REALM)) +
-    geom_point(size = 0.2, alpha = 0.5) + 
-    geom_smooth() +
-    scale_color_brewer(palette="Set1")
-```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 3132 rows containing non-finite values (stat_smooth).
-    
-    ## Warning: Removed 3132 rows containing missing values (geom_point).
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20turnover%20v%20temp%20trend-3.png)<!-- -->
-
-``` r
-# Jaccard turnover trend vs. abs temperature trend (across all years)
-ggplot(trends, aes(abs(temptrend_comb_allyr), Jbetatrend, group = REALM, color = REALM)) +
-    geom_point(size = 0.2, alpha = 0.5) + 
-    geom_smooth() +
-    geom_smooth(method = 'lm') +
-    scale_color_brewer(palette="Set1")
-```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 3132 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 3132 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 3132 rows containing missing values (geom_point).
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20turnover%20v%20temp%20trend-4.png)<!-- -->
-
-``` r
-# Horn-Morisita turnover trend vs. temperature trend (across all years)
-ggplot(trends, aes(temptrend_comb_allyr, Horntrend, color = REALM)) +
-    geom_point(size = 0.2, alpha = 0.5) + 
-    geom_smooth() +
-    scale_color_brewer(palette="Set1")
-```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 4262 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 4262 rows containing missing values (geom_point).
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20turnover%20v%20temp%20trend-5.png)<!-- -->
-
-``` r
-# Horn-Morisita turnover trend vs. abs temperature trend (across all years)
-ggplot(trends, aes(abs(temptrend_comb_allyr), Horntrend, group = REALM, color = REALM)) +
-    geom_point(size = 0.2, alpha = 0.5) + 
-    geom_smooth() +
-    geom_smooth(method = 'lm') +
-    scale_color_brewer(palette="Set1")
-```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 4262 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 4262 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 4262 rows containing missing values (geom_point).
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20turnover%20v%20temp%20trend-6.png)<!-- -->
-
-### Plot Richness trend vs. temperature trends
-
-``` r
-# Richness trend vs. temperature trend (across all years)
-ggplot(trends, aes(temptrend_comb_allyr, Strend, color = REALM)) +
-    geom_point(size = 0.2, alpha = 0.5) + 
-    geom_smooth() +
-    scale_color_brewer(palette="Set1")
-```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 3132 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 3132 rows containing missing values (geom_point).
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/richness%20trend%20v%20temp%20trend-1.png)<!-- -->
-
-``` r
-# Richness trend vs. abs temperature trend (across all years)
-ggplot(trends, aes(abs(temptrend_comb_allyr), Strend, group = REALM, color = REALM)) +
-    geom_point(size = 0.2, alpha = 0.5) + 
-    geom_smooth() +
-    scale_color_brewer(palette="Set1")
-```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-    ## Warning: Removed 3132 rows containing non-finite values (stat_smooth).
-    
-    ## Warning: Removed 3132 rows containing missing values (geom_point).
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/richness%20trend%20v%20temp%20trend-2.png)<!-- -->
-
-### Compare covariates across realms
-
-Marine are in generally warmer locations (seawater doesn’t freeze)
-Marine have much lower seasonality. Marine and freshwater have some very
-small masses (plankton), but much of dataset is similar to terrestrial.
-Marine has a lot of slow, crawling organisms, but land has plants. Land
-also has birds
-(fast).
-
-``` r
-i <- trends[, !duplicated(STUDY_ID)]; sum(i)
-```
-
-    ## [1] 332
-
-``` r
-beanplot(rarefyID_y ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Latitude (degN)', ll = 0.05)
-```
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/compare%20across%20realms-1.png)<!-- -->
-
-``` r
-beanplot(tempave_comb ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature (degC)', ll = 0.05)
-```
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/compare%20across%20realms-2.png)<!-- -->
-
-``` r
-beanplot(seas_comb ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Seasonality (degC)', ll = 0.05)
-```
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/compare%20across%20realms-3.png)<!-- -->
-
-``` r
-beanplot(npp ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'NPP', ll = 0.05)
-```
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/compare%20across%20realms-4.png)<!-- -->
-
-``` r
-beanplot(mass_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Mass (g)', ll = 0.05)
-```
-
-    ## log="y" selected
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/compare%20across%20realms-5.png)<!-- -->
-
-``` r
-beanplot(speed_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Speed (km/hr)', ll = 0.05, log = '')
-```
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/compare%20across%20realms-6.png)<!-- -->
-
-### Center and scale covariates
+Log-transform some variables, then center and scale. Do they look ok?
 
 ``` r
 trends[, temptrend_comb_allyr.sc := scale(temptrend_comb_allyr)]
@@ -250,225 +124,96 @@ trends[, mass_geomean.sc := scale(log(mass_geomean))]
 trends[, speed_geomean.sc := scale(log(speed_geomean+1))]
 
 # histograms to examine
-trends[, hist(temptrend_comb_allyr.sc)]
+par(mfrow = c(3,3))
+invisible(trends[, hist(temptrend_comb_allyr.sc, main = 'Temperature trend (°C/yr)')])
+invisible(trends[, hist(temptrend_comb_allyr_abs.sc, main = 'log abs(Temperature trend) (°C/yr)')])
+invisible(trends[, hist(seas_comb.sc, main = 'Seasonality (°C)')])
+invisible(trends[, hist(tempave_comb.sc, main = 'Temperature (°C)')])
+invisible(trends[, hist(npp.sc, main = 'Net primary productivity')])
+invisible(trends[, hist(mass_geomean.sc, main = 'log Mass (g)')])
+invisible(trends[, hist(speed_geomean.sc, main = 'log Speed (km/hr)')])
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/center%20and%20scale-1.png)<!-- -->
 
-    ## $breaks
-    ##  [1] -12 -10  -8  -6  -4  -2   0   2   4   6   8  10  12  14  16
-    ## 
-    ## $counts
-    ##  [1]     1    38    72   323  1003 22397 25251   979   216    47     5
-    ## [12]     1     1     1
-    ## 
-    ## $density
-    ##  [1] 9.933446e-06 3.774709e-04 7.152081e-04 3.208503e-03 9.963246e-03
-    ##  [6] 2.224794e-01 2.508294e-01 9.724844e-03 2.145624e-03 4.668720e-04
-    ## [11] 4.966723e-05 9.933446e-06 9.933446e-06 9.933446e-06
-    ## 
-    ## $mids
-    ##  [1] -11  -9  -7  -5  -3  -1   1   3   5   7   9  11  13  15
-    ## 
-    ## $xname
-    ## [1] "temptrend_comb_allyr.sc"
-    ## 
-    ## $equidist
-    ## [1] TRUE
-    ## 
-    ## attr(,"class")
-    ## [1] "histogram"
+# Results
+
+## Where do we have data?
 
 ``` r
-trends[, hist(temptrend_comb_allyr_abs.sc)]
+world <- map_data('world')
+ggplot(world, aes(x = long, y = lat, group = group)) +
+    geom_polygon(fill = 'lightgray', color = 'white') +
+    geom_point(data = trends, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.5, alpha = 0.4)  +
+    scale_color_brewer(palette="Set1")
 ```
 
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/center%20and%20scale-2.png)<!-- -->
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/map-1.png)<!-- -->
+Mostly northern hemisphere, but spread all over. No so much in Africa or
+much of Asia.
 
-    ## $breaks
-    ##  [1] -10  -9  -8  -7  -6  -5  -4  -3  -2  -1   0   1   2   3
-    ## 
-    ## $counts
-    ##  [1]     1     0     0     2    19    63   320  1254  5484 16535 19238
-    ## [12]  6612   807
-    ## 
-    ## $density
-    ##  [1] 1.986689e-05 0.000000e+00 0.000000e+00 3.973378e-05 3.774709e-04
-    ##  [6] 1.251614e-03 6.357405e-03 2.491308e-02 1.089500e-01 3.284991e-01
-    ## [11] 3.821993e-01 1.313599e-01 1.603258e-02
-    ## 
-    ## $mids
-    ##  [1] -9.5 -8.5 -7.5 -6.5 -5.5 -4.5 -3.5 -2.5 -1.5 -0.5  0.5  1.5  2.5
-    ## 
-    ## $xname
-    ## [1] "temptrend_comb_allyr_abs.sc"
-    ## 
-    ## $equidist
-    ## [1] TRUE
-    ## 
-    ## attr(,"class")
-    ## [1] "histogram"
+## Plot turnover vs. temperature trends
+
+Lines are ggplot smoother fits by
+    realm.
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 3132 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 3132 rows containing missing values (geom_point).
+
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20turnover%20v%20temp%20trend-1.png)<!-- -->
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 3132 rows containing non-finite values (stat_smooth).
+    
+    ## Warning: Removed 3132 rows containing missing values (geom_point).
+
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20turnover%20v%20temp%20trend-2.png)<!-- -->
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 4262 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 4262 rows containing missing values (geom_point).
+
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20turnover%20v%20temp%20trend-3.png)<!-- -->
+Trends are pretty symmetric around no trend in temperature, which
+implies warming or cooling drives similar degree of community turnover.
+
+## Compare covariates across realms
 
 ``` r
-trends[, hist(seas_comb.sc)]
+i <- trends[, !duplicated(STUDY_ID)]; sum(i)
 ```
 
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/center%20and%20scale-3.png)<!-- -->
-
-    ## $breaks
-    ##  [1] -2.0 -1.5 -1.0 -0.5  0.0  0.5  1.0  1.5  2.0  2.5  3.0  3.5  4.0  4.5
-    ## [15]  5.0  5.5  6.0
-    ## 
-    ## $counts
-    ##  [1]  1033  6796  9996  7839 11136 10131   407   466   566  1181   603
-    ## [12]   120    49     8     3     1
-    ## 
-    ## $density
-    ##  [1] 4.104500e-02 2.700308e-01 3.971789e-01 3.114731e-01 4.424754e-01
-    ##  [6] 4.025430e-01 1.617165e-02 1.851594e-02 2.248932e-02 4.692560e-02
-    ## [11] 2.395947e-02 4.768054e-03 1.946955e-03 3.178703e-04 1.192014e-04
-    ## [16] 3.973378e-05
-    ## 
-    ## $mids
-    ##  [1] -1.75 -1.25 -0.75 -0.25  0.25  0.75  1.25  1.75  2.25  2.75  3.25
-    ## [12]  3.75  4.25  4.75  5.25  5.75
-    ## 
-    ## $xname
-    ## [1] "seas_comb.sc"
-    ## 
-    ## $equidist
-    ## [1] TRUE
-    ## 
-    ## attr(,"class")
-    ## [1] "histogram"
+    ## [1] 332
 
 ``` r
-trends[, hist(tempave_comb.sc)]
+par(mfrow=c(2,3))
+beanplot(rarefyID_y ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Latitude (degN)', ll = 0.05)
+beanplot(tempave_comb ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature (degC)', ll = 0.05)
+beanplot(seas_comb ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Seasonality (degC)', ll = 0.05)
+beanplot(npp ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'NPP', ll = 0.05)
+beanplot(mass_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Mass (g)', ll = 0.05)
 ```
 
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/center%20and%20scale-4.png)<!-- -->
-
-    ## $breaks
-    ##  [1] -3.5 -3.0 -2.5 -2.0 -1.5 -1.0 -0.5  0.0  0.5  1.0  1.5  2.0  2.5
-    ## 
-    ## $counts
-    ##  [1]     1     5    10  2666  5184  7788 13242  7903  4441  2070  6617
-    ## [12]   408
-    ## 
-    ## $density
-    ##  [1] 3.973378e-05 1.986689e-04 3.973378e-04 1.059303e-01 2.059799e-01
-    ##  [6] 3.094467e-01 5.261548e-01 3.140161e-01 1.764577e-01 8.224893e-02
-    ## [11] 2.629184e-01 1.621138e-02
-    ## 
-    ## $mids
-    ##  [1] -3.25 -2.75 -2.25 -1.75 -1.25 -0.75 -0.25  0.25  0.75  1.25  1.75
-    ## [12]  2.25
-    ## 
-    ## $xname
-    ## [1] "tempave_comb.sc"
-    ## 
-    ## $equidist
-    ## [1] TRUE
-    ## 
-    ## attr(,"class")
-    ## [1] "histogram"
+    ## log="y" selected
 
 ``` r
-trends[, hist(npp.sc)]
+beanplot(speed_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Speed (km/hr)', ll = 0.05, log = '')
 ```
 
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/center%20and%20scale-5.png)<!-- -->
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/compare%20across%20realms-1.png)<!-- -->
+Marine are in generally warmer locations (seawater doesn’t freeze)
+Marine have much lower seasonality. Marine and freshwater have some very
+small masses (plankton), but much of dataset is similar to terrestrial.
+Marine has a lot of slow, crawling organisms, but land has plants. Land
+also has birds (fast).
 
-    ## $breaks
-    ##  [1] -1.5 -1.0 -0.5  0.0  0.5  1.0  1.5  2.0  2.5  3.0  3.5  4.0  4.5  5.0
-    ## [15]  5.5  6.0  6.5
-    ## 
-    ## $counts
-    ##  [1]  3838 13798 15770  8777  4760  1936  1602   944   695   534   315
-    ## [12]   161    91    55    37     1
-    ## 
-    ## $density
-    ##  [1] 0.1439771917 0.5176126346 0.5915894512 0.3292568556 0.1785647297
-    ##  [6] 0.0726263270 0.0600967851 0.0354128372 0.0260719511 0.0200322617
-    ## [11] 0.0118167836 0.0060396894 0.0034137375 0.0020632479 0.0013880032
-    ## [16] 0.0000375136
-    ## 
-    ## $mids
-    ##  [1] -1.25 -0.75 -0.25  0.25  0.75  1.25  1.75  2.25  2.75  3.25  3.75
-    ## [12]  4.25  4.75  5.25  5.75  6.25
-    ## 
-    ## $xname
-    ## [1] "npp.sc"
-    ## 
-    ## $equidist
-    ## [1] TRUE
-    ## 
-    ## attr(,"class")
-    ## [1] "histogram"
-
-``` r
-trends[, hist(mass_geomean.sc)]
-```
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/center%20and%20scale-6.png)<!-- -->
-
-    ## $breaks
-    ##  [1] -11 -10  -9  -8  -7  -6  -5  -4  -3  -2  -1   0   1   2   3   4
-    ## 
-    ## $counts
-    ##  [1]     1     0    52    35     0     3   162   955   976  2426 19667
-    ## [12] 19735  8622   441     3
-    ## 
-    ## $density
-    ##  [1] 1.884020e-05 0.000000e+00 9.796903e-04 6.594069e-04 0.000000e+00
-    ##  [6] 5.652059e-05 3.052112e-03 1.799239e-02 1.838803e-02 4.570632e-02
-    ## [11] 3.705302e-01 3.718113e-01 1.624402e-01 8.308527e-03 5.652059e-05
-    ## 
-    ## $mids
-    ##  [1] -10.5  -9.5  -8.5  -7.5  -6.5  -5.5  -4.5  -3.5  -2.5  -1.5  -0.5
-    ## [12]   0.5   1.5   2.5   3.5
-    ## 
-    ## $xname
-    ## [1] "mass_geomean.sc"
-    ## 
-    ## $equidist
-    ## [1] TRUE
-    ## 
-    ## attr(,"class")
-    ## [1] "histogram"
-
-``` r
-trends[, hist(speed_geomean.sc)]
-```
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/center%20and%20scale-7.png)<!-- -->
-
-    ## $breaks
-    ##  [1] -2.0 -1.5 -1.0 -0.5  0.0  0.5  1.0  1.5  2.0  2.5  3.0  3.5  4.0
-    ## 
-    ## $counts
-    ##  [1]  4492  8479  5032  2155 10592 14006  7044   746    68    20    11
-    ## [12]     4
-    ## 
-    ## $density
-    ##  [1] 0.1706395183 0.3220953864 0.1911527284 0.0818629034 0.4023628179
-    ##  [6] 0.5320518908 0.2675834299 0.0283386199 0.0025831450 0.0007597485
-    ## [11] 0.0004178617 0.0001519497
-    ## 
-    ## $mids
-    ##  [1] -1.75 -1.25 -0.75 -0.25  0.25  0.75  1.25  1.75  2.25  2.75  3.25
-    ## [12]  3.75
-    ## 
-    ## $xname
-    ## [1] "speed_geomean.sc"
-    ## 
-    ## $equidist
-    ## [1] TRUE
-    ## 
-    ## attr(,"class")
-    ## [1] "histogram"
-
-### Model choice: Jaccard turnover trend vs. temperature trend (across all years)
+## Model choice: Jaccard turnover temporal trend vs. temperature trend
 
 First examine how many data points are available
 
@@ -503,7 +248,18 @@ sum(i)
 
     ## [1] 49471
 
-Then choose the variance structure
+### Choose the variance structure
+
+Try combinations of
+
+  - variance scaled to a power of the number of years in the community
+    time-series
+  - variance scaled to a power of the abs temperature trend
+  - random intercept for STUDY\_ID
+  - random slope (abs temperature trend) for STUDY\_ID
+  - random intercept for rarefyID (for overdispersion)
+
+And choose the one with lowest AIC
 
 ``` r
 # fit models for variance structure
@@ -548,8 +304,19 @@ Chooses the random slopes & intercepts, overdispersion, and variance
 scaled to number of years. We haven’t dealt with potential testing on
 the boundary issues here yet.
 
-Finally, compare fixed effects among
-models
+### Compare fixed effects among models
+
+Try interactions of abs temperature trend with each covariate:
+
+  - realm
+  - average
+temperature
+  - seasonality
+  - speed
+  - mass
+  - NPP
+
+<!-- end list -->
 
 ``` r
 i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb, mass_geomean, speed_geomean)]
@@ -659,7 +426,7 @@ summary(mods[[which.min(aics)]])
 Chooses a model with temperature trend and speed, but maybe not the
 interaction
 
-### Validate the chosen model
+## Examine the chosen model
 
 ``` r
 bmod <- update(mods[[7]], method = 'REML') # re-fit with REML
@@ -768,7 +535,7 @@ temperature trend, but may be created by so few data points in certain
 locations on the
 axis
 
-### Plot the chosen model
+## Plot the chosen model
 
 ``` r
 ggplot(data = trends[i,], aes(x = speed_geomean.sc, y = Jtutrend, color = REALM)) +
@@ -818,3 +585,9 @@ ggplot(newdat, aes(temptrend_comb_allyr, preds, color = grp, group = grp)) +
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/examine%20model-5.png)<!-- -->
+
+# To do
+
+  - plot residuals on top of temperature relationship
+  - plot turnover vs. speed, look for outliers
+  - other temporal turnover metrics (Jaccard total, M-H)
