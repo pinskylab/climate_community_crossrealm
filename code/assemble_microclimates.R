@@ -22,6 +22,9 @@ library(maps) # for a plot at the end
 tempbio1 <- raster("wc2.0_bio_30s_01.tif")   ##downloaded from site
 temp_sstmean <- load_layers("BO_sstmean")
 
+# load BioTime change
+load('data/biotime_blowes/bt_malin.Rdata')
+trends <- bt_malin[!duplicated(bt_malin$rarefyID), c('REALM', 'STUDY_ID', 'rarefyID', 'rarefyID_x', 'rarefyID_y')]; rm(bt_malin) # rename to bt
 
 ##for terrestrial & freshwater
 ##get coords from rarefyIDs ####
@@ -245,7 +248,12 @@ ggplot(world, aes(x = long, y = lat, group = group)) +
   geom_polygon(fill = 'lightgray', color = 'white', size = 0.1) +
   geom_point(data = Temp_sd, aes(rarefyID_x, rarefyID_y, color = !is.na(Temp_sd20km), group = NA), size = 0.2, alpha = 0.4)
 
+# look at missing data by realm
+Temp_sd2 <- merge(Temp_sd, trends[, c('rarefyID', 'REALM')], by= 'rarefyID')
 
-##end
+ggplot(world, aes(x = long, y = lat, group = group)) +
+  geom_polygon(fill = 'lightgray', color = 'white', size = 0.1) +
+  geom_point(data = subset(Temp_sd2, REALM=='Marine'), aes(rarefyID_x, rarefyID_y, color = !is.na(Temp_sd20km), group = NA), size = 0.2, alpha = 0.4) +
+  coord_cartesian(xlim = c(-130, -100), ylim = c(30,45)) # what are they doing on land?
 
 
