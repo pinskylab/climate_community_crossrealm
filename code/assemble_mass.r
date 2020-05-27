@@ -33,6 +33,8 @@ load('data/biotime_blowes/bt_grid_spp_list.Rdata') # loads bt_grid_spp_list. thi
 btspp <- data.table(bt_grid_spp_list); rm(bt_grid_spp_list) # rename to btspp
 btspp <- merge(btspp, bt[!duplicated(rarefyID), .(rarefyID, taxa_mod)], by = 'rarefyID') # add taxa_mod to spp list
 
+btspp[, length(unique(Species))] # 26289 species
+
 #################
 # Assemble data
 #################
