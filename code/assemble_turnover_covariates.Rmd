@@ -47,6 +47,16 @@ speed <- fread('output/speed_byrarefyID.csv.gz', drop = 1)
 speed[, ':='(STUDY_ID = NULL, REALM = NULL, taxa_mod = NULL)] # remove unnecessary columns 
 ```
 
+### Plot a turnover example
+```{r plot turnover}
+bt[, .(n = .N), by = rarefyID][n > 50,]
+
+ggplot(bt[rarefyID == '339_1085477'], aes(YEAR, Jtu_base)) +
+    geom_point() +
+    geom_smooth(method = 'lm') +
+    xlab('Year') + ylab('Jaccard dissimilarity')
+```
+
 ### Assemble dataset of trends (turnover and temperature) and covariates
 ```{r assemble trends}
 # calculate temporal turnover
