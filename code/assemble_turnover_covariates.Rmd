@@ -1,5 +1,5 @@
 ---
-title: "Turnover vs. temperature data prep"
+title: "Turnover covariate data prep"
 output: 
     html_notebook: default
     #html_document: default
@@ -19,21 +19,11 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStu
 load('data/biotime_blowes/bt_malin.Rdata')
 bt <- data.table(bt_malin); rm(bt_malin)
 
-# Temperature trends from CRU TS (on land)
-tmptrendbyyr <- fread('output/cruts_tmptrend_byyear.csv.gz', drop = 1)
-tmptrendallyr <- fread('output/cruts_tmptrend_allyear.csv.gz', drop = 1)
+# Temperature average, trends, and seasonality
+temperature <- fread('output/temperature_byrarefyID.csv.gz')
 
-# Temperature trends from ERSST (ocean)
-ssttrendbyyr <- fread('output/ersst_ssttrend_byyear.csv.gz', drop = 1)
-ssttrendallyr <- fread('output/ersst_ssttrend_allyear.csv.gz', drop = 1)
-
-# Seasonality
-seascru <- fread('output/cruts_seas.csv.gz', drop = 1)
-seasersst <- fread('output/ersst_seas.csv.gz', drop = 1)
-
-# Average temperature
-tavecru <- fread('output/cruts_tmpave_allyear.csv.gz', drop = 1)
-taveersst <- fread('output/ersst_sstave_allyear.csv.gz', drop = 1)
+# microclimates
+microclim <- fread('output/microclimates.csv.gz', drop = 1)
 
 # NPP
 npp <- fread('output/npplandocean.csv.gz')
@@ -45,6 +35,16 @@ bs[, ':='(STUDY_ID = NULL, REALM = NULL, taxa_mod = NULL)] # remove unnecessary 
 # Mobility
 speed <- fread('output/speed_byrarefyID.csv.gz', drop = 1)
 speed[, ':='(STUDY_ID = NULL, REALM = NULL, taxa_mod = NULL)] # remove unnecessary columns 
+
+# Lifespan
+lsp <- fread('output/lifespan_byrarefyID.csv.gz')
+
+# CTI
+cti <- fread('output/cti_byrarefyID.csv.gz')
+    
+# consumer vs. producer
+cons <- fread('output/metab_feed_byspecies.csv.gz')
+consfrac <- cons[, .(consfrac = sum(feeding == 'consumer')/.N), by = rarefyID] # fraction of species in each study that are consumers
 ```
 
 ### Plot a turnover example
@@ -57,7 +57,7 @@ ggplot(bt[rarefyID == '339_1085477'], aes(YEAR, Jtu_base)) +
     xlab('Year') + ylab('Jaccard dissimilarity')
 ```
 
-### Assemble dataset of trends (turnover and temperature) and covariates
+### Assemble dataset of beta diversity trends (temporal turnover) and covariates
 ```{r assemble trends}
 # calculate temporal turnover
 calctrend <- function(y, YEAR, nm = 'y'){ # function to calc trends
@@ -85,36 +85,16 @@ trends <- merge(trends, nyrBT)
 rm(trends2, trends3, trends4, nyrBT)
 ```
 
-Find a minimum trend SE to use in cases where missing
-```{r find minse}
-trends[Jtutrend_se>0, hist(log10(Jtutrend_se))] # plot of SE on the trends
-trends[Jtutrend_se>0, plot(nyrBT, Jtutrend_se, log = 'y')]
-
-fillse <- trends[Jtutrend_se > 1e-10, mean(Jtutrend_se)] # find mean non-zero se, avoiding the perfect fits
-trends[, Jtutrend_se_nz := Jtutrend_se] # create an SE that is not zero or NA
-trends[is.na(Jtutrend_se_nz), Jtutrend_se_nz := fillse] 
-trends[Jtutrend_se_nz < 1e-10, Jtutrend_se_nz := fillse] 
-
-trends[, hist(log10(1/(Jtutrend_se_nz^2)))] # inverse variance, used for weighting
-trends[, plot(nyrBT, 1/(Jtutrend_se_nz^2), log = 'y')]
-
-```
-
 ```{r add covariate data}
-# add temperature trends
-trends <- merge(trends, tmptrendbyyr, all.x = TRUE, by = 'rarefyID') # add temperature trend (years that match biotime)
-trends <- merge(trends, tmptrendallyr[, .(rarefyID, tmptrendallyr)], all.x = TRUE, by = 'rarefyID') # add temperature trend (all years from first to last of each time-series)
-trends <- merge(trends, ssttrendbyyr[, .(rarefyID, ssttrendbyyr)], all.x = TRUE, by = 'rarefyID') # sst
-trends <- merge(trends, ssttrendallyr[, .(rarefyID, ssttrendallyr)], all.x = TRUE, by = 'rarefyID')
-
 # add covariates
-trends <- merge(trends, seascru[, .(rarefyID, seas_cruts)], all.x = TRUE, by = 'rarefyID') # seasonality from CRU TS
-trends <- merge(trends, seasersst[, .(rarefyID, seas_ersst)], all.x = TRUE, by = 'rarefyID') # seasonality from ERSST
-trends <- merge(trends, tavecru[, .(rarefyID, tmpaveallyr)], all.x = TRUE, by = 'rarefyID')
-trends <- merge(trends, taveersst[, .(rarefyID, sstaveallyr)], all.x = TRUE, by = 'rarefyID')
+trends <- merge(trends, temperature[, .(rarefyID, tempave, tempave_metab, temptrend, seas)], all.x = TRUE, by = 'rarefyID') # temperature ave, ave metabolic, trend, and seasonality
+trends <- merge(trends, microclim[, .(rarefyID, microclim = Temp_sd20km)], all.x = TRUE, by = 'rarefyID') # microclimates
 trends <- merge(trends, npp, all.x = TRUE, by = 'rarefyID') # npp
 trends <- merge(trends, bs[, .(rarefyID, mass_mean, mass_geomean, mass_sd, mass_geosd)], all.x = TRUE) # body size mass (g)
 trends <- merge(trends, speed[, .(rarefyID, speed_mean, speed_geomean, speed_sd, speed_geosd)], all.x = TRUE) # speed (km/hr)
+trends <- merge(trends, lsp[, .(rarefyID, lifespan_mean, lifespan_geomean, lifespan_sd, lifespan_geosd)], all.x = TRUE) # lifespan (yr)
+trends <- merge(trends, cti[, .(rarefyID, thermal_bias)], all.x = TRUE) # thermal bias (degC)
+trends <- merge(trends, consfrac, all.x = TRUE) # fraction consumers
 ```
 
 Do some basic checks
@@ -140,53 +120,9 @@ ggplot(trends, aes(Jbetatrend, Horntrend)) +
 
 ```
 
-Temperature trends are correlated, though complicated for seasonality (at the poles, low in the ocean and high on land)
-```{r basic graphs of temperatures}
-# are the temperature trends correlated?
-# compare trends calculated from all sampled years in BioTime vs. all years from min to max year in BioTime
-ggplot(trends, aes(tmptrendallyr, tmptrendbyyr)) +
-    geom_point() +
-    geom_smooth()
-
-ggplot(trends, aes(ssttrendallyr, ssttrendbyyr)) +
-    geom_point() +
-    geom_smooth()
-
-# compare temperature trends from CRU TS vs ERSST
-ggplot(trends, aes(tmptrendallyr, ssttrendbyyr)) + # ERSST more muted at fastest rates of change in CRU TS
-    geom_point() +
-    geom_smooth()
-
-# average temperature from CRU TS and ERSST
-ggplot(trends, aes(tmpaveallyr, sstaveallyr, color = rarefyID_y)) + # ERSST more muted at fastest rates of change in CRU TS
-    geom_point() +
-    geom_smooth()
-
-# compare seasonality from CRU TS and ERSST
-ggplot(trends, aes(seas_cruts, seas_ersst, color = rarefyID_y)) + # ERSST more muted at fastest rates of change in CRU TS
-    geom_point() +
-    geom_smooth()
-```
-
-### Combine CRU TS and ERSST
-```{r combine cruts and ersst}
-# temperature trend
-trends[ , temptrend_comb_allyr := tmptrendallyr] # CRU TS for land and freshwater
-trends[REALM == 'Marine', temptrend_comb_allyr := ssttrendallyr] # ERSST for marine
-
-# average temperature
-trends[, tempave_comb := tmpaveallyr]
-trends[REALM == 'Marine', tempave_comb := sstaveallyr]
-
-# seasonality
-trends[, seas_comb := seas_cruts]
-trends[REALM == 'Marine', seas_comb := seas_ersst]
-```
-
-
 
 ### Write out
 ```{r write out}
-write.csv(trends, gzfile('output/turnover_w_covariates.csv.gz'))
+write.csv(trends, gzfile('output/turnover_w_covariates.csv.gz'), row.names = FALSE)
 ```
 

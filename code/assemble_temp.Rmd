@@ -25,9 +25,8 @@ btspp <- merge(btspp, bt[!duplicated(rarefyID), .(rarefyID, taxa_mod)], by = 'ra
 
 btspp[, length(unique(Species))] # 26289 species
 
-# phylogeny info
-phylo <- fread('output/taxonomy.csv.gz')
-phylo[, ':='(gateway.masses = NULL, V1 = NULL, X = NULL, NA. = NULL)] # remove extraneous columns
+# endo vs. ectotherm classifications by species
+endo <- fread('output/metab_feed.csv.gz')
 
 # CRU TS mean temp by year
 n = nc_open('dataDL/cruts/cru_ts4.03.1901.2018.tmp.dat.nc') # Open the netCDF file. Won't work on .gz for some reason
@@ -167,30 +166,6 @@ btallyrsersst <- merge(btallyrsersst, ersstyr, by = c('lat_ersst', 'lon_ersst', 
 # Calculations by rarefyID
 Find fraction ectotherm vs. mammal vs. bird by rarefyID
 ```{r endotherm fractions}
-# merge taxonomy and mass
-phylo[, original_name := gsub(' ', '_', original_name)] # add _ back to name
-endo <- merge(btspp[, .(rarefyID, original_name = Species, REALM, STUDY_ID, taxa_mod)], phylo, 
-             all.x = TRUE, by = "original_name")
-
-# classify by bird vs. mammal vs. ectotherm. Assume ecto if not otherwise known.
-endo[, metab := NA_character_]
-endo[class == 'Aves', metab := 'bird']
-endo[class == 'Mammalia', metab := 'mamm']
-endo[is.na(metab) & is.na(class) & taxa_mod == 'Birds', metab := 'bird'] # use taxa_mod if phylum not available
-endo[is.na(metab) & is.na(class) & taxa_mod == 'Mammals', metab := 'mamm']
-endo[is.na(metab), metab := 'ecto']
-
-# examine
-endo[, table(taxa_mod, metab)]
-
-endo[taxa_mod == 'Mammals' & metab != 'mamm', ] # seem correct
-endo[taxa_mod == 'Birds' & metab != 'bird', ][!duplicated(original_name)] # seem correct
-endo[taxa_mod == 'Fish' & metab != 'ecto', ][!duplicated(original_name)] # seem correct
-endo[taxa_mod == 'Plant' & metab != 'ecto', ][!duplicated(original_name)] # wrong
-
-# fix known errors
-endo[original_name == 'Phyllanthus_emblica', metab := 'ecto']
-
 # summarize by rarefyID
 endofrac <- endo[, .(mammfrac = sum(metab == 'mamm')/.N, birdfrac = sum(metab == 'bird')/.N, ectofrac = sum(metab == 'ecto')/.N),
                  by = .(rarefyID)]

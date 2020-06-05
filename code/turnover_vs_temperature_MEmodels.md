@@ -115,26 +115,122 @@ trends[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'
 Log-transform some variables, then center and scale. Do they look ok?
 
 ``` r
-trends[, temptrend_comb_allyr.sc := scale(temptrend_comb_allyr)]
-trends[, temptrend_comb_allyr_abs.sc := scale(log(abs(temptrend_comb_allyr)))]
-trends[, seas_comb.sc := scale(seas_comb)]
-trends[, tempave_comb.sc := scale(tempave_comb)]
-trends[, npp.sc := scale(npp)]
-trends[, mass_geomean.sc := scale(log(mass_geomean))]
-trends[, speed_geomean.sc := scale(log(speed_geomean+1))]
+trends[, tempave.sc := scale(tempave)]
+trends[, tempave_metab.sc := scale(tempave_metab)]
+trends[, seas.sc := scale(seas)]
+trends[, microclim.sc := scale(log(microclim))]
+trends[, temptrend.sc := scale(temptrend)]
+trends[, temptrend_abs.sc := scale(log(abs(temptrend)))]
+trends[, npp.sc := scale(log(npp))]
+trends[, mass.sc := scale(log(mass_geomean))]
+trends[, speed.sc := scale(log(speed_geomean+1))]
+trends[, lifespan.sc := scale(log(lifespan_geomean))]
+trends[, thermal_bias.sc := scale(thermal_bias)]
+trends[, consumerfrac.sc := scale(consfrac)]
 
 # histograms to examine
-par(mfrow = c(3,3))
-invisible(trends[, hist(temptrend_comb_allyr.sc, main = 'Temperature trend (°C/yr)')])
-invisible(trends[, hist(temptrend_comb_allyr_abs.sc, main = 'log abs(Temperature trend) (°C/yr)')])
-invisible(trends[, hist(seas_comb.sc, main = 'Seasonality (°C)')])
-invisible(trends[, hist(tempave_comb.sc, main = 'Temperature (°C)')])
-invisible(trends[, hist(npp.sc, main = 'Net primary productivity')])
-invisible(trends[, hist(mass_geomean.sc, main = 'log Mass (g)')])
-invisible(trends[, hist(speed_geomean.sc, main = 'log Speed (km/hr)')])
+par(mfrow = c(3,4))
+invisible(trends[, hist(tempave.sc, main = 'Environmental temperature (°C)')])
+invisible(trends[, hist(tempave_metab.sc, main = 'Metabolic temperature (°C)')])
+invisible(trends[, hist(seas.sc, main = 'Seasonality (°C)')])
+invisible(trends[, hist(microclim.sc, main = 'log Microclimates (°C)')])
+invisible(trends[, hist(temptrend.sc, main = 'Temperature trend (°C/yr)')])
+invisible(trends[, hist(temptrend_abs.sc, main = 'log abs(Temperature trend) (°C/yr)')])
+invisible(trends[, hist(npp.sc, main = 'log Net primary productivity')])
+invisible(trends[, hist(mass.sc, main = 'log Mass (g)')])
+invisible(trends[, hist(speed.sc, main = 'log Speed (km/hr)')])
+invisible(trends[, hist(lifespan.sc, main = 'log Lifespan (yr)')])
+invisible(trends[, hist(thermal_bias.sc, main = 'Thermal bias (°C)')])
+invisible(trends[, hist(consumerfrac.sc, main = 'Consumers (fraction)')])
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/center%20and%20scale-1.png)<!-- -->
+
+First examine how many data points are available
+
+``` r
+# the cases we can compare
+cat('Number of data points available:\n')
+```
+
+    ## Number of data points available:
+
+``` r
+apply(trends[, .(Jtutrend, temptrend.sc, tempave_metab.sc, REALM, seas.sc, microclim.sc, npp.sc, mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, thermal_bias.sc)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
+```
+
+    ##         Jtutrend     temptrend.sc tempave_metab.sc            REALM 
+    ##            53467            50335            50335            53467 
+    ##          seas.sc     microclim.sc           npp.sc          mass.sc 
+    ##            50335            52262            53314            53078 
+    ##         speed.sc      lifespan.sc  consumerfrac.sc  thermal_bias.sc 
+    ##            52649            51797            47988            49624
+
+``` r
+i <- trends[, complete.cases(Jtutrend, temptrend.sc, tempave_metab.sc, REALM, seas.sc, microclim.sc, npp.sc, mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, thermal_bias.sc)]
+cat('Overall:\n')
+```
+
+    ## Overall:
+
+``` r
+sum(i)
+```
+
+    ## [1] 43559
+
+### Choose the variance structure
+
+Try combinations of
+
+  - variance scaled to a power of the number of years in the community
+    time-series
+  - variance scaled to a power of the abs temperature trend
+  - random intercept for STUDY\_ID
+  - random slope (abs temperature trend) for STUDY\_ID
+  - random intercept for rarefyID (for overdispersion)
+
+And choose the one with lowest AIC
+
+``` r
+# fit models for variance structure
+fixed <- formula(Jtutrend ~ REALM + tempave_metab.sc + seas.sc + microclim.sc + npp.sc + temptrend.sc +
+                     mass.sc + speed.sc + lifespan.sc + consumerfrac.sc + thermal_bias.sc)
+i <- trends[, complete.cases(Jtutrend, REALM, tempave_metab.sc, seas.sc, microclim.sc, npp.sc, temptrend.sc,
+                             mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, thermal_bias.sc)]
+mods <- vector('list', 0)
+mods[[1]] <- gls(fixed, data = trends[i,])
+mods[[2]] <- gls(fixed, data = trends[i,], weights = varPower(-0.5, ~nyrBT))
+mods[[3]] <- gls(fixed, data = trends[i,], weights = varPower(0.5, ~ abs(temptrend)))
+
+mods[[4]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, control = lmeControl(opt = "optim"))
+mods[[5]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID, control = lmeControl(opt = "optim"))
+
+mods[[6]] <- lme(fixed, data = trends[i,], random = ~temptrend_abs.sc | STUDY_ID)
+mods[[7]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)) # includes overdispersion. new formula so that random slope is only for study level (not enough data to extend to rarefyID).
+
+mods[[8]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, weights = varPower(-0.5, ~nyrBT))
+mods[[9]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID, weights = varPower(-0.5, ~nyrBT))
+mods[[10]] <- lme(fixed, data = trends[i,], random = ~temptrend_abs.sc|STUDY_ID, weights = varPower(-0.5, ~nyrBT))
+mods[[11]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1), weights = varPower(-0.5, ~nyrBT))
+
+mods[[12]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, weights = varPower(-0.5, ~abs(temptrend)))
+mods[[13]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID, weights = varPower(-0.5, ~abs(temptrend)))
+mods[[14]] <- lme(fixed, data = trends[i,], random = ~temptrend_abs.sc|STUDY_ID, weights = varPower(-0.5, ~abs(temptrend)))
+mods[[15]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1), weights = varPower(-0.5, ~abs(temptrend)))
+
+aics <- sapply(mods, AIC)
+minaics <- aics - min(aics)
+minaics
+```
+
+    ##  [1] 40894.193939 14779.149044 33681.552359 35003.152188 35005.152188
+    ##  [6] 29874.125281 29876.125282  3323.064861  3307.416479     4.542291
+    ## [11]     0.000000 27707.938936 24132.563076 25160.466709 21909.263091
+
+Chooses the random slopes & intercepts, overdispersion, and variance
+scaled to number of years. We haven’t dealt with potential testing on
+the boundary issues here yet.
 
 # Results
 
@@ -194,8 +290,21 @@ i <- trends[, !duplicated(STUDY_ID)]; sum(i)
 ``` r
 par(mfrow=c(2,3))
 beanplot(rarefyID_y ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Latitude (degN)', ll = 0.05)
-beanplot(tempave_comb ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature (degC)', ll = 0.05)
-beanplot(seas_comb ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Seasonality (degC)', ll = 0.05)
+beanplot(tempave ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature (degC)', ll = 0.05)
+beanplot(tempave_metab ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Metabolic Temperature (degC)', ll = 0.05)
+beanplot(seas ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Seasonality (degC)', ll = 0.05)
+beanplot(microclim ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Microclimates (degC)', ll = 0.05)
+```
+
+    ## log="y" selected
+
+``` r
+beanplot(temptrend ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature trend (degC/yr)', ll = 0.05)
+```
+
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/compare%20across%20realms-1.png)<!-- -->
+
+``` r
 beanplot(npp ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'NPP', ll = 0.05)
 beanplot(mass_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Mass (g)', ll = 0.05)
 ```
@@ -204,150 +313,63 @@ beanplot(mass_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#C
 
 ``` r
 beanplot(speed_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Speed (km/hr)', ll = 0.05, log = '')
+beanplot(lifespan_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Lifespan (yr)', ll = 0.05, log = '')
+beanplot(thermal_bias ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Thermal bias (degC)', ll = 0.05, log = '')
+#beanplot(consfrac ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Consumers (fraction)', ll = 0.05, log = '') # too sparse
 ```
 
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/compare%20across%20realms-1.png)<!-- -->
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/compare%20across%20realms-2.png)<!-- -->
 Marine are in generally warmer locations (seawater doesn’t freeze)
 Marine have much lower seasonality. Marine and freshwater have some very
 small masses (plankton), but much of dataset is similar to terrestrial.
 Marine has a lot of slow, crawling organisms, but land has plants. Land
 also has birds (fast).
 
-## Model choice: Jaccard turnover temporal trend vs. temperature trend
-
-First examine how many data points are available
-
-``` r
-# the cases we can compare
-cat('Number of data points available:\n')
-```
-
-    ## Number of data points available:
-
-``` r
-apply(trends[, .(Jtutrend, temptrend_comb_allyr, tempave_comb, REALM, seas_comb, npp, mass_geomean, speed_geomean)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
-```
-
-    ##             Jtutrend temptrend_comb_allyr         tempave_comb 
-    ##                53467                50335                50335 
-    ##                REALM            seas_comb                  npp 
-    ##                53467                50335                53314 
-    ##         mass_geomean        speed_geomean 
-    ##                53078                52649
-
-``` r
-i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb, mass_geomean, speed_geomean)]
-cat('Overall:\n')
-```
-
-    ## Overall:
-
-``` r
-sum(i)
-```
-
-    ## [1] 49471
-
-### Choose the variance structure
-
-Try combinations of
-
-  - variance scaled to a power of the number of years in the community
-    time-series
-  - variance scaled to a power of the abs temperature trend
-  - random intercept for STUDY\_ID
-  - random slope (abs temperature trend) for STUDY\_ID
-  - random intercept for rarefyID (for overdispersion)
-
-And choose the one with lowest AIC
-
-``` r
-# fit models for variance structure
-fixed <- formula(Jtutrend ~ temptrend_comb_allyr_abs.sc*REALM + 
-                     temptrend_comb_allyr_abs.sc*tempave_comb + 
-                     temptrend_comb_allyr_abs.sc*seas_comb + 
-                     temptrend_comb_allyr_abs.sc*npp + 
-                     temptrend_comb_allyr_abs.sc*mass_geomean + 
-                     temptrend_comb_allyr_abs.sc*speed_geomean)
-i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb, mass_geomean, speed_geomean)]
-mods <- vector('list', 0)
-mods[[1]] <- gls(fixed, data = trends[i,])
-mods[[2]] <- gls(fixed, data = trends[i,], weights = varPower(-0.5, ~nyrBT))
-mods[[3]] <- gls(fixed, data = trends[i,], weights = varPower(0.5, ~ abs(temptrend_comb_allyr)))
-
-mods[[4]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, control = lmeControl(opt = "optim"))
-mods[[5]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID, control = lmeControl(opt = "optim"))
-
-mods[[6]] <- lme(fixed, data = trends[i,], random = ~temptrend_comb_allyr_abs.sc | STUDY_ID)
-mods[[7]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ temptrend_comb_allyr_abs.sc, rarefyID = ~1)) # includes overdispersion. new formula so that random slope is only for study level (not enough data to extend to rarefyID).
-
-mods[[8]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, weights = varPower(-0.5, ~nyrBT))
-mods[[9]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID, weights = varPower(-0.5, ~nyrBT))
-mods[[10]] <- lme(fixed, data = trends[i,], random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, weights = varPower(-0.5, ~nyrBT))
-mods[[11]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ temptrend_comb_allyr_abs.sc, rarefyID = ~1), weights = varPower(-0.5, ~nyrBT))
-
-mods[[12]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, weights = varPower(-0.5, ~abs(temptrend_comb_allyr)))
-mods[[13]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID, weights = varPower(-0.5, ~abs(temptrend_comb_allyr)))
-mods[[14]] <- lme(fixed, data = trends[i,], random = ~temptrend_comb_allyr_abs.sc|STUDY_ID, weights = varPower(-0.5, ~abs(temptrend_comb_allyr)))
-mods[[15]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ temptrend_comb_allyr_abs.sc, rarefyID = ~1), weights = varPower(-0.5, ~abs(temptrend_comb_allyr)))
-
-aics <- sapply(mods, AIC)
-minaics <- aics - min(aics)
-minaics
-```
-
-    ##  [1] 48445.19140 18222.58517 41627.12157 38675.44804 38677.44804
-    ##  [6] 37786.50724 37788.50724  1765.08077  1588.13774    20.25581
-    ## [11]     0.00000 32399.98390 28678.50831 31558.81180 27907.09088
-
-Chooses the random slopes & intercepts, overdispersion, and variance
-scaled to number of years. We haven’t dealt with potential testing on
-the boundary issues here yet.
-
-### Compare fixed effects among models
-
-Try interactions of abs temperature trend with each covariate:
+## Model choice: Jaccard turnover temporal trend vs. covariates
 
   - realm
-  - average
-temperature
+  - average metabolic temperature
   - seasonality
+  - microclimates
+  - NPP
   - speed
   - mass
-  - NPP
+  - lifespan
+  - consumer vs. producer
+  - thermal
+bias
 
 <!-- end list -->
 
 ``` r
-i <- trends[, complete.cases(Jtutrend, temptrend_comb_allyr, REALM, seas_comb, npp, tempave_comb, mass_geomean, speed_geomean)]
+i <- trends[, complete.cases(Jtutrend, REALM, tempave_metab.sc, seas.sc, microclim.sc, npp.sc,
+                             mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, thermal_bias.sc)]
 
-randef <- list(STUDY_ID = ~ temptrend_comb_allyr_abs.sc, rarefyID = ~1)
+randef <- list(STUDY_ID = ~ 1, rarefyID = ~1)
 varef <- varPower(-0.5, ~nyrBT)
 
 mods <- vector('list', 0)
 mods[[1]] <- lme(Jtutrend ~ 1, random = randef, 
                  weights = varef, data = trends[i,], method = 'ML')
-mods[[2]] <- lme(Jtutrend ~ temptrend_comb_allyr.sc, random = randef, 
+mods[[2]] <- lme(Jtutrend ~ REALM, random = randef, 
                  weights = varef, data = trends[i,], method = 'ML')
-mods[[3]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc, random = randef, 
+mods[[3]] <- lme(Jtutrend ~ tempave_metab.sc, random = randef, 
                  weights = varef, data = trends[i,], method = 'ML')
-mods[[4]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * REALM, random = randef, 
+mods[[4]] <- lme(Jtutrend ~ seas.sc, random = randef, 
                  weights = varef, data = trends[i,], method = 'ML')
-mods[[5]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * tempave_comb.sc, random = randef, 
+mods[[5]] <- lme(Jtutrend ~ microclim.sc, random = randef, 
                  weights = varef, data = trends[i,], method = 'ML')
-mods[[6]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * seas_comb.sc, random = randef, 
+mods[[6]] <- lme(Jtutrend ~ npp.sc, random = randef, 
                  weights = varef, data = trends[i,], method = 'ML')
-mods[[7]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * speed_geomean.sc, random = randef, 
+mods[[7]] <- lme(Jtutrend ~ speed.sc, random = randef, 
                  weights = varef, data = trends[i,], method = 'ML')
-mods[[8]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * mass_geomean.sc, random = randef, 
+mods[[8]] <- lme(Jtutrend ~ mass.sc, random = randef, 
                  weights = varef, data = trends[i,], method = 'ML')
-mods[[9]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc * npp.sc, random = randef, 
+mods[[9]] <- lme(Jtutrend ~ lifespan.sc, random = randef, 
                  weights = varef, data = trends[i,], method = 'ML')
-
-mods[[10]] <- lme(Jtutrend ~ temptrend_comb_allyr_abs.sc + speed_geomean.sc, random = randef, 
+mods[[10]] <- lme(Jtutrend ~ consumerfrac.sc, random = randef, 
                  weights = varef, data = trends[i,], method = 'ML')
-
-mods[[11]] <- lme(Jtutrend ~ speed_geomean.sc, random = randef, 
+mods[[11]] <- lme(Jtutrend ~ thermal_bias.sc, random = randef, 
                  weights = varef, data = trends[i,], method = 'ML')
 
 # examine models
@@ -360,16 +382,15 @@ cat('AIC:\n')
 aics <- sapply(mods, AIC) - min(sapply(mods, AIC)); aics
 ```
 
-    ##  [1] 137.2464752 139.0933902 102.0253274  82.1151257  88.3846613
-    ##  [6] 100.6581440   0.1344852  57.3818067  96.4063838   0.0000000
-    ## [11]  34.9180486
+    ##  [1] 70.044979 54.468409 69.975536 71.059149 37.894461  5.195981 19.339194
+    ##  [8]  0.000000 63.511457 64.818691 69.745851
 
 ``` r
 cat(paste0('\nChose model ', which.min(aics), ': ', paste0(mods[[which.min(aics)]]$call$fixed[c(2,1,3)], collapse = ' '), '\n'))
 ```
 
     ## 
-    ## Chose model 10: Jtutrend `~` temptrend_comb_allyr_abs.sc + speed_geomean.sc
+    ## Chose model 8: Jtutrend `~` mass.sc
 
 ``` r
 cat('\nModel terms:\n')
@@ -384,102 +405,231 @@ summary(mods[[which.min(aics)]])
 
     ## Linear mixed-effects model fit by maximum likelihood
     ##  Data: trends[i, ] 
-    ##         AIC       BIC  logLik
-    ##   -153128.4 -153049.1 76573.2
+    ##         AIC       BIC   logLik
+    ##   -125559.6 -125507.5 62785.81
     ## 
     ## Random effects:
-    ##  Formula: ~temptrend_comb_allyr_abs.sc | STUDY_ID
-    ##  Structure: General positive-definite, Log-Cholesky parametrization
-    ##                             StdDev     Corr  
-    ## (Intercept)                 0.05418508 (Intr)
-    ## temptrend_comb_allyr_abs.sc 0.01890756 0.457 
+    ##  Formula: ~1 | STUDY_ID
+    ##         (Intercept)
+    ## StdDev:  0.05912184
     ## 
     ##  Formula: ~1 | rarefyID %in% STUDY_ID
-    ##         (Intercept)  Residual
-    ## StdDev: 0.002242457 0.3161294
+    ##         (Intercept) Residual
+    ## StdDev: 0.001206208 0.345842
     ## 
     ## Variance function:
     ##  Structure: Power of variance covariate
     ##  Formula: ~nyrBT 
     ##  Parameter estimates:
     ##     power 
-    ## -1.255242 
-    ## Fixed effects: Jtutrend ~ temptrend_comb_allyr_abs.sc + speed_geomean.sc 
-    ##                                  Value   Std.Error    DF   t-value p-value
-    ## (Intercept)                 0.04468975 0.004104368 49262 10.888340       0
-    ## temptrend_comb_allyr_abs.sc 0.01378307 0.002073437 49262  6.647447       0
-    ## speed_geomean.sc            0.00677595 0.000662523 49262 10.227497       0
+    ## -1.299339 
+    ## Fixed effects: Jtutrend ~ mass.sc 
+    ##                   Value   Std.Error    DF   t-value p-value
+    ## (Intercept)  0.04062228 0.004742349 43375  8.565855       0
+    ## mass.sc     -0.00697705 0.000819578 43375 -8.512981       0
     ##  Correlation: 
-    ##                             (Intr) tm___.
-    ## temptrend_comb_allyr_abs.sc  0.302       
-    ## speed_geomean.sc            -0.033  0.003
+    ##         (Intr)
+    ## mass.sc 0.189 
     ## 
     ## Standardized Within-Group Residuals:
-    ##        Min         Q1        Med         Q3        Max 
-    ## -7.8881796 -0.2609638  0.1015781  0.5795188  6.7819934 
+    ##         Min          Q1         Med          Q3         Max 
+    ## -9.33802335 -0.24004997  0.09812242  0.60777708  6.44613610 
     ## 
-    ## Number of Observations: 49471
+    ## Number of Observations: 43559
     ## Number of Groups: 
     ##               STUDY_ID rarefyID %in% STUDY_ID 
-    ##                    207                  49471
+    ##                    183                  43559
 
-Chooses a model with temperature trend and speed, but maybe not the
-interaction
+Chooses a model with mass (slower turnover for larger body size). Next
+best is NPP (deltaAIC 5)
 
-## Examine the chosen model
+## Model choice: Jaccard turnover temporal trend vs. temperature trend
+
+Try interactions of abs temperature trend with each covariate:
+
+  - realm
+  - average metabolic temperature
+  - seasonality
+  - microclimates
+  - NPP
+  - speed
+  - mass
+  - lifespan
+  - consumer vs. producer
+  - thermal
+bias
+
+<!-- end list -->
 
 ``` r
-bmod <- update(mods[[7]], method = 'REML') # re-fit with REML
+i <- trends[, complete.cases(Jtutrend, temptrend, REALM, tempave_metab.sc, seas.sc, microclim.sc, npp.sc, 
+                             mass.sc, speed.sc, lifespan.sc, thermal_bias.sc, consumerfrac.sc)]
+
+randef <- list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)
+varef <- varPower(-0.5, ~nyrBT)
+
+mods2 <- vector('list', 0)
+mods2[[1]] <- lme(Jtutrend ~ 1, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods2[[2]] <- lme(Jtutrend ~ temptrend.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods2[[3]] <- lme(Jtutrend ~ temptrend_abs.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods2[[4]] <- lme(Jtutrend ~ temptrend_abs.sc * REALM, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods2[[5]] <- lme(Jtutrend ~ temptrend_abs.sc * tempave_metab.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods2[[6]] <- lme(Jtutrend ~ temptrend_abs.sc * seas.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods2[[7]] <- lme(Jtutrend ~ temptrend_abs.sc * microclim.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods2[[8]] <- lme(Jtutrend ~ temptrend_abs.sc * npp.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods2[[9]] <- lme(Jtutrend ~ temptrend_abs.sc * speed.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods2[[10]] <- lme(Jtutrend ~ temptrend_abs.sc * mass.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods2[[11]] <- lme(Jtutrend ~ temptrend_abs.sc * lifespan.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods2[[12]] <- lme(Jtutrend ~ temptrend_abs.sc * consumerfrac.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+mods2[[13]] <- lme(Jtutrend ~ temptrend_abs.sc * thermal_bias.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+
+mods2[[14]] <- lme(Jtutrend ~ temptrend_abs.sc + speed.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+
+mods2[[15]] <- lme(Jtutrend ~ speed.sc, random = randef, 
+                 weights = varef, data = trends[i,], method = 'ML')
+
+# examine models
+cat('AIC:\n')
+```
+
+    ## AIC:
+
+``` r
+aics <- sapply(mods2, AIC) - min(sapply(mods2, AIC)); aics
+```
+
+    ##  [1] 122.155932 123.821336  88.705187  69.506448  61.336645  88.617908
+    ##  [7]   6.801944  53.238895   0.000000  28.358985  13.821183  84.418094
+    ## [13]  61.351105  21.002366  53.452021
+
+``` r
+cat(paste0('\nChose model ', which.min(aics), ': ', paste0(mods2[[which.min(aics)]]$call$fixed[c(2,1,3)], collapse = ' '), '\n'))
+```
+
+    ## 
+    ## Chose model 9: Jtutrend `~` temptrend_abs.sc * speed.sc
+
+``` r
+cat('\nModel terms:\n')
+```
+
+    ## 
+    ## Model terms:
+
+``` r
+summary(mods2[[which.min(aics)]])
+```
+
+    ## Linear mixed-effects model fit by maximum likelihood
+    ##  Data: trends[i, ] 
+    ##         AIC       BIC   logLik
+    ##   -129026.7 -128939.9 64523.36
+    ## 
+    ## Random effects:
+    ##  Formula: ~temptrend_abs.sc | STUDY_ID
+    ##  Structure: General positive-definite, Log-Cholesky parametrization
+    ##                  StdDev     Corr  
+    ## (Intercept)      0.05597433 (Intr)
+    ## temptrend_abs.sc 0.01853060 0.355 
+    ## 
+    ##  Formula: ~1 | rarefyID %in% STUDY_ID
+    ##          (Intercept)  Residual
+    ## StdDev: 0.0009920627 0.3120502
+    ## 
+    ## Variance function:
+    ##  Structure: Power of variance covariate
+    ##  Formula: ~nyrBT 
+    ##  Parameter estimates:
+    ##     power 
+    ## -1.255396 
+    ## Fixed effects: Jtutrend ~ temptrend_abs.sc * speed.sc 
+    ##                                 Value   Std.Error    DF   t-value p-value
+    ## (Intercept)                0.04550969 0.004491278 43373 10.132904       0
+    ## temptrend_abs.sc           0.01473795 0.002170159 43373  6.791186       0
+    ## speed.sc                   0.00615244 0.000789113 43373  7.796656       0
+    ## temptrend_abs.sc:speed.sc -0.00383958 0.000793227 43373 -4.840456       0
+    ##  Correlation: 
+    ##                           (Intr) tmpt_. spd.sc
+    ## temptrend_abs.sc           0.232              
+    ## speed.sc                  -0.063 -0.007       
+    ## temptrend_abs.sc:speed.sc  0.003 -0.061  0.110
+    ## 
+    ## Standardized Within-Group Residuals:
+    ##         Min          Q1         Med          Q3         Max 
+    ## -7.56673953 -0.27281439  0.08978463  0.57986869  6.83169173 
+    ## 
+    ## Number of Observations: 43559
+    ## Number of Groups: 
+    ##               STUDY_ID rarefyID %in% STUDY_ID 
+    ##                    183                  43559
+
+Chooses a model with temperature trend and speed. More turnover at
+faster speeds and faster temperature change, but less response to
+temperature change at faster speeds.
+
+Examine the chosen model
+
+``` r
+bmod <- update(mods2[[9]], method = 'REML') # re-fit with REML
 summary(bmod)
 ```
 
     ## Linear mixed-effects model fit by REML
     ##  Data: trends[i, ] 
-    ##         AIC     BIC   logLik
-    ##   -153083.1 -152995 76551.57
+    ##         AIC       BIC   logLik
+    ##   -128982.4 -128895.6 64501.19
     ## 
     ## Random effects:
-    ##  Formula: ~temptrend_comb_allyr_abs.sc | STUDY_ID
+    ##  Formula: ~temptrend_abs.sc | STUDY_ID
     ##  Structure: General positive-definite, Log-Cholesky parametrization
-    ##                             StdDev     Corr  
-    ## (Intercept)                 0.05446662 (Intr)
-    ## temptrend_comb_allyr_abs.sc 0.01955632 0.463 
+    ##                  StdDev     Corr  
+    ## (Intercept)      0.05621517 (Intr)
+    ## temptrend_abs.sc 0.01880514 0.348 
     ## 
     ##  Formula: ~1 | rarefyID %in% STUDY_ID
-    ##         (Intercept)  Residual
-    ## StdDev: 0.002229942 0.3160733
+    ##          (Intercept)  Residual
+    ## StdDev: 0.0009923436 0.3120258
     ## 
     ## Variance function:
     ##  Structure: Power of variance covariate
     ##  Formula: ~nyrBT 
     ##  Parameter estimates:
     ##     power 
-    ## -1.255114 
-    ## Fixed effects: Jtutrend ~ temptrend_comb_allyr_abs.sc * speed_geomean.sc 
-    ##                                                   Value   Std.Error    DF
-    ## (Intercept)                                  0.04466173 0.004126729 49261
-    ## temptrend_comb_allyr_abs.sc                  0.01370534 0.002129866 49261
-    ## speed_geomean.sc                             0.00708839 0.000698578 49261
-    ## temptrend_comb_allyr_abs.sc:speed_geomean.sc 0.00102555 0.000734488 49261
-    ##                                                t-value p-value
-    ## (Intercept)                                  10.822551  0.0000
-    ## temptrend_comb_allyr_abs.sc                   6.434837  0.0000
-    ## speed_geomean.sc                             10.146883  0.0000
-    ## temptrend_comb_allyr_abs.sc:speed_geomean.sc  1.396279  0.1626
+    ## -1.255337 
+    ## Fixed effects: Jtutrend ~ temptrend_abs.sc * speed.sc 
+    ##                                 Value   Std.Error    DF   t-value p-value
+    ## (Intercept)                0.04553018 0.004510611 43373 10.094016       0
+    ## temptrend_abs.sc           0.01479151 0.002198582 43373  6.727751       0
+    ## speed.sc                   0.00615925 0.000789288 43373  7.803553       0
+    ## temptrend_abs.sc:speed.sc -0.00385260 0.000795136 43373 -4.845213       0
     ##  Correlation: 
-    ##                                              (Intr) tm___. spd_g.
-    ## temptrend_comb_allyr_abs.sc                   0.308              
-    ## speed_geomean.sc                             -0.032 -0.011       
-    ## temptrend_comb_allyr_abs.sc:speed_geomean.sc -0.003 -0.043  0.317
+    ##                           (Intr) tmpt_. spd.sc
+    ## temptrend_abs.sc           0.228              
+    ## speed.sc                  -0.063 -0.007       
+    ## temptrend_abs.sc:speed.sc  0.003 -0.060  0.110
     ## 
     ## Standardized Within-Group Residuals:
-    ##        Min         Q1        Med         Q3        Max 
-    ## -7.8791935 -0.2608093  0.1014711  0.5797334  6.7944542 
+    ##         Min          Q1         Med          Q3         Max 
+    ## -7.56648491 -0.27280515  0.08980588  0.57983358  6.83172649 
     ## 
-    ## Number of Observations: 49471
+    ## Number of Observations: 43559
     ## Number of Groups: 
     ##               STUDY_ID rarefyID %in% STUDY_ID 
-    ##                    207                  49471
+    ##                    183                  43559
 
 ``` r
 hist(residuals(bmod))
@@ -518,13 +668,13 @@ plot(trends[i,nyrBT], residuals(bmod, type = 'normalized'), col = '#00000011', l
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/model%20examination-6.png)<!-- -->
 
 ``` r
-plot(trends[i,temptrend_comb_allyr_abs.sc], residuals(bmod, type = 'normalized'), col = '#00000011')
+plot(trends[i,temptrend_abs.sc], residuals(bmod, type = 'normalized'), col = '#00000011')
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/model%20examination-7.png)<!-- -->
 
 ``` r
-plot(trends[i,speed_geomean.sc], residuals(bmod, type = 'normalized'), col = '#00000033')
+plot(trends[i,speed.sc], residuals(bmod, type = 'normalized'), col = '#00000033')
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/model%20examination-8.png)<!-- -->
@@ -532,13 +682,13 @@ plot(trends[i,speed_geomean.sc], residuals(bmod, type = 'normalized'), col = '#0
 Residuals may still be overdispersed despite the observation-level RE?
 Not sure what else to try. Still some heterogeneity (cone) for nyrBT and
 temperature trend, but may be created by so few data points in certain
-locations on the
-axis
+locations on the axis
 
-## Plot the chosen model
+Plot the chosen
+model
 
 ``` r
-ggplot(data = trends[i,], aes(x = speed_geomean.sc, y = Jtutrend, color = REALM)) +
+ggplot(data = trends[i,], aes(x = speed.sc, y = Jtutrend, color = REALM)) +
     geom_point(shape = 16, alpha = 0.5) +
     geom_smooth(method = 'lm') +
     scale_color_brewer(palette="Set1")
@@ -548,12 +698,12 @@ ggplot(data = trends[i,], aes(x = speed_geomean.sc, y = Jtutrend, color = REALM)
 
 ``` r
 # fix temptrend at low or high
-newdat1 <- trends[i, .(STUDY_ID, rarefyID, REALM, temptrend_comb_allyr_abs.sc = quantile(temptrend_comb_allyr_abs.sc, 0.25), speed_geomean, speed_geomean.sc, grp = 1)]
-newdat2 <- trends[i, .(STUDY_ID, rarefyID, REALM, temptrend_comb_allyr_abs.sc = quantile(temptrend_comb_allyr_abs.sc, 0.75), speed_geomean, speed_geomean.sc, grp = 2)]
+newdat1 <- trends[i, .(STUDY_ID, rarefyID, REALM, temptrend_abs.sc = quantile(temptrend_abs.sc, 0.25), speed_geomean, speed.sc, grp = 1)]
+newdat2 <- trends[i, .(STUDY_ID, rarefyID, REALM, temptrend_abs.sc = quantile(temptrend_abs.sc, 0.75), speed_geomean, speed.sc, grp = 2)]
 newdat <- rbind(newdat1, newdat2)
 newdat$preds <- predict(bmod, newdata = newdat, level = 0)
 
-ggplot(newdat, aes(speed_geomean.sc, preds, color = grp, group = grp)) +
+ggplot(newdat, aes(speed.sc, preds, color = grp, group = grp)) +
     geom_line()
 ```
 
@@ -568,19 +718,19 @@ ggplot(newdat, aes(speed_geomean, preds, color = grp, group = grp)) +
 
 ``` r
 # fix speed at low or high
-newdat1 <- trends[i, .(STUDY_ID, rarefyID, REALM, temptrend_comb_allyr, temptrend_comb_allyr_abs.sc, speed_geomean.sc = quantile(speed_geomean.sc, 0.25), grp = 1)]
-newdat2 <- trends[i, .(STUDY_ID, rarefyID, REALM, temptrend_comb_allyr, temptrend_comb_allyr_abs.sc, speed_geomean.sc = quantile(speed_geomean.sc, 0.75), grp = 2)]
+newdat1 <- trends[i, .(STUDY_ID, rarefyID, REALM, temptrend, temptrend_abs.sc, speed.sc = quantile(speed.sc, 0.25), grp = 1)]
+newdat2 <- trends[i, .(STUDY_ID, rarefyID, REALM, temptrend, temptrend_abs.sc, speed.sc = quantile(speed.sc, 0.75), grp = 2)]
 newdat <- rbind(newdat1, newdat2)
 newdat$preds <- predict(bmod, newdata = newdat, level = 0)
 
-ggplot(newdat, aes(temptrend_comb_allyr_abs.sc, preds, color = grp, group = grp)) +
+ggplot(newdat, aes(temptrend_abs.sc, preds, color = grp, group = grp)) +
     geom_line()
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/examine%20model-4.png)<!-- -->
 
 ``` r
-ggplot(newdat, aes(temptrend_comb_allyr, preds, color = grp, group = grp)) +
+ggplot(newdat, aes(temptrend, preds, color = grp, group = grp)) +
     geom_line()
 ```
 
