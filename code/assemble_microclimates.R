@@ -14,13 +14,13 @@
 
 library(tidyverse)
 library(raster)
-library(sdmpredictors)
+library(sdmpredictors) # for extracting BIO-Oracle data
 library(ggplot2) # for a plot at the end
 library(maps) # for a plot at the end
 
 ##load raster files as before
-tempbio1 <- raster("wc2.0_bio_30s_01.tif")   ##downloaded from site
-temp_sstmean <- load_layers("BO_sstmean")
+tempbio1 <- raster("dataDL/worldclim/wc2.0_bio_30s_01.tif")   ##downloaded from site
+temp_sstmean <- load_layers("BO_sstmean") # direct download of BIO-Oracle layers
 
 # load BioTime change
 load('data/biotime_blowes/bt_malin.Rdata')
