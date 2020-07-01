@@ -30,3 +30,5 @@ vignettes/*.pdf
 .Renviron
 # downloaded data
 dataDL/
+# temp
+temp/
