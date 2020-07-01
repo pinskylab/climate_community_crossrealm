@@ -324,9 +324,9 @@ No really clear differences among realms.
 
 
 ## Compare covariates across realms
-```{r compare across realms}
+```{r compare across realms, fig.height=12}
 i <- trends[, !duplicated(STUDY_ID)]; sum(i)
-par(mfrow=c(2,3))
+par(mfrow=c(4,3))
 beanplot(rarefyID_y ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Latitude (degN)', ll = 0.05)
 beanplot(tempave ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature (degC)', ll = 0.05)
 beanplot(tempave_metab ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Metabolic Temperature (degC)', ll = 0.05)
@@ -390,7 +390,7 @@ summary(modfull1)
 
 ```
 
-Try simplifying the model
+#### Try simplifying the model
 ```{r step modfull1}
 if(file.exists('temp/modfull1simp.rds')){
   modfull1simp <- readRDS('temp/modfull1simp.rds')
@@ -403,7 +403,7 @@ if(file.exists('temp/modfull1simp.rds')){
 summary(modfull1simp)
 ```
 
-Plot the coefficients
+#### Plot the coefficients
 ```{r plot fullmod1simp}
 require(sjPlot)
 modfull1simpreml <- update(modfull1simp, method = 'REML')
@@ -412,7 +412,7 @@ p2<- sjPlot::plot_model(modfull1simpreml, type = 'est', terms = 'REALM [Terrestr
 grid.arrange(p1, p2, nrow = 1)
 ```
 
-Plot residuals against each predictor
+#### Plot residuals against each predictor
 ```{r resids modfull1simp, fig.height = 8}
 resids <- resid(modfull1simpreml)
 preds <- getData(modfull1simpreml)
@@ -479,7 +479,7 @@ summary(modTfull1)
 ```
 
 
-Try simplifying the model
+#### Try simplifying the model
 ```{r simplify modTfull1}
 if(file.exists('temp/modTfull1.rds')){
   modTfull1simp <- readRDS('temp/modTfull1simp.rds')
@@ -494,7 +494,7 @@ summary(modTfull1simp)
 ```
 
 
-Plot the coefficients
+#### Plot the coefficients
 ```{r plot fullTmod1simp}
 modTfull1simpreml <- update(modTfull1simp, method = 'REML')
 
@@ -530,21 +530,23 @@ for(i in 1:length(rows2)){
 
 ```
 
-To do: Plot residuals against each predictor
-```{r resids modTfull1simp, fig.height = 8}
+#### Plot residuals against each predictor
+```{r resids modTfull1simp, fig.height = 10}
 resids <- resid(modTfull1simpreml)
 preds <- getData(modTfull1simpreml)
 col = '#00000033'
 cex = 0.5
-par(mfrow = c(3,3))
+par(mfrow = c(4,3))
 boxplot(resids ~ preds$REALM, cex = cex, col = col)
-plot(preds$seas.sc, resids, cex = cex, col = col)
+plot(preds$temptrend_abs.sc, resids, cex = cex, col = col)
+plot(preds$temptrend.sc, resids, cex = cex, col = col)
+plot(preds$tempave.sc, resids, cex = cex, col = col)
 plot(preds$microclim.sc, resids, cex = cex, col = col)
 plot(preds$npp.sc, resids, cex = cex, col = col)
 plot(preds$speed.sc, resids, cex = cex, col = col)
 plot(preds$mass.sc, resids, cex = cex, col = col)
-plot(preds$lifespan.sc, resids, cex = cex, col = col)
 plot(preds$consumerfrac.sc, resids, cex = cex, col = col)
+plot(preds$thermal_bias.sc, resids, cex = cex, col = col)
 ```
 
 # To do

@@ -310,7 +310,7 @@ i <- trends[, !duplicated(STUDY_ID)]; sum(i)
     ## [1] 332
 
 ``` r
-par(mfrow=c(2,3))
+par(mfrow=c(4,3))
 beanplot(rarefyID_y ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Latitude (degN)', ll = 0.05)
 beanplot(tempave ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature (degC)', ll = 0.05)
 beanplot(tempave_metab ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Metabolic Temperature (degC)', ll = 0.05)
@@ -322,11 +322,6 @@ beanplot(microclim ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2
 
 ``` r
 beanplot(temptrend ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature trend (degC/yr)', ll = 0.05)
-```
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/compare%20across%20realms-1.png)<!-- -->
-
-``` r
 beanplot(npp ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'NPP', ll = 0.05)
 beanplot(mass_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Mass (g)', ll = 0.05)
 ```
@@ -340,7 +335,7 @@ beanplot(thermal_bias ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#C
 #beanplot(consfrac ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Consumers (fraction)', ll = 0.05, log = '') # too sparse
 ```
 
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/compare%20across%20realms-2.png)<!-- -->
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/compare%20across%20realms-1.png)<!-- -->
 Marine are in generally warmer locations (seawater doesn’t freeze)
 Marine have much lower seasonality. Marine and freshwater have some very
 small masses (plankton), but much of dataset is similar to terrestrial.
@@ -460,7 +455,7 @@ summary(modfull1)
     ##               STUDY_ID rarefyID %in% STUDY_ID 
     ##                    183                  43559
 
-Try simplifying the model
+#### Try simplifying the model
 
 ``` r
 if(file.exists('temp/modfull1simp.rds')){
@@ -537,7 +532,7 @@ summary(modfull1simp)
     ##               STUDY_ID rarefyID %in% STUDY_ID 
     ##                    183                  43559
 
-Plot the coefficients
+#### Plot the coefficients
 
 ``` r
 require(sjPlot)
@@ -545,7 +540,7 @@ require(sjPlot)
 
     ## Loading required package: sjPlot
 
-    ## Learn more about sjPlot with 'browseVignettes("sjPlot")'.
+    ## Install package "strengejacke" from GitHub (`devtools::install_github("strengejacke/strengejacke")`) to load all sj-packages at once!
 
 ``` r
 modfull1simpreml <- update(modfull1simp, method = 'REML')
@@ -570,7 +565,7 @@ grid.arrange(p1, p2, nrow = 1)
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20fullmod1simp-1.png)<!-- -->
 
-Plot residuals against each predictor
+#### Plot residuals against each predictor
 
 ``` r
 resids <- resid(modfull1simpreml)
@@ -945,7 +940,7 @@ summary(modTfull1)
     ##               STUDY_ID rarefyID %in% STUDY_ID 
     ##                    183                  43559
 
-Try simplifying the model
+#### Try simplifying the model
 
 ``` r
 if(file.exists('temp/modTfull1.rds')){
@@ -1097,7 +1092,7 @@ summary(modTfull1simp)
     ##               STUDY_ID rarefyID %in% STUDY_ID 
     ##                    183                  43559
 
-Plot the coefficients
+#### Plot the coefficients
 
 ``` r
 modTfull1simpreml <- update(modTfull1simp, method = 'REML')
@@ -1135,22 +1130,24 @@ for(i in 1:length(rows2)){
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20fullTmod1simp-1.png)<!-- -->
 
-To do: Plot residuals against each predictor
+#### Plot residuals against each predictor
 
 ``` r
 resids <- resid(modTfull1simpreml)
 preds <- getData(modTfull1simpreml)
 col = '#00000033'
 cex = 0.5
-par(mfrow = c(3,3))
+par(mfrow = c(4,3))
 boxplot(resids ~ preds$REALM, cex = cex, col = col)
-plot(preds$seas.sc, resids, cex = cex, col = col)
+plot(preds$temptrend_abs.sc, resids, cex = cex, col = col)
+plot(preds$temptrend.sc, resids, cex = cex, col = col)
+plot(preds$tempave.sc, resids, cex = cex, col = col)
 plot(preds$microclim.sc, resids, cex = cex, col = col)
 plot(preds$npp.sc, resids, cex = cex, col = col)
 plot(preds$speed.sc, resids, cex = cex, col = col)
 plot(preds$mass.sc, resids, cex = cex, col = col)
-plot(preds$lifespan.sc, resids, cex = cex, col = col)
 plot(preds$consumerfrac.sc, resids, cex = cex, col = col)
+plot(preds$thermal_bias.sc, resids, cex = cex, col = col)
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/resids%20modTfull1simp-1.png)<!-- -->
