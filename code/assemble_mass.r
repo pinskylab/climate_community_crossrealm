@@ -4,14 +4,7 @@
 ## functions
 ##############
 require(data.table)
-
-geomean = function(x){ # geometric mean. remove NAs and x<0
-    exp(sum(log(x[x > 0 & !is.na(x)])) / length(x[x > 0 & !is.na(x)]))
-}
-
-geosd <- function(x){ # geometric standard deviation
-    exp(sd(log(x[x > 0 & !is.na(x)])))
-}
+source('code/util.R') # for weighted and geometric means and sds
 
 ##############
 # Load data
@@ -25,15 +18,34 @@ fishbase <- fread('output/mass_fishbase.csv.gz', drop = 1) # mass in g
 sealifebase <- fread('output/mass_sealifebase.csv.gz', drop = 1) # mass in g
 eltonbirds <- fread('output/mass_eltonbirds.csv.gz', drop = 1) # mass in g
 eltonmammals <- fread('output/mass_eltonmammals.csv.gz', drop = 1) # mass in g
+manual <- fread('data/mass/mass_prioritymissing_wscinames.csv') # mass in g, assembled manually
 
 # BioTime change (for taxa_mod) and species
-load('data/biotime_blowes/bt_malin.Rdata')
+load('data/biotime_blowes/bt_malin.Rdata') # load bt_malin
 bt <- data.table(bt_malin); rm(bt_malin) # rename to bt
 load('data/biotime_blowes/bt_grid_spp_list.Rdata') # loads bt_grid_spp_list. this has some studies not in bt.
 btspp <- data.table(bt_grid_spp_list); rm(bt_grid_spp_list) # rename to btspp
 btspp <- merge(btspp, bt[!duplicated(rarefyID), .(rarefyID, taxa_mod)], by = 'rarefyID') # add taxa_mod to spp list
 
 btspp[, length(unique(Species))] # 26289 species
+nrow(btspp) #1034700
+
+# Add abundance information
+load('data/biotime_blowes/bt_grid_spp_list_abund.Rdata') # loads abundance data
+btabund <- as.data.table(bt_grid_spp_list_abund); rm(bt_grid_spp_list_abund, bt_grid_spp_list_abund_year) # rename and delete unneeded df
+btspp <- merge(btspp, btabund[, .(rarefyID, Species, N_bar)], by = c('rarefyID', 'Species'), all.x = TRUE)
+
+btspp[, length(unique(Species))] # 26289 species
+nrow(btspp) #1034700
+
+btspp[, summary(N_bar)] # some N_bar data missing
+btspp[is.na(N_bar), ][!duplicated(rarefyID), table(REALM)] # mostly marine are missing abund data
+btspp[, .(fracmiss = sum(is.na(N_bar))/(sum(!is.na(N_bar)) + sum(is.na(N_bar)))), 
+      by = .(rarefyID, REALM)][fracmiss >0, .(mean = mean(fracmiss),
+                                              se = sd(fracmiss)/sqrt(.N),
+                                              min = min(fracmiss),
+                                              max = max(fracmiss)), 
+                               by = REALM] # for studies missing N_bar, what fraction missing on average?
 
 #################
 # Assemble data
@@ -47,6 +59,7 @@ btmass <- merge(btmass, fishbase[, .(Species, rarefyID, mass_fishbase = mass)], 
 btmass <- merge(btmass, sealifebase[, .(Species, rarefyID, mass_sealifebase = mass)], by = c('Species', 'rarefyID'), all.x = TRUE)
 btmass <- merge(btmass, eltonbirds[, .(Species, rarefyID, mass_eltonbirds = mass)], by = c('Species', 'rarefyID'), all.x = TRUE)
 btmass <- merge(btmass, eltonmammals[, .(Species, rarefyID, mass_eltonmammals = mass)], by = c('Species', 'rarefyID'), all.x = TRUE)
+btmass <- merge(btmass, manual[!is.na(mass_g), .(Species = Species_orig, taxa_mod, mass_manual = mass_g, source_manual = source)], by = c('Species', 'taxa_mod'), all.x = TRUE)
 
 #######################################################
 # pairwise comparisons among values from each source
@@ -111,6 +124,9 @@ btmass[!is.na(mass_sealifebase) & !is.na(mass_eltonmammals), .(.N, length(unique
 
 btmass[!is.na(mass_eltonbirds) & !is.na(mass_eltonmammals), .(.N, length(unique(Species)))] # 0
     
+btmass[!is.na(mass_manual) & (!is.na(mass_vectraits) | !is.na(mass_try) | !is.na(mass_gateway) |
+                                  !is.na(mass_fishbase) | !is.na(mass_sealifebase) | !is.na(mass_eltonbirds) |
+                                  !is.na(mass_eltonmammals)), ] # mistakenly pulled manual values for 55 cases (fishes) 
     
 # merge mass values based on a decision tree
 btmass[, mass := NA_real_]
@@ -123,29 +139,51 @@ btmass[!is.na(mass_try) & is.na(mass) & taxa_mod == "Plants", ':='(mass = mass_t
 btmass[!is.na(mass_gateway) & is.na(mass), ':='(mass = mass_gateway, mass_source = 'GATEway')]
 btmass[!is.na(mass_vectraits) & is.na(mass), ':='(mass = mass_vectraits, mass_source = 'VecTraits')]
 btmass[!is.na(mass_try) & is.na(mass), ':='(mass = mass_try, mass_source = 'TRY')]
+btmass[!is.na(mass_manual) & is.na(mass), ':='(mass = mass_manual, mass_source = source_manual)]
+
 
 # check
 btmass[(!is.na(mass_eltonbirds) | !is.na(mass_eltonmammals) | !is.na(mass_fishbase) | !is.na(mass_sealifebase) |
            !is.na(mass_try) | !is.na(mass_gateway) | !is.na(mass_vectraits)) & is.na(mass), .N] # 0: good
-btmass[, length(unique(Species)), by = !is.na(mass)] # 9426 species with data, 16863 without
+btmass[, length(unique(Species)), by = !is.na(mass)] # 9601 species with data, 16725 without
 
 btmass[, .(n = length(unique(Species)), val = sum(!is.na(mass))), by = rarefyID][, hist(val/n)] # most rarefyIDs have >50% of species represented!
-btmass[, .(n = length(unique(Species)), val = sum(!is.na(mass))), by = rarefyID][(val/n) < 0.5, ] # 1726 rarefyID with <50% of 53467 (3.2%)
+btmass[, .(n = length(unique(Species)), val = sum(!is.na(mass))), by = rarefyID][(val/n) < 0.5, ] # 1685 rarefyID with <50% of 53467 (3.2%)
 
 btmass[, .(n = length(unique(Species)), val = sum(!is.na(mass))), by = 
            .(rarefyID, STUDY_ID)][, .(n = sum(n), val = sum(val)), by = STUDY_ID][, hist(val/n)] # a bit more than half the studies have >50% of species represented!
 btmass[, .(n = length(unique(Species)), val = sum(!is.na(mass))), by = 
-           .(rarefyID, STUDY_ID, taxa_mod)][, .(n = sum(n), val = sum(val)), by = .(STUDY_ID, taxa_mod)][(val/n) < 0.5, ] #127 studies of 332 have <50% of species represented
+           .(rarefyID, STUDY_ID, taxa_mod)][, .(n = sum(n), val = sum(val)), by = .(STUDY_ID, taxa_mod)][(val/n) < 0.5, ] #118 studies of 332 have <50% of species represented
 btmass[, .(n = length(unique(Species)), val = sum(!is.na(mass))), by = 
            .(rarefyID, STUDY_ID, taxa_mod)][, .(n = sum(n), val = sum(val)), by = .(STUDY_ID, taxa_mod)][(val/n) < 0.5, table(taxa_mod)] # 66 of studies <50% are plants, 34 inverts
 
+
+#########################
+# Summarize
+#########################
 # make a list of priority studies for further mass finding
 # less thatn 50% species with data, at least 5 species in the study
-priorities <- btmass[rarefyID %in% bt[, rarefyID], .(n = length(unique(Species)), val = sum(!is.na(mass))), by = 
-           .(rarefyID, STUDY_ID, taxa_mod)][, .(n = sum(n), val = sum(val)), by = .(STUDY_ID, taxa_mod)][(val/n) < 0.5 & n > 4, STUDY_ID]
-length(priorities) # 124 studies
+# priorities <- btmass[rarefyID %in% bt[, rarefyID], .(n = length(unique(Species)), val = sum(!is.na(mass))), by = 
+#            .(rarefyID, STUDY_ID, taxa_mod)][, .(n = sum(n), val = sum(val)), by = .(STUDY_ID, taxa_mod)][(val/n) < 0.5 & n > 4, STUDY_ID]
+# length(priorities) # 124 studies
+# 
+
+btmass.sum <- btmass[, .(mass_mean = mean(mass, na.rm = TRUE), mass_sd = sd(mass, na.rm = TRUE), 
+                         mass_geomean = geomean(mass), mass_geosd = geosd(mass), 
+                         mass_mean_weight = meanwt(mass, N_bar), mass_sd_weight = sdwt(mass, N_bar),
+                         nspp = length(unique(Species)), nspp_wdata = sum(!is.na(mass))), 
+                     by = .(STUDY_ID, rarefyID, REALM, taxa_mod)]
+btmass.sum[is.nan(mass_mean), mass_mean := NA_real_]
+btmass.sum[is.nan(mass_geomean), mass_geomean := NA_real_]
+btmass.sum[is.nan(mass_mean_weight), mass_mean_weight := NA_real_]
+nrow(btmass.sum) # 53467
+setkey(btmass.sum, STUDY_ID, rarefyID)
+
+btmass.sum
 
 
+btmass.sum[, plot(mass_mean, mass_geomean, log = 'xy')]; abline(0,1) # graph mean vs. geomean
+btmass.sum[, plot(mass_mean, mass_mean_weight, log = 'xy')]; abline(0,1) # graph mean vs. weighted mean
 
 #########
 # Output
@@ -154,27 +192,18 @@ length(priorities) # 124 studies
 # output mass values
 btmass.out <- btmass[!is.na(mass), .(Species, rarefyID, REALM, STUDY_ID, taxa_mod, mass, mass_source)]
 nrow(btmass)
-nrow(btmass.out) # 814040
+nrow(btmass.out) # 815396
 
 write.csv(btmass.out, gzfile('output/mass_byspecies.csv.gz'), row.names = FALSE)
 
 # output average mass by rarefyID
 #see how we're doing (per rarefyID: # species with data, mean mass, sd mass, geometric mean mass, geometric standard deviation mass)
-btmass.sum <- btmass[, .(mass_mean = mean(mass, na.rm = TRUE), mass_sd = sd(mass, na.rm = TRUE), mass_geomean = geomean(mass),
-                         mass_geosd = geosd(mass), nspp = length(unique(Species)), nspp_wdata = sum(!is.na(mass))), 
-                     by = .(STUDY_ID, rarefyID, REALM, taxa_mod)]
-btmass.sum[is.nan(mass_mean), mass_mean := NA_real_]
-btmass.sum[is.nan(mass_geomean), mass_geomean := NA_real_]
-nrow(btmass.sum) # 53467
-setkey(btmass.sum, STUDY_ID, rarefyID)
-btmass.sum
-
 write.csv(btmass.sum, gzfile('output/mass_byrarefyID.csv.gz'))
 
 # output list of priority species
-priorities.out <- btmass[STUDY_ID %in% priorities & rarefyID %in% bt[, rarefyID] & is.na(mass), .(Species, REALM, taxa_mod)][!duplicated(cbind(Species, REALM, taxa_mod)), .(REALM, taxa_mod, Species)]
-setkey(priorities.out, REALM, taxa_mod, Species)
-nrow(priorities.out) # 12907
-priorities.out
-
-write.csv(priorities.out, gzfile('output/mass_prioritymissing.csv.gz'))
+# priorities.out <- btmass[STUDY_ID %in% priorities & rarefyID %in% bt[, rarefyID] & is.na(mass), .(Species, REALM, taxa_mod)][!duplicated(cbind(Species, REALM, taxa_mod)), .(REALM, taxa_mod, Species)]
+# setkey(priorities.out, REALM, taxa_mod, Species)
+# nrow(priorities.out) # 12907
+# priorities.out
+# 
+# write.csv(priorities.out, gzfile('output/mass_prioritymissing.csv.gz'))

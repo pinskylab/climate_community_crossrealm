@@ -3,20 +3,14 @@
 # needs output from assemble_mass.r
 
 require(data.table)
-
-geomean = function(x){ # geometric mean. remove NAs and x<0
-    exp(sum(log(x[x > 0 & !is.na(x)])) / length(x[x > 0 & !is.na(x)]))
-}
-
-geosd <- function(x){ # geometric standard deviation
-    exp(sd(log(x[x > 0 & !is.na(x)])))
-}
+source('code/util.R')
 
 ##############
 # Load data
 ##############
 mass <- fread('output/mass_byspecies.csv.gz') # assembled data on mass, in g
 phylo <- fread('output/taxonomy.csv.gz') # phylogeny info
+crawl <- fread('data/crawling/Crawling_speeds.csv') # crawling speeds from the literature
 
 # BioTime change (for taxa_mod) and species
 load('data/biotime_blowes/bt_malin.Rdata')
@@ -25,6 +19,14 @@ load('data/biotime_blowes/bt_grid_spp_list.Rdata') # loads bt_grid_spp_list. thi
 btspp <- data.table(bt_grid_spp_list); rm(bt_grid_spp_list) # rename to btspp
 btspp <- merge(btspp, bt[!duplicated(rarefyID), .(rarefyID, taxa_mod)], by = 'rarefyID') # add taxa_mod to spp list and trims to spp in bt
 
+# Add abundance information
+load('data/biotime_blowes/bt_grid_spp_list_abund.Rdata') # loads abundance data
+btabund <- as.data.table(bt_grid_spp_list_abund); rm(bt_grid_spp_list_abund, bt_grid_spp_list_abund_year) # rename and delete unneeded df
+btspp <- merge(btspp, btabund[, .(rarefyID, Species, N_bar)], by = c('rarefyID', 'Species'), all.x = TRUE)
+
+btspp[, length(unique(Species))] # 26289 species
+nrow(btspp) #1034700
+
 #################
 # process data
 #################
@@ -32,8 +34,9 @@ btspp <- merge(btspp, bt[!duplicated(rarefyID), .(rarefyID, taxa_mod)], by = 'ra
 # merge taxonomy and mass
 phylo[, original_name := gsub(' ', '_', original_name)] # add _ back to name
 phylo[, ':='(gateway.masses = NULL, V1 = NULL, X = NULL, NA. = NULL)] # remove extraneous columns
-mob <- merge(mass[, .(original_name = Species, rarefyID, REALM, STUDY_ID, taxa_mod, mass, mass_source)], phylo, by = 'original_name', all.x = TRUE)
-mob <- merge(btspp[, .(rarefyID, original_name = Species, REALM, STUDY_ID, taxa_mod)], 
+mob <- merge(mass[, .(original_name = Species, rarefyID, REALM, STUDY_ID, taxa_mod, mass, mass_source)], 
+             phylo, by = 'original_name', all.x = TRUE)
+mob <- merge(btspp[, .(rarefyID, original_name = Species, REALM, STUDY_ID, taxa_mod, N_bar)], 
              mob[, .(original_name, rarefyID, mass, mass_source, kingdom, phylum, class, order, family, genus, species)], 
              all.x = TRUE, by = c("rarefyID", "original_name"))
 
@@ -62,7 +65,7 @@ mob[original_genus %in% c('Cecidomyiidae'), mode := 'flying'] # gall midges
 mob[REALM == 'Terrestrial' & class == 'Insecta' & order %in% c('Plecoptera', 'Trichoptera'), mode := 'crawling'] # stoneflies and caddisflies
 
 mob[mass_source == 'Elton mammals' & !(order %in% c('Cetacea', 'Sirenia')) & !(family %in% c('Odobenidae', 'Otariidae', 'Phocidae')), mode := 'running']
-mob[class %in% c('Reptilia', 'Amphibia'), mode := 'running']
+mob[class %in% c('Reptilia', 'Amphibia') & !(family %in% c('Colubridae', 'Elapidae', 'Natricidae', 'Pygopodidae', 'Typhlopidae')), mode := 'running'] # reptiles and amphibians run, except snakes/legless lizards
 mob[class %in% c('Arachnida', 'Entognatha'), mode := 'running'] # spiders, Entognaths
 mob[REALM == 'Terrestrial' & order %in% c('Isopoda'), mode := 'running'] # terrestrial isopods
 mob[REALM == 'Terrestrial' & original_genus %in% c('Isopoda'), mode := 'running'] # terrestrial isopods
@@ -75,6 +78,7 @@ mob[REALM == 'Marine' & original_genus %in% c('Isopoda'), mode := 'running'] # m
 
 mob[phylum %in% c( 'Annelida', 'Echinodermata', 'Sipuncula', 'Cephalorhyncha', 'Nemertea'), mode := 'crawling'] # segmented worms, echinoderms, sipunculid worms, ribbon worms
 mob[class %in% c('Gastropoda'), mode := 'crawling'] # snails and slugs
+mob[order == 'Squamata' & family %in% c('Colubridae', 'Elapidae', 'Natricidae', 'Pygopodidae', 'Typhlopidae'), mode := 'crawling'] # snakes and legless lizards
 mob[class %in% c('Polyplacophora', 'Priapulida'), mode := 'crawling'] # chitons, priapulid worms
 mob[original_genus %in% c('Turbellaria', 'Valvata'), mode := 'crawling'] # flatworms (some can swim...), snails
 
@@ -90,6 +94,10 @@ mob[order %in% c('Sessilia', 'Anthoathecata', 'Leptothecata'), mode := 'stationa
 mob[is.na(mode) & !duplicated(species), table(phylum)] # nothing missing that has a scientific name match
 mob[is.na(mode) & !duplicated(original_name), table(mass_source)]
 
+# calculate allometry for crawling
+cmod <- crawl[, lm(log10(`max. speed [km/h]`) ~ log10(`body mass [kg]`))]
+crawl_coef <- coef(cmod)
+crawl_coef
 
 # calculate max speed (km/hr) from allometry
 # Table S4 in Hirt et al. 2017 Nature E&E
@@ -97,14 +105,14 @@ mob[, mass_kg := mass * 1000] # convert to kg from g
 mob[, speed := NA_real_]
 mob[mode == 'flying', speed := 142.8 * mass_kg^0.24 * (1 - exp(-2.4 * mass_kg^(-0.72)))]
 mob[mode == 'running', speed := 25.5 * mass_kg^0.26 * (1 - exp(-22 * mass_kg^(-0.6)))]
-mob[mode == 'crawling', speed := 0.1] # set crawlers to something below the slowest runners
+mob[mode == 'crawling', speed := 10^(crawl_coef[1] + crawl_coef[2] * log10(mass_kg))]
 mob[mode == 'swimming', speed := 11.2 * mass_kg^0.36 * (1 - exp(-19.5 * mass_kg^(-0.56)))]
 mob[mode == 'stationary', speed := 0]
 
 
 # check coverage
 mob[, .(n = length(unique(original_name)), val = sum(!is.na(speed))), by = rarefyID][, hist(val/n)] # most have >50% of species represented!
-mob[, .(n = length(unique(original_name)), val = sum(!is.na(speed))), by = rarefyID][(val/n) < 0.5, ] # 4159 rarefyID with <50%
+mob[, .(n = length(unique(original_name)), val = sum(!is.na(speed))), by = rarefyID][(val/n) < 0.5, ] # 4116 rarefyID with <50%
 
 
 
@@ -129,18 +137,21 @@ priorities.out[, .(n = length(original_name)), by = original_genus][order(n, dec
 # output speed values
 mob.out <- mob[!is.na(speed), .(original_name, rarefyID, REALM, STUDY_ID, taxa_mod, speed, mode)]
 nrow(mob)
-nrow(mob.out) # 765848
+nrow(mob.out) # 767202
 
 write.csv(mob.out, gzfile('output/speed_byspecies.csv.gz'), row.names = FALSE)
 
 
 # output average speed by rarefyID
 #see how we're doing (per rarefyID: # species with data, mean mass, sd mass, geometric mean mass, geometric standard deviation mass)
-mob.sum <- mob[, .(speed_mean = mean(speed, na.rm = TRUE), speed_sd = sd(speed, na.rm = TRUE), speed_geomean = geomean(speed),
-                   speed_geosd = geosd(speed), nspp = length(unique(original_name)), nspp_wdata = sum(!is.na(speed))), 
+mob.sum <- mob[, .(speed_mean = mean(speed, na.rm = TRUE), speed_sd = sd(speed, na.rm = TRUE), 
+                   speed_geomean = geomean(speed), speed_geosd = geosd(speed), 
+                   speed_mean_weight = meanwt(speed, N_bar), speed_sd_weight = sdwt(speed, N_bar),
+                   nspp = length(unique(original_name)), nspp_wdata = sum(!is.na(speed))), 
                      by = .(STUDY_ID, rarefyID, REALM, taxa_mod)]
 mob.sum[is.nan(speed_mean), speed_mean := NA_real_]
 mob.sum[is.nan(speed_geomean), speed_geomean := NA_real_]
+mob.sum[is.nan(speed_mean_weight), speed_mean_weight := NA_real_]
 nrow(mob.sum) # 53467
 setkey(mob.sum, STUDY_ID, rarefyID)
 mob.sum

@@ -3,14 +3,7 @@
 # needs output from assemble_temperature.Rmd, assemble_mass.R, and match_names_with_gbif.R
 
 require(data.table)
-
-geomean = function(x){ # geometric mean. remove NAs and x<0
-    exp(sum(log(x[x > 0 & !is.na(x)])) / length(x[x > 0 & !is.na(x)]))
-}
-
-geosd <- function(x){ # geometric standard deviation
-    exp(sd(log(x[x > 0 & !is.na(x)])))
-}
+source('code/util.R') # for weighted and geometric means and sds
 
 ##############
 # Load data
@@ -27,12 +20,20 @@ load('data/biotime_blowes/bt_grid_spp_list.Rdata') # loads bt_grid_spp_list. thi
 btspp <- data.table(bt_grid_spp_list); rm(bt_grid_spp_list) # rename to btspp
 btspp <- merge(btspp, bt[!duplicated(rarefyID), .(rarefyID, taxa_mod)], by = 'rarefyID') # add taxa_mod to spp list and trims to spp in bt
 
+# Add abundance information
+load('data/biotime_blowes/bt_grid_spp_list_abund.Rdata') # loads abundance data
+btabund <- as.data.table(bt_grid_spp_list_abund); rm(bt_grid_spp_list_abund, bt_grid_spp_list_abund_year) # rename and delete unneeded df
+btspp <- merge(btspp, btabund[, .(rarefyID, Species, N_bar)], by = c('rarefyID', 'Species'), all.x = TRUE)
+
+btspp[, length(unique(Species))] # 26289 species
+nrow(btspp) #1034700
+
 #################
 # assemble data
 #################
 
 # merge bt with mass, endoecto, temperature
-lsp <- merge(btspp[, .(rarefyID, Species, REALM, STUDY_ID, taxa_mod)], 
+lsp <- merge(btspp[, .(rarefyID, Species, REALM, STUDY_ID, taxa_mod, N_bar)], 
              mass[, .(rarefyID, Species, mass)], by = c('Species', 'rarefyID'), all.x = TRUE)
 lsp <- merge(lsp, endo, by = c('Species', 'rarefyID'), all.x = TRUE)
 lsp <- merge(lsp, temperature[, .(rarefyID, tempave)], by = 'rarefyID', all.x = TRUE)
@@ -65,22 +66,28 @@ lsp[, lifespan := 1/Z] # lifespan in years
 
 # check coverage
 lsp[, .(n = length(unique(Species)), val = sum(!is.na(lifespan))), by = rarefyID][, hist(val/n)] # most have >50% of species represented!
-lsp[, .(n = length(unique(Species)), val = sum(!is.na(lifespan))), by = rarefyID][(val/n) < 0.5, ] # 4139 rarefyID with <50%
+lsp[, .(n = length(unique(Species)), val = sum(!is.na(lifespan))), by = rarefyID][(val/n) < 0.5, ] # 4104 rarefyID with <50%
 
 # check data
 lsp[, hist(lifespan)]
 
 # average lifespan by rarefyID
 #also see how we're doing (per rarefyID): # species with data, mean mass, sd mass, geometric mean mass, geometric standard deviation mass)
-lsp.sum <- lsp[, .(lifespan_mean = mean(lifespan, na.rm = TRUE), lifespan_sd = sd(lifespan, na.rm = TRUE), lifespan_geomean = geomean(lifespan),
-                   lifespan_geosd = geosd(lifespan), nspp = length(unique(Species)), nspp_wdata = sum(!is.na(lifespan))), 
+lsp.sum <- lsp[, .(lifespan_mean = mean(lifespan, na.rm = TRUE), lifespan_sd = sd(lifespan, na.rm = TRUE), 
+                   lifespan_geomean = geomean(lifespan), lifespan_geosd = geosd(lifespan), 
+                   lifespan_mean_weight = meanwt(lifespan, N_bar), lifespan_sd_weight = sdwt(lifespan, N_bar),
+                   nspp = length(unique(Species)), nspp_wdata = sum(!is.na(lifespan))), 
                by = .(STUDY_ID, rarefyID, REALM, taxa_mod)]
 lsp.sum[is.nan(lifespan_mean), lifespan_mean := NA_real_]
 lsp.sum[is.nan(lifespan_geomean), lifespan_geomean := NA_real_]
+lsp.sum[is.nan(lifespan_mean_weight), lifespan_mean_weight := NA_real_]
 nrow(lsp.sum) # 53467
 setkey(lsp.sum, STUDY_ID, rarefyID)
 lsp.sum
 
+
+lsp.sum[, plot(lifespan_mean, lifespan_geomean, log = 'xy')]; abline(0,1) # graph mean vs. geomean
+lsp.sum[, plot(lifespan_mean, lifespan_mean_weight, log = 'xy')]; abline(0,1) # graph mean vs. weighted mean
 
 ############
 # output

@@ -1,0 +1,16 @@
+.RData has two objects:
+- bt_grid_spp_list_abund
+- bt_grid_spp_list_abund_year
+
+Shane Blowes <shane.blowes@idiv.de>
+Tue 3/24/2020 5:51 AM
+Hi Malin
+
+I’ve attached two versions of the species list with abundances:
+- one with total abundance (all samples, all years)
+- one with total annual abundance (all samples)
+
+Neither of these are very satisfactory. Due to the resampling process required to standardise effort within time series, we’d need to do some more work to calculate an abundance-weighted community mass. 
+
+Cheers,
+Shane
