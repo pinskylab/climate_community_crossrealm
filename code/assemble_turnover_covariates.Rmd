@@ -45,11 +45,22 @@ cti <- fread('output/cti_byrarefyID.csv.gz')
 # consumer vs. producer
 cons <- fread('output/metab_feed_byspecies.csv.gz')
 consfrac <- cons[, .(consfrac = sum(feeding == 'consumer')/.N), by = rarefyID] # fraction of species in each study that are consumers
+
+# richness
+rich <- fread('output/richness_by_rarefyID.csv.gz') # number of species
+
+# endotherm vs. ectotherm
+endo <- fread('output/metab_feed_byspecies.csv.gz') # endotherm vs. ectotherm classifications
+endofrac <- endo[, .(endofrac = sum(metab != 'ecto')/.N), by = rarefyID]
+rm(endo)
+
+# human impact
+human <- fread('output/humanimpact_by_rarefyID.csv.gz')
 ```
 
 ### Plot a turnover example
 ```{r plot turnover}
-bt[, .(n = .N), by = rarefyID][n > 50,]
+#bt[, .(n = .N), by = rarefyID][n > 50,]
 
 ggplot(bt[rarefyID == '339_1085477'], aes(YEAR, Jtu_base)) +
     geom_point() +
@@ -75,14 +86,18 @@ trends2 <- bt[, calctrend(Jbeta_base, YEAR, 'Jbetatrend'),
     by = .(rarefyID)] # calculate trend in total Jaccard' beta diversity's from first year, 
 trends3 <- bt[, calctrend(1-Horn_base, YEAR, 'Horntrend'), 
     by = .(rarefyID)] # calculate trend in Horn-Morisita from first year. Convert to dissimilarity.
-trends4 <- bt[, .(Strend = coef(lm(I(log(S)) ~ YEAR))[2]), by = .(rarefyID)] # trend in log(S)
-nyrBT <-  bt[, .(nyrBT = length(YEAR)), by = .(rarefyID)] # number of years in time-series
+#trends4 <- bt[, .(Strend = coef(lm(I(log(S)) ~ YEAR))[2]), by = .(rarefyID)] # trend in log(S)
+nyrBT <-  bt[, .(nyrBT = length(YEAR), 
+                 minyrBT = min(YEAR), 
+                 maxyrBT = max(YEAR),
+                 medianyrBT = median(YEAR),
+                 meanyrBT = mean(YEAR)), 
+             by = .(rarefyID)] # number of years in time-series
 
 trends <- merge(trends, trends2) # merge in total J and Horn-Morisita
 trends <- merge(trends, trends3)
-trends <- merge(trends, trends4)
+#trends <- merge(trends, trends4)
 trends <- merge(trends, nyrBT)
-rm(trends2, trends3, trends4, nyrBT)
 ```
 
 ```{r add covariate data}
@@ -95,6 +110,9 @@ trends <- merge(trends, speed[, .(rarefyID, speed_mean, speed_geomean, speed_sd,
 trends <- merge(trends, lsp[, .(rarefyID, lifespan_mean, lifespan_geomean, lifespan_sd, lifespan_geosd)], all.x = TRUE) # lifespan (yr)
 trends <- merge(trends, cti[, .(rarefyID, thermal_bias)], all.x = TRUE) # thermal bias (degC)
 trends <- merge(trends, consfrac, all.x = TRUE) # fraction consumers
+trends <- merge(trends, rich, all.x = TRUE) # species richness
+trends <- merge(trends, endofrac, all.x = TRUE) # endotherm vs. ectotherm
+trends <- merge(trends, human, all.x = TRUE) # human impact
 ```
 
 Do some basic checks
@@ -102,9 +120,20 @@ Do some basic checks
 # basic checks
 trends
 trends[, .(minJtu = min(Jtutrend), maxJtu = max(Jtutrend), minJbe = min(Jbetatrend), maxJbe = max(Jbetatrend), 
-           minHo = min(Horntrend, na.rm = TRUE), maxHo = max(Horntrend, na.rm = TRUE), minS = min(Strend), maxS = max(Strend)), by = REALM]
-trends[, .(nJtu = sum(Jtutrend < 0), nS = sum(Strend < 0)), by = REALM] # why are some turnover trends < 0?
-trends[, .(nJ = sum(Jtutrend > 0), nS = sum(Strend > 0)), by = REALM]
+           minHo = min(Horntrend, na.rm = TRUE), maxHo = max(Horntrend, na.rm = TRUE)), by = REALM]
+trends[, .(nJtu = sum(Jtutrend < 0)), by = REALM] # why are some turnover trends < 0? first year more diverged than future years
+trends[, .(nJ = sum(Jtutrend > 0)), by = REALM]
+
+# number of species
+trends[, summary(Nspp)]
+trends[, plot(Nspp, Jtutrend, log = 'x')]
+```
+
+Remove studies with only 1 species
+```{r remove 1-spp studies}
+nrow(trends)
+trends <- trends[Nspp > 1, ]
+nrow(trends)
 ```
 
 Turnover calculations are correlated, though less so for Horn
