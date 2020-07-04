@@ -5,10 +5,10 @@ require(raster) # for geotiff
 require(ggplot2) # for plotting
 
 # Load human footprint (Venter and Halpern)
-hfp <- raster("dataDL/terrestrial_footprint/HFP1993.tif") # terrestrial human footprint (Venter)
-himp <- raster('dataDL/human_impact_marine/model.tif') # marine human impact (Halpern)
-proj4string(himp) <- CRS('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=km +no_defs') # since WGS 1984 Mollweide
-extent(himp)
+# hfp <- raster("dataDL/terrestrial_footprint/HFP1993.tif") # terrestrial human footprint (Venter)
+# himp <- raster('dataDL/human_impact_marine/model.tif') # marine human impact (Halpern)
+# proj4string(himp) <- CRS('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +datum=WGS84 +units=km +no_defs') # since WGS 1984 Mollweide
+# extent(himp)
 #plot(himp)
 
 # Load Bowler anthropogenic threats
@@ -27,9 +27,9 @@ proj4string(btcoords) <- CRS('+init=epsg:4326') # set coordinate system to WGS84
 
 
 # Extract from HFP
-bt1 <- spTransform(btcoords, proj4string(hfp)) # convert points to HFP coord system
-hfpval <- extract(hfp, bt1)
-bt[, hfp := hfpval]
+# bt1 <- spTransform(btcoords, proj4string(hfp)) # convert points to HFP coord system
+# hfpval <- extract(hfp, bt1)
+# bt[, hfp := hfpval]
 
 
 # Extract from HIMP
@@ -51,24 +51,24 @@ bt[, atc := atcval]
 
 
 # plot maps
-ggplot(bt, aes(rarefyID_x, rarefyID_y, color = hfp)) +
-    geom_point(size = 0.3)
-
-ggplot(bt, aes(rarefyID_x, rarefyID_y, color = himp)) +
-    geom_point(size = 0.3)
+# ggplot(bt, aes(rarefyID_x, rarefyID_y, color = hfp)) +
+#     geom_point(size = 0.3)
+# 
+# ggplot(bt, aes(rarefyID_x, rarefyID_y, color = himp)) +
+#     geom_point(size = 0.3)
 
 ggplot(bt, aes(rarefyID_x, rarefyID_y, color = atc)) +
     geom_point(size = 0.3)
 
 # plot pairwise
-ggplot(bt, aes(hfp, atc)) +
-    geom_point(size = 0.3, alpha = 0.5)
-
-ggplot(bt, aes(himp, atc)) +
-    geom_point(size = 0.3, alpha = 0.5)
+# ggplot(bt, aes(hfp, atc)) +
+#     geom_point(size = 0.3, alpha = 0.5)
+# 
+# ggplot(bt, aes(himp, atc)) +
+#     geom_point(size = 0.3, alpha = 0.5)
 
 # stats
-bt[, cor.test(hfp, atc, use = 'pairwise.complete.obs')]
+# bt[, cor.test(hfp, atc, use = 'pairwise.complete.obs')]
 
 # write out Bowler
-write.csv(bt[, .(rarefyID, atc)], file = gzfile('output/humanimpact_by_rarefyID.csv.gz'))
+write.csv(bt[, .(rarefyID, atc)], file = gzfile('output/humanimpact_by_rarefyID.csv.gz'), row.names = FALSE)

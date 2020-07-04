@@ -112,7 +112,7 @@ trends <- merge(trends, cti[, .(rarefyID, thermal_bias)], all.x = TRUE) # therma
 trends <- merge(trends, consfrac, all.x = TRUE) # fraction consumers
 trends <- merge(trends, rich, all.x = TRUE) # species richness
 trends <- merge(trends, endofrac, all.x = TRUE) # endotherm vs. ectotherm
-trends <- merge(trends, human, all.x = TRUE) # human impact
+trends <- merge(trends, human[, .(rarefyID, human = atc)], all.x = TRUE) # human impact
 ```
 
 Do some basic checks
@@ -140,11 +140,11 @@ Turnover calculations are correlated, though less so for Horn
 ```{r basic pairwise graphs of turnover metrics}
 # are turnover calculations correlated?
 ggplot(trends, aes(Jbetatrend, Jtutrend)) +
-    geom_point() +
+    geom_point(alpha = 0.3) +
     geom_smooth()
 
 ggplot(trends, aes(Jbetatrend, Horntrend)) +
-    geom_point() +
+    geom_point(alpha = 0.3) +
     geom_smooth()
 
 ```
