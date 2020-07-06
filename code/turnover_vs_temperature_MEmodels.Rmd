@@ -136,6 +136,7 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 pairs(formula = ~ REALM + tempave.sc + tempave_metab.sc + seas.sc + microclim.sc + temptrend.sc + temptrend_abs.sc +  mass.sc + speed.sc + lifespan.sc + consumerfrac.sc + endothermfrac.sc + nspp.sc + thermal_bias.sc + npp.sc + human.sc, data = trends, gap = 1/10, cex = 0.2, col = '#00000022', lower.panel = panel.cor)
 
 ```
+
 Mass and lifespan look tightly correlated, but r only 0.56...?
 Tempave_metab and lifespan don't look tightly correlated, but r= -0.81 
 Tempave_metab and speed don't look tightly correlated, but r= -0.83 
@@ -224,6 +225,7 @@ ggplot(world, aes(x = long, y = lat, group = group)) +
     geom_point(data = trends, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.5, alpha = 0.4)  +
     scale_color_brewer(palette="Set1")
 ```
+
 Mostly northern hemisphere, but spread all over. No so much in Africa or much of Asia.
 
 
@@ -343,6 +345,7 @@ p17 <- ggplot(trends, aes(temptrend, Horntrend, color = REALM, size = nyrBT)) +
 
 grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, ncol = 2)
 ```
+
 Strong trends with temperature change, but trends are pretty symmetric around no trend in temperature, which implies warming or cooling drives similar degree of community turnover.
 Some indication of less turnover for larger organisms (mass)
 Higher turnover on land with higher seasonality?
@@ -372,6 +375,7 @@ beanplot(npp ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "
 beanplot(human ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Human impact score', ll = 0.05)
 
 ```
+
 Marine are in generally warmer locations (seawater doesn't freeze)
 Marine have much lower seasonality.
 Marine and freshwater have some very small masses (plankton), but much of dataset is similar to terrestrial.
@@ -595,7 +599,7 @@ if(file.exists('temp/modTfullJbetasimpreml.rds')){
   saveRDS(modTfullJbetasimpreml, file = 'temp/modTfullJbetasimpreml.rds')
 }
 if(file.exists('temp/modTfullHornsimpreml.rds')){
-  modTfullHornsimpreml <- readRDS('temp/modTfullJbetasimpreml.rds')
+  modTfullHornsimpreml <- readRDS('temp/modTfullHornsimpreml.rds')
 } else {
   modTfullHornsimpreml <- update(modTfullHornsimp, method = 'REML')
   saveRDS(modTfullHornsimpreml, file = 'temp/modTfullHornsimpreml.rds')
@@ -623,7 +627,8 @@ xlims2 <- range(c(coefs2[rows2_2,1] - coefs2[rows2_2,2],
                   coefs3[rows2_3,1] + coefs3[rows2_3,2]))
 
 cols <- c('black', 'grey') # for Jbeta and Horn models, respectively
-offs <- 0.1 # offset vertically for the two models
+offs1 <- 0.1 # offset vertically for the two models
+offs2 <- 0.01 # offset vertically for the two models (plot 2)
 
 par(mfrow=c(1,2), las = 1, mai = c(0.5, 3, 0.1, 0.1))
 
@@ -634,36 +639,37 @@ for(i in 1:length(rows1)){
   if(varstoplot[rows1[i]] %in% rownames(coefs2)){
     x = coefs2[rownames(coefs2) == varstoplot[rows1[i]], 1]
     se = coefs2[rownames(coefs2) == varstoplot[rows1[i]], 2]
-    points(x, length(rows1) + 1 - i + offs, pch = 16, col = cols[1])
-    lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i + offs, length(rows1) + 1 - i + offs), col = cols[1])
+    points(x, length(rows1) + 1 - i + offs1, pch = 16, col = cols[1])
+    lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i + offs1, length(rows1) + 1 - i + offs1), col = cols[1])
   }
   if(varstoplot[rows1[i]] %in% rownames(coefs3)){
     x = coefs3[rownames(coefs3) == varstoplot[rows1[i]], 1]
     se = coefs3[rownames(coefs3) == varstoplot[rows1[i]], 2]
-    points(x, length(rows1) + 1 - i - offs, pch = 16, col = cols[2])
-    lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i - offs, length(rows1) + 1 - i - offs), col = cols[2])
+    points(x, length(rows1) + 1 - i - offs1, pch = 16, col = cols[2])
+    lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i - offs1, length(rows1) + 1 - i - offs1), col = cols[2])
   }
 }
 
-plot(0,0, col = 'white', xlim=xlims2, ylim = c(1,length(rows2)), yaxt='n', xlab = '', ylab ='')
+plot(0,0, col = 'white', xlim=xlims2, ylim = c(0.9, length(rows2) + 0.1), yaxt='n', xlab = '', ylab ='')
 axis(2, at = length(rows2):1, labels = varstoplot[rows2], cex.axis = 0.7)
 abline(v = 0, col = 'grey')
 for(i in 1:length(rows2)){
   if(varstoplot[rows2[i]] %in% rownames(coefs2)){
     x = coefs2[rownames(coefs2) == varstoplot[rows2[i]], 1]
     se = coefs2[rownames(coefs2) == varstoplot[rows2[i]], 2]
-    points(x, length(rows2) + 1 - i + offs, pch = 16, col = cols[1])
-    lines(x = c(x-se, x+se), y = c(length(rows2) + 1 - i + offs, length(rows2) + 1 - i + offs), col = cols[1])
+    points(x, length(rows2) + 1 - i + offs2, pch = 16, col = cols[1])
+    lines(x = c(x-se, x+se), y = c(length(rows2) + 1 - i + offs2, length(rows2) + 1 - i + offs2), col = cols[1])
   }
   if(varstoplot[rows2[i]] %in% rownames(coefs3)){
     x = coefs3[rownames(coefs3) == varstoplot[rows2[i]], 1]
     se = coefs3[rownames(coefs3) == varstoplot[rows2[i]], 2]
-    points(x, length(rows2) + 1 - i - offs, pch = 16, col = cols[2])
-    lines(x = c(x-se, x+se), y = c(length(rows2) + 1 - i - offs, length(rows2) + 1 - i - offs), col = cols[2])
+    points(x, length(rows2) + 1 - i - offs2, pch = 16, col = cols[2])
+    lines(x = c(x-se, x+se), y = c(length(rows2) + 1 - i - offs2, length(rows2) + 1 - i - offs2), col = cols[2])
   }
 }
 
 ```
+
 Black is for Jaccard total turnover (pres/abs), grey is for Morisita-Horn turnover (considers abundance)
 
 # To do

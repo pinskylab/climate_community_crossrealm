@@ -182,6 +182,7 @@ pairs(formula = ~ REALM + tempave.sc + tempave_metab.sc + seas.sc + microclim.sc
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/pairs-1.png)<!-- -->
+
 Mass and lifespan look tightly correlated, but r only 0.56…?
 Tempave\_metab and lifespan don’t look tightly correlated, but r= -0.81
 Tempave\_metab and speed don’t look tightly correlated, but r= -0.83
@@ -292,6 +293,7 @@ ggplot(world, aes(x = long, y = lat, group = group)) +
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/map-1.png)<!-- -->
+
 Mostly northern hemisphere, but spread all over. No so much in Africa or
 much of Asia.
 
@@ -299,6 +301,7 @@ much of Asia.
 
 Lines are ggplot smoother fits by realm.
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20turnover%20v%20temp%20trend-1.png)<!-- -->
+
 Strong trends with temperature change, but trends are pretty symmetric
 around no trend in temperature, which implies warming or cooling drives
 similar degree of community turnover. Some indication of less turnover
@@ -344,6 +347,7 @@ beanplot(human ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6",
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/compare%20across%20realms-1.png)<!-- -->
+
 Marine are in generally warmer locations (seawater doesn’t freeze)
 Marine have much lower seasonality. Marine and freshwater have some very
 small masses (plankton), but much of dataset is similar to terrestrial.
@@ -1199,7 +1203,7 @@ if(file.exists('temp/modTfullJbetasimpreml.rds')){
   saveRDS(modTfullJbetasimpreml, file = 'temp/modTfullJbetasimpreml.rds')
 }
 if(file.exists('temp/modTfullHornsimpreml.rds')){
-  modTfullHornsimpreml <- readRDS('temp/modTfullJbetasimpreml.rds')
+  modTfullHornsimpreml <- readRDS('temp/modTfullHornsimpreml.rds')
 } else {
   modTfullHornsimpreml <- update(modTfullHornsimp, method = 'REML')
   saveRDS(modTfullHornsimpreml, file = 'temp/modTfullHornsimpreml.rds')
@@ -1227,7 +1231,8 @@ xlims2 <- range(c(coefs2[rows2_2,1] - coefs2[rows2_2,2],
                   coefs3[rows2_3,1] + coefs3[rows2_3,2]))
 
 cols <- c('black', 'grey') # for Jbeta and Horn models, respectively
-offs <- 0.1 # offset vertically for the two models
+offs1 <- 0.1 # offset vertically for the two models
+offs2 <- 0.01 # offset vertically for the two models (plot 2)
 
 par(mfrow=c(1,2), las = 1, mai = c(0.5, 3, 0.1, 0.1))
 
@@ -1238,37 +1243,38 @@ for(i in 1:length(rows1)){
   if(varstoplot[rows1[i]] %in% rownames(coefs2)){
     x = coefs2[rownames(coefs2) == varstoplot[rows1[i]], 1]
     se = coefs2[rownames(coefs2) == varstoplot[rows1[i]], 2]
-    points(x, length(rows1) + 1 - i + offs, pch = 16, col = cols[1])
-    lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i + offs, length(rows1) + 1 - i + offs), col = cols[1])
+    points(x, length(rows1) + 1 - i + offs1, pch = 16, col = cols[1])
+    lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i + offs1, length(rows1) + 1 - i + offs1), col = cols[1])
   }
   if(varstoplot[rows1[i]] %in% rownames(coefs3)){
     x = coefs3[rownames(coefs3) == varstoplot[rows1[i]], 1]
     se = coefs3[rownames(coefs3) == varstoplot[rows1[i]], 2]
-    points(x, length(rows1) + 1 - i - offs, pch = 16, col = cols[2])
-    lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i - offs, length(rows1) + 1 - i - offs), col = cols[2])
+    points(x, length(rows1) + 1 - i - offs1, pch = 16, col = cols[2])
+    lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i - offs1, length(rows1) + 1 - i - offs1), col = cols[2])
   }
 }
 
-plot(0,0, col = 'white', xlim=xlims2, ylim = c(1,length(rows2)), yaxt='n', xlab = '', ylab ='')
+plot(0,0, col = 'white', xlim=xlims2, ylim = c(0.9, length(rows2) + 0.1), yaxt='n', xlab = '', ylab ='')
 axis(2, at = length(rows2):1, labels = varstoplot[rows2], cex.axis = 0.7)
 abline(v = 0, col = 'grey')
 for(i in 1:length(rows2)){
   if(varstoplot[rows2[i]] %in% rownames(coefs2)){
     x = coefs2[rownames(coefs2) == varstoplot[rows2[i]], 1]
     se = coefs2[rownames(coefs2) == varstoplot[rows2[i]], 2]
-    points(x, length(rows2) + 1 - i + offs, pch = 16, col = cols[1])
-    lines(x = c(x-se, x+se), y = c(length(rows2) + 1 - i + offs, length(rows2) + 1 - i + offs), col = cols[1])
+    points(x, length(rows2) + 1 - i + offs2, pch = 16, col = cols[1])
+    lines(x = c(x-se, x+se), y = c(length(rows2) + 1 - i + offs2, length(rows2) + 1 - i + offs2), col = cols[1])
   }
   if(varstoplot[rows2[i]] %in% rownames(coefs3)){
     x = coefs3[rownames(coefs3) == varstoplot[rows2[i]], 1]
     se = coefs3[rownames(coefs3) == varstoplot[rows2[i]], 2]
-    points(x, length(rows2) + 1 - i - offs, pch = 16, col = cols[2])
-    lines(x = c(x-se, x+se), y = c(length(rows2) + 1 - i - offs, length(rows2) + 1 - i - offs), col = cols[2])
+    points(x, length(rows2) + 1 - i - offs2, pch = 16, col = cols[2])
+    lines(x = c(x-se, x+se), y = c(length(rows2) + 1 - i - offs2, length(rows2) + 1 - i - offs2), col = cols[2])
   }
 }
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/LME%20Jacard%20total%20and%20MH%20models-1.png)<!-- -->
+
 Black is for Jaccard total turnover (pres/abs), grey is for
 Morisita-Horn turnover (considers abundance)
 
