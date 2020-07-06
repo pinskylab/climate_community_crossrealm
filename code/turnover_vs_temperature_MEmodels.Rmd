@@ -61,6 +61,8 @@ library(gridExtra) # to combine ggplots together
 library(grid) # to combine ggplots together
 library(gridExtra)
 
+options(width=500) # turn off most text wrapping
+
 # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
 ```
@@ -86,34 +88,41 @@ trends[, microclim.sc := scale(log(microclim))]
 trends[, temptrend.sc := scale(temptrend)]
 trends[, temptrend_abs.sc := scale(log(abs(temptrend)))]
 trends[, npp.sc := scale(log(npp))]
-trends[, mass.sc := scale(log(mass_geomean))]
-trends[, speed.sc := scale(log(speed_geomean+1))]
-trends[, lifespan.sc := scale(log(lifespan_geomean))]
+trends[, mass.sc := scale(log(mass_mean_weight))]
+trends[, speed.sc := scale(log(speed_mean_weight+1))]
+trends[, lifespan.sc := scale(log(lifespan_mean_weight))]
 trends[, thermal_bias.sc := scale(thermal_bias)]
 trends[, consumerfrac.sc := scale(consfrac)]
+trends[, endothermfrac.sc := scale(endofrac)]
+trends[, nspp.sc := scale(log(Nspp))]
+trends[, human.sc := scale(human)]
 ```
 
 Do the variables look ok?
 ```{r histograms}
 # histograms to examine
-par(mfrow = c(3,4))
-invisible(trends[, hist(tempave.sc, main = 'Environmental temperature (°C)')])
-invisible(trends[, hist(tempave_metab.sc, main = 'Metabolic temperature (°C)')])
-invisible(trends[, hist(seas.sc, main = 'Seasonality (°C)')])
-invisible(trends[, hist(microclim.sc, main = 'log Microclimates (°C)')])
-invisible(trends[, hist(temptrend.sc, main = 'Temperature trend (°C/yr)')])
-invisible(trends[, hist(temptrend_abs.sc, main = 'log abs(Temperature trend) (°C/yr)')])
-invisible(trends[, hist(npp.sc, main = 'log Net primary productivity')])
-invisible(trends[, hist(mass.sc, main = 'log Mass (g)')])
-invisible(trends[, hist(speed.sc, main = 'log Speed (km/hr)')])
-invisible(trends[, hist(lifespan.sc, main = 'log Lifespan (yr)')])
-invisible(trends[, hist(thermal_bias.sc, main = 'Thermal bias (°C)')])
-invisible(trends[, hist(consumerfrac.sc, main = 'Consumers (fraction)')])
+cexmain = 0.6
+par(mfrow = c(3,5))
+invisible(trends[, hist(tempave.sc, main = 'Environmental temperature (°C)', cex.main = cexmain)])
+invisible(trends[, hist(tempave_metab.sc, main = 'Metabolic temperature (°C)', cex.main = cexmain)])
+invisible(trends[, hist(seas.sc, main = 'Seasonality (°C)', cex.main = cexmain)])
+invisible(trends[, hist(microclim.sc, main = 'log Microclimates (°C)', cex.main = cexmain)])
+invisible(trends[, hist(temptrend.sc, main = 'Temperature trend (°C/yr)', cex.main = cexmain)])
+invisible(trends[, hist(temptrend_abs.sc, main = 'log abs(Temperature trend) (°C/yr)', cex.main = cexmain)])
+invisible(trends[, hist(mass.sc, main = 'log Mass (g)', cex.main = cexmain)])
+invisible(trends[, hist(speed.sc, main = 'log Speed (km/hr)', cex.main = cexmain)])
+invisible(trends[, hist(lifespan.sc, main = 'log Lifespan (yr)', cex.main = cexmain)])
+invisible(trends[, hist(consumerfrac.sc, main = 'Consumers (fraction)', cex.main = cexmain)])
+invisible(trends[, hist(endothermfrac.sc, main = 'Endotherms (fraction)', cex.main = cexmain)])
+invisible(trends[, hist(nspp.sc, main = 'log Species richness', cex.main = cexmain)])
+invisible(trends[, hist(thermal_bias.sc, main = 'Thermal bias (°C)', cex.main = cexmain)])
+invisible(trends[, hist(npp.sc, main = 'log Net primary productivity', cex.main = cexmain)])
+invisible(trends[, hist(human.sc, main = 'Human impact score', cex.main = cexmain)])
 
 ```
 
 Check correlations among variables. Pearson's r is on the lower diagonal.
-```{r pairs}
+```{r pairs, fig.height=10, fig.width=10}
 panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 {
     usr <- par("usr"); on.exit(par(usr))
@@ -124,7 +133,7 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
     if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
     text(0.5, 0.5, txt) #, cex = cex.cor * r)
 }
-pairs(formula = ~ tempave.sc + tempave_metab.sc + seas.sc + microclim.sc + temptrend.sc + temptrend_abs.sc + npp.sc + mass.sc + speed.sc + lifespan.sc + thermal_bias.sc + consumerfrac.sc, data = trends, gap = 1/10, cex = 0.2, col = '#00000022', lower.panel = panel.cor)
+pairs(formula = ~ REALM + tempave.sc + tempave_metab.sc + seas.sc + microclim.sc + temptrend.sc + temptrend_abs.sc +  mass.sc + speed.sc + lifespan.sc + consumerfrac.sc + endothermfrac.sc + nspp.sc + thermal_bias.sc + npp.sc + human.sc, data = trends, gap = 1/10, cex = 0.2, col = '#00000022', lower.panel = panel.cor)
 
 ```
 Mass and lifespan look tightly correlated, but r only 0.56...?
@@ -134,9 +143,9 @@ Lifespan and speed don't look tightly correlated, but r = 0.73
 
 
 Examine how many data points are available
-```{r model setup for Jaccard turnover}
+```{r sample size for Jaccard turnover}
 # the cases we can compare
-apply(trends[, .(Jtutrend, temptrend.sc, tempave_metab.sc, REALM, seas.sc, microclim.sc, npp.sc, mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, thermal_bias.sc)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
+apply(trends[, .(Jtutrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, temptrend.sc, mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, human.sc)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
 i <- trends[, complete.cases(Jtutrend, temptrend.sc, tempave_metab.sc, REALM, seas.sc, microclim.sc, npp.sc, mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, thermal_bias.sc)]
 cat('Overall:\n')
 sum(i)
@@ -218,87 +227,106 @@ ggplot(world, aes(x = long, y = lat, group = group)) +
 Mostly northern hemisphere, but spread all over. No so much in Africa or much of Asia.
 
 
-## Plot turnover vs. temperature trends
+## Plot turnover vs. explanatory variables
 Lines are ggplot smoother fits by realm.
-```{r plot turnover v temp trend, echo=FALSE, fig.height = 14, fig.width = 9,}
-# use fish.show and out.width to put figures side-by side
+```{r plot turnover v temp trend, echo=FALSE, fig.height = 16, fig.width = 9,}
 
-# Jaccard turnover trend vs. temperature trend (across all years)
 p1 <- ggplot(trends, aes(REALM, Jtutrend)) +
   geom_boxplot(na.rm = TRUE) + 
   labs(x = 'Realm', y = 'Jaccard turnover temporal trend')
 
-p2 <- ggplot(trends, aes(tempave, Jtutrend, color = REALM, size = nyrBT)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+p2 <- ggplot(trends, aes(tempave, Jtutrend, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Temperature (°C)', y = 'Jaccard turnover temporal trend')
 
-p3 <- ggplot(trends, aes(tempave_metab, Jtutrend, color = REALM, size = nyrBT)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+p3 <- ggplot(trends, aes(tempave_metab, Jtutrend, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Metabolic temperature (°C)', y = 'Jaccard turnover temporal trend')
 
-p4 <- ggplot(trends, aes(seas, Jtutrend, color = REALM, size = nyrBT)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+p4 <- ggplot(trends, aes(seas, Jtutrend, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Seasonality (°C)', y = 'Jaccard turnover temporal trend')
 
-p5 <- ggplot(trends, aes(microclim, Jtutrend, color = REALM, size = nyrBT)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+p5 <- ggplot(trends, aes(microclim, Jtutrend, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Microclimate availability (°C)', y = 'Jaccard turnover temporal trend')
 
-p6 <- ggplot(trends, aes(npp, Jtutrend, color = REALM, size = nyrBT)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Net primary productivity (mg C / m2 / day)', y = 'Jaccard turnover temporal trend')
-
-p7 <- ggplot(trends, aes(mass_geomean, Jtutrend, color = REALM, size = nyrBT)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+p6 <- ggplot(trends, aes(mass_mean_weight, Jtutrend, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Mass (g))', y = 'Jaccard turnover temporal trend')
 
-p8 <- ggplot(trends, aes(speed_geomean, Jtutrend, color = REALM, size = nyrBT)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+p7 <- ggplot(trends, aes(speed_mean_weight+1, Jtutrend, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Speed (km / hr))', y = 'Jaccard turnover temporal trend')
 
-p9 <- ggplot(trends, aes(lifespan_geomean, Jtutrend, color = REALM, size = nyrBT)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+p8 <- ggplot(trends, aes(lifespan_mean_weight, Jtutrend, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
   labs(x = 'Lifespan (yr))', y = 'Jaccard turnover temporal trend')
 
-p10 <- ggplot(trends, aes(consfrac, Jtutrend, color = REALM, size = nyrBT)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 3), na.rm = TRUE) +
+p9 <- ggplot(trends, aes(consfrac, Jtutrend, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 3), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Fraction consumers)', y = 'Jaccard turnover temporal trend')
+  labs(x = 'Fraction consumers', y = 'Jaccard turnover temporal trend')
 
-p11 <- ggplot(trends, aes(thermal_bias, Jtutrend, color = REALM, size = nyrBT)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+p10 <- ggplot(trends, aes(endofrac, Jtutrend, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 3), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Thermal bias (°C))', y = 'Jaccard turnover temporal trend')
+  labs(x = 'Fraction endotherms', y = 'Jaccard turnover temporal trend')
 
-p12 <- ggplot(trends, aes(temptrend, Jtutrend, color = REALM, size = nyrBT)) +
+p11 <- ggplot(trends, aes(Nspp, Jtutrend, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
+  labs(x = 'Number of species', y = 'Jaccard turnover temporal trend')
+
+p12 <- ggplot(trends, aes(thermal_bias, Jtutrend, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Thermal bias (°C)', y = 'Jaccard turnover temporal trend')
+
+p13 <- ggplot(trends, aes(npp, Jtutrend, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
+  labs(x = 'Net primary productivity (mg C / m2 / day)', y = 'Jaccard turnover temporal trend')
+
+p14 <- ggplot(trends, aes(human, Jtutrend, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Bowler human impact score', y = 'Jaccard turnover temporal trend')
+
+p15 <- ggplot(trends, aes(temptrend, Jtutrend, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover temporal trend')
 
 # Jaccard total trend vs. temperature trend (across all years)
-p13 <- ggplot(trends, aes(temptrend, Jbetatrend, color = REALM, size = nyrBT)) +
+p16 <- ggplot(trends, aes(temptrend, Jbetatrend, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
@@ -306,14 +334,14 @@ p13 <- ggplot(trends, aes(temptrend, Jbetatrend, color = REALM, size = nyrBT)) +
 
 
 # Horn-Morisita turnover trend vs. temperature trend (across all years)
-p14 <- ggplot(trends, aes(temptrend, Horntrend, color = REALM, size = nyrBT)) +
+p17 <- ggplot(trends, aes(temptrend, Horntrend, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn temporal turnover')
 
 
-grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, ncol = 2)
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, ncol = 2)
 ```
 Strong trends with temperature change, but trends are pretty symmetric around no trend in temperature, which implies warming or cooling drives similar degree of community turnover.
 Some indication of less turnover for larger organisms (mass)
@@ -324,21 +352,24 @@ No really clear differences among realms.
 
 
 ## Compare covariates across realms
-```{r compare across realms, fig.height=12}
-i <- trends[, !duplicated(STUDY_ID)]; sum(i)
-par(mfrow=c(4,3))
+```{r compare across realms, fig.height=12, fig.width=9}
+i <- trends[, !duplicated(rarefyID)]; sum(i)
+par(mfrow=c(5,3))
 beanplot(rarefyID_y ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Latitude (degN)', ll = 0.05)
 beanplot(tempave ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature (degC)', ll = 0.05)
-beanplot(tempave_metab ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Metabolic Temperature (degC)', ll = 0.05)
+beanplot(tempave_metab ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Metabolic Temperature (degC)', ll = 0.05, bw = 'nrd0') # nrd0 bandwidth to calculation gap
 beanplot(seas ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Seasonality (degC)', ll = 0.05)
 beanplot(microclim ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Microclimates (degC)', ll = 0.05)
 beanplot(temptrend ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature trend (degC/yr)', ll = 0.05)
-beanplot(npp ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'NPP', ll = 0.05)
-beanplot(mass_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Mass (g)', ll = 0.05)
-beanplot(speed_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Speed (km/hr)', ll = 0.05, log = '')
-beanplot(lifespan_geomean ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Lifespan (yr)', ll = 0.05, log = '')
-beanplot(thermal_bias ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Thermal bias (degC)', ll = 0.05, log = '')
+beanplot(mass_mean_weight ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Mass (g)', ll = 0.05, log = 'y')
+beanplot(speed_mean_weight +1 ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Speed (km/hr)', ll = 0.05, log = 'y')
+beanplot(lifespan_mean_weight ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Lifespan (yr)', ll = 0.05, log = 'y')
 #beanplot(consfrac ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Consumers (fraction)', ll = 0.05, log = '') # too sparse
+#beanplot(endofrac ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Endotherms (fraction)', ll = 0.05, log = '') # too sparse
+beanplot(Nspp ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Number of species', ll = 0.05, log = 'y')
+beanplot(thermal_bias ~ REALM, data = trends[i & !is.na(thermal_bias),], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Thermal bias (degC)', ll = 0.05)
+beanplot(npp ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'NPP', ll = 0.05)
+beanplot(human ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Human impact score', ll = 0.05)
 
 ```
 Marine are in generally warmer locations (seawater doesn't freeze)
@@ -348,90 +379,9 @@ Marine has a lot of slow, crawling organisms, but land has plants. Land also has
 
 
 
-## Jaccard turnover temporal trend vs. static covariates
-- realm
-- environmental temperature
-- average metabolic temperature
-- seasonality
-- microclimates
-- NPP
-- speed
-- mass
-- lifespan
-- consumer vs. producer
-### Full model
-linear mixed model
-```{r LME Jacard turnover}
-i <- trends[, complete.cases(Jtutrend, REALM, tempave_metab.sc, seas.sc, microclim.sc, npp.sc,
-                             mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, thermal_bias.sc)]
 
-randef <- list(STUDY_ID = ~ 1, rarefyID = ~1)
-varef <- varPower(-0.5, ~nyrBT)
-
-if(file.exists('temp/modfull1.rds')){
-  modfull1 <- readRDS('temp/modfull1.rds')
-} else {
-  modfull1 <- lme(Jtutrend ~ REALM +
-                    tempave.sc + 
-                    tempave_metab.sc + 
-                    seas.sc + 
-                    microclim.sc + 
-                    npp.sc + 
-                    speed.sc + 
-                    mass.sc + 
-                    lifespan.sc + 
-                    consumerfrac.sc,
-                  random = randef, weights = varef, data = trends[i,], method = 'REML')
-  
-  saveRDS(modfull1, file = 'temp/modfull1.rds')
-}
-
-summary(modfull1)
-
-```
-
-#### Try simplifying the model
-```{r step modfull1}
-if(file.exists('temp/modfull1simp.rds')){
-  modfull1simp <- readRDS('temp/modfull1simp.rds')
-} else {
-  require(MASS) # for stepAIC()
-  modfull1ml <- update(modfull1, method = 'ML')
-  modfull1simp <- stepAIC(modfull1ml, direction = 'backward')
-  saveRDS(modfull1simp, file = 'temp/modfull1simp.rds')
-}
-summary(modfull1simp)
-```
-
-#### Plot the coefficients
-```{r plot fullmod1simp}
-require(sjPlot)
-modfull1simpreml <- update(modfull1simp, method = 'REML')
-p1 <- sjPlot::plot_model(modfull1simpreml, type = 'est', rm.terms = 'REALM [Marine,Terrestrial]') + ylim(-0.011, 0.01)
-p2<- sjPlot::plot_model(modfull1simpreml, type = 'est', terms = 'REALM [Terrestrial,Marine]') + ylim(-0.03, 0.1)
-grid.arrange(p1, p2, nrow = 1)
-```
-
-#### Plot residuals against each predictor
-```{r resids modfull1simp, fig.height = 8}
-resids <- resid(modfull1simpreml)
-preds <- getData(modfull1simpreml)
-col = '#00000033'
-cex = 0.5
-par(mfrow = c(3,3))
-boxplot(resids ~ preds$REALM, cex = cex, col = col)
-plot(preds$seas.sc, resids, cex = cex, col = col)
-plot(preds$microclim.sc, resids, cex = cex, col = col)
-plot(preds$npp.sc, resids, cex = cex, col = col)
-plot(preds$speed.sc, resids, cex = cex, col = col)
-plot(preds$mass.sc, resids, cex = cex, col = col)
-plot(preds$lifespan.sc, resids, cex = cex, col = col)
-plot(preds$consumerfrac.sc, resids, cex = cex, col = col)
-```
-
-
-## Jaccard turnover temporal trend vs. temperature trend
-Try interactions of abs temperature trend with each covariate:
+## Jaccard turnover temporal trend
+Try static covariates plus interactions of abs temperature trend with each covariate:
 
 - realm
 - environmental temperature
@@ -449,8 +399,8 @@ Except for thermal bias: interact with temperature trend (not abs)
 
 ### Full model
 ```{r LME Jacard turnover temperature}
-i <- trends[, complete.cases(Jtutrend, REALM, temptrend.sc, temptrend_abs.sc, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
-                             npp.sc, mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, thermal_bias.sc)]
+i <- trends[, complete.cases(Jtutrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, temptrend.sc, temptrend_abs.sc,  
+                             mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, human.sc)]
 
 randef <- list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)
 varef <- varPower(-0.5, ~nyrBT)
@@ -463,12 +413,15 @@ if(file.exists('temp/modTfull1.rds')){
                      temptrend_abs.sc*tempave_metab.sc + 
                      temptrend_abs.sc*seas.sc + 
                      temptrend_abs.sc*microclim.sc + 
-                     temptrend_abs.sc*npp.sc + 
-                     temptrend_abs.sc*speed.sc + 
                      temptrend_abs.sc*mass.sc + 
+                     temptrend_abs.sc*speed.sc + 
                      temptrend_abs.sc*lifespan.sc + 
                      temptrend_abs.sc*consumerfrac.sc +
-                     temptrend.sc*thermal_bias.sc,
+                     temptrend_abs.sc*endothermfrac.sc +
+                     temptrend_abs.sc*nspp.sc +
+                     temptrend.sc*thermal_bias.sc +
+                     temptrend_abs.sc*npp.sc +
+                     temptrend_abs.sc*human.sc*REALM,
                    random = randef, weights = varef, data = trends[i,], method = 'REML')
   saveRDS(modTfull1, file = 'temp/modTfull1.rds')
 }
@@ -481,7 +434,7 @@ summary(modTfull1)
 
 #### Try simplifying the model
 ```{r simplify modTfull1}
-if(file.exists('temp/modTfull1.rds')){
+if(file.exists('temp/modTfull1simp.rds')){
   modTfull1simp <- readRDS('temp/modTfull1simp.rds')
 } else {
   require(MASS) # for stepAIC
@@ -507,7 +460,7 @@ modTfull1simpreml <- update(modTfull1simp, method = 'REML')
 coefs <- summary(modTfull1simpreml)$tTable
 par(mfrow=c(1,2), las = 1, mai = c(0.5, 2, 0.1, 0.1))
 rows1 <- which(!grepl('Intercept|REALM', rownames(coefs)))
-plot(0,0, col = 'white', xlim=c(-0.011, 0.02), ylim = c(1,length(rows1)), yaxt='n', xlab = '', ylab ='')
+plot(0,0, col = 'white', xlim=c(-0.02, 0.035), ylim = c(1,length(rows1)), yaxt='n', xlab = '', ylab ='')
 axis(2, at = length(rows1):1, labels = rownames(coefs)[rows1], cex.axis = 0.7)
 abline(v = 0, col = 'grey')
 for(i in 1:length(rows1)){
@@ -517,7 +470,7 @@ for(i in 1:length(rows1)){
   lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i, length(rows1) + 1 - i))
 }
 
-rows2 <- which(grepl('REALM', rownames(coefs)))
+rows2 <- which(grepl('REALM', rownames(coefs)) & !grepl(':', rownames(coefs)))
 plot(0,0, col = 'white', xlim=c(-0.0, 0.1), ylim = c(1,length(rows2)), yaxt='n', xlab = '', ylab ='')
 axis(2, at = length(rows2):1, labels = rownames(coefs)[rows2], cex.axis = 0.7)
 abline(v = 0, col = 'grey')
@@ -531,24 +484,187 @@ for(i in 1:length(rows2)){
 ```
 
 #### Plot residuals against each predictor
-```{r resids modTfull1simp, fig.height = 10}
+```{r resids modTfull1simp, fig.height = 10, fig.width=10}
 resids <- resid(modTfull1simpreml)
 preds <- getData(modTfull1simpreml)
 col = '#00000033'
 cex = 0.5
-par(mfrow = c(4,3))
+par(mfrow = c(4,4))
 boxplot(resids ~ preds$REALM, cex = cex, col = col)
 plot(preds$temptrend_abs.sc, resids, cex = cex, col = col)
 plot(preds$temptrend.sc, resids, cex = cex, col = col)
 plot(preds$tempave.sc, resids, cex = cex, col = col)
+plot(preds$tempave_metab.sc, resids, cex = cex, col = col)
+plot(preds$seas.sc, resids, cex = cex, col = col)
 plot(preds$microclim.sc, resids, cex = cex, col = col)
-plot(preds$npp.sc, resids, cex = cex, col = col)
-plot(preds$speed.sc, resids, cex = cex, col = col)
 plot(preds$mass.sc, resids, cex = cex, col = col)
+plot(preds$speed.sc, resids, cex = cex, col = col)
+plot(preds$lifespan.sc, resids, cex = cex, col = col)
 plot(preds$consumerfrac.sc, resids, cex = cex, col = col)
+plot(preds$endothermfrac.sc, resids, cex = cex, col = col)
+plot(preds$nspp.sc, resids, cex = cex, col = col)
 plot(preds$thermal_bias.sc, resids, cex = cex, col = col)
+plot(preds$npp.sc, resids, cex = cex, col = col)
+plot(preds$human.sc, resids, cex = cex, col = col)
 ```
+
+## Sensitivity analysis: total turnover and Morisita-Horn models
+```{r LME Jacard total and MH models, fig.width=10, fig.height=8}
+i2 <- trends[, complete.cases(Jbetatrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
+                             temptrend.sc, temptrend_abs.sc, mass.sc, speed.sc, lifespan.sc, 
+                             consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, human.sc)]
+i3 <- trends[, complete.cases(Horntrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
+                             temptrend.sc, temptrend_abs.sc, mass.sc, speed.sc, lifespan.sc, 
+                             consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, human.sc)]
+
+randef <- list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)
+varef <- varPower(-0.5, ~nyrBT)
+
+# full models
+if(file.exists('temp/modTfullJbeta.rds')){
+  modTfullJbeta <- readRDS('temp/modTfullJbeta.rds')
+} else {
+  modTfullJbeta <- lme(Jbetatrend ~ temptrend_abs.sc*REALM + 
+                     temptrend_abs.sc*tempave.sc +
+                     temptrend_abs.sc*tempave_metab.sc + 
+                     temptrend_abs.sc*seas.sc + 
+                     temptrend_abs.sc*microclim.sc + 
+                     temptrend_abs.sc*mass.sc + 
+                     temptrend_abs.sc*speed.sc + 
+                     temptrend_abs.sc*lifespan.sc + 
+                     temptrend_abs.sc*consumerfrac.sc +
+                     temptrend_abs.sc*endothermfrac.sc +
+                     temptrend_abs.sc*nspp.sc +
+                     temptrend.sc*thermal_bias.sc +
+                     temptrend_abs.sc*npp.sc +
+                     temptrend_abs.sc*human.sc*REALM,
+                   random = randef, weights = varef, data = trends[i2,], method = 'REML')
+  saveRDS(modTfullJbeta, file = 'temp/modTfullJbeta.rds')
+}
+
+if(file.exists('temp/modTfullHorn.rds')){
+  modTfullHorn <- readRDS('temp/modTfullHorn.rds')
+} else {
+  modTfullHorn <- lme(Horntrend ~ temptrend_abs.sc*REALM + 
+                     temptrend_abs.sc*tempave.sc +
+                     temptrend_abs.sc*tempave_metab.sc + 
+                     temptrend_abs.sc*seas.sc + 
+                     temptrend_abs.sc*microclim.sc + 
+                     temptrend_abs.sc*mass.sc + 
+                     temptrend_abs.sc*speed.sc + 
+                     temptrend_abs.sc*lifespan.sc + 
+                     temptrend_abs.sc*consumerfrac.sc +
+                     temptrend_abs.sc*endothermfrac.sc +
+                     temptrend_abs.sc*nspp.sc +
+                     temptrend.sc*thermal_bias.sc +
+                     temptrend_abs.sc*npp.sc +
+                     temptrend_abs.sc*human.sc*REALM,
+                   random = randef, weights = varef, data = trends[i3,], method = 'REML')
+  saveRDS(modTfullHorn, file = 'temp/modTfullHorn.rds')
+}
+
+summary(modTfullJbeta)
+summary(modTfullHorn)
+
+# simplify
+if(file.exists('temp/modTfullJbetasimp.rds')){
+  modTfullJbetasimp <- readRDS('temp/modTfullJbetasimp.rds')
+} else {
+  require(MASS) # for stepAIC
+  modTfullJbetaml <- update(modTfullJbeta, method = 'ML')
+  modTfullJbetasimp <- stepAIC(modTfullJbetaml, direction = 'backward')
+  saveRDS(modTfullJbetasimp, file = 'temp/modTfullJbetasimp.rds')
+}
+
+if(file.exists('temp/modTfullHornsimp.rds')){
+  modTfullHornsimp <- readRDS('temp/modTfullHornsimp.rds')
+} else {
+  require(MASS) # for stepAIC
+  modTfullHornml <- update(modTfullHorn, method = 'ML')
+  modTfullHornsimp <- stepAIC(modTfullHornml, direction = 'backward')
+  saveRDS(modTfullHornsimp, file = 'temp/modTfullHornsimp.rds')
+}
+
+summary(modTfullJbetasimp)
+summary(modTfullHornsimp)
+
+if(file.exists('temp/modTfullJbetasimpreml.rds')){
+  modTfullJbetasimpreml <- readRDS('temp/modTfullJbetasimpreml.rds')
+} else {
+  modTfullJbetasimpreml <- update(modTfullJbetasimp, method = 'REML')
+  saveRDS(modTfullJbetasimpreml, file = 'temp/modTfullJbetasimpreml.rds')
+}
+if(file.exists('temp/modTfullHornsimpreml.rds')){
+  modTfullHornsimpreml <- readRDS('temp/modTfullJbetasimpreml.rds')
+} else {
+  modTfullHornsimpreml <- update(modTfullHornsimp, method = 'REML')
+  saveRDS(modTfullHornsimpreml, file = 'temp/modTfullHornsimpreml.rds')
+}
+
+# plot coefs
+coefs2 <- summary(modTfullJbetasimpreml)$tTable
+coefs3 <- summary(modTfullHornsimpreml)$tTable
+varstoplot <- unique(c(rownames(coefs2), rownames(coefs3)))
+
+rows1 <- which(!grepl('Intercept|REALM', varstoplot) | grepl(':', varstoplot)) # vars to plot in first graph
+rows1_2 <- which(rownames(coefs2) %in% varstoplot[rows1]) # rows in coefs2
+rows1_3 <- which(rownames(coefs3) %in% varstoplot[rows1]) # rows in coefs3
+xlims1 <- range(c(coefs2[rows1_2,1] - coefs2[rows1_2,2], 
+                  coefs2[rows1_2,1] + coefs2[rows1_2,2], 
+                  coefs3[rows1_3,1] - coefs3[rows1_3,2], 
+                  coefs3[rows1_3,1] + coefs3[rows1_3,2]))
+
+rows2 <- which(grepl('REALM', varstoplot) & !grepl(':', varstoplot)) # vars to plot in 2nd graph
+rows2_2 <- which(rownames(coefs2) %in% varstoplot[rows2]) # rows in coefs2
+rows2_3 <- which(rownames(coefs3) %in% varstoplot[rows2]) # rows in coefs3
+xlims2 <- range(c(coefs2[rows2_2,1] - coefs2[rows2_2,2], 
+                  coefs2[rows2_2,1] + coefs2[rows2_2,2], 
+                  coefs3[rows2_3,1] - coefs3[rows2_3,2], 
+                  coefs3[rows2_3,1] + coefs3[rows2_3,2]))
+
+cols <- c('black', 'grey') # for Jbeta and Horn models, respectively
+offs <- 0.1 # offset vertically for the two models
+
+par(mfrow=c(1,2), las = 1, mai = c(0.5, 3, 0.1, 0.1))
+
+plot(0,0, col = 'white', xlim=xlims1, ylim = c(1,length(rows1)), yaxt='n', xlab = '', ylab ='')
+axis(2, at = length(rows1):1, labels = varstoplot[rows1], cex.axis = 0.7)
+abline(v = 0, col = 'grey')
+for(i in 1:length(rows1)){
+  if(varstoplot[rows1[i]] %in% rownames(coefs2)){
+    x = coefs2[rownames(coefs2) == varstoplot[rows1[i]], 1]
+    se = coefs2[rownames(coefs2) == varstoplot[rows1[i]], 2]
+    points(x, length(rows1) + 1 - i + offs, pch = 16, col = cols[1])
+    lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i + offs, length(rows1) + 1 - i + offs), col = cols[1])
+  }
+  if(varstoplot[rows1[i]] %in% rownames(coefs3)){
+    x = coefs3[rownames(coefs3) == varstoplot[rows1[i]], 1]
+    se = coefs3[rownames(coefs3) == varstoplot[rows1[i]], 2]
+    points(x, length(rows1) + 1 - i - offs, pch = 16, col = cols[2])
+    lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i - offs, length(rows1) + 1 - i - offs), col = cols[2])
+  }
+}
+
+plot(0,0, col = 'white', xlim=xlims2, ylim = c(1,length(rows2)), yaxt='n', xlab = '', ylab ='')
+axis(2, at = length(rows2):1, labels = varstoplot[rows2], cex.axis = 0.7)
+abline(v = 0, col = 'grey')
+for(i in 1:length(rows2)){
+  if(varstoplot[rows2[i]] %in% rownames(coefs2)){
+    x = coefs2[rownames(coefs2) == varstoplot[rows2[i]], 1]
+    se = coefs2[rownames(coefs2) == varstoplot[rows2[i]], 2]
+    points(x, length(rows2) + 1 - i + offs, pch = 16, col = cols[1])
+    lines(x = c(x-se, x+se), y = c(length(rows2) + 1 - i + offs, length(rows2) + 1 - i + offs), col = cols[1])
+  }
+  if(varstoplot[rows2[i]] %in% rownames(coefs3)){
+    x = coefs3[rownames(coefs3) == varstoplot[rows2[i]], 1]
+    se = coefs3[rownames(coefs3) == varstoplot[rows2[i]], 2]
+    points(x, length(rows2) + 1 - i - offs, pch = 16, col = cols[2])
+    lines(x = c(x-se, x+se), y = c(length(rows2) + 1 - i - offs, length(rows2) + 1 - i - offs), col = cols[2])
+  }
+}
+
+```
+Black is for Jaccard total turnover (pres/abs), grey is for Morisita-Horn turnover (considers abundance)
 
 # To do
 
-- other temporal turnover metrics (Jaccard total, M-H)
