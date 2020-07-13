@@ -32,3 +32,4 @@ vignettes/*.pdf
 dataDL/
 # temp
 temp/
+.Rproj.user
