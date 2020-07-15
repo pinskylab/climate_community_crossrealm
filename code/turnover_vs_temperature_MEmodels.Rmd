@@ -373,56 +373,6 @@ Higher turnover on land with higher seasonality?
 More turnover for shorter-lived organisms?
 No really clear differences among realms.
 
-## Nicer plots of turnover vs. temperature?
-Violin plots
-```{r turnover vs. temperature vioplot, fig.width=2, fig.height=1.75}
-trends[temptrend <= -0.5, temptrendtext := 'Cooling']
-trends[abs(temptrend) <= 0.1, temptrendtext := 'Stable']
-trends[temptrend >= 0.5, temptrendtext := 'Warming']
-
-trends[abs(rarefyID_y) < 35, latzone := 'Subtropics']
-trends[abs(rarefyID_y) >= 35 & abs(rarefyID_x) < 66.56339, latzone := 'Temperate'] 
-trends[abs(rarefyID_y) >= 66.56339, latzone := 'Polar']
-trends[, latzone := factor(latzone, levels = c('Subtropics', 'Temperate', 'Polar'))]
-
-p1 <- ggplot(trends, aes(temptrend, Jtutrend, color = REALM, fill = REALM, size = nyrBT)) +
-  geom_point(na.rm = TRUE, shape = 16, alpha = 0.1) + 
-  geom_smooth(data=subset(trends, abs(temptrend) < 0.75), method = 'gam', formula = y ~ s(x, bs = "cs"), 
-              na.rm = TRUE) +
-  scale_color_brewer(palette="Set1", name = 'Realm') + 
-  scale_fill_brewer(palette="Set1", name = 'Realm') + 
-  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover') +
-  scale_size_continuous(range = c(1, 8), breaks = c(2, 5, 20)) +
-  guides(size = guide_legend(title = 'Years',
-                             override.aes = list(linetype=0, fill = NA, alpha = 1))) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        legend.key.size = unit(0.5,"line"), 
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=10))
-
-p2 <- ggplot(trends[!is.na(temptrendtext), ], aes(temptrendtext, Jtutrend)) +
-  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
-  labs(x = '', y = 'Jaccard turnover') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=10))
-
-p3 <- ggplot(trends[abs(temptrend) >= 0.5 & !is.na(latzone), ], aes(latzone, Jtutrend)) +
-  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') + 
-  labs(x = '', y = '') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=7),
-        axis.title=element_text(size=10))
-
-grid.arrange(p1, p2, p3, ncol = 2, layout_matrix = rbind(c(1,1), c(2,3)),
-             heights=c(unit(0.66, "npc"), unit(0.34, "npc")))
-```
 
 Average rates of turnover
 ```{r rates of turnover}
@@ -481,24 +431,7 @@ Marine has a lot of slow, crawling organisms, but land has plants. Land also has
 
 
 
-## Jaccard turnover temporal trend
-Try static covariates plus interactions of abs temperature trend with each covariate:
-
-- realm
-- environmental temperature
-- average metabolic temperature
-- seasonality
-- microclimates
-- NPP
-- speed
-- mass
-- lifespan
-- consumer vs. producer
-- thermal bias
-
-Except for thermal bias: interact with temperature trend (not abs)
-
-### Temperature-only model (Jtutrend, Jbetatrend, Horntrend)
+## Temperature-only model (Jtutrend, Jbetatrend, Horntrend)
 ```{r LME Jacard turnover temperature only}
 i <- trends[, complete.cases(Jtutrend, REALM, temptrend)]
 
@@ -538,7 +471,7 @@ summary(modonlyTtrendHorn)
 
 ```
 
-#### Try simplifying the temp-only models
+### Try simplifying the temp-only models
 ```{r simplify modonlyTtrend}
 if(file.exists('temp/modonlyTtrendsimpreml.rds')){
   modonlyTtrendsimpreml <- readRDS('temp/modonlyTtrendsimpreml.rds')
@@ -577,46 +510,126 @@ summary(modonlyTtrendHornsimpreml)
 
 ```
 
-#### Plot the temp-only coefficients
-```{r plot modonlyTtrendsimp}
-coefs <- summary(modonlyTtrend)$tTable
-coefs2 <- summary(modonlyTtrendJbeta)$tTable
-coefs3 <- summary(modonlyTtrendHorn)$tTable
+### Plot the temp-only coefficients
+```{r modonlyTtrendsimp coefs}
+# make table of coefficients
+coefs <- as.data.frame(summary(modonlyTtrend)$tTable)
+coefs2 <- as.data.frame(summary(modonlyTtrendJbeta)$tTable)
+coefs3 <- as.data.frame(summary(modonlyTtrendHorn)$tTable)
+coefs$mod <- 'Jtu'
+coefs2$mod <- 'Jbeta'
+coefs3$mod <- 'Horn'
+rows1 <- which(grepl('temptrend', rownames(coefs))) # extract temperature effect
+cols <- c('Value', 'Std.Error', 'mod')
+allcoefs <- rbind(coefs[rows1, cols], coefs2[rows1, cols], coefs3[rows1, cols])
+allcoefs$Value[grepl('REALMMarine', rownames(allcoefs))] <- 
+  allcoefs$Value[grepl('REALMMarine', rownames(allcoefs))] + 
+  allcoefs$Value[!grepl('REALM', rownames(allcoefs))] # add intercept to marine effects
+allcoefs$Value[grepl('REALMTerrestrial', rownames(allcoefs))] <- 
+  allcoefs$Value[grepl('REALMTerrestrial', rownames(allcoefs))] + 
+  allcoefs$Value[!grepl('REALM', rownames(allcoefs))] # add intercept to terrestrial effects
+
+allcoefs$lCI <- allcoefs$Value - allcoefs$Std.Error # lower confidence interval
+allcoefs$uCI <- allcoefs$Value + allcoefs$Std.Error
+allcoefs$y <- c(3, 2, 1, 2.9, 1.9, 0.9, 2.8, 1.8, 0.8) # y-values
+allcoefs$col <- c(rep('black', 3), rep('light grey', 3), rep('dark grey', 3))
+allcoefs$realm <- rep(c('Freshwater', 'Marine', 'Terrestrial'), 3)
 
 par(las = 1, mai = c(0.8, 2, 0.1, 0.1))
-rows1 <- which(grepl('temptrend', rownames(coefs)))
-plot(0,0, col = 'white', xlim=c(-0.02, 0.85), ylim = c(1,length(rows1)+0.3), 
+plot(0,0, col = 'white', xlim=c(-0.02, 0.85), ylim = c(0.7,3), 
      yaxt='n', xlab = 'Turnover per |°C/yr|', ylab ='')
-axis(2, at = length(rows1):1, labels = c('Freshwater', 'Marine', 'Terrestrial'), cex.axis = 0.7)
+axis(2, at = 3:1, labels = c('Freshwater', 'Marine', 'Terrestrial'), cex.axis = 0.7)
 abline(v = 0, col = 'grey')
-for(i in 1:length(rows1)){
-  x = coefs[rows1[i], 1]
-  x2 = coefs2[rows1[i], 1]
-  x3 = coefs3[rows1[i], 1]
-  if(i>1){ # if an interaction, add the intercept
-    x = x + coefs['abs(temptrend)', 1]
-    x2 = x2 + coefs2['abs(temptrend)', 1]
-    x3 = x3 + coefs3['abs(temptrend)', 1]
-  }
-  se = coefs[rows1[i], 2]
-  se2 = coefs2[rows1[i], 2]
-  se3 = coefs3[rows1[i], 2]
-  points(x, length(rows1) + 1 - i, pch = 16)
-  lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i, length(rows1) + 1 - i))
-  
-  points(x2, length(rows1) + 1.1 - i, pch = 16, col = 'light grey')
-  lines(x = c(x2-se2, x2+se2), y = c(length(rows1) + 1.1 - i, length(rows1) + 1.1 - i), col = 'light grey')
-  
-  points(x3, length(rows1) + 1.2 - i, pch = 16, col = 'dark grey')
-  lines(x = c(x3-se3, x3+se3), y = c(length(rows1) + 1.2 - i, length(rows1) + 1.2 - i), col = 'dark grey')
+for(i in 1:nrow(allcoefs)){
+  with(allcoefs[i, ], points(Value, y, pch = 16, col = col))
+  with(allcoefs[i, ], lines(x = c(lCI, uCI), y = c(y, y), col = col))
 }
 legend('bottomright', col = c('black', 'dark grey', 'light grey'), lwd = 1, pch = 16, 
        legend = c('Jaccard turnover', 'Jaccard total', 'Horn-Morisita'))
 
 ```
+### Nicer plots of turnover vs. temperature data and model fit
+Scatterplot, violin plots, and coefficient plots all together
+```{r turnover vs. temperature big plot, fig.width=6, fig.height=5.25}
+trends[temptrend <= -0.5, temptrendtext := 'Cooling']
+trends[abs(temptrend) <= 0.1, temptrendtext := 'Stable']
+trends[temptrend >= 0.5, temptrendtext := 'Warming']
 
+trends[abs(rarefyID_y) < 35, latzone := 'Subtropics']
+trends[abs(rarefyID_y) >= 35 & abs(rarefyID_x) < 66.56339, latzone := 'Temperate'] 
+trends[abs(rarefyID_y) >= 66.56339, latzone := 'Polar']
+trends[, latzone := factor(latzone, levels = c('Subtropics', 'Temperate', 'Polar'))]
 
-### Full model
+p1 <- ggplot(trends, aes(temptrend, Jtutrend, color = REALM, fill = REALM, size = nyrBT)) +
+  geom_point(na.rm = TRUE, shape = 16, alpha = 0.1) + 
+  geom_smooth(data=subset(trends, abs(temptrend) < 0.75), method = 'gam', formula = y ~ s(x, bs = "cs"), 
+              na.rm = TRUE) +
+  scale_color_brewer(palette="Set1", name = 'Realm') + 
+  scale_fill_brewer(palette="Set1", name = 'Realm') + 
+  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover', tag = 'A') +
+  scale_size_continuous(range = c(1, 8), breaks = c(2, 5, 20)) +
+  guides(size = guide_legend(title = 'Years',
+                             override.aes = list(linetype=0, fill = NA, alpha = 1))) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        legend.key.size = unit(0.5,"line"), 
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10))
+
+p2 <- ggplot(trends[!is.na(temptrendtext), ], aes(temptrendtext, Jtutrend)) +
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
+  labs(x = '', y = 'Jaccard turnover', tag = 'B') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10))
+
+p3 <- ggplot(trends[abs(temptrend) >= 0.5 & !is.na(latzone), ], aes(latzone, Jtutrend)) +
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') + 
+  labs(x = '', y = '', tag = 'C') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=7),
+        axis.title=element_text(size=10))
+
+p4 <- ggplot(allcoefs, aes(Value, y, group = mod, color = mod)) +
+  geom_errorbarh(aes(xmin = lCI, xmax = uCI, height = 0)) + 
+  geom_point() + 
+  labs(x = expression(atop('Temperature change effect', '(Turnover '~degree*'C'^'-1'*')')), y = '', tag = 'D') +
+  scale_color_grey() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position='none',
+        axis.text=element_text(size=7),
+        axis.title=element_text(size=7)) + 
+  coord_cartesian(xlim =c(0, 1)) +
+  scale_y_continuous(name = '', breaks = c(1, 2, 3), labels = c('Terrestrial', 'Marine', 'Freshwater'))
+
+grid.arrange(p1, p2, p3, p4, ncol = 3, layout_matrix = rbind(c(1,1,1), c(2,3,4)),
+             heights=c(unit(0.66, "npc"), unit(0.34, "npc")))
+```
+
+## Full models
+Try static covariates plus interactions of abs temperature trend with each covariate:
+
+- realm
+- environmental temperature
+- average metabolic temperature
+- seasonality
+- microclimates
+- NPP
+- speed
+- mass
+- lifespan
+- consumer vs. producer
+- thermal bias
+
+Except for thermal bias: interact with temperature trend (not abs)
+
+### Full model for Jaccard total
 ```{r LME Jacard turnover temperature full}
 i <- trends[, complete.cases(Jtutrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
                              temptrend.sc, temptrend_abs.sc, mass.sc, speed.sc, lifespan.sc, 
@@ -717,7 +730,8 @@ plot(preds$npp.sc, resids, cex = cex, col = col)
 plot(preds$human.sc, resids, cex = cex, col = col)
 ```
 
-## Sensitivity analysis: total turnover and Morisita-Horn models
+### Sensitivity analysis: total turnover and Horn-Morisita models
+#### Fit full models for total and HM
 ```{r LME Jacard total and MH models, fig.width=10, fig.height=8}
 i2 <- trends[, complete.cases(Jbetatrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
                              temptrend.sc, temptrend_abs.sc, mass.sc, speed.sc, lifespan.sc, 
@@ -774,48 +788,42 @@ if(file.exists('temp/modTfullHorn.rds')){
 
 summary(modTfullJbeta)
 summary(modTfullHorn)
+```
+
+#### Simplify full Total and HM models
+```{r simplify full total and HM models}
+require(MASS) # for stepAIC
 
 # simplify
-if(file.exists('temp/modTfullJbetasimp.rds')){
-  modTfullJbetasimp <- readRDS('temp/modTfullJbetasimp.rds')
-} else {
-  require(MASS) # for stepAIC
-  modTfullJbetaml <- update(modTfullJbeta, method = 'ML')
-  modTfullJbetasimp <- stepAIC(modTfullJbetaml, direction = 'backward')
-  saveRDS(modTfullJbetasimp, file = 'temp/modTfullJbetasimp.rds')
-}
-
-if(file.exists('temp/modTfullHornsimp.rds')){
-  modTfullHornsimp <- readRDS('temp/modTfullHornsimp.rds')
-} else {
-  require(MASS) # for stepAIC
-  modTfullHornml <- update(modTfullHorn, method = 'ML')
-  modTfullHornsimp <- stepAIC(modTfullHornml, direction = 'backward')
-  saveRDS(modTfullHornsimp, file = 'temp/modTfullHornsimp.rds')
-}
-
-summary(modTfullJbetasimp)
-summary(modTfullHornsimp)
-
 if(file.exists('temp/modTfullJbetasimpreml.rds')){
   modTfullJbetasimpreml <- readRDS('temp/modTfullJbetasimpreml.rds')
 } else {
+  modTfullJbetaml <- update(modTfullJbeta, method = 'ML')
+  modTfullJbetasimp <- stepAIC(modTfullJbetaml, direction = 'backward')
   modTfullJbetasimpreml <- update(modTfullJbetasimp, method = 'REML')
   saveRDS(modTfullJbetasimpreml, file = 'temp/modTfullJbetasimpreml.rds')
 }
+
 if(file.exists('temp/modTfullHornsimpreml.rds')){
   modTfullHornsimpreml <- readRDS('temp/modTfullHornsimpreml.rds')
 } else {
+  modTfullHornml <- update(modTfullHorn, method = 'ML')
+  modTfullHornsimp <- stepAIC(modTfullHornml, direction = 'backward')
   modTfullHornsimpreml <- update(modTfullHornsimp, method = 'REML')
   saveRDS(modTfullHornsimpreml, file = 'temp/modTfullHornsimpreml.rds')
 }
 
-# plot coefs
+summary(modTfullJbetasimpreml)
+summary(modTfullHornsimpreml)
+```
+
+#### plot coefs for full Total and HM models
+```{r plot simplified total and HM mod coefs, fig.height=8, fig.width=6}
 coefs2 <- summary(modTfullJbetasimpreml)$tTable
 coefs3 <- summary(modTfullHornsimpreml)$tTable
 varstoplot <- unique(c(rownames(coefs2), rownames(coefs3)))
 
-rows1 <- which(!grepl('Intercept|REALM', varstoplot) | grepl(':', varstoplot)) # vars to plot in first graph
+rows1 <- which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot)) # vars to plot in first graph
 rows1_2 <- which(rownames(coefs2) %in% varstoplot[rows1]) # rows in coefs2
 rows1_3 <- which(rownames(coefs3) %in% varstoplot[rows1]) # rows in coefs3
 xlims1 <- range(c(coefs2[rows1_2,1] - coefs2[rows1_2,2], 
@@ -823,19 +831,11 @@ xlims1 <- range(c(coefs2[rows1_2,1] - coefs2[rows1_2,2],
                   coefs3[rows1_3,1] - coefs3[rows1_3,2], 
                   coefs3[rows1_3,1] + coefs3[rows1_3,2]))
 
-rows2 <- which(grepl('REALM', varstoplot) & !grepl(':', varstoplot)) # vars to plot in 2nd graph
-rows2_2 <- which(rownames(coefs2) %in% varstoplot[rows2]) # rows in coefs2
-rows2_3 <- which(rownames(coefs3) %in% varstoplot[rows2]) # rows in coefs3
-xlims2 <- range(c(coefs2[rows2_2,1] - coefs2[rows2_2,2], 
-                  coefs2[rows2_2,1] + coefs2[rows2_2,2], 
-                  coefs3[rows2_3,1] - coefs3[rows2_3,2], 
-                  coefs3[rows2_3,1] + coefs3[rows2_3,2]))
-
 cols <- c('black', 'grey') # for Jbeta and Horn models, respectively
 offs1 <- 0.1 # offset vertically for the two models
 offs2 <- 0.01 # offset vertically for the two models (plot 2)
 
-par(mfrow=c(1,2), las = 1, mai = c(0.5, 3, 0.1, 0.1))
+par(las = 1, mai = c(0.5, 3, 0.1, 0.1))
 
 plot(0,0, col = 'white', xlim=xlims1, ylim = c(1,length(rows1)), yaxt='n', xlab = '', ylab ='')
 axis(2, at = length(rows1):1, labels = varstoplot[rows1], cex.axis = 0.7)
@@ -855,27 +855,146 @@ for(i in 1:length(rows1)){
   }
 }
 
-plot(0,0, col = 'white', xlim=xlims2, ylim = c(0.9, length(rows2) + 0.1), yaxt='n', xlab = '', ylab ='')
-axis(2, at = length(rows2):1, labels = varstoplot[rows2], cex.axis = 0.7)
-abline(v = 0, col = 'grey')
-for(i in 1:length(rows2)){
-  if(varstoplot[rows2[i]] %in% rownames(coefs2)){
-    x = coefs2[rownames(coefs2) == varstoplot[rows2[i]], 1]
-    se = coefs2[rownames(coefs2) == varstoplot[rows2[i]], 2]
-    points(x, length(rows2) + 1 - i + offs2, pch = 16, col = cols[1])
-    lines(x = c(x-se, x+se), y = c(length(rows2) + 1 - i + offs2, length(rows2) + 1 - i + offs2), col = cols[1])
-  }
-  if(varstoplot[rows2[i]] %in% rownames(coefs3)){
-    x = coefs3[rownames(coefs3) == varstoplot[rows2[i]], 1]
-    se = coefs3[rownames(coefs3) == varstoplot[rows2[i]], 2]
-    points(x, length(rows2) + 1 - i - offs2, pch = 16, col = cols[2])
-    lines(x = c(x-se, x+se), y = c(length(rows2) + 1 - i - offs2, length(rows2) + 1 - i - offs2), col = cols[2])
-  }
-}
 
 ```
 
 Black is for Jaccard total turnover (pres/abs), grey is for Morisita-Horn turnover (considers abundance)
+
+### Plot coefficients from all full models
+```{r plot coefs for all models, fig.height=5, fig.width=6}
+coefs <- as.data.table(summary(modTfull1)$tTable)
+coefs2 <- as.data.table(summary(modTfullJbeta)$tTable)
+coefs3 <- as.data.table(summary(modTfullHorn)$tTable)
+
+coefs$mod <- 'Jtu'
+coefs2$mod <- 'Jbeta'
+coefs3$mod <- 'Horn'
+
+coefs$var <- rownames(summary(modTfull1)$tTable)
+coefs2$var <- rownames(summary(modTfullJbeta)$tTable)
+coefs3$var <- rownames(summary(modTfullHorn)$tTable)
+
+# extract temperature effects and bind model coefs together
+cols <- c('var', 'Value', 'Std.Error', 'mod')
+
+allcoefsfull <- rbind(coefs[grep('temptrend|REALM', var), ..cols], 
+                      coefs2[grep('temptrend|REALM', var), ..cols], 
+                      coefs3[grep('temptrend|REALM', var), ..cols])
+allcoefsfull$var[allcoefsfull$var == 'temptrend_abs.sc'] <- 'temptrend_abs.sc:REALMFreshwater'
+
+# add average temperature effect (across realms) to realm-specific temperature effects
+meantempeffect <- allcoefsfull[var %in% c('temptrend_abs.sc:REALMMarine', 'temptrend_abs.sc:REALMTerrestrial'), mean(Value), by = mod]$V1
+allcoefsfull[var == 'temptrend_abs.sc:REALMMarine', Value := Value - meantempeffect]
+allcoefsfull[var == 'temptrend_abs.sc:REALMTerrestrial', Value := Value - meantempeffect]
+allcoefsfull[var == 'temptrend_abs.sc:REALMFreshwater', Value := -meantempeffect]
+
+# add base temperature:human effect (freshwater) to realm-specific temperature:human effects
+allcoefsfull$Value[allcoefsfull$var == 'temptrend_abs.sc:REALMMarine:human.sc'] <- with(allcoefsfull, Value[var == 'temptrend_abs.sc:REALMMarine:human.sc'] + Value[var == 'temptrend_abs.sc:human.sc'])
+allcoefsfull$Value[allcoefsfull$var == 'temptrend_abs.sc:REALMTerrestrial:human.sc'] <- with(allcoefsfull, Value[var == 'temptrend_abs.sc:REALMTerrestrial:human.sc'] + Value[var == 'temptrend_abs.sc:human.sc'])
+
+
+# remove non-temperature effects
+allcoefsfull <- allcoefsfull[grepl(':', allcoefsfull$var) & grepl('temptrend', allcoefsfull$var), ]
+
+# add info for plotting
+allcoefsfull$lCI <- allcoefsfull$Value - allcoefsfull$Std.Error # lower confidence interval
+allcoefsfull$uCI <- allcoefsfull$Value + allcoefsfull$Std.Error
+nvar <- nrow(allcoefsfull)/3
+allcoefsfull$y <- 1:nvar + rep(c(0, 0.1, 0.2), c(nvar, nvar, nvar)) # y-values
+
+allcoefsfull$varname <- gsub('temptrend_abs.sc:|temptrend.sc:', '', allcoefsfull$var)
+allcoefsfull$varname <- gsub('REALM', '', allcoefsfull$varname)
+allcoefsfull$varname <- gsub('.sc', '', allcoefsfull$varname)
+allcoefsfull$varname <- gsub('^human$', 'Freshwater:human', allcoefsfull$varname)
+
+xlims1 <- c(-0.02, 0.02) # for realms
+xlims2 <- c(-0.01, 0.015) # for traits
+xlims3 <- c(-0.004, 0.0025) # for environment
+xlims4 <- c(-0.016, 0.005) # for community
+xlims5 <- c(-0.01, 0.015) # for human
+
+ddg <- 0.5 # dodge for each model
+
+set1 <- c('Terrestrial', 'Marine', 'Freshwater')
+set2 <- c('mass', 'speed', 'lifespan', 'consumerfrac', 'endothermfrac', 'tempave_metab')
+set3 <- c('seas', 'microclim', 'tempave')
+set4 <- c('npp', 'nspp', 'thermal_bias')
+set5 <- c('Terrestrial:human', 'Marine:human', 'Freshwater:human')
+
+p1 <- ggplot(subset(allcoefsfull, varname %in% set1), 
+                    aes(varname, Value, group = mod, color = mod)) +
+  geom_hline(yintercept = 0, linetype = 'dashed', color = 'light grey') +
+  geom_errorbar(aes(ymin = lCI, ymax = uCI), width = 0, position = position_dodge(ddg)) + 
+  geom_point(position = position_dodge(ddg)) + 
+  labs(y = 'Interaction with temperature change effect', x = '', tag = 'A') +
+  scale_color_grey() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position='none',
+        axis.text=element_text(size=7),
+        axis.title=element_text(size=7)) + 
+  coord_flip(ylim = xlims1)
+
+p2 <- ggplot(subset(allcoefsfull, varname %in% set2), 
+                    aes(varname, Value, group = mod, color = mod)) +
+  geom_hline(yintercept = 0, linetype = 'dashed', color = 'light grey') +
+  geom_errorbar(aes(ymin = lCI, ymax = uCI), width = 0, position = position_dodge(ddg)) + 
+  geom_point(position = position_dodge(ddg)) + 
+  labs(y = 'Interaction with temperature change effect', x = '', tag = 'B') +
+  scale_color_grey() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position='none',
+        axis.text=element_text(size=7),
+        axis.title=element_text(size=7)) + 
+  coord_flip(ylim = xlims2)
+
+p3 <- ggplot(subset(allcoefsfull, varname %in% set3), 
+                    aes(varname, Value, group = mod, color = mod)) +
+  geom_hline(yintercept = 0, linetype = 'dashed', color = 'light grey') +
+  geom_errorbar(aes(ymin = lCI, ymax = uCI), width = 0, position = position_dodge(ddg)) + 
+  geom_point(position = position_dodge(ddg)) + 
+  labs(y = 'Interaction with temperature change effect', x = '', tag = 'C') +
+  scale_color_grey() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position='none',
+        axis.text=element_text(size=7),
+        axis.title=element_text(size=7)) + 
+  coord_flip(ylim = xlims3)
+
+p4 <- ggplot(subset(allcoefsfull, varname %in% set4), 
+                    aes(varname, Value, group = mod, color = mod)) +
+  geom_hline(yintercept = 0, linetype = 'dashed', color = 'light grey') +
+  geom_errorbar(aes(ymin = lCI, ymax = uCI), width = 0, position = position_dodge(ddg)) + 
+  geom_point(position = position_dodge(ddg)) + 
+  labs(y = 'Interaction with temperature change effect', x = '', tag = 'D') +
+  scale_color_grey() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position='none',
+        axis.text=element_text(size=7),
+        axis.title=element_text(size=7)) + 
+  coord_flip(ylim = xlims4)
+
+p5 <- ggplot(subset(allcoefsfull, varname %in% set5), 
+                    aes(varname, Value, group = mod, color = mod)) +
+  geom_hline(yintercept = 0, linetype = 'dashed', color = 'light grey') +
+  geom_errorbar(aes(ymin = lCI, ymax = uCI), width = 0, position = position_dodge(ddg)) + 
+  geom_point(position = position_dodge(ddg)) + 
+  labs(y = 'Interaction with temperature change effect', x = '', tag = 'E') +
+  scale_color_grey() + 
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.position='none',
+        axis.text=element_text(size=7),
+        axis.title=element_text(size=7)) + 
+  coord_flip(ylim = xlims5)
+
+grid.arrange(p1, p2, p3, p4, p5, ncol = 2, layout_matrix = rbind(c(1,2), c(3,4), c(5, NA)))
+
+
+```
 
 # To do
 
