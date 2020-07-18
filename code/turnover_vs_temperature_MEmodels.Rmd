@@ -52,14 +52,11 @@ Assistance: Katherine Lew, Josef Hauser
 ```{r setup}
 library(data.table) # for handling large datasets
 library(ggplot2) # for some plotting
-#library(lme4)
 library(nlme) # for ME models
 library(beanplot) # for beanplots
 library(maps) # for map
-library(ggeffects) # marginal effect plots
 library(gridExtra) # to combine ggplots together
 library(grid) # to combine ggplots together
-library(gridExtra)
 
 options(width=500) # turn off most text wrapping
 
@@ -74,6 +71,10 @@ trends <- fread('output/turnover_w_covariates.csv.gz')
 # set realm order
 trends[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
 
+# realm that combined Terrestrial and Freshwater, for interacting with human impact
+trends[, REALM2 := REALM]
+levels(trends$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
+
 # group Marine invertebrates/plants in with All
 trends[, taxa_mod2 := taxa_mod]
 trends[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
@@ -86,7 +87,7 @@ trends[, tempave_metab.sc := scale(tempave_metab)]
 trends[, seas.sc := scale(seas)]
 trends[, microclim.sc := scale(log(microclim))]
 trends[, temptrend.sc := scale(temptrend)]
-trends[, temptrend_abs.sc := scale(log(abs(temptrend)))]
+trends[, temptrend_abs.sc := scale(abs(temptrend))]
 trends[, npp.sc := scale(log(npp))]
 trends[, mass.sc := scale(log(mass_mean_weight))]
 trends[, speed.sc := scale(log(speed_mean_weight+1))]
@@ -386,19 +387,6 @@ trends[abs(temptrend) >= 0.5 & abs(rarefyID_y) >= 35 & abs(rarefyID_y) < 66.5633
 trends[abs(temptrend) >= 0.5 & abs(rarefyID_y) >= 66.56339, .(mean(Jtutrend), sd(Jtutrend)/sqrt(.N))] # arctic
 ```
 
-Hexagonal bins
-```{r turnover vs. temperature hexbin, fig.width=2, fig.height=1.5}
-require(ggplot2)
-ggplot(trends[REALM == 'Terrestrial',], aes(temptrend, Jtutrend)) +
-  geom_hex() + 
-  scale_fill_gradient(trans = "log")
-ggplot(trends[REALM == 'Marine',], aes(temptrend, Jtutrend)) +
-  geom_hex() + 
-  scale_fill_gradient(trans = "log")
-ggplot(trends[REALM == 'Freshwater',], aes(temptrend, Jtutrend)) +
-  geom_hex() + 
-  scale_fill_gradient(trans = "log")
-```
 
 
 ## Compare covariates across realms
@@ -435,7 +423,7 @@ Marine has a lot of slow, crawling organisms, but land has plants. Land also has
 ```{r LME Jacard turnover temperature only}
 i <- trends[, complete.cases(Jtutrend, REALM, temptrend)]
 
-randef <- list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)
+randef <- list(STUDY_ID = ~ abs(temptrend), rarefyID = ~1)
 varef <- varPower(-0.5, ~nyrBT)
 
 if(file.exists('temp/modonlyTtrend.rds')){
@@ -451,7 +439,8 @@ if(file.exists('temp/modonlyTtrendJbeta.rds')){
   modonlyTtrendJbeta <- readRDS('temp/modonlyTtrendJbeta.rds')
 } else {
   modonlyTtrendJbeta <- lme(Jbetatrend ~ abs(temptrend)*REALM,
-                   random = randef, weights = varef, data = trends[i2,], method = 'REML')
+                   random = randef, weights = varef, data = trends[i2,], method = 'REML', 
+                   control=lmeControl(msMaxIter = 100, maxIter = 100))
   saveRDS(modonlyTtrendJbeta, file = 'temp/modonlyTtrendJbeta.rds')
 }
 
@@ -471,44 +460,7 @@ summary(modonlyTtrendHorn)
 
 ```
 
-### Try simplifying the temp-only models
-```{r simplify modonlyTtrend}
-if(file.exists('temp/modonlyTtrendsimpreml.rds')){
-  modonlyTtrendsimpreml <- readRDS('temp/modonlyTtrendsimpreml.rds')
-} else {
-  require(MASS) # for stepAIC
-  modonlyTtrendml <- update(modonlyTtrend, method = 'ML')
-  modonlyTtrendsimp <- stepAIC(modonlyTtrendml, direction = 'backward')
-  modonlyTtrendsimpreml <- update(modonlyTtrendsimp, method = 'REML')
-  saveRDS(modonlyTtrendsimpreml, file = 'temp/modonlyTtrendsimpreml.rds')
-}
 
-
-if(file.exists('temp/modonlyTtrendJbetasimpreml.rds')){
-  modonlyTtrendJbetasimpreml <- readRDS('temp/modonlyTtrendJbetasimpreml.rds')
-} else {
-  require(MASS) # for stepAIC
-  modonlyTtrendJbetaml <- update(modonlyTtrendJbeta, method = 'ML')
-  modonlyTtrendJbetasimp <- stepAIC(modonlyTtrendJbetaml, direction = 'backward')
-  modonlyTtrendJbetasimpreml <- update(modonlyTtrendJbetasimp, method = 'REML')
-  saveRDS(modonlyTtrendJbetasimpreml, file = 'temp/modonlyTtrendJbetasimpreml.rds')
-}
-
-if(file.exists('temp/modonlyTtrendHornsimpreml.rds')){
-  modonlyTtrendHornsimpreml <- readRDS('temp/modonlyTtrendHornsimpreml.rds')
-} else {
-  require(MASS) # for stepAIC
-  modonlyTtrendHornml <- update(modonlyTtrendHorn, method = 'ML')
-  modonlyTtrendHornsimp <- stepAIC(modonlyTtrendHornml, direction = 'backward')
-  modonlyTtrendHornsimpreml <- update(modonlyTtrendHornsimp, method = 'REML')
-  saveRDS(modonlyTtrendHornsimpreml, file = 'temp/modonlyTtrendHornsimpreml.rds')
-}
-
-summary(modonlyTtrendsimpreml)
-summary(modonlyTtrendJbetasimpreml)
-summary(modonlyTtrendHornsimpreml)
-
-```
 
 ### Plot the temp-only coefficients
 ```{r modonlyTtrendsimp coefs}
@@ -550,7 +502,9 @@ legend('bottomright', col = c('black', 'dark grey', 'light grey'), lwd = 1, pch 
 ```
 ### Nicer plots of turnover vs. temperature data and model fit
 Scatterplot, violin plots, and coefficient plots all together
-```{r turnover vs. temperature big plot, fig.width=6, fig.height=5.25}
+```{r turnover vs. temperature big plot, fig.width=6, fig.height=4.5}
+# on macbook: fig.width=3, fig.height=2.375, fig.retina=3, out.width=3, out.height=2.375
+# on external monitor: fig.width=6, fig.height=4.5
 trends[temptrend <= -0.5, temptrendtext := 'Cooling']
 trends[abs(temptrend) <= 0.1, temptrendtext := 'Stable']
 trends[temptrend >= 0.5, temptrendtext := 'Warming']
@@ -654,7 +608,7 @@ if(file.exists('temp/modTfull1.rds')){
                      temptrend_abs.sc*nspp.sc +
                      temptrend.sc*thermal_bias.sc +
                      temptrend_abs.sc*npp.sc +
-                     temptrend_abs.sc*human.sc*REALM,
+                     temptrend_abs.sc*human.sc:REALM2,
                    random = randef, weights = varef, data = trends[i,], method = 'REML')
   saveRDS(modTfull1, file = 'temp/modTfull1.rds')
 }
@@ -665,36 +619,14 @@ summary(modTfull1)
 ```
 
 
-#### Try simplifying the model
-```{r simplify modTfull1}
-i <- trends[, complete.cases(Jtutrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
-                             temptrend.sc, temptrend_abs.sc, mass.sc, speed.sc, lifespan.sc, 
-                             consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, human.sc)]
 
-randef <- list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)
-varef <- varPower(-0.5, ~nyrBT)
+#### Plot the coefficients from the full model
+```{r plot fullTmod1, fig.height=6, fig.width=7}
 
-if(file.exists('temp/modTfull1simpreml.rds')){
-  modTfull1simpreml <- readRDS('temp/modTfull1simpreml.rds')
-} else {
-  require(MASS) # for stepAIC
-  modTfull1ml <- update(modTfull1, method = 'ML')
-  modTfull1simp <- stepAIC(modTfull1ml, direction = 'backward')
-  modTfull1simpreml <- update(modTfull1simp, method = 'REML')
-  saveRDS(modTfull1simpreml, file = 'temp/modTfull1simpreml.rds')
-}
-summary(modTfull1simpreml)
-
-```
-
-
-#### Plot the coefficients from the simplified model
-```{r plot fullTmod1simpreml}
-
-coefs <- summary(modTfull1simpreml)$tTable
+coefs <- summary(modTfull1)$tTable
 par(las = 1, mai = c(0.5, 3, 0.1, 0.1))
 rows1 <- which(!grepl('Intercept', rownames(coefs)))
-plot(0,0, col = 'white', xlim=c(-0.02, 0.08), ylim = c(1,length(rows1)), yaxt='n', xlab = '', ylab ='')
+plot(0,0, col = 'white', xlim=c(-0.05, 0.08), ylim = c(1,length(rows1)), yaxt='n', xlab = '', ylab ='')
 axis(2, at = length(rows1):1, labels = rownames(coefs)[rows1], cex.axis = 0.7)
 abline(v = 0, col = 'grey')
 for(i in 1:length(rows1)){
@@ -705,10 +637,51 @@ for(i in 1:length(rows1)){
 }
 ```
 
+#### Plot interactions
+```{r interaction plots modTfull1}
+# nspp effect
+# trends[, range(Nspp)] # 2:1427
+# trends[, range(temptrend, na.rm = TRUE)] # -1.3 to 1.9
+# which.min(abs(ranef(modTfull1simpreml)$STUDY_ID$`(Intercept)`)) # study 127 has ranefs near 0
+# trends[STUDY_ID == 127, sort(unique(rarefyID))] # ranefs near zero for 127_514668
+# 
+
+newdat <- cbind(expand.grid(temptrend = seq(-1.3, 2, length.out = 100), nspp = 2^seq(1, 9, length.out=500)), 
+                data.table(REALM = 'Freshwater', REALM2 = 'TerrFresh', tempave.sc = 0, tempave_metab.sc = 0, 
+                           seas.sc = 0, microclim.sc = 0, mass.sc = 0, 
+                           speed.sc = 0, lifespan.sc = 0, endothermfrac.sc = 0, 
+                           thermal_bias.sc = 0, npp.sc = 0, human.sc = 0,
+                           consumerfrac.sc = 0,
+                           nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_514668'))
+newdat <- rbind(newdat[1:2, ], newdat) # add two extra rows so that all factor levels are represented (for predict.lme to work)
+newdat$REALM[1:2] <- c('Marine', 'Terrestrial')
+newdat$REALM2[1:2] <- c('Marine', 'Marine')
+
+# scale the vars
+newdat$nspp.sc <- (log(newdat$nspp) - attr(trends$nspp.sc, 'scaled:center'))/attr(trends$nspp.sc, 'scaled:scale')
+newdat$temptrend.sc <- (newdat$temptrend - attr(trends$temptrend.sc, 'scaled:center'))/attr(trends$temptrend.sc, 'scaled:scale') 
+newdat$temptrend_abs <- abs(newdat$temptrend)
+newdat$temptrend_abs.sc <- ((newdat$temptrend_abs) - attr(trends$temptrend_abs.sc, 'scaled:center'))/attr(trends$temptrend_abs.sc, 'scaled:scale')
+
+newdat <- newdat[is.finite(newdat$temptrend_abs.sc),]
+
+# make predictions
+newdat$preds <- predict(object = modTfull1, newdata = newdat, level = 0)
+
+#remove the extra rows
+newdat <- newdat[newdat$REALM == 'Freshwater', ]
+
+# plot
+ggplot(newdat, aes(temptrend, preds, group = nspp, color = nspp)) +
+  geom_line() +
+  scale_color_distiller(palette = "YlGnBu", trans = 'log', breaks = c(2, 10, 50, 500))
+```
+
+
 #### Plot residuals against each predictor
-```{r resids modTfull1simp, fig.height = 10, fig.width=10}
-resids <- resid(modTfull1simpreml)
-preds <- getData(modTfull1simpreml)
+```{r resids modTfull1, fig.height = 10, fig.width=10}
+resids <- resid(modTfull1)
+preds <- getData(modTfull1)
 col = '#00000033'
 cex = 0.5
 par(mfrow = c(4,4))
@@ -760,7 +733,7 @@ if(file.exists('temp/modTfullJbeta.rds')){
                      temptrend_abs.sc*nspp.sc +
                      temptrend.sc*thermal_bias.sc +
                      temptrend_abs.sc*npp.sc +
-                     temptrend_abs.sc*human.sc*REALM,
+                     temptrend_abs.sc*human.sc:REALM2,
                    random = randef, weights = varef, data = trends[i2,], method = 'REML')
   saveRDS(modTfullJbeta, file = 'temp/modTfullJbeta.rds')
 }
@@ -781,7 +754,7 @@ if(file.exists('temp/modTfullHorn.rds')){
                      temptrend_abs.sc*nspp.sc +
                      temptrend.sc*thermal_bias.sc +
                      temptrend_abs.sc*npp.sc +
-                     temptrend_abs.sc*human.sc*REALM,
+                     temptrend_abs.sc*human.sc:REALM2,
                    random = randef, weights = varef, data = trends[i3,], method = 'REML')
   saveRDS(modTfullHorn, file = 'temp/modTfullHorn.rds')
 }
@@ -790,37 +763,10 @@ summary(modTfullJbeta)
 summary(modTfullHorn)
 ```
 
-#### Simplify full Total and HM models
-```{r simplify full total and HM models}
-require(MASS) # for stepAIC
-
-# simplify
-if(file.exists('temp/modTfullJbetasimpreml.rds')){
-  modTfullJbetasimpreml <- readRDS('temp/modTfullJbetasimpreml.rds')
-} else {
-  modTfullJbetaml <- update(modTfullJbeta, method = 'ML')
-  modTfullJbetasimp <- stepAIC(modTfullJbetaml, direction = 'backward')
-  modTfullJbetasimpreml <- update(modTfullJbetasimp, method = 'REML')
-  saveRDS(modTfullJbetasimpreml, file = 'temp/modTfullJbetasimpreml.rds')
-}
-
-if(file.exists('temp/modTfullHornsimpreml.rds')){
-  modTfullHornsimpreml <- readRDS('temp/modTfullHornsimpreml.rds')
-} else {
-  modTfullHornml <- update(modTfullHorn, method = 'ML')
-  modTfullHornsimp <- stepAIC(modTfullHornml, direction = 'backward')
-  modTfullHornsimpreml <- update(modTfullHornsimp, method = 'REML')
-  saveRDS(modTfullHornsimpreml, file = 'temp/modTfullHornsimpreml.rds')
-}
-
-summary(modTfullJbetasimpreml)
-summary(modTfullHornsimpreml)
-```
-
 #### plot coefs for full Total and HM models
 ```{r plot simplified total and HM mod coefs, fig.height=8, fig.width=6}
-coefs2 <- summary(modTfullJbetasimpreml)$tTable
-coefs3 <- summary(modTfullHornsimpreml)$tTable
+coefs2 <- summary(modTfullJbeta)$tTable
+coefs3 <- summary(modTfullHorn)$tTable
 varstoplot <- unique(c(rownames(coefs2), rownames(coefs3)))
 
 rows1 <- which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot)) # vars to plot in first graph
@@ -861,7 +807,9 @@ for(i in 1:length(rows1)){
 Black is for Jaccard total turnover (pres/abs), grey is for Morisita-Horn turnover (considers abundance)
 
 ### Plot coefficients from all full models
-```{r plot coefs for all models, fig.height=5, fig.width=6}
+```{r plot coefs for all models, fig.height=5, fig.width=6, out.height=5, out.width=6, fig.retina=2}
+# fig.width = 3, fig.height = 5, out.height=2.5, out.width=3, fig.retina =3 for macbook screen
+# double that for external monitor
 coefs <- as.data.table(summary(modTfull1)$tTable)
 coefs2 <- as.data.table(summary(modTfullJbeta)$tTable)
 coefs3 <- as.data.table(summary(modTfullHorn)$tTable)
@@ -883,10 +831,9 @@ allcoefsfull <- rbind(coefs[grep('temptrend|REALM', var), ..cols],
 allcoefsfull$var[allcoefsfull$var == 'temptrend_abs.sc'] <- 'temptrend_abs.sc:REALMFreshwater'
 
 # add average temperature effect (across realms) to realm-specific temperature effects
-meantempeffect <- allcoefsfull[var %in% c('temptrend_abs.sc:REALMMarine', 'temptrend_abs.sc:REALMTerrestrial'), mean(Value), by = mod]$V1
-allcoefsfull[var == 'temptrend_abs.sc:REALMMarine', Value := Value - meantempeffect]
-allcoefsfull[var == 'temptrend_abs.sc:REALMTerrestrial', Value := Value - meantempeffect]
-allcoefsfull[var == 'temptrend_abs.sc:REALMFreshwater', Value := -meantempeffect]
+meantempeffect <- allcoefsfull[var == 'temptrend_abs.sc:REALMFreshwater', mean(Value), by = mod]$V1
+allcoefsfull[var == 'temptrend_abs.sc:REALMMarine', Value := Value + meantempeffect]
+allcoefsfull[var == 'temptrend_abs.sc:REALMTerrestrial', Value := Value + meantempeffect]
 
 # add base temperature:human effect (freshwater) to realm-specific temperature:human effects
 allcoefsfull$Value[allcoefsfull$var == 'temptrend_abs.sc:REALMMarine:human.sc'] <- with(allcoefsfull, Value[var == 'temptrend_abs.sc:REALMMarine:human.sc'] + Value[var == 'temptrend_abs.sc:human.sc'])
@@ -907,7 +854,7 @@ allcoefsfull$varname <- gsub('REALM', '', allcoefsfull$varname)
 allcoefsfull$varname <- gsub('.sc', '', allcoefsfull$varname)
 allcoefsfull$varname <- gsub('^human$', 'Freshwater:human', allcoefsfull$varname)
 
-xlims1 <- c(-0.02, 0.02) # for realms
+xlims1 <- c(0.0, 0.05) # for realms
 xlims2 <- c(-0.01, 0.015) # for traits
 xlims3 <- c(-0.004, 0.0025) # for environment
 xlims4 <- c(-0.016, 0.005) # for community
@@ -926,7 +873,7 @@ p1 <- ggplot(subset(allcoefsfull, varname %in% set1),
   geom_hline(yintercept = 0, linetype = 'dashed', color = 'light grey') +
   geom_errorbar(aes(ymin = lCI, ymax = uCI), width = 0, position = position_dodge(ddg)) + 
   geom_point(position = position_dodge(ddg)) + 
-  labs(y = 'Interaction with temperature change effect', x = '', tag = 'A') +
+  labs(y = 'Temperature change effect', x = '', tag = 'A') +
   scale_color_grey() + 
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"),
