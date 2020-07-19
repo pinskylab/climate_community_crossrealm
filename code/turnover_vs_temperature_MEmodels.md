@@ -1397,11 +1397,6 @@ meantempeffect <- allcoefsfull[var == 'temptrend_abs.sc:REALMFreshwater', mean(V
 allcoefsfull[var == 'temptrend_abs.sc:REALMMarine', Value := Value + meantempeffect]
 allcoefsfull[var == 'temptrend_abs.sc:REALMTerrestrial', Value := Value + meantempeffect]
 
-# add base temperature:human effect (freshwater) to realm-specific temperature:human effects
-allcoefsfull$Value[allcoefsfull$var == 'temptrend_abs.sc:REALMMarine:human.sc'] <- with(allcoefsfull, Value[var == 'temptrend_abs.sc:REALMMarine:human.sc'] + Value[var == 'temptrend_abs.sc:human.sc'])
-allcoefsfull$Value[allcoefsfull$var == 'temptrend_abs.sc:REALMTerrestrial:human.sc'] <- with(allcoefsfull, Value[var == 'temptrend_abs.sc:REALMTerrestrial:human.sc'] + Value[var == 'temptrend_abs.sc:human.sc'])
-
-
 # remove non-temperature effects
 allcoefsfull <- allcoefsfull[grepl(':', allcoefsfull$var) & grepl('temptrend', allcoefsfull$var), ]
 
@@ -1412,15 +1407,14 @@ nvar <- nrow(allcoefsfull)/3
 allcoefsfull$y <- 1:nvar + rep(c(0, 0.1, 0.2), c(nvar, nvar, nvar)) # y-values
 
 allcoefsfull$varname <- gsub('temptrend_abs.sc:|temptrend.sc:', '', allcoefsfull$var)
-allcoefsfull$varname <- gsub('REALM', '', allcoefsfull$varname)
+allcoefsfull$varname <- gsub('REALM|REALM2', '', allcoefsfull$varname)
 allcoefsfull$varname <- gsub('.sc', '', allcoefsfull$varname)
-allcoefsfull$varname <- gsub('^human$', 'Freshwater:human', allcoefsfull$varname)
 
-xlims1 <- c(0.0, 0.05) # for realms
-xlims2 <- c(-0.01, 0.015) # for traits
-xlims3 <- c(-0.004, 0.0025) # for environment
+xlims1 <- c(-0.01, 0.09) # for realms
+xlims2 <- c(-0.007, 0.015) # for traits
+xlims3 <- c(-0.01, 0.012) # for environment
 xlims4 <- c(-0.016, 0.005) # for community
-xlims5 <- c(-0.01, 0.015) # for human
+xlims5 <- c(-0.0025, 0.0025) # for human
 
 ddg <- 0.5 # dodge for each model
 
@@ -1428,7 +1422,7 @@ set1 <- c('Terrestrial', 'Marine', 'Freshwater')
 set2 <- c('mass', 'speed', 'lifespan', 'consumerfrac', 'endothermfrac', 'tempave_metab')
 set3 <- c('seas', 'microclim', 'tempave')
 set4 <- c('npp', 'nspp', 'thermal_bias')
-set5 <- c('Terrestrial:human', 'Marine:human', 'Freshwater:human')
+set5 <- c('human:TerrFresh', 'human:Marine')
 
 p1 <- ggplot(subset(allcoefsfull, varname %in% set1), 
                     aes(varname, Value, group = mod, color = mod)) +
