@@ -493,30 +493,80 @@ for(i in 1:length(rows1)){
 ```
 
 #### Plot interactions
-```{r interaction plots modTfull1}
+```{r interaction plots modTfull1, fig.height = 10, fig.width = 9}
+# set up the interactions to plot
+ints <- data.frame(vars = c('tsign', 'tempave', 'tempave_metab', 'seas', 'microclim', 'mass', 'speed', 'lifespan', 'consumerfrac', 'endothermfrac', 'nspp', 'thermal_bias', 'npp', 'veg', 'human_bowler'),
+           min = c(1, -10, 10, 0.1, 0, 0, 0, 0.3, 0, 0, 0.3, -10, 1.9, 0, 0), 
+           max = c(2, 30, 40, 16, 6, 8, 2, 2, 1, 1, 2.6, 10, 3.7, 1, 9),
+           log = c(F, F, F, F, F, T, T, T, F, F, T, F, T, F, F),
+           len = c(2, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
+           discrete = c(T, F, F, F, F, F, F, F, F, F, F, F, F, F, F),
+           stringsAsFactors = FALSE)
+basetab <- data.frame(REALM = 'Freshwater', REALM2 = 'TerrFresh', 
+                      tempave.sc = 0, tempave_metab.sc = 0, 
+                      seas.sc = 0, microclim.sc = 0, mass.sc = 0, 
+                      speed.sc = 0, lifespan.sc = 0, endothermfrac.sc = 0, 
+                      nspp.sc = 0, thermal_bias.sc = 0, npp.sc = 0, human_bowler.sc = 0, veg.sc = 0,
+                      consumerfrac.sc = 0,
+                      nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_514668')
 
-newdat <- cbind(expand.grid(temptrend = seq(-1.5, 1.5, length.out = 100), nspp = 2^seq(1, 9, length.out=500)), 
-                data.table(REALM = 'Freshwater', REALM2 = 'TerrFresh', tempave.sc = 0, tempave_metab.sc = 0, 
-                           seas.sc = 0, microclim.sc = 0, mass.sc = 0, 
-                           speed.sc = 0, lifespan.sc = 0, endothermfrac.sc = 0, 
-                           thermal_bias.sc = 0, npp.sc = 0, human_bowler.sc = 0, veg.sc = 0,
-                           consumerfrac.sc = 0,
-                           nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_514668'))
-newdat <- rbind(newdat[1:2, ], newdat) # add two extra rows so that all factor levels are represented (for predict.lme to work)
+# make the data frames for each interaction to plot                
+for(j in 1:nrow(ints)){
+  # set up a grid of temperature trends and the interacting variable
+  if(ints$log[j]) intvars <- list(temptrend = seq(-1.5, 1.5, length.out = 100), 
+                                  new = 10^seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
+                                   var = ints$vars[j])
+  if(!ints$log[j]) intvars <- list(temptrend = seq(-1.5, 1.5, length.out = 100), 
+                                   new = seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
+                                   var = ints$vars[j])
+  names(intvars) <- c('temptrend', ints$vars[j], 'var')
+  thisdat <- expand.grid(intvars)
+  
+  # scale the interacting variable
+  cent <- attr(trends[[paste0(ints$var[j], '.sc')]], 'scaled:center')
+  scl <- attr(trends[[paste0(ints$var[j], '.sc')]], 'scaled:scale')
+  if(!is.null(cent) & !is.null(scl)){
+    if(ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (log(thisdat[[ints$var[j]]]) - cent)/scl
+    if(!ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (thisdat[[ints$var[j]]] - cent)/scl
+  }
+
+  # merge with the rest of the columns
+  if(ints$var[j] != 'tsign') colnamestouse <- setdiff(colnames(basetab), paste0(ints$var[j], '.sc'))
+  if(ints$var[j] == 'tsign') colnamestouse <- setdiff(colnames(basetab), ints$var[j])
+  thisdat <- cbind(thisdat, basetab[, colnamestouse])
+
+  # merge with the previous iterations
+  if(j == 1) newdat <- thisdat
+  if(j > 1){
+    colstoadd <- setdiff(colnames(thisdat), colnames(newdat))
+    for(toadd in colstoadd){
+      newdat[[toadd]] <- NA
+    }
+    
+    colstoadd2 <- setdiff(colnames(newdat), colnames(thisdat))
+    for(toadd in colstoadd2){
+      thisdat[[toadd]] <- NA
+    }
+    
+    newdat <- rbind(newdat, thisdat)
+  } 
+}
+
+# add two extra rows so that all factor levels are represented (for predict.lme to work)
+newdat <- rbind(newdat[1:2, ], newdat)
+newdat$REALM <- as.character(newdat$REALM)
+newdat$REALM2 <- as.character(newdat$REALM2)
 newdat$REALM[1:2] <- c('Marine', 'Terrestrial')
 newdat$REALM2[1:2] <- c('Marine', 'Marine')
 
-# trim to some temperature change (so that tsign is -1 or 1)
+# trim to at least some temperature change (so that tsign is -1 or 1)
 newdat <- newdat[newdat$temptrend != 0,]
 
-# scale the vars
-newdat$nspp.sc <- (log(newdat$nspp) - attr(trends$nspp.sc, 'scaled:center'))/attr(trends$nspp.sc, 'scaled:scale')
+# scale the temperature vars
 newdat$temptrend.sc <- newdat$temptrend/attr(trends$temptrend.sc, 'scaled:scale') 
 newdat$temptrend_abs <- abs(newdat$temptrend)
 newdat$temptrend_abs.sc <- (newdat$temptrend_abs)/attr(trends$temptrend_abs.sc, 'scaled:scale')
 newdat$tsign <- factor(sign(newdat$temptrend))
-
-
 
 # make predictions
 newdat$preds <- predict(object = modTfull1, newdata = newdat, level = 0)
@@ -524,12 +574,32 @@ newdat$preds <- predict(object = modTfull1, newdata = newdat, level = 0)
 #remove the extra rows
 newdat <- newdat[newdat$REALM == 'Freshwater', ]
 
-# plot
-ggplot(newdat, aes(temptrend, preds, group = nspp, color = nspp)) +
-  geom_line() +
-  scale_color_distiller(palette = "YlGnBu", trans = 'log', breaks = c(2, 10, 50, 500))
-```
+# prep the plots
+intplots <- vector('list', nrow(ints))
+for(j in 1:nrow(ints)){
+  thisplot <- ggplot(newdat[newdat$var == ints$vars[j], ], 
+                     aes_string(x = 'temptrend', y = 'preds', 
+                                group = ints$vars[j], 
+                                color = ints$vars[j])) +
+    geom_line() +
+    coord_cartesian(ylim = c(0, 1)) +
+    theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm'))
+  if(ints$log[j] & !ints$discrete[j]){
+    intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'log')
+  }
+  if(!ints$log[j] & !ints$discrete[j]){
+    intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'identity')
+  }
+  if(ints$discrete[j]){
+    intplots[[j]] <- thisplot + scale_color_brewer(palette = "Dark2")
+  }
+}
 
+#grid.arrange(grobs = intplots, '+', theme(plot.margin = unit(c(0,0,0,0), 'cm'))), ncol=2)
+#do.call('grid.arrange', c(intplots, ncol = 2))
+grid.arrange(grobs = intplots, ncol = 3)
+```
+Positive thermal bias means that the species in the assemblage have warmer thermal niches than the environment (and vice versa). 
 
 #### Plot residuals against each predictor
 ```{r resids modTfull1, fig.height = 10, fig.width=10}
@@ -555,6 +625,63 @@ plot(preds$thermal_bias.sc, resids, cex = cex, col = col)
 plot(preds$npp.sc, resids, cex = cex, col = col)
 plot(preds$veg.sc, resids, cex = cex, col = col)
 plot(preds$human_bowler.sc, resids, cex = cex, col = col)
+```
+
+#### Remove each term from the full model
+```{r term deletion from modTfull1}
+
+if(file.exists('output/aics_from_full.csv')){
+  aicsfromfull <- read.csv('output/aics_from_full.csv')
+
+} else {
+  i <- trends[, complete.cases(Jtutrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
+                               temptrend_abs.sc, mass.sc, speed.sc, lifespan.sc, 
+                               consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
+  
+  randef <- list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)
+  varef <- varPower(-0.5, ~nyrBT)
+  
+  terms <- c('temptrend_abs.sc*REALM', 
+             'temptrend_abs.sc*tsign',
+             'temptrend_abs.sc*tempave.sc',
+             'temptrend_abs.sc*tempave_metab.sc',
+             'temptrend_abs.sc*seas.sc',
+             'temptrend_abs.sc*microclim.sc',
+             'temptrend_abs.sc*mass.sc',
+             'temptrend_abs.sc*speed.sc', 
+             'temptrend_abs.sc*lifespan.sc', 
+             'temptrend_abs.sc*consumerfrac.sc',
+             'temptrend_abs.sc*endothermfrac.sc',
+             'temptrend_abs.sc*nspp.sc',
+             'temptrend_abs.sc*thermal_bias.sc:tsign',
+             'temptrend_abs.sc*npp.sc',
+             'temptrend_abs.sc*veg.sc',
+             'temptrend_abs.sc*human_bowler.sc:REALM2')
+  modTdrops <- vector('list', length(terms)+2)
+  names(modTdrops) <- c('full', '-temptrend_abs.sc', paste0('-', terms))
+  
+  # fit full model with ML for model comparison
+  modTdrops[[1]] <- lme(formula(paste0('Jtutrend ~ ', paste(terms, collapse = ' + '))),
+                        random = randef, weights = varef, data = trends[i,], method = 'ML')
+  
+  # w/out temptrend
+  modTdrops[[2]] <- lme(formula(paste0('Jtutrend ~ ', paste(gsub('temptrend_abs.sc\\*', '', terms), collapse = ' + '))),
+                        random = list(STUDY_ID = ~ 1, rarefyID = ~1), weights = varef, data = trends[i,], method = 'ML')
+  
+  for(j in 1:length(terms)){
+    print(j)
+    modTdrops[[j+2]] <- lme(formula(paste0('Jtutrend ~ ', paste(terms[-j], collapse = ' + '))),
+                            random = randef, weights = varef, data = trends[i,], method = 'ML')
+  }
+  
+  aics <- sapply(modTdrops, AIC)
+  
+  aicsfromfull <- data.frame(mod = names(aics), dAIC_Jtu = aics - aics[1])
+  
+  write.csv(aicsfromfull, file = 'output/aics_from_full.csv', row.names = FALSE)
+}
+
+aicsfromfull
 ```
 
 ### Sensitivity analysis: total turnover and Horn-Morisita models
@@ -622,7 +749,7 @@ summary(modTfullHorn)
 ```
 
 #### plot coefs for full Total and HM models
-```{r plot simplified total and HM mod coefs, fig.height=8, fig.width=6}
+```{r plot total and HM mod coefs, fig.height=8, fig.width=6}
 coefs2 <- summary(modTfullJbeta)$tTable
 coefs3 <- summary(modTfullHorn)$tTable
 varstoplot <- unique(c(rownames(coefs2), rownames(coefs3)))
@@ -664,8 +791,119 @@ for(i in 1:length(rows1)){
 
 Black is for Jaccard total turnover (pres/abs), grey is for Morisita-Horn turnover (considers abundance)
 
-### Plot coefficients from all full models
-NEED TO FIX CODE FOR THERMAL BIAS AND FOR HUMAN IMPACT
+#### Delete terms from the full Jbeta and Horn models, plot dAICs
+```{r term deletion from Jbeta and Horn models}
+
+if(file.exists('output/aics_from_full.csv')){
+  aicsfromfull <- read.csv('output/aics_from_full.csv')
+  
+  if(all(c('dAIC_Jbeta', 'dAIC_Horn') %in% colnames(aicsfromfull))){
+    runJbetaHorn <- FALSE
+  } else {
+    runJbetaHorn <- TRUE
+  }
+} else {
+  runJbetaHorn <- TRUE
+}
+
+if(runJbetaHorn){
+  i <- trends[, complete.cases(Jbetatrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
+                               temptrend_abs.sc, mass.sc, speed.sc, lifespan.sc, 
+                               consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
+  i2 <- trends[, complete.cases(Horntrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
+                               temptrend_abs.sc, mass.sc, speed.sc, lifespan.sc, 
+                               consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
+  
+  randef <- list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)
+  varef <- varPower(-0.5, ~nyrBT)
+  
+  terms <- c('temptrend_abs.sc*REALM', 
+             'temptrend_abs.sc*tsign',
+             'temptrend_abs.sc*tempave.sc',
+             'temptrend_abs.sc*tempave_metab.sc',
+             'temptrend_abs.sc*seas.sc',
+             'temptrend_abs.sc*microclim.sc',
+             'temptrend_abs.sc*mass.sc',
+             'temptrend_abs.sc*speed.sc', 
+             'temptrend_abs.sc*lifespan.sc', 
+             'temptrend_abs.sc*consumerfrac.sc',
+             'temptrend_abs.sc*endothermfrac.sc',
+             'temptrend_abs.sc*nspp.sc',
+             'temptrend_abs.sc*thermal_bias.sc:tsign',
+             'temptrend_abs.sc*npp.sc',
+             'temptrend_abs.sc*veg.sc',
+             'temptrend_abs.sc*human_bowler.sc:REALM2')
+  
+  modTJbetadrops <- vector('list', length(terms)+2)
+  modTHorndrops <- vector('list', length(terms)+2)
+
+  names(modTJbetadrops) <- c('full', '-temptrend_abs.sc', paste0('-', terms))
+  names(modTHorndrops) <- c('full', '-temptrend_abs.sc', paste0('-', terms))
+  
+  # fit full model with ML for model comparison
+  modTJbetadrops[[1]] <- lme(formula(paste0('Jbetatrend ~ ', paste(terms, collapse = ' + '))),
+                        random = randef, weights = varef, data = trends[i,], method = 'ML')
+  modTHorndrops[[1]] <- lme(formula(paste0('Horntrend ~ ', paste(terms, collapse = ' + '))),
+                        random = randef, weights = varef, data = trends[i2,], method = 'ML')
+  
+  # w/out temptrend
+  modTJbetadrops[[2]] <- lme(formula(paste0('Jbetatrend ~ ', paste(gsub('temptrend_abs.sc\\*', '', terms), collapse = ' + '))),
+                        random = list(STUDY_ID = ~ 1, rarefyID = ~1), weights = varef, data = trends[i,], method = 'ML')
+  modTHorndrops[[2]] <- lme(formula(paste0('Horntrend ~ ', paste(gsub('temptrend_abs.sc\\*', '', terms), collapse = ' + '))),
+                        random = list(STUDY_ID = ~ 1, rarefyID = ~1), weights = varef, data = trends[i2,], method = 'ML')
+  
+  for(j in 1:length(terms)){
+    print(j)
+    modTJbetadrops[[j+2]] <- lme(formula(paste0('Jbetatrend ~ ', paste(terms[-j], collapse = ' + '))),
+                                 random = randef, weights = varef, data = trends[i,], method = 'ML', 
+                                 control = lmeContrl(returnObject = TRUE)) # return fitted object even if a convergence error
+    modTHorndrops[[j+2]] <- lme(formula(paste0('Horntrend ~ ', paste(terms[-j], collapse = ' + '))),
+                            random = randef, weights = varef, data = trends[i2,], method = 'ML')
+  }
+  
+  aicsJbeta <- sapply(modTJbetadrops, AIC)
+  aicsHorn <- sapply(modTHorndrops, AIC)
+
+  if(exists('aicsfromfull')){
+    aicsfromfull$dAIC_Jbeta <- aicsJbeta - aicsJbeta[1]
+    aicsfromfull$dAIC_Horn <- aicsHorn - aicsHorn[1]
+  } else {
+    aicsfromfull <- data.frame(mod = names(aics), 
+                               dAIC_Jbeta = aicsJbeta - aicsJbeta[1],
+                               dAIC_Horn <- aicsHorn - aicsHorn[1])
+  }
+  
+  write.csv(aicsfromfull, file = 'output/aics_from_full.csv', row.names = FALSE)
+}
+
+aicsfromfull
+
+# transform for a plot
+aicsfromfulllong <- reshape(aicsfromfull, direction = 'long',
+                            varying = c('dAIC_Jtu', 'dAIC_Jbeta', 'dAIC_Horn'),
+                            v.names = 'dAIC',
+                            idvar = 'mod',
+                            timevar = 'type',
+                            times = c('Jtu', 'Jbeta', 'Horn'))
+
+trans = function(x) sign(x)*sqrt(abs(x))
+aicsfromfulllong$dAIC_tr <- trans(aicsfromfulllong$dAIC)
+
+# plot
+xlims <- range(aicsfromfulllong$dAIC_tr)
+xticks <- c(-10, 0, 10, 100, 1000, 10000)
+par(mai = c(0.5, 3, 0.1, 0.1))
+with(aicsfromfulllong[aicsfromfulllong$type == 'Jtu',], plot(dAIC_tr, nrow(aicsfromfull):1, 
+                                                           col = 'light grey', xlim = xlims, yaxt = 'n', ylab = '', xaxt = 'n'))
+with(aicsfromfulllong[aicsfromfulllong$type == 'Jbeta',], points(dAIC_tr, nrow(aicsfromfull):1 - 0.1, col = 'dark grey'))
+with(aicsfromfulllong[aicsfromfulllong$type == 'Horn',], points(dAIC_tr, nrow(aicsfromfull):1 - 0.2, col = 'black'))
+axis(2, at = nrow(aicsfromfull):1, labels = aicsfromfull$mod, las = 1, cex.axis = 0.7)
+axis(1, at = trans(xticks), labels = xticks, cex.axis = 0.5)
+abline(v = 0, lty =2, col = 'grey')
+```
+Light grey is for Jaccard turnover, dark grey is for Jaccard total, black is for Morisita-Horn
+
+### Plot interaction coefficients from all full models
 ```{r plot coefs for all models, fig.height=5, fig.width=6, out.height=5, out.width=6, fig.retina=2}
 # fig.width = 3, fig.height = 5, out.height=2.5, out.width=3, fig.retina =3 for macbook screen
 # double that for external monitor
@@ -708,6 +946,8 @@ allcoefsfull$varname <- gsub('temptrend_abs.sc:|temptrend.sc:', '', allcoefsfull
 allcoefsfull$varname <- gsub('REALM|REALM2', '', allcoefsfull$varname)
 allcoefsfull$varname <- gsub('.sc', '', allcoefsfull$varname)
 allcoefsfull$varname <- gsub('_bowler', '', allcoefsfull$varname)
+allcoefsfull$varname <- gsub('tsign1', 'warming', allcoefsfull$varname)
+allcoefsfull$varname <- gsub('tsign-1', 'cooling', allcoefsfull$varname)
 
 # set x-axes
 xlims1 <- c(-0.01, 0.11) # for realms
@@ -799,5 +1039,4 @@ grid.arrange(p1, p2, p3, p4, p5, ncol = 2, layout_matrix = rbind(c(1,2), c(3,4),
 
 
 ```
-
 
