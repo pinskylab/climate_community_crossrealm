@@ -151,6 +151,6 @@ grid.arrange(p1, p2, nrow = 1)
 
 # Write out 
 ```{r write}
-write.csv(btsum, file = gzfile('output/temperature_byrarefyID.csv.gz'), row.names = FALSE)
+write.csv(temptrends, file = gzfile('output/temperature_trends_sampled.csv.gz'), row.names = FALSE)
 
 ```
