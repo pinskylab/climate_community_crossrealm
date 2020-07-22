@@ -1,9 +1,8 @@
 ---
 title: "Turnover covariate data prep"
-output: 
-    html_notebook: default
-    #html_document: default
-    #github_document: default # latter for displaying on github
+output:
+  github_document: default
+  html_notebook: default
 ---
 
 ```{r setup}
@@ -180,8 +179,6 @@ beanplot(Nspp ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", 
 beanplot(thermal_bias ~ REALM, data = trends[i & !is.na(thermal_bias),], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Thermal bias (degC)', ll = 0.05)
 beanplot(npp ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'NPP', ll = 0.05)
 beanplot(veg ~ REALM, data = trends[i & REALM !='Marine',], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'NPP', ll = 0.05)
-beanplot(human_bowler ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Human impact score (Bowler)', ll = 0.05)
-beanplot(human_footprint.sc ~ REALM, data = trends[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Human impact score (Venter/Halpern', ll = 0.05)
 
 ```
 
@@ -293,20 +290,26 @@ p15 <- ggplot(trends, aes(human_bowler, Jtutrend, color = REALM, size = nyrBT)) 
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Bowler human impact score', y = 'Jaccard turnover temporal trend')
 
-p16 <- ggplot(trends, aes(human_footprint.sc, Jtutrend, color = REALM, size = nyrBT)) +
+p16 <- ggplot(trends, aes(human_venter, Jtutrend, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'scaled Human impact score (Venter/Halpern)', y = 'Jaccard turnover temporal trend')
+  labs(x = 'scaled Human impact score (Venter)', y = 'Jaccard turnover temporal trend')
 
-p17 <- ggplot(trends, aes(temptrend, Jtutrend, color = REALM, size = nyrBT)) +
+p17 <- ggplot(trends, aes(human_halpern, Jtutrend, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'scaled Human impact score (Halpern)', y = 'Jaccard turnover temporal trend')
+
+p18 <- ggplot(trends, aes(temptrend, Jtutrend, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover temporal trend')
 
 # Jaccard total trend vs. temperature trend (across all years)
-p18 <- ggplot(trends, aes(temptrend, Jbetatrend, color = REALM, size = nyrBT)) +
+p19 <- ggplot(trends, aes(temptrend, Jbetatrend, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
@@ -314,14 +317,14 @@ p18 <- ggplot(trends, aes(temptrend, Jbetatrend, color = REALM, size = nyrBT)) +
 
 
 # Horn-Morisita turnover trend vs. temperature trend (across all years)
-p19 <- ggplot(trends, aes(temptrend, Horntrend, color = REALM, size = nyrBT)) +
+p20 <- ggplot(trends, aes(temptrend, Horntrend, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn temporal turnover')
 
 
-grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, ncol = 2)
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, ncol = 2)
 ```
 
 Strong trends with temperature change, but trends are pretty symmetric around no trend in temperature, which implies warming or cooling drives similar degree of community turnover.
