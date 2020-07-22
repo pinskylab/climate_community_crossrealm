@@ -1,0 +1,156 @@
+---
+title: "Sample global temperature dataset trends"
+output: html_notebook
+---
+```{r setup}
+require(data.table)
+require(ncdf4)
+require(ggplot2)
+require(gridExtra)
+
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
+```
+
+# Read in BioTime and temperature data
+Using average daily temperature by month from CRU TS
+Using average temperature by month from ERSST. NOAA_ERSST_V5 data provided by the NOAA/OAR/ESRL PSD, Boulder, Colorado, USA, from their Web site at https://www.esrl.noaa.gov/psd/
+```{r}
+# biotime community similarity data
+load('data/biotime_blowes/bt_malin.Rdata') # load bt_malin
+bt <- data.table(bt_malin); rm(bt_malin)
+
+# biotime covariate data, including temperature trends
+trends <- fread('output/turnover_w_covariates.csv.gz')
+trends[, REALM2 := as.character(REALM)] # group terrestrial and freshwater
+trends[REALM %in% c('Terrestrial', 'Freshwater'), REALM2 := 'TerrFresh']
+
+# CRU TS mean temp by year
+n = nc_open('dataDL/cruts/cru_ts4.03.1901.2018.tmp.dat.nc') # Open the netCDF file. Won't work on .gz for some reason
+# print(n) # get information about the file format
+cruts = ncvar_get(n, 'tmp') # dim order: 720 lon x 360 lat x 1416 time (observations are month, time measured in days since Jan 1, 1900). 0 lon is at date line.
+dim(cruts)
+dates <- format(as.Date(as.numeric(ncvar_get(n, 'time')), origin=as.Date('1900-01-01')), format = '%Y%m')
+dimnames(cruts) <- list(lon_cruts = ncvar_get(n, 'lon'), lat_cruts = ncvar_get(n, 'lat'), time = dates)
+nc_close(n)
+
+# ERSST temp by month
+n = nc_open('dataDL/ersst/sst.mnmean.nc') # Open the netCDF file
+# print(n) # get information about the file format
+ersst = ncvar_get(n, 'sst') # dim order: 180 lon x 89 lat x 1994 time (observations are month, time measured in days since Jan 1, 1800). 0 lon is at greenwhich mean.
+dim(ersst)
+dates <- format(as.Date(as.numeric(ncvar_get(n, 'time')), origin = as.Date('1800-01-01')), format = '%Y%m')
+dimnames(ersst) <- list(lon_ersst = ncvar_get(n, 'lon'), lat_ersst = ncvar_get(n, 'lat'), time = dates)
+nc_close(n)
+
+```
+
+Check the temperature data read in correctly
+```{r}
+# CTU TS
+head(dimnames(cruts)[[3]]) # 190101: good
+tail(dimnames(cruts)[[3]]) # should be Dec. 2018: good
+
+# ERSST
+head(dimnames(ersst)[[3]]) # should be Jan. 1854: good
+tail(dimnames(ersst)[[3]]) # should be 2020: good
+
+```
+
+# Average temperature by year
+```{r}
+# CRU TS
+crutsmelt <- as.data.table(cruts, value.name='cruts') # reshape to long format
+crutsmelt[, YEAR := as.numeric(substr(time, 1,4))] # extract year
+crutsyr <- crutsmelt[, .(cruts = mean(cruts, na.rm=TRUE)), by = .(lat_cruts = as.numeric(lat_cruts), lon_cruts = as.numeric(lon_cruts), YEAR)]
+
+# ERSST
+ersstmelt <- as.data.table(ersst, value.name = 'ersst')
+ersstmelt[, YEAR := as.numeric(substr(time, 1,4))]
+ersstyr <- ersstmelt[, .(ersst = mean(ersst, na.rm=TRUE)), by = .(lat_ersst = as.numeric(lat_ersst), lon_ersst = as.numeric(lon_ersst), YEAR)]
+
+```
+
+## Plot CRU TS to make sure it worked
+```{r}
+ggplot(crutsyr[YEAR == 1901,], aes(lon_cruts, lat_cruts, color = cruts)) + geom_point(size = 0.1)
+```
+## Plot ERSST to make sure it worked
+```{r}
+ggplot(ersstyr[YEAR == 1901,], aes(lon_ersst, lat_ersst, color = ersst)) + geom_point(size = 1) # plot to make sure it worked
+```
+
+
+
+# Find first/last year pairs in biotime
+```{r bt years}
+btrng <- bt[, .(min = min(YEAR), max = max(YEAR)), by = .(rarefyID, REALM)]
+btrng
+```
+
+# Pick 1000 locations globally and assign a set of years
+```{r random locations}
+# Pick locations and assign a rarefyID randomly
+crutslls <- crutsyr[!duplicated(cbind(lat_cruts, lon_cruts)), .(lat_cruts, lon_cruts)]
+crutslls <- crutslls[sample(1:.N, 50000, replace = TRUE), ] # pick locations
+crutslls[, rarefyID := sample(btrng[REALM %in% c('Terrestrial', 'Freshwater'), rarefyID], .N, replace = TRUE)] # randomly assign rarefyIDs
+
+ersstlls <- ersstyr[!duplicated(cbind(lat_ersst, lon_ersst)), .(lat_ersst, lon_ersst)]
+ersstlls <- ersstlls[sample(1:.N, 50000, replace = TRUE), ]
+ersstlls[, rarefyID := sample(btrng[REALM == 'Marine', rarefyID], .N, replace = TRUE)]
+
+# Merge in start/end years from BioTime
+crutslls <- merge(crutslls, btrng, by = 'rarefyID')
+ersstlls <- merge(ersstlls, btrng, by = 'rarefyID')
+
+# Fill out with temperature for each intervening year
+crutslls[, index := 1:.N]
+crutsallyrs <- crutslls[, .(YEAR = seq(min, max, by = 1)), by = .(rarefyID, lat_cruts, lon_cruts, index)] # make a data.table of all years from first to last for each rarefyID
+crutsallyrs <- merge(crutsallyrs, crutsyr, by = c('lat_cruts', 'lon_cruts', 'YEAR'), all.x = TRUE) # merge the data.table with cruts values
+
+# ERSST
+ersstlls[, index := 1:.N]
+ersstallyrs <- ersstlls[, .(YEAR = seq(min, max, by = 1)), by = .(rarefyID, lat_ersst, lon_ersst, index)]
+ersstallyrs <- merge(ersstallyrs, ersstyr, by = c('lat_ersst', 'lon_ersst', 'YEAR'), all.x = TRUE)
+
+```
+
+
+## Temperature trends for all years from first to last
+```{r calc temp trend all years}
+# CRU TS
+trend_allyrscruts <- crutsallyrs[, .(trend_cruts = coef(lm(cruts ~ YEAR))[2], YEAR_min = min(YEAR), YEAR_max = max(YEAR)), 
+          by = .(rarefyID, lat_cruts, lon_cruts, index)] # calculate trends
+
+# ERSST
+trend_allyrsersst <- ersstallyrs[, .(trend_ersst = coef(lm(ersst ~ YEAR))[2], YEAR_min = min(YEAR), YEAR_max = max(YEAR)), 
+          by = .(rarefyID, lat_ersst, lon_ersst, index)]
+
+```
+
+## Merge
+```{r merge}
+temptrends <- rbind(trend_allyrscruts[, .(lat = lat_cruts, lon = lon_cruts, REALM = 'Terrestrial', trend = trend_cruts, YEAR_min, YEAR_max)],
+                    trend_allyrsersst[, .(lat = lat_ersst, lon = lon_ersst, REALM = 'Marine', trend = trend_ersst, YEAR_min, YEAR_max)])
+```
+
+## Plot
+```{r plot, fig.width=8, fig.height=3}
+p1 <- ggplot(temptrends, aes(x = trend, fill = REALM)) +
+    geom_density(alpha = 0.25) +
+    scale_y_sqrt(limits = c(0,16)) +
+    scale_x_continuous(limits = c(-2, 2.5)) +
+    ggtitle('50k random locations')
+p2 <- ggplot(trends[!is.na(temptrend), ], aes(x = temptrend, fill = REALM2)) +
+    geom_density(alpha = 0.25) +
+    scale_y_sqrt(limits = c(0,16)) +
+    scale_x_continuous(limits = c(-2, 2.5)) +
+    ggtitle('BioTime')
+
+grid.arrange(p1, p2, nrow = 1)
+```
+
+# Write out 
+```{r write}
+write.csv(btsum, file = gzfile('output/temperature_byrarefyID.csv.gz'), row.names = FALSE)
+
+```
