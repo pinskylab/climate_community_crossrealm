@@ -426,6 +426,38 @@ trends[REALM2 == 'Marine', human_footprint.sc := scale(log(human_halpern))]
 
 ### Do the variables look ok?
 
+#### Unscaled
+
+``` r
+# histograms to examine
+cexmain = 0.6
+par(mfrow = c(5,4))
+invisible(trends[, hist(minyrBT, main = 'Start year', cex.main = cexmain)])
+invisible(trends[, hist(maxyrBT - minyrBT, main = 'Duration (years)', cex.main = cexmain)])
+invisible(trends[, hist(nyrBT, main = 'Number of sampled years', cex.main = cexmain)])
+invisible(trends[, hist(mass_mean_weight, main = 'Mass (g)', cex.main = cexmain)])
+invisible(trends[, hist(speed_mean_weight, main = 'Speed (km/hr)', cex.main = cexmain)])
+invisible(trends[, hist(lifespan_mean_weight, main = 'Lifespan (yr)', cex.main = cexmain)])
+invisible(trends[, hist(tempave_metab, main = 'Metabolic temperature (°C)', cex.main = cexmain)])
+invisible(trends[, hist(consfrac, main = 'Consumers (fraction)', cex.main = cexmain)])
+invisible(trends[, hist(endofrac, main = 'Endotherms (fraction)', cex.main = cexmain)])
+invisible(trends[, hist(tempave, main = 'Environmental temperature (°C)', cex.main = cexmain)])
+invisible(trends[, hist(temptrend, main = 'Temperature trend (°C/yr)', cex.main = cexmain)])
+invisible(trends[, hist(seas, main = 'Seasonality (°C)', cex.main = cexmain)])
+invisible(trends[, hist(microclim, main = 'Microclimates (°C)', cex.main = cexmain)])
+invisible(trends[, hist(Nspp, main = 'Species richness', cex.main = cexmain)])
+invisible(trends[, hist(thermal_bias, main = 'Thermal bias (°C)', cex.main = cexmain)])
+invisible(trends[, hist(npp, main = 'Net primary productivity', cex.main = cexmain)])
+invisible(trends[, hist(veg, main = 'Vegetation index', cex.main = cexmain)])
+invisible(trends[, hist(human_bowler, main = 'Human impact score (Bowler)', cex.main = cexmain)])
+invisible(trends[, hist(human_venter, main = 'Human impact score (Venter)', cex.main = cexmain)])
+invisible(trends[, hist(human_halpern, main = 'Human impact score (Halpern)', cex.main = cexmain)])
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/histograms%20unscaled-1.png)<!-- -->
+
+#### Scaled
+
 ``` r
 # histograms to examine
 cexmain = 0.6
@@ -449,7 +481,7 @@ invisible(trends[, hist(human_bowler.sc, main = 'log Human impact score (Bowler)
 invisible(trends[, hist(human_footprint.sc, main = 'log Human impact score (Venter & Halpern)', cex.main = cexmain)])
 ```
 
-![](assemble_turnover_covariates_files/figure-gfm/histograms-1.png)<!-- -->
+![](assemble_turnover_covariates_files/figure-gfm/histograms%20scaled-1.png)<!-- -->
 
 ### Check correlations among variables. Pearson’s r is on the lower diagonal.
 

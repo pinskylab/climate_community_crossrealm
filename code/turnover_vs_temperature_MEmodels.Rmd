@@ -33,20 +33,22 @@ Assistance: Katherine Lew, Josef Hauser
   - Temporal slope of Jaccard turnover compared to the first year
   - Same for Jaccard total
   - and Morisita-Horn turnover
-- Tested explanatory variables for differences in rate of turnover:
+- Explanatory variables considered for differences in rate of turnover:
   - Temperature trend over the time-frame of each time-series (CRU TS 4.03 on land and in freshwater, ERSST v5 in the ocean)
   - Seasonality as a metric of thermal sensitivity (Deutsch et al. 2008 PNAS). Standard deviation of monthly temperatures.
-  - Average temperature as a metric of metabolic rates (Dillon et al. 2010 Nature, Antao et al. 2020 Nat E&E)
+  - Microclimates calculated from WorldClim and BioOracle (Laura Antao)
+  - Average temperature
+  - Body mass, collated from databases and literature searches
+  - Metabolic temperature, from average temperature if ectotherms (Dillon et al. 2010 Nature, Antao et al. 2020 Nat E&E)
   - Mobility calculated from body mass and taxonomic group classifications of mobility mode (fly, run, swim, crawl, sessile). Fly/run/swim followed the allometric relationship in Hirt et al. 2017 Nat E&E. Crawl set at 0.1 km/hr, sessile set to 0 km/hr. Then calculated averaged within each assemblage.
+  - Generation time calculated from body mass and endotherm vs. ectotherm classifications, following McCoy & Gillooly 2008 ELE. Averaged across species within each assemblage. 
+  - Consumer vs. producer classification by species
+  - Endotherm vs. ectotherm classification by species
+  - Species richness, calculated as the number of species in the assemblage
   - Net primary productivity (NPP) from the merged land/ocean product produced by the [Ocean Productivity](http://www.science.oregonstate.edu/ocean.productivity/) group at Oregon State using methods from Zhao et al. 2005 and Behrenfeld & Falkowski 1997. 
- - TO DO:
-   - Generation time calculated from body mass and endotherm vs. ectotherm classifications, following McCoy & Gillooly 2008 ELE. Averaged across species within each assemblage. 
-   - Human impact calculated from Carsten Meyer's ecosystem cube data
-   - Thermal bias calculated from Species Temperature Indices (Mike Burrows)
-   - Microclimates calculated from WorldClim and BioOracle (Laura Antao)
-   - Consumer vs. producer classification
- - Maybe to do:
-   - Species pool richness
+  - Human impact calculated from Bowler et al. 2020 (also try data from Venter et al. 2016 and Halpern et al. 2008)
+  - Thermal bias calculated from Species Temperature Indices (Mike Burrows)
+  - Vegetation cover index, calculated from %tree cover and %non-tree veg cover (latter counted as 1/2), from vegetation continuous fields (Ruben Remelgado)
 - Differences in temporal turnover (response variable) modeled with a linear mixed effects model (nlme package, lme() function). See below for details.
 
 ```{r setup}
@@ -116,11 +118,11 @@ trends[, table(taxa_mod)]
 trends[, table(taxa_mod, REALM)]
 ```
 
-With all covariates (Venter/Halpern for human)
+With all covariates (Bowler for human)
 ```{r sample size for Jaccard turnover}
 # the cases we can compare
-apply(trends[, .(Jtutrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, temptrend.sc, mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_footprint.sc)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
-i <- trends[, complete.cases(Jtutrend, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, temptrend.sc, mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_footprint.sc)]
+apply(trends[, .(Jtutrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, temptrend.sc, mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
+i <- trends[, complete.cases(Jtutrend, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, temptrend.sc, mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
 cat('Overall # time-series: ', sum(i), '\n')
 cat('# studies: ', trends[i, length(unique(STUDY_ID))], '\n')
 cat('Data points: ', trends[i, sum(nyrBT)], '\n')
@@ -216,14 +218,14 @@ Mostly northern hemisphere, but spread all over. No so much in Africa or much of
 
 Average rates of turnover
 ```{r rates of turnover}
-trends[abs(temptrend) >= 0.5, .(mean(Jtutrend), sd(Jtutrend)/sqrt(.N))] # turnover per year for locations changing temperature
-trends[abs(temptrend) < 0.1, .(mean(Jtutrend), sd(Jtutrend)/sqrt(.N))] # not changing temperature
-trends[temptrend >= 0.5, .(mean(Jtutrend), sd(Jtutrend)/sqrt(.N))] # warming
-trends[temptrend <= -0.5, .(mean(Jtutrend), sd(Jtutrend)/sqrt(.N))] # cooling
+trends[abs(temptrend) >= 0.5, .(ave = mean(Jtutrend), sd = sd(Jtutrend)/sqrt(.N))] # turnover per year for locations changing temperature
+trends[abs(temptrend) < 0.1, .(ave = mean(Jtutrend), sd = sd(Jtutrend)/sqrt(.N))] # not changing temperature
+trends[temptrend >= 0.5, .(ave = mean(Jtutrend), sd = sd(Jtutrend)/sqrt(.N))] # warming
+trends[temptrend <= -0.5, .(ave = mean(Jtutrend), sd = sd(Jtutrend)/sqrt(.N))] # cooling
 
-trends[abs(temptrend) >= 0.5 & abs(rarefyID_y) < 35, .(mean(Jtutrend), sd(Jtutrend)/sqrt(.N))] # tropics and sub-tropics
-trends[abs(temptrend) >= 0.5 & abs(rarefyID_y) >= 35 & abs(rarefyID_y) < 66.56339, .(mean(Jtutrend), sd(Jtutrend)/sqrt(.N))] # temperate
-trends[abs(temptrend) >= 0.5 & abs(rarefyID_y) >= 66.56339, .(mean(Jtutrend), sd(Jtutrend)/sqrt(.N))] # arctic
+trends[abs(temptrend) >= 0.5 & abs(rarefyID_y) < 35, .(ave = mean(Jtutrend), sd = sd(Jtutrend)/sqrt(.N))] # tropics and sub-tropics
+trends[abs(temptrend) >= 0.5 & abs(rarefyID_y) >= 35 & abs(rarefyID_y) < 66.56339, .(ave = mean(Jtutrend), sd = sd(Jtutrend)/sqrt(.N))] # temperate
+trends[abs(temptrend) >= 0.5 & abs(rarefyID_y) >= 66.56339, .(ave = mean(Jtutrend), sd = sd(Jtutrend)/sqrt(.N))] # arctic
 ```
 
 
@@ -310,6 +312,7 @@ legend('bottomright', col = c('black', 'dark grey', 'light grey'), lwd = 1, pch 
        legend = c('Jaccard turnover', 'Jaccard total', 'Horn-Morisita'))
 
 ```
+
 ### Nicer plots of turnover vs. temperature data and model fit
 Scatterplot, violin plots, and coefficient plots all together
 ```{r turnover vs. temperature big plot, fig.width=6, fig.height=4.5}
@@ -396,7 +399,9 @@ Try static covariates plus interactions of abs temperature trend with each covar
 
 Except for thermal bias: interact with temperature trend (not abs)
 
-### Full model for Jaccard total
+### Fit full models
+#### Full model for Jaccard total
+Try Bowler or Venter/Halpern human impact
 ```{r LME Jacard turnover temperature full}
 # using Bowler for human impact
 i <- trends[, complete.cases(Jtutrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
@@ -430,7 +435,7 @@ if(file.exists('temp/modTfull1.rds')){
 }
 
 # using Venter/Halpern for human impact
-i <- trends[, complete.cases(Jtutrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
+i1.2 <- trends[, complete.cases(Jtutrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
                              temptrend.sc, temptrend_abs.sc, mass.sc, speed.sc, lifespan.sc, 
                              consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_footprint.sc)]
 
@@ -456,7 +461,7 @@ if(file.exists('temp/modTfullfootprint.rds')){
                      temptrend_abs.sc*npp.sc +
                      temptrend_abs.sc*veg.sc +
                      temptrend_abs.sc*human_footprint.sc:REALM2,
-                   random = randef, weights = varef, data = trends[i,], method = 'REML')
+                   random = randef, weights = varef, data = trends[i1.2,], method = 'REML')
   saveRDS(modTfullfootprint, file = 'temp/modTfullfootprint.rds')
 }
 
@@ -466,226 +471,7 @@ summary(modTfullfootprint)
 
 ```
 
-
-
-#### Plot the coefficients from the full model
-Bowler human footprint in black, Venter/Halpern in grey
-```{r plot fullTmod1, fig.height=6, fig.width=7}
-
-coefs <- summary(modTfull1)$tTable
-coefs2 <- summary(modTfullfootprint)$tTable
-par(las = 1, mai = c(0.5, 3, 0.1, 0.1))
-rows1 <- which(!grepl('Intercept', rownames(coefs)))
-plot(0,0, col = 'white', xlim=c(-0.05, 0.08), ylim = c(1,length(rows1)), yaxt='n', xlab = '', ylab ='')
-axis(2, at = length(rows1):1, labels = rownames(coefs)[rows1], cex.axis = 0.7)
-abline(v = 0, col = 'grey')
-for(i in 1:length(rows1)){
-  x = coefs[rows1[i], 1]
-  se = coefs[rows1[i], 2]
-  points(x, length(rows1) + 1 - i, pch = 16)
-  lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i, length(rows1) + 1 - i))
-
-  x = coefs2[rows1[i], 1]
-  se = coefs2[rows1[i], 2]
-  points(x, length(rows1) + 1 - i, pch = 16, col = 'grey', cex = 0.75)
-  lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i, length(rows1) + 1 - i), col = 'grey')
-}
-```
-
-#### Plot interactions
-```{r interaction plots modTfull1, fig.height = 10, fig.width = 9}
-# set up the interactions to plot
-ints <- data.frame(vars = c('tsign', 'tempave', 'tempave_metab', 'seas', 'microclim', 'mass', 'speed', 'lifespan', 'consumerfrac', 'endothermfrac', 'nspp', 'thermal_bias', 'npp', 'veg', 'human_bowler'),
-           min = c(1, -10, 10, 0.1, 0, 0, 0, 0.3, 0, 0, 0.3, -10, 1.9, 0, 0), 
-           max = c(2, 30, 40, 16, 6, 8, 2, 2, 1, 1, 2.6, 10, 3.7, 1, 9),
-           log = c(F, F, F, F, F, T, T, T, F, F, T, F, T, F, F),
-           len = c(2, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
-           discrete = c(T, F, F, F, F, F, F, F, F, F, F, F, F, F, F),
-           stringsAsFactors = FALSE)
-basetab <- data.frame(REALM = 'Freshwater', REALM2 = 'TerrFresh', 
-                      tempave.sc = 0, tempave_metab.sc = 0, 
-                      seas.sc = 0, microclim.sc = 0, mass.sc = 0, 
-                      speed.sc = 0, lifespan.sc = 0, endothermfrac.sc = 0, 
-                      nspp.sc = 0, thermal_bias.sc = 0, npp.sc = 0, human_bowler.sc = 0, veg.sc = 0,
-                      consumerfrac.sc = 0,
-                      nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_514668')
-
-# make the data frames for each interaction to plot                
-for(j in 1:nrow(ints)){
-  # set up a grid of temperature trends and the interacting variable
-  if(ints$log[j]) intvars <- list(temptrend = seq(-1.5, 1.5, length.out = 100), 
-                                  new = 10^seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
-                                   var = ints$vars[j])
-  if(!ints$log[j]) intvars <- list(temptrend = seq(-1.5, 1.5, length.out = 100), 
-                                   new = seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
-                                   var = ints$vars[j])
-  names(intvars) <- c('temptrend', ints$vars[j], 'var')
-  thisdat <- expand.grid(intvars)
-  
-  # scale the interacting variable
-  cent <- attr(trends[[paste0(ints$var[j], '.sc')]], 'scaled:center')
-  scl <- attr(trends[[paste0(ints$var[j], '.sc')]], 'scaled:scale')
-  if(!is.null(cent) & !is.null(scl)){
-    if(ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (log(thisdat[[ints$var[j]]]) - cent)/scl
-    if(!ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (thisdat[[ints$var[j]]] - cent)/scl
-  }
-
-  # merge with the rest of the columns
-  if(ints$var[j] != 'tsign') colnamestouse <- setdiff(colnames(basetab), paste0(ints$var[j], '.sc'))
-  if(ints$var[j] == 'tsign') colnamestouse <- setdiff(colnames(basetab), ints$var[j])
-  thisdat <- cbind(thisdat, basetab[, colnamestouse])
-
-  # merge with the previous iterations
-  if(j == 1) newdat <- thisdat
-  if(j > 1){
-    colstoadd <- setdiff(colnames(thisdat), colnames(newdat))
-    for(toadd in colstoadd){
-      newdat[[toadd]] <- NA
-    }
-    
-    colstoadd2 <- setdiff(colnames(newdat), colnames(thisdat))
-    for(toadd in colstoadd2){
-      thisdat[[toadd]] <- NA
-    }
-    
-    newdat <- rbind(newdat, thisdat)
-  } 
-}
-
-# add two extra rows so that all factor levels are represented (for predict.lme to work)
-newdat <- rbind(newdat[1:2, ], newdat)
-newdat$REALM <- as.character(newdat$REALM)
-newdat$REALM2 <- as.character(newdat$REALM2)
-newdat$REALM[1:2] <- c('Marine', 'Terrestrial')
-newdat$REALM2[1:2] <- c('Marine', 'Marine')
-
-# trim to at least some temperature change (so that tsign is -1 or 1)
-newdat <- newdat[newdat$temptrend != 0,]
-
-# scale the temperature vars
-newdat$temptrend.sc <- newdat$temptrend/attr(trends$temptrend.sc, 'scaled:scale') 
-newdat$temptrend_abs <- abs(newdat$temptrend)
-newdat$temptrend_abs.sc <- (newdat$temptrend_abs)/attr(trends$temptrend_abs.sc, 'scaled:scale')
-newdat$tsign <- factor(sign(newdat$temptrend))
-
-# make predictions
-newdat$preds <- predict(object = modTfull1, newdata = newdat, level = 0)
-
-#remove the extra rows
-newdat <- newdat[newdat$REALM == 'Freshwater', ]
-
-# prep the plots
-intplots <- vector('list', nrow(ints))
-for(j in 1:nrow(ints)){
-  thisplot <- ggplot(newdat[newdat$var == ints$vars[j], ], 
-                     aes_string(x = 'temptrend', y = 'preds', 
-                                group = ints$vars[j], 
-                                color = ints$vars[j])) +
-    geom_line() +
-    coord_cartesian(ylim = c(0, 1)) +
-    theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm'))
-  if(ints$log[j] & !ints$discrete[j]){
-    intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'log')
-  }
-  if(!ints$log[j] & !ints$discrete[j]){
-    intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'identity')
-  }
-  if(ints$discrete[j]){
-    intplots[[j]] <- thisplot + scale_color_brewer(palette = "Dark2")
-  }
-}
-
-#grid.arrange(grobs = intplots, '+', theme(plot.margin = unit(c(0,0,0,0), 'cm'))), ncol=2)
-#do.call('grid.arrange', c(intplots, ncol = 2))
-grid.arrange(grobs = intplots, ncol = 3)
-```
-Positive thermal bias means that the species in the assemblage have warmer thermal niches than the environment (and vice versa). 
-
-#### Plot residuals against each predictor
-```{r resids modTfull1, fig.height = 10, fig.width=10}
-resids <- resid(modTfull1)
-preds <- getData(modTfull1)
-col = '#00000033'
-cex = 0.5
-par(mfrow = c(5,4))
-boxplot(resids ~ preds$REALM, cex = cex, col = col)
-plot(preds$temptrend_abs.sc, resids, cex = cex, col = col)
-plot(preds$tsign, resids, cex = cex, col = col)
-plot(preds$tempave.sc, resids, cex = cex, col = col)
-plot(preds$tempave_metab.sc, resids, cex = cex, col = col)
-plot(preds$seas.sc, resids, cex = cex, col = col)
-plot(preds$microclim.sc, resids, cex = cex, col = col)
-plot(preds$mass.sc, resids, cex = cex, col = col)
-plot(preds$speed.sc, resids, cex = cex, col = col)
-plot(preds$lifespan.sc, resids, cex = cex, col = col)
-plot(preds$consumerfrac.sc, resids, cex = cex, col = col)
-plot(preds$endothermfrac.sc, resids, cex = cex, col = col)
-plot(preds$nspp.sc, resids, cex = cex, col = col)
-plot(preds$thermal_bias.sc, resids, cex = cex, col = col)
-plot(preds$npp.sc, resids, cex = cex, col = col)
-plot(preds$veg.sc, resids, cex = cex, col = col)
-plot(preds$human_bowler.sc, resids, cex = cex, col = col)
-```
-
-#### Remove each term from the full model
-```{r term deletion from modTfull1}
-
-if(file.exists('output/aics_from_full.csv')){
-  aicsfromfull <- read.csv('output/aics_from_full.csv')
-
-} else {
-  i <- trends[, complete.cases(Jtutrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
-                               temptrend_abs.sc, mass.sc, speed.sc, lifespan.sc, 
-                               consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
-  
-  randef <- list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)
-  varef <- varPower(-0.5, ~nyrBT)
-  
-  terms <- c('temptrend_abs.sc*REALM', 
-             'temptrend_abs.sc*tsign',
-             'temptrend_abs.sc*tempave.sc',
-             'temptrend_abs.sc*tempave_metab.sc',
-             'temptrend_abs.sc*seas.sc',
-             'temptrend_abs.sc*microclim.sc',
-             'temptrend_abs.sc*mass.sc',
-             'temptrend_abs.sc*speed.sc', 
-             'temptrend_abs.sc*lifespan.sc', 
-             'temptrend_abs.sc*consumerfrac.sc',
-             'temptrend_abs.sc*endothermfrac.sc',
-             'temptrend_abs.sc*nspp.sc',
-             'temptrend_abs.sc*thermal_bias.sc:tsign',
-             'temptrend_abs.sc*npp.sc',
-             'temptrend_abs.sc*veg.sc',
-             'temptrend_abs.sc*human_bowler.sc:REALM2')
-  modTdrops <- vector('list', length(terms)+2)
-  names(modTdrops) <- c('full', '-temptrend_abs.sc', paste0('-', terms))
-  
-  # fit full model with ML for model comparison
-  modTdrops[[1]] <- lme(formula(paste0('Jtutrend ~ ', paste(terms, collapse = ' + '))),
-                        random = randef, weights = varef, data = trends[i,], method = 'ML')
-  
-  # w/out temptrend
-  modTdrops[[2]] <- lme(formula(paste0('Jtutrend ~ ', paste(gsub('temptrend_abs.sc\\*', '', terms), collapse = ' + '))),
-                        random = list(STUDY_ID = ~ 1, rarefyID = ~1), weights = varef, data = trends[i,], method = 'ML')
-  
-  for(j in 1:length(terms)){
-    print(j)
-    modTdrops[[j+2]] <- lme(formula(paste0('Jtutrend ~ ', paste(terms[-j], collapse = ' + '))),
-                            random = randef, weights = varef, data = trends[i,], method = 'ML')
-  }
-  
-  aics <- sapply(modTdrops, AIC)
-  
-  aicsfromfull <- data.frame(mod = names(aics), dAIC_Jtu = aics - aics[1])
-  
-  write.csv(aicsfromfull, file = 'output/aics_from_full.csv', row.names = FALSE)
-}
-
-aicsfromfull
-```
-
-### Sensitivity analysis: total turnover and Horn-Morisita models
-#### Fit full models for total and HM
+#### Full models for total and HM
 ```{r LME Jacard total and MH models, fig.width=10, fig.height=8}
 i2 <- trends[, complete.cases(Jbetatrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
                              temptrend.sc, temptrend_abs.sc, mass.sc, speed.sc, lifespan.sc, 
@@ -748,50 +534,293 @@ summary(modTfullJbeta)
 summary(modTfullHorn)
 ```
 
-#### plot coefs for full Total and HM models
-```{r plot total and HM mod coefs, fig.height=8, fig.width=6}
-coefs2 <- summary(modTfullJbeta)$tTable
-coefs3 <- summary(modTfullHorn)$tTable
-varstoplot <- unique(c(rownames(coefs2), rownames(coefs3)))
 
-rows1 <- which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot)) # vars to plot in first graph
-rows1_2 <- which(rownames(coefs2) %in% varstoplot[rows1]) # rows in coefs2
-rows1_3 <- which(rownames(coefs3) %in% varstoplot[rows1]) # rows in coefs3
-xlims1 <- range(c(coefs2[rows1_2,1] - coefs2[rows1_2,2], 
-                  coefs2[rows1_2,1] + coefs2[rows1_2,2], 
-                  coefs3[rows1_3,1] - coefs3[rows1_3,2], 
-                  coefs3[rows1_3,1] + coefs3[rows1_3,2]))
+### Plots from the full models
+#### Plot the coefficients
+```{r plot fullTmod1, fig.height=8, fig.width=7}
 
-cols <- c('black', 'grey') # for Jbeta and Horn models, respectively
-offs1 <- 0.1 # offset vertically for the two models
-offs2 <- 0.01 # offset vertically for the two models (plot 2)
+coefs <- summary(modTfull1)$tTable
+coefs2 <- summary(modTfullfootprint)$tTable
+coefs3 <- summary(modTfullJbeta)$tTable
+coefs4 <- summary(modTfullHorn)$tTable
+varstoplot <- unique(c(rownames(coefs), rownames(coefs2), rownames(coefs3), rownames(coefs4)))
+varstoplot <- varstoplot[which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot))] # vars to plot
+
+rows1_1 <- which(rownames(coefs) %in% varstoplot) # rows in coefs
+rows1_2 <- which(rownames(coefs2) %in% varstoplot)
+rows1_3 <- which(rownames(coefs3) %in% varstoplot)
+rows1_4 <- which(rownames(coefs4) %in% varstoplot)
+xlims <- range(c(coefs[rows1_1,1] - coefs[rows1_1,2], coefs[rows1_1,1] + coefs[rows1_1,2], 
+                  coefs2[rows1_2,1] - coefs2[rows1_2,2], coefs2[rows1_2,1] + coefs2[rows1_2,2], 
+                  coefs3[rows1_3,1] - coefs3[rows1_3,2], coefs3[rows1_3,1] + coefs3[rows1_3,2],
+                  coefs4[rows1_4,1] - coefs4[rows1_4,2], coefs4[rows1_4,1] + coefs4[rows1_4,2]))
+
+cols <- c('light grey', 'light grey', 'dark grey', 'black') # for Jtu Bowler, Jtu footprint, Jbeta and Horn models, respectively
+pchs <- c(16, 15, 16, 16)
+offs <- c(0.3, 0.1, -0.1, -0.3) # offset vertically for each model
+
+
 
 par(las = 1, mai = c(0.5, 3, 0.1, 0.1))
 
-plot(0,0, col = 'white', xlim=xlims1, ylim = c(1,length(rows1)), yaxt='n', xlab = '', ylab ='')
-axis(2, at = length(rows1):1, labels = varstoplot[rows1], cex.axis = 0.7)
-abline(v = 0, col = 'grey')
-for(i in 1:length(rows1)){
-  if(varstoplot[rows1[i]] %in% rownames(coefs2)){
-    x = coefs2[rownames(coefs2) == varstoplot[rows1[i]], 1]
-    se = coefs2[rownames(coefs2) == varstoplot[rows1[i]], 2]
-    points(x, length(rows1) + 1 - i + offs1, pch = 16, col = cols[1])
-    lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i + offs1, length(rows1) + 1 - i + offs1), col = cols[1])
+plot(0,0, col = 'white', xlim = xlims, ylim = c(1,length(varstoplot)), yaxt='n', xlab = '', ylab ='')
+axis(2, at = length(varstoplot):1, labels = varstoplot, cex.axis = 0.7)
+abline(v = 0, col = 'grey', lty = 2)
+abline(h = 1:length(varstoplot), col = 'grey', lty = 3)
+for(i in 1:length(varstoplot)){
+  if(varstoplot[i] %in% rownames(coefs)){
+    x = coefs[rownames(coefs) == varstoplot[i], 1]
+    se = coefs[rownames(coefs) == varstoplot[i], 2]
+    points(x, length(varstoplot) + 1 - i + offs[1], pch = pchs[1], col = cols[1])
+    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[1], length(varstoplot) + 1 - i + offs[1]), col = cols[1])
   }
-  if(varstoplot[rows1[i]] %in% rownames(coefs3)){
-    x = coefs3[rownames(coefs3) == varstoplot[rows1[i]], 1]
-    se = coefs3[rownames(coefs3) == varstoplot[rows1[i]], 2]
-    points(x, length(rows1) + 1 - i - offs1, pch = 16, col = cols[2])
-    lines(x = c(x-se, x+se), y = c(length(rows1) + 1 - i - offs1, length(rows1) + 1 - i - offs1), col = cols[2])
+  if(varstoplot[i] %in% rownames(coefs2)){
+    x = coefs2[rownames(coefs2) == varstoplot[i], 1]
+    se = coefs2[rownames(coefs2) == varstoplot[i], 2]
+    points(x, length(varstoplot) + 1 - i + offs[2], pch = pchs[2], col = cols[2])
+    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[2], length(varstoplot) + 1 - i + offs[2]), col = cols[2])
+  }
+  if(varstoplot[i] %in% rownames(coefs3)){
+    x = coefs3[rownames(coefs3) == varstoplot[i], 1]
+    se = coefs3[rownames(coefs3) == varstoplot[i], 2]
+    points(x, length(varstoplot) + 1 - i + offs[3], pch = pchs[3], col = cols[3])
+    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[3], length(varstoplot) + 1 - i + offs[3]), col = cols[3])
+  }
+  if(varstoplot[i] %in% rownames(coefs4)){
+    x = coefs4[rownames(coefs4) == varstoplot[i], 1]
+    se = coefs4[rownames(coefs4) == varstoplot[i], 2]
+    points(x, length(varstoplot) + 1 - i + offs[4], pch = pchs[4], col = cols[4])
+    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[4], length(varstoplot) + 1 - i + offs[4]), col = cols[4])
+  }
+}
+```
+
+
+Jaccard turnover in grey (Bowler human footprint circles, Venter/Halpern in squares)
+Jaccard total dark grey
+Horn-Morisita in black
+
+
+#### Plot interactions (Jaccard turnover)
+```{r interaction plots modTfull1, fig.height = 13, fig.width = 9}
+# set up the interactions to plot
+ints <- data.frame(vars = c('tsign', 'tempave', 'tempave_metab', 'seas', 'microclim', 'mass', 'speed', 'lifespan', 'consumerfrac', 'endothermfrac', 'nspp', 'thermal_bias', 'npp', 'veg', 'human_bowler', 'human_bowler'),
+           min = c(1, -10, 10, 0.1, 0, 0, 0, 0.3, 0, 0, 0.3, -10, 1.9, 0, 0, 0), 
+           max = c(2, 30, 40, 16, 6, 8, 2, 2, 1, 1, 2.6, 10, 3.7, 1, 9, 9),
+           log = c(F, F, F, F, F, T, T, T, F, F, T, F, T, F, F, F),
+           len = c(2, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
+           discrete = c(T, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F),
+           REALM = c(rep('Freshwater', 15), 'Marine'),
+           REALM2 = c(rep('TerrFresh', 15), 'Marine'),
+           stringsAsFactors = FALSE)
+basetab <- data.frame(tempave.sc = 0, tempave_metab.sc = 0, 
+                      seas.sc = 0, microclim.sc = 0, mass.sc = 0, 
+                      speed.sc = 0, lifespan.sc = 0, endothermfrac.sc = 0, 
+                      nspp.sc = 0, thermal_bias.sc = 0, npp.sc = 0, human_bowler.sc = 0, veg.sc = 0,
+                      consumerfrac.sc = 0,
+                      nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_514668')
+
+# make the data frames for each interaction to plot                
+for(j in 1:nrow(ints)){
+  # set up a grid of temperature trends and the interacting variable
+  if(ints$log[j]) intvars <- list(temptrend = seq(-1.5, 1.5, length.out = 100), 
+                                  new = 10^seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
+                                   var = ints$vars[j])
+  if(!ints$log[j]) intvars <- list(temptrend = seq(-1.5, 1.5, length.out = 100), 
+                                   new = seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
+                                   var = ints$vars[j])
+  names(intvars) <- c('temptrend', ints$vars[j], 'var')
+  thisdat <- expand.grid(intvars)
+  
+  # scale the interacting variable
+  cent <- attr(trends[[paste0(ints$var[j], '.sc')]], 'scaled:center')
+  scl <- attr(trends[[paste0(ints$var[j], '.sc')]], 'scaled:scale')
+  if(!is.null(cent) & !is.null(scl)){
+    if(ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (log(thisdat[[ints$var[j]]]) - cent)/scl
+    if(!ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (thisdat[[ints$var[j]]] - cent)/scl
+  }
+
+  # merge with the rest of the columns
+  if(ints$var[j] != 'tsign') colnamestouse <- setdiff(colnames(basetab), paste0(ints$var[j], '.sc'))
+  if(ints$var[j] == 'tsign') colnamestouse <- setdiff(colnames(basetab), ints$var[j])
+  thisdat <- cbind(thisdat, basetab[, colnamestouse])
+
+  # add realm
+  thisdat$REALM <- ints$REALM[j]
+  thisdat$REALM2 <- ints$REALM2[j]
+  
+  # merge with the previous iterations
+  if(j == 1) newdat <- thisdat
+  if(j > 1){
+    colstoadd <- setdiff(colnames(thisdat), colnames(newdat))
+    for(toadd in colstoadd){
+      newdat[[toadd]] <- NA
+    }
+    
+    colstoadd2 <- setdiff(colnames(newdat), colnames(thisdat))
+    for(toadd in colstoadd2){
+      thisdat[[toadd]] <- NA
+    }
+    
+    newdat <- rbind(newdat, thisdat)
+  } 
+}
+
+# character so that new levels can be added
+newdat$REALM <- as.character(newdat$REALM)
+newdat$REALM2 <- as.character(newdat$REALM2)
+
+# add extra rows so that all factor levels are represented (for predict.lme to work)
+newdat <- rbind(newdat[1:4, ], newdat)
+newdat$REALM[1:4] <- c('Marine', 'Marine', 'Terrestrial', 'Terrestrial')
+newdat$REALM2[1:4] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh')
+newdat$temptrend[1:4] <- c(-1, 1, -1, 1)
+
+# trim to at least some temperature change (so that tsign is -1 or 1)
+newdat <- newdat[newdat$temptrend != 0,]
+
+# scale the temperature vars
+newdat$temptrend.sc <- newdat$temptrend/attr(trends$temptrend.sc, 'scaled:scale') 
+newdat$temptrend_abs <- abs(newdat$temptrend)
+newdat$temptrend_abs.sc <- (newdat$temptrend_abs)/attr(trends$temptrend_abs.sc, 'scaled:scale')
+newdat$tsign <- factor(sign(newdat$temptrend))
+
+# make predictions
+newdat$preds <- predict(object = modTfull1, newdata = newdat, level = 0)
+
+#remove the extra rows
+newdat <- newdat[5:nrow(newdat), ]
+
+# prep the plots
+intplots <- vector('list', length(intstoplot))
+for(j in 1:length(intplots)){
+  subs <- newdat$var == ints$vars[j] & newdat$temptrend > 0 # select warming side
+  xvar <- 'temptrend_abs'
+  title <- ints$vars[j]
+  if(ints$vars[j] %in% c('tsign')){
+    subs <- newdat$var == ints$vars[j]
+  } 
+  if(ints$vars[j] %in% c('thermal_bias')){
+    subs <- newdat$var == ints$vars[j]
+    xvar <- 'temptrend'
+  } 
+  if(ints$vars[j] %in% c('human_bowler')){
+    subs <- newdat$var == ints$vars[j] & newdat$temptrend > 0 & newdat$REALM2 == ints$REALM2[j]
+    title <- paste0('human:', ints$REALM2[j])
+  } 
+
+  thisplot <- ggplot(newdat[subs, ], 
+                     aes_string(x = xvar, y = 'preds', 
+                                group = ints$vars[j], 
+                                color = ints$vars[j])) +
+    geom_line() +
+    coord_cartesian(ylim = c(0, 1)) +
+    theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm')) +
+    labs(title = title)
+  if(ints$log[j] & !ints$discrete[j]){
+    intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'log')
+  }
+  if(!ints$log[j] & !ints$discrete[j]){
+    intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'identity')
+  }
+  if(ints$discrete[j]){
+    intplots[[j]] <- thisplot + scale_color_brewer(palette = "Dark2")
   }
 }
 
+#grid.arrange(grobs = intplots, '+', theme(plot.margin = unit(c(0,0,0,0), 'cm'))), ncol=2)
+#do.call('grid.arrange', c(intplots, ncol = 2))
+grid.arrange(grobs = intplots, ncol = 3)
 
 ```
+Positive thermal bias means that the species in the assemblage have warmer thermal niches than the environment (and vice versa). 
 
-Black is for Jaccard total turnover (pres/abs), grey is for Morisita-Horn turnover (considers abundance)
+#### Plot residuals against each predictor (Jaccard turnover)
+```{r resids modTfull1, fig.height = 10, fig.width=10}
+resids <- resid(modTfull1)
+preds <- getData(modTfull1)
+col = '#00000033'
+cex = 0.5
+par(mfrow = c(5,4))
+boxplot(resids ~ preds$REALM, cex = cex, col = col)
+plot(preds$temptrend_abs.sc, resids, cex = cex, col = col)
+plot(preds$tsign, resids, cex = cex, col = col)
+plot(preds$tempave.sc, resids, cex = cex, col = col)
+plot(preds$tempave_metab.sc, resids, cex = cex, col = col)
+plot(preds$seas.sc, resids, cex = cex, col = col)
+plot(preds$microclim.sc, resids, cex = cex, col = col)
+plot(preds$mass.sc, resids, cex = cex, col = col)
+plot(preds$speed.sc, resids, cex = cex, col = col)
+plot(preds$lifespan.sc, resids, cex = cex, col = col)
+plot(preds$consumerfrac.sc, resids, cex = cex, col = col)
+plot(preds$endothermfrac.sc, resids, cex = cex, col = col)
+plot(preds$nspp.sc, resids, cex = cex, col = col)
+plot(preds$thermal_bias.sc, resids, cex = cex, col = col)
+plot(preds$npp.sc, resids, cex = cex, col = col)
+plot(preds$veg.sc, resids, cex = cex, col = col)
+plot(preds$human_bowler.sc, resids, cex = cex, col = col)
+```
 
-#### Delete terms from the full Jbeta and Horn models, plot dAICs
+### Remove each term from the full model
+#### Jaccard turnover
+```{r term deletion from modTfull1}
+
+if(file.exists('output/aics_from_full.csv')){
+  aicsfromfull <- read.csv('output/aics_from_full.csv')
+
+} else {
+  i <- trends[, complete.cases(Jtutrend, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, 
+                               temptrend_abs.sc, mass.sc, speed.sc, lifespan.sc, 
+                               consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
+  
+  randef <- list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)
+  varef <- varPower(-0.5, ~nyrBT)
+  
+  terms <- c('temptrend_abs.sc*REALM', 
+             'temptrend_abs.sc*tsign',
+             'temptrend_abs.sc*tempave.sc',
+             'temptrend_abs.sc*tempave_metab.sc',
+             'temptrend_abs.sc*seas.sc',
+             'temptrend_abs.sc*microclim.sc',
+             'temptrend_abs.sc*mass.sc',
+             'temptrend_abs.sc*speed.sc', 
+             'temptrend_abs.sc*lifespan.sc', 
+             'temptrend_abs.sc*consumerfrac.sc',
+             'temptrend_abs.sc*endothermfrac.sc',
+             'temptrend_abs.sc*nspp.sc',
+             'temptrend_abs.sc*thermal_bias.sc:tsign',
+             'temptrend_abs.sc*npp.sc',
+             'temptrend_abs.sc*veg.sc',
+             'temptrend_abs.sc*human_bowler.sc:REALM2')
+  modTdrops <- vector('list', length(terms)+2)
+  names(modTdrops) <- c('full', '-temptrend_abs.sc', paste0('-', terms))
+  
+  # fit full model with ML for model comparison
+  modTdrops[[1]] <- lme(formula(paste0('Jtutrend ~ ', paste(terms, collapse = ' + '))),
+                        random = randef, weights = varef, data = trends[i,], method = 'ML')
+  
+  # w/out temptrend
+  modTdrops[[2]] <- lme(formula(paste0('Jtutrend ~ ', paste(gsub('temptrend_abs.sc\\*', '', terms), collapse = ' + '))),
+                        random = list(STUDY_ID = ~ 1, rarefyID = ~1), weights = varef, data = trends[i,], method = 'ML')
+  
+  for(j in 1:length(terms)){
+    print(j)
+    modTdrops[[j+2]] <- lme(formula(paste0('Jtutrend ~ ', paste(terms[-j], collapse = ' + '))),
+                            random = randef, weights = varef, data = trends[i,], method = 'ML')
+  }
+  
+  aics <- sapply(modTdrops, AIC)
+  
+  aicsfromfull <- data.frame(mod = names(aics), dAIC_Jtu = aics - aics[1])
+  
+  write.csv(aicsfromfull, file = 'output/aics_from_full.csv', row.names = FALSE)
+}
+
+aicsfromfull
+```
+
+
+#### Jbeta and Horn models
 ```{r term deletion from Jbeta and Horn models}
 
 if(file.exists('output/aics_from_full.csv')){
@@ -877,7 +906,10 @@ if(runJbetaHorn){
 }
 
 aicsfromfull
+```
 
+#### Plot deltaAICs for all 3 models
+```{r plot dAICs}
 # transform for a plot
 aicsfromfulllong <- reshape(aicsfromfull, direction = 'long',
                             varying = c('dAIC_Jtu', 'dAIC_Jbeta', 'dAIC_Horn'),
@@ -902,6 +934,7 @@ axis(1, at = trans(xticks), labels = xticks, cex.axis = 0.5)
 abline(v = 0, lty =2, col = 'grey')
 ```
 Light grey is for Jaccard turnover, dark grey is for Jaccard total, black is for Morisita-Horn
+
 
 ### Plot interaction coefficients from all full models
 ```{r plot coefs for all models, fig.height=5, fig.width=6, out.height=5, out.width=6, fig.retina=2}
