@@ -86,6 +86,33 @@ calctrend <- function(y, YEAR, nm = 'y'){ # function to calc trends
     return(out)
 }
 
+# function to calc trends, removing first year with 0
+calctrendrem0 <- function(y, YEAR, nm = 'y'){
+  if(length(YEAR)>2){
+    o <- order(YEAR)
+    YEAR2 <- YEAR[o][2:length(YEAR)]
+    y2 <- y[o][2:length(y)]
+    
+    if(sum(!is.na(y2)) >= 2){ # make sure enough values to fit a line
+      mod <- lm(y2 ~ YEAR2)
+      out <- list(y = coef(mod)[2], # coef for the slope
+                  y_se = sqrt(diag(vcov(mod)))[2]) # SE
+      names(out) <- c(nm, paste0(nm, '_se'))
+      return(out)
+    } else {
+      out <- list(y = NA_real_, y_se = NA_real_)
+      names(out) <- c(nm, paste0(nm, '_se'))
+      return(out)
+    }
+    
+  } else {
+    out <- list(y = NA_real_, y_se = NA_real_)
+    names(out) <- c(nm, paste0(nm, '_se'))
+    return(out)
+  }
+}
+
+
 setkey(bt, STUDY_ID, rarefyID, YEAR)
 trends <- bt[, calctrend(Jtu_base, YEAR, 'Jtutrend'), 
     by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover from first year, plus SEs
@@ -94,6 +121,15 @@ trends2 <- bt[, calctrend(Jbeta_base, YEAR, 'Jbetatrend'),
 trends3 <- bt[, calctrend(1-Horn_base, YEAR, 'Horntrend'), 
     by = .(rarefyID)] # calculate trend in Horn-Morisita from first year. Convert to dissimilarity.
 #trends4 <- bt[, .(Strend = coef(lm(I(log(S)) ~ YEAR))[2]), by = .(rarefyID)] # trend in log(S)
+
+trends5 <- bt[, calctrendrem0(Jtu_base, YEAR, 'Jtutrendrem0'), 
+    by = .(rarefyID)] # calculate trend in Jaccard turnover without first year
+trends6 <- bt[, calctrendrem0(Jbeta_base, YEAR, 'Jbetatrendrem0'), 
+    by = .(rarefyID)]
+trends7 <- bt[, calctrendrem0(1-Horn_base, YEAR, 'Horntrendrem0'), 
+    by = .(rarefyID)]
+
+
 nyrBT <-  bt[, .(nyrBT = length(YEAR), 
                  minyrBT = min(YEAR), 
                  maxyrBT = max(YEAR),
@@ -103,7 +139,9 @@ nyrBT <-  bt[, .(nyrBT = length(YEAR),
 
 trends <- merge(trends, trends2) # merge in total J and Horn-Morisita
 trends <- merge(trends, trends3)
-#trends <- merge(trends, trends4)
+trends <- merge(trends, trends5)
+trends <- merge(trends, trends6)
+trends <- merge(trends, trends7)
 trends <- merge(trends, nyrBT)
 ```
 
@@ -125,7 +163,7 @@ trends <- merge(trends, veg[, .(rarefyID, veg = veg)], all.x = TRUE) # vegetatio
 trends[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 ```
 
-Do some basic checks
+Do some basic checks of the turnover calculations
 ```{r basic checks}
 # basic checks
 trends
@@ -158,7 +196,24 @@ ggplot(trends, aes(Jbetatrend, Horntrend)) +
     geom_smooth()
 
 ```
+Temporal turnover is not all that correlated between including first year or not.
+```{r turnover metrics with and without first year}
+ggplot(trends, aes(Jtutrend, Jtutrendrem0)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth() +
+  geom_abline(a = 0, b = 1)
 
+ggplot(trends, aes(Jbetatrend, Jbetatrendrem0)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth() +
+  geom_abline(a = 0, b = 1)
+
+ggplot(trends, aes(Horntrend, Horntrendrem0)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth() +
+  geom_abline(a = 0, b = 1)
+
+```
 
 ## Compare covariates across realms
 ```{r compare across realms, fig.height=12, fig.width=9}

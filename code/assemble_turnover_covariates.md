@@ -87,6 +87,33 @@ calctrend <- function(y, YEAR, nm = 'y'){ # function to calc trends
     return(out)
 }
 
+# function to calc trends, removing first year with 0
+calctrendrem0 <- function(y, YEAR, nm = 'y'){
+  if(length(YEAR)>2){
+    o <- order(YEAR)
+    YEAR2 <- YEAR[o][2:length(YEAR)]
+    y2 <- y[o][2:length(y)]
+    
+    if(sum(!is.na(y2)) >= 2){ # make sure enough values to fit a line
+      mod <- lm(y2 ~ YEAR2)
+      out <- list(y = coef(mod)[2], # coef for the slope
+                  y_se = sqrt(diag(vcov(mod)))[2]) # SE
+      names(out) <- c(nm, paste0(nm, '_se'))
+      return(out)
+    } else {
+      out <- list(y = NA_real_, y_se = NA_real_)
+      names(out) <- c(nm, paste0(nm, '_se'))
+      return(out)
+    }
+    
+  } else {
+    out <- list(y = NA_real_, y_se = NA_real_)
+    names(out) <- c(nm, paste0(nm, '_se'))
+    return(out)
+  }
+}
+
+
 setkey(bt, STUDY_ID, rarefyID, YEAR)
 trends <- bt[, calctrend(Jtu_base, YEAR, 'Jtutrend'), 
     by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover from first year, plus SEs
@@ -104,6 +131,19531 @@ trends2 <- bt[, calctrend(Jbeta_base, YEAR, 'Jbetatrend'),
 trends3 <- bt[, calctrend(1-Horn_base, YEAR, 'Horntrend'), 
     by = .(rarefyID)] # calculate trend in Horn-Morisita from first year. Convert to dissimilarity.
 #trends4 <- bt[, .(Strend = coef(lm(I(log(S)) ~ YEAR))[2]), by = .(rarefyID)] # trend in log(S)
+
+trends5 <- bt[, calctrendrem0(Jtu_base, YEAR, 'Jtutrendrem0'), 
+    by = .(rarefyID)] # calculate trend in Jaccard turnover without first year
+```
+
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+
+``` r
+trends6 <- bt[, calctrendrem0(Jbeta_base, YEAR, 'Jbetatrendrem0'), 
+    by = .(rarefyID)]
+```
+
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+
+``` r
+trends7 <- bt[, calctrendrem0(1-Horn_base, YEAR, 'Horntrendrem0'), 
+    by = .(rarefyID)]
+```
+
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+    
+    ## Warning in summary.lm(object, ...): essentially perfect fit: summary may be
+    ## unreliable
+
+``` r
 nyrBT <-  bt[, .(nyrBT = length(YEAR), 
                  minyrBT = min(YEAR), 
                  maxyrBT = max(YEAR),
@@ -113,7 +19665,9 @@ nyrBT <-  bt[, .(nyrBT = length(YEAR),
 
 trends <- merge(trends, trends2) # merge in total J and Horn-Morisita
 trends <- merge(trends, trends3)
-#trends <- merge(trends, trends4)
+trends <- merge(trends, trends5)
+trends <- merge(trends, trends6)
+trends <- merge(trends, trends7)
 trends <- merge(trends, nyrBT)
 ```
 
@@ -136,7 +19690,7 @@ trends <- merge(trends, veg[, .(rarefyID, veg = veg)], all.x = TRUE) # vegetatio
 trends[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 ```
 
-Do some basic checks
+Do some basic checks of the turnover calculations
 
 ``` r
 # basic checks
@@ -167,78 +19721,90 @@ trends
     ## 53465:       99   117.8600  -18.80625  0.000000000         NaN 0.250000000
     ## 53466:       99   118.3213  -18.79645  0.088888889 0.071860741 0.092380952
     ## 53467:       99   118.8110  -19.35420  0.000000000         NaN 0.080000000
-    ##        Jbetatrend_se    Horntrend Horntrend_se nyrBT minyrBT maxyrBT
-    ##     1:   0.001622134 0.0031009875 0.0015680649    31    1981    2011
-    ##     2:   0.002121344 0.0004638415 0.0008664591    31    1981    2011
-    ##     3:           NaN 0.0714285714          NaN     2    1985    1999
-    ##     4:           NaN 0.1147144190          NaN     2    1985    1993
-    ##     5:           NaN 0.0878275862          NaN     2    1985    1993
-    ##    ---                                                              
-    ## 53463:   0.027264849           NA           NA     3    1982    1997
-    ## 53464:           NaN           NA           NA     2    1982    1990
-    ## 53465:           NaN           NA           NA     2    1986    1988
-    ## 53466:   0.072315133           NA           NA     4    1982    1989
-    ## 53467:           NaN           NA           NA     2    1982    1987
-    ##        medianyrBT meanyrBT   tempave tempave_metab    temptrend      seas
-    ##     1:     1996.0 1996.000 12.051350      12.05135  0.041129329 3.0760983
-    ##     2:     1996.0 1996.000 12.051350      12.05135  0.041129329 3.0760983
-    ##     3:     1992.0 1992.000 -1.320041      40.00000 -0.006945833 0.4808712
-    ##     4:     1989.0 1989.000 -1.271692      40.00000 -0.004529737 0.5261527
-    ##     5:     1989.0 1989.000 -1.271692      40.00000 -0.004529737 0.5261527
-    ##    ---                                                                   
-    ## 53463:     1983.0 1987.333 26.938956      26.93896 -0.003552321 2.0045745
-    ## 53464:     1986.0 1986.000        NA            NA           NA        NA
-    ## 53465:     1987.0 1987.000 27.370296      27.37030  0.620516857 1.8875665
-    ## 53466:     1984.5 1985.000 27.549504      27.54950 -0.002693142 1.8875665
-    ## 53467:     1984.5 1984.500        NA            NA           NA        NA
-    ##         microclim       npp mass_mean_weight mass_sd_weight
-    ##     1: 0.23603834 1685.9467       4576.35361    16081.00494
-    ##     2: 0.23603834 1685.9467         15.46288       65.75757
-    ##     3: 0.03647966  126.3856       1011.72769      662.44697
-    ##     4: 0.01186496  152.3814        380.26044      360.69826
-    ##     5: 0.01315645  150.4591       2559.31968     2480.08226
+    ##        Jbetatrend_se    Horntrend Horntrend_se Jtutrendrem0
+    ##     1:   0.001622134 0.0031009875 0.0015680649   0.00297623
+    ##     2:   0.002121344 0.0004638415 0.0008664591   0.00000000
+    ##     3:           NaN 0.0714285714          NaN           NA
+    ##     4:           NaN 0.1147144190          NaN           NA
+    ##     5:           NaN 0.0878275862          NaN           NA
     ##    ---                                                     
-    ## 53463: 0.04537952  552.9129      11098.73495    17185.06309
-    ## 53464: 0.03587447  543.8439       4376.39609     9104.03188
-    ## 53465: 0.03082215  366.2237       4546.03260    12646.27215
-    ## 53466: 0.05193555  384.6634      15949.56141    49280.74146
-    ## 53467: 0.04392091  694.7807       6295.59279     9783.92682
-    ##        speed_mean_weight speed_sd_weight lifespan_mean_weight
-    ##     1:         12.020663        9.883453            24.368790
-    ##     2:          5.701894        6.033516             6.855411
-    ##     3:        126.528799        7.027091             2.322789
-    ##     4:        106.398871       18.543573             1.835437
-    ##     5:         73.390318       57.378463             2.628751
-    ##    ---                                                       
-    ## 53463:         21.061352       10.977955             9.477088
-    ## 53464:         14.427234        8.894618                   NA
-    ## 53465:         12.384251        9.922576             6.184025
-    ## 53466:         15.765330       11.647149             7.722453
-    ## 53467:         17.989658        8.753660                   NA
-    ##        lifespan_sd_weight thermal_bias consfrac Nspp endofrac human_bowler
-    ##     1:         13.8561561   -0.1166378        1   83        0            6
-    ##     2:          5.5954324   -1.3322161        1   15        0            6
-    ##     3:          0.2962608    5.8210833        1    4        1            0
-    ##     4:          0.3587385    5.5271034        1    7        1            0
-    ##     5:          0.8313121    3.0517163        1    7        1            0
+    ## 53463:   0.027264849           NA           NA  -0.02380952
+    ## 53464:           NaN           NA           NA           NA
+    ## 53465:           NaN           NA           NA           NA
+    ## 53466:   0.072315133           NA           NA   0.01388889
+    ## 53467:           NaN           NA           NA           NA
+    ##        Jtutrendrem0_se Jbetatrendrem0 Jbetatrendrem0_se Horntrendrem0
+    ##     1:     0.001309059    0.002587992      0.0009975709  0.0023147105
+    ##     2:     0.000000000    0.002208307      0.0009103225  0.0001735803
+    ##     3:              NA             NA                NA            NA
+    ##     4:              NA             NA                NA            NA
+    ##     5:              NA             NA                NA            NA
+    ##    ---                                                               
+    ## 53463:             NaN    0.025510204               NaN            NA
+    ## 53464:              NA             NA                NA            NA
+    ## 53465:              NA             NA                NA            NA
+    ## 53466:     0.056131276    0.014285714      0.0467378789            NA
+    ## 53467:              NA             NA                NA            NA
+    ##        Horntrendrem0_se nyrBT minyrBT maxyrBT medianyrBT meanyrBT
+    ##     1:     0.0016045472    31    1981    2011     1996.0 1996.000
+    ##     2:     0.0009087936    31    1981    2011     1996.0 1996.000
+    ##     3:               NA     2    1985    1999     1992.0 1992.000
+    ##     4:               NA     2    1985    1993     1989.0 1989.000
+    ##     5:               NA     2    1985    1993     1989.0 1989.000
+    ##    ---                                                           
+    ## 53463:               NA     3    1982    1997     1983.0 1987.333
+    ## 53464:               NA     2    1982    1990     1986.0 1986.000
+    ## 53465:               NA     2    1986    1988     1987.0 1987.000
+    ## 53466:               NA     4    1982    1989     1984.5 1985.000
+    ## 53467:               NA     2    1982    1987     1984.5 1984.500
+    ##          tempave tempave_metab    temptrend      seas  microclim       npp
+    ##     1: 12.051350      12.05135  0.041129329 3.0760983 0.23603834 1685.9467
+    ##     2: 12.051350      12.05135  0.041129329 3.0760983 0.23603834 1685.9467
+    ##     3: -1.320041      40.00000 -0.006945833 0.4808712 0.03647966  126.3856
+    ##     4: -1.271692      40.00000 -0.004529737 0.5261527 0.01186496  152.3814
+    ##     5: -1.271692      40.00000 -0.004529737 0.5261527 0.01315645  150.4591
     ##    ---                                                                    
-    ## 53463:          3.5699526    0.8561218        1   37        0            2
-    ## 53464:                 NA           NA        1   23        0            2
-    ## 53465:          3.6468843    0.4429424        1   46        0            1
-    ## 53466:          4.3764322    0.1860061        1   50        0            1
-    ## 53467:                 NA           NA        1   36        0            1
-    ##        human_venter human_halpern veg
-    ##     1:     33.00286            NA   0
-    ##     2:     33.00286            NA   0
-    ##     3:           NA      6.875259   0
-    ##     4:           NA      1.041834   0
-    ##     5:           NA      1.091445   0
-    ##    ---                               
-    ## 53463:           NA      6.855058   0
-    ## 53464:           NA      1.672769   0
-    ## 53465:           NA      8.710693   0
-    ## 53466:           NA      8.704291   0
-    ## 53467:           NA      7.336845   0
+    ## 53463: 26.938956      26.93896 -0.003552321 2.0045745 0.04537952  552.9129
+    ## 53464:        NA            NA           NA        NA 0.03587447  543.8439
+    ## 53465: 27.370296      27.37030  0.620516857 1.8875665 0.03082215  366.2237
+    ## 53466: 27.549504      27.54950 -0.002693142 1.8875665 0.05193555  384.6634
+    ## 53467:        NA            NA           NA        NA 0.04392091  694.7807
+    ##        mass_mean_weight mass_sd_weight speed_mean_weight speed_sd_weight
+    ##     1:       4576.35361    16081.00494         12.020663        9.883453
+    ##     2:         15.46288       65.75757          5.701894        6.033516
+    ##     3:       1011.72769      662.44697        126.528799        7.027091
+    ##     4:        380.26044      360.69826        106.398871       18.543573
+    ##     5:       2559.31968     2480.08226         73.390318       57.378463
+    ##    ---                                                                  
+    ## 53463:      11098.73495    17185.06309         21.061352       10.977955
+    ## 53464:       4376.39609     9104.03188         14.427234        8.894618
+    ## 53465:       4546.03260    12646.27215         12.384251        9.922576
+    ## 53466:      15949.56141    49280.74146         15.765330       11.647149
+    ## 53467:       6295.59279     9783.92682         17.989658        8.753660
+    ##        lifespan_mean_weight lifespan_sd_weight thermal_bias consfrac Nspp
+    ##     1:            24.368790         13.8561561   -0.1166378        1   83
+    ##     2:             6.855411          5.5954324   -1.3322161        1   15
+    ##     3:             2.322789          0.2962608    5.8210833        1    4
+    ##     4:             1.835437          0.3587385    5.5271034        1    7
+    ##     5:             2.628751          0.8313121    3.0517163        1    7
+    ##    ---                                                                   
+    ## 53463:             9.477088          3.5699526    0.8561218        1   37
+    ## 53464:                   NA                 NA           NA        1   23
+    ## 53465:             6.184025          3.6468843    0.4429424        1   46
+    ## 53466:             7.722453          4.3764322    0.1860061        1   50
+    ## 53467:                   NA                 NA           NA        1   36
+    ##        endofrac human_bowler human_venter human_halpern veg
+    ##     1:        0            6     33.00286            NA   0
+    ##     2:        0            6     33.00286            NA   0
+    ##     3:        1            0           NA      6.875259   0
+    ##     4:        1            0           NA      1.041834   0
+    ##     5:        1            0           NA      1.091445   0
+    ##    ---                                                     
+    ## 53463:        0            2           NA      6.855058   0
+    ## 53464:        0            2           NA      1.672769   0
+    ## 53465:        0            1           NA      8.710693   0
+    ## 53466:        0            1           NA      8.704291   0
+    ## 53467:        0            1           NA      7.336845   0
 
 ``` r
 trends[, .(minJtu = min(Jtutrend), maxJtu = max(Jtutrend), minJbe = min(Jbetatrend), maxJbe = max(Jbetatrend), 
@@ -325,6 +19891,59 @@ ggplot(trends, aes(Jbetatrend, Horntrend)) +
     ## Warning: Removed 1435 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/basic%20pairwise%20graphs%20of%20turnover%20metrics-2.png)<!-- -->
+Temporal turnover is not all that correlated between including first
+year or not.
+
+``` r
+ggplot(trends, aes(Jtutrend, Jtutrendrem0)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth() +
+  geom_abline(a = 0, b = 1)
+```
+
+    ## Warning: Ignoring unknown parameters: a, b
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 13818 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 13818 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/turnover%20metrics%20with%20and%20without%20first%20year-1.png)<!-- -->
+
+``` r
+ggplot(trends, aes(Jbetatrend, Jbetatrendrem0)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth() +
+  geom_abline(a = 0, b = 1)
+```
+
+    ## Warning: Ignoring unknown parameters: a, b
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 13818 rows containing non-finite values (stat_smooth).
+    
+    ## Warning: Removed 13818 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/turnover%20metrics%20with%20and%20without%20first%20year-2.png)<!-- -->
+
+``` r
+ggplot(trends, aes(Horntrend, Horntrendrem0)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth() +
+  geom_abline(a = 0, b = 1)
+```
+
+    ## Warning: Ignoring unknown parameters: a, b
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 14825 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 14825 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/turnover%20metrics%20with%20and%20without%20first%20year-3.png)<!-- -->
 
 ## Compare covariates across realms
 
@@ -373,7 +19992,7 @@ also has birds (fast).
 
 ## Plot turnover vs. explanatory variables
 
-Lines are ggplot smoother fits by realm.
+Lines are ggplot smoother fits.
 ![](assemble_turnover_covariates_files/figure-gfm/plot%20turnover%20v%20temp%20trend-1.png)<!-- -->
 
 Strong trends with temperature change, but trends are pretty symmetric
