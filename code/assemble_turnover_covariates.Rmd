@@ -79,15 +79,24 @@ ggplot(bt[rarefyID == '339_1085477'], aes(YEAR, Jtu_base)) +
 ```{r assemble trends}
 # calculate temporal turnover
 calctrend <- function(y, YEAR, nm = 'y'){ # function to calc trends
-    mod <- lm(y ~ YEAR)
-    out <- list(y = coef(mod)[2], # coef for the slope
-         y_se = sqrt(diag(vcov(mod)))[2]) # SE
-    names(out) <- c(nm, paste0(nm, '_se'))
-    return(out)
+  # turn off warnings for the following
+  defaultW <- getOption("warn")
+  options(warn = -1)
+  
+  mod <- lm(y ~ YEAR)
+  out <- list(y = coef(mod)[2], # coef for the slope
+              y_se = sqrt(diag(vcov(mod)))[2]) # SE
+  names(out) <- c(nm, paste0(nm, '_se'))
+  options(warn = defaultW)
+  return(out)
 }
 
 # function to calc trends, removing first year with 0
 calctrendrem0 <- function(y, YEAR, nm = 'y'){
+  # turn off warnings for the following
+  defaultW <- getOption("warn")
+  options(warn = -1)
+  
   if(length(YEAR)>2){
     o <- order(YEAR)
     YEAR2 <- YEAR[o][2:length(YEAR)]
@@ -98,22 +107,32 @@ calctrendrem0 <- function(y, YEAR, nm = 'y'){
       out <- list(y = coef(mod)[2], # coef for the slope
                   y_se = sqrt(diag(vcov(mod)))[2]) # SE
       names(out) <- c(nm, paste0(nm, '_se'))
+      options(warn = defaultW)
       return(out)
+      
     } else {
       out <- list(y = NA_real_, y_se = NA_real_)
       names(out) <- c(nm, paste0(nm, '_se'))
+      
+      options(warn = defaultW)
       return(out)
     }
     
   } else {
     out <- list(y = NA_real_, y_se = NA_real_)
     names(out) <- c(nm, paste0(nm, '_se'))
+  
+    options(warn = defaultW)
     return(out)
   }
+  
+
 }
 
 
 setkey(bt, STUDY_ID, rarefyID, YEAR)
+
+
 trends <- bt[, calctrend(Jtu_base, YEAR, 'Jtutrend'), 
     by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover from first year, plus SEs
 trends2 <- bt[, calctrend(Jbeta_base, YEAR, 'Jbetatrend'), 
