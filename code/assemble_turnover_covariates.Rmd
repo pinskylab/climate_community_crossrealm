@@ -266,9 +266,81 @@ Marine has a lot of slow, crawling organisms, but land has plants. Land also has
 
 
 
+## Plot turnover vs. temperature
+```{r plot turnover vs temp trend, echo=FALSE, fig.height = 8, fig.width = 9,}
+p1 <- ggplot(trends, aes(temptrend, Jtutrend, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover temporal trend', title = 'All')
+
+# Jaccard total trend vs. temperature trend (across all years)
+p2 <- ggplot(trends, aes(temptrend, Jbetatrend, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total temporal trend')
+
+# Horn-Morisita turnover trend vs. temperature trend (across all years)
+p3 <- ggplot(trends, aes(temptrend, Horntrend, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn temporal turnover')
+
+# same, but only ts >= 5 yrs
+p4 <- ggplot(trends[nyrBT >= 5, ], aes(temptrend, Jtutrend, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover temporal trend', title = '>= 5 yrs')
+
+p5 <- ggplot(trends[nyrBT >= 5, ], aes(temptrend, Jbetatrend, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total temporal trend')
+
+p6 <- ggplot(trends[nyrBT >= 5, ], aes(temptrend, Horntrend, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn temporal turnover')
+
+# same, but removing year 1
+p7 <- ggplot(trends, aes(temptrend, Jtutrendrem0, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover temporal trend w/out year 1', title = 'Without year 1')
+
+p8 <- ggplot(trends, aes(temptrend, Jbetatrendrem0, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total temporal trend w/out year 1')
+
+p9 <- ggplot(trends, aes(temptrend, Horntrendrem0, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn temporal turnover w/out year 1')
+
+
+grid.arrange(p1, p4, p7, p2, p5, p8, p3, p6, p9, ncol = 3)
+```
+
+### Time-series length and temperature trend?
+```{r ts length and temp trend}
+ggplot(trends, aes(temptrend, nyrBT)) +
+  geom_point() +
+  geom_smooth() +
+  scale_y_log10()
+```
+
 ## Plot turnover vs. explanatory variables
 Lines are ggplot smoother fits.
-```{r plot turnover v temp trend, echo=FALSE, fig.height = 16, fig.width = 9,}
+```{r plot turnover v explanatory vars, echo=FALSE, fig.height = 16, fig.width = 9,}
 
 p1 <- ggplot(trends, aes(REALM, Jtutrend)) +
   geom_boxplot(na.rm = TRUE) + 
@@ -376,29 +448,8 @@ p17 <- ggplot(trends, aes(human_halpern, Jtutrend, color = REALM, size = nyrBT))
   scale_color_brewer(palette="Set1") + 
   labs(x = 'scaled Human impact score (Halpern)', y = 'Jaccard turnover temporal trend')
 
-p18 <- ggplot(trends, aes(temptrend, Jtutrend, color = REALM, size = nyrBT)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover temporal trend')
 
-# Jaccard total trend vs. temperature trend (across all years)
-p19 <- ggplot(trends, aes(temptrend, Jbetatrend, color = REALM, size = nyrBT)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total temporal trend')
-
-
-# Horn-Morisita turnover trend vs. temperature trend (across all years)
-p20 <- ggplot(trends, aes(temptrend, Horntrend, color = REALM, size = nyrBT)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn temporal turnover')
-
-
-grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, p18, p19, p20, ncol = 2)
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, ncol = 2)
 ```
 
 Strong trends with temperature change, but trends are pretty symmetric around no trend in temperature, which implies warming or cooling drives similar degree of community turnover.

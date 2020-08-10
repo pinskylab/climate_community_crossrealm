@@ -484,10 +484,31 @@ small masses (plankton), but much of dataset is similar to terrestrial.
 Marine has a lot of slow, crawling organisms, but land has plants. Land
 also has birds (fast).
 
+## Plot turnover vs. temperature
+
+![](assemble_turnover_covariates_files/figure-gfm/plot%20turnover%20vs%20temp%20trend-1.png)<!-- -->
+
+### Time-series length and temperature trend?
+
+``` r
+ggplot(trends, aes(temptrend, nyrBT)) +
+  geom_point() +
+  geom_smooth() +
+  scale_y_log10()
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 3097 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 3097 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/ts%20length%20and%20temp%20trend-1.png)<!-- -->
+
 ## Plot turnover vs. explanatory variables
 
 Lines are ggplot smoother fits.
-![](assemble_turnover_covariates_files/figure-gfm/plot%20turnover%20v%20temp%20trend-1.png)<!-- -->
+![](assemble_turnover_covariates_files/figure-gfm/plot%20turnover%20v%20explanatory%20vars-1.png)<!-- -->
 
 Strong trends with temperature change, but trends are pretty symmetric
 around no trend in temperature, which implies warming or cooling drives
