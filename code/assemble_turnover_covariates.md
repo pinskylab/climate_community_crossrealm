@@ -43,16 +43,13 @@ lsp <- fread('output/lifespan_byrarefyID.csv.gz')
 cti <- fread('output/cti_byrarefyID.csv.gz')
     
 # consumer vs. producer
-cons <- fread('output/metab_feed_byspecies.csv.gz')
-consfrac <- cons[, .(consfrac = sum(feeding == 'consumer')/.N), by = rarefyID] # fraction of species in each study that are consumers
+consfrac <- fread('output/consfrac_byrarefyID.csv.gz')
 
 # richness
 rich <- fread('output/richness_by_rarefyID.csv.gz') # number of species
 
 # endotherm vs. ectotherm
-endo <- fread('output/metab_feed_byspecies.csv.gz') # endotherm vs. ectotherm classifications
-endofrac <- endo[, .(endofrac = sum(metab != 'ecto')/.N), by = rarefyID]
-rm(endo)
+endofrac <- fread('output/endofrac_byrarefyID.csv.gz') # endotherm vs. ectotherm classifications
 
 # human impact
 human <- fread('output/humanimpact_by_rarefyID.csv.gz')
@@ -64,6 +61,9 @@ veg[, veg := (`tree cover % (mean)` + 0.5 * `non-tree veg. % (mean)`)/100] # veg
 
 ### Plot a turnover example
 
+First is a long time-series, next one shows an example result of
+removing the first year of self-comparison.
+
 ``` r
 #bt[, .(n = .N), by = rarefyID][n > 50,]
 
@@ -74,6 +74,16 @@ ggplot(bt[rarefyID == '339_1085477'], aes(YEAR, Jtu_base)) +
 ```
 
 ![](assemble_turnover_covariates_files/figure-gfm/plot%20turnover-1.png)<!-- -->
+
+``` r
+ggplot(bt[rarefyID == '489_16754'], aes(YEAR, Jtu_base)) +
+    geom_point() +
+    geom_smooth(method = 'lm', se = FALSE) +
+    xlab('Year') + ylab('Jaccard dissimilarity') +
+  geom_smooth(data = bt[rarefyID == '489_16754' & YEAR != 2000], method = 'lm', se = FALSE, color = 'red')
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/plot%20turnover-2.png)<!-- -->
 
 ### Assemble dataset of beta diversity trends (temporal turnover) and covariates
 
@@ -176,9 +186,9 @@ trends <- merge(trends, bs[, .(rarefyID, mass_mean_weight, mass_sd_weight)], all
 trends <- merge(trends, speed[, .(rarefyID, speed_mean_weight, speed_sd_weight)], all.x = TRUE) # speed (km/hr)
 trends <- merge(trends, lsp[, .(rarefyID, lifespan_mean_weight, lifespan_sd_weight)], all.x = TRUE) # lifespan (yr)
 trends <- merge(trends, cti[, .(rarefyID, thermal_bias)], all.x = TRUE) # thermal bias (degC)
-trends <- merge(trends, consfrac, all.x = TRUE) # fraction consumers
+trends <- merge(trends, consfrac[, .(rarefyID, consfrac)], all.x = TRUE) # fraction consumers
 trends <- merge(trends, rich, all.x = TRUE) # species richness
-trends <- merge(trends, endofrac, all.x = TRUE) # endotherm vs. ectotherm
+trends <- merge(trends, endofrac[, .(rarefyID, endofrac)], all.x = TRUE) # endotherm vs. ectotherm
 trends <- merge(trends, human[, .(rarefyID, human_bowler = atc, human_venter = hfp, human_halpern = himp)], all.x = TRUE) # human impact
 trends <- merge(trends, veg[, .(rarefyID, veg = veg)], all.x = TRUE) # vegetation index
 trends[REALM == 'Marine', veg := 0] # veg index is 0 at sea
@@ -363,26 +373,30 @@ Turnover calculations are correlated, though less so for Horn
 
 ``` r
 # are turnover calculations correlated?
-ggplot(trends, aes(Jbetatrend, Jtutrend)) +
+ggplot(trends, aes(Jbetatrendrem0, Jtutrendrem0)) +
     geom_point(alpha = 0.3) +
     geom_smooth()
 ```
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 13818 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 13818 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/basic%20pairwise%20graphs%20of%20turnover%20metrics-1.png)<!-- -->
 
 ``` r
-ggplot(trends, aes(Jbetatrend, Horntrend)) +
+ggplot(trends, aes(Jbetatrendrem0, Horntrendrem0)) +
     geom_point(alpha = 0.3) +
     geom_smooth()
 ```
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Removed 1435 rows containing non-finite values (stat_smooth).
+    ## Warning: Removed 14825 rows containing non-finite values (stat_smooth).
 
-    ## Warning: Removed 1435 rows containing missing values (geom_point).
+    ## Warning: Removed 14825 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/basic%20pairwise%20graphs%20of%20turnover%20metrics-2.png)<!-- -->
 Temporal turnover is not all that correlated between including first
