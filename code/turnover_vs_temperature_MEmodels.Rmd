@@ -323,71 +323,39 @@ legend('bottomright', col = colors, lwd = 1, pch = 16,
 
 ```
 
-### Nicer plots of turnover vs. temperature data and model fit
-Scatterplot, violin plots, and coefficient plots all together
-Off for now
-```{r turnover vs. temperature big plot, fig.width=6, fig.height=4.5, eval=FALSE}
+### Nicer plots of turnover vs. temperature data
+Violin plots
+```{r turnover vs. temperature big plot, fig.width=6, fig.height=4.5}
 # on macbook: fig.width=3, fig.height=2.375, fig.retina=3, out.width=3, out.height=2.375
 # on external monitor: fig.width=6, fig.height=4.5
-trends[temptrend <= -0.5, temptrendtext := 'Cooling']
-trends[abs(temptrend) <= 0.1, temptrendtext := 'Stable']
-trends[temptrend >= 0.5, temptrendtext := 'Warming']
+trends[temptrend <= -0.7, temptrendtext := 'Cooling']
+trends[abs(temptrend) <= 0.05, temptrendtext := 'Stable']
+trends[temptrend >= 0.7, temptrendtext := 'Warming']
 
 trends[abs(rarefyID_y) < 35, latzone := 'Subtropics']
 trends[abs(rarefyID_y) >= 35 & abs(rarefyID_x) < 66.56339, latzone := 'Temperate'] 
 trends[abs(rarefyID_y) >= 66.56339, latzone := 'Polar']
-trends[, latzone := factor(latzone, levels = c('Subtropics', 'Temperate', 'Polar'))]
 
-p1 <- ggplot(trends, aes(temptrend, Jtutrend, color = REALM, fill = REALM, size = nyrBT)) +
-  geom_point(na.rm = TRUE, shape = 16, alpha = 0.1) + 
-  geom_smooth(data=subset(trends, abs(temptrend) < 0.75), method = 'gam', formula = y ~ s(x, bs = "cs"), 
-              na.rm = TRUE) +
-  scale_color_brewer(palette="Set1", name = 'Realm') + 
-  scale_fill_brewer(palette="Set1", name = 'Realm') + 
-  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover', tag = 'A') +
-  scale_size_continuous(range = c(1, 8), breaks = c(2, 5, 20)) +
-  guides(size = guide_legend(title = 'Years',
-                             override.aes = list(linetype=0, fill = NA, alpha = 1))) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        legend.key.size = unit(0.5,"line"), 
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=10))
-
-p2 <- ggplot(trends[!is.na(temptrendtext), ], aes(temptrendtext, Jtutrend)) +
+p1 <- ggplot(trends[!is.na(temptrendtext), ], aes(temptrendtext, Horntrendrem0)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
-  labs(x = '', y = 'Jaccard turnover', tag = 'B') +
+  labs(x = '', y = 'Turnover', tag = 'A', title = 'Rate of temperature change') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"),
         legend.key=element_blank(),
         axis.text=element_text(size=8),
         axis.title=element_text(size=10))
 
-p3 <- ggplot(trends[abs(temptrend) >= 0.5 & !is.na(latzone), ], aes(latzone, Jtutrend)) +
+p2 <- ggplot(trends[abs(temptrend) >= 0.1 & !is.na(latzone), ], aes(latzone, Horntrendrem0)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') + 
-  labs(x = '', y = '', tag = 'C') +
+  labs(x = '', y = '', tag = 'C', title = 'Warming regions') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"),
         legend.key=element_blank(),
         axis.text=element_text(size=7),
         axis.title=element_text(size=10))
 
-p4 <- ggplot(allcoefs, aes(Value, y, group = mod, color = mod)) +
-  geom_errorbarh(aes(xmin = lCI, xmax = uCI, height = 0)) + 
-  geom_point() + 
-  labs(x = expression(atop('Temperature change effect', '(Turnover '~degree*'C'^'-1'*')')), y = '', tag = 'D') +
-  scale_color_grey() + 
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.position='none',
-        axis.text=element_text(size=7),
-        axis.title=element_text(size=7)) + 
-  coord_cartesian(xlim =c(0, 1)) +
-  scale_y_continuous(name = '', breaks = c(1, 2, 3), labels = c('Terrestrial', 'Marine', 'Freshwater'))
 
-grid.arrange(p1, p2, p3, p4, ncol = 3, layout_matrix = rbind(c(1,1,1), c(2,3,4)),
-             heights=c(unit(0.66, "npc"), unit(0.34, "npc")))
+grid.arrange(p1, p2, ncol = 2)
 ```
 
 ## Full models
@@ -396,10 +364,8 @@ Try static covariates plus interactions of abs temperature trend with each covar
 - realm
 - speed
 - mass
-- lifespan
 - average metabolic temperature
 - consumer fraction
-- endotherm fraction
 - environmental temperature
 - seasonality
 - microclimates
@@ -412,7 +378,7 @@ Try static covariates plus interactions of abs temperature trend with each covar
 Except for thermal bias: interact with temperature trend (not abs)
 
 ### Fit full models
-#### Bowler vs Venter/Halpern human impact. 
+#### Bowler vs Venter/Halpern human impact
 Bowler has lower AIC.
 ```{r LME Jacard turnover temperature full rem0}
 # using Bowler for human impact
@@ -462,7 +428,7 @@ AIC(modTfullbowlerrem0, modTfullfootprintrem0)
 
 ```
 
-#### Full models for turnover, total and HM (remove year 1)
+#### Full models
 ```{r LME Jacard total and MH models rem0, fig.width=10, fig.height=8}
 i1 <- trends[, complete.cases(Jtutrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
                              temptrend_abs.sc, mass.sc, speed.sc, 
@@ -608,17 +574,18 @@ legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Hor
 
 #### Plot interactions (Jaccard turnover) without year 1
 ```{r interaction plots modTfullrem0, fig.height = 13, fig.width = 9}
-## NEED TO ALIGN THE INTS DF AGAIN
 
 # set up the interactions to plot
-ints <- data.frame(vars = c('tsign', 'tempave_metab', 'seas', 'microclim', 'mass', 'speed', 'consumerfrac', 'nspp', 'thermal_bias', 'npp', 'veg', 'duration', 'human_bowler', 'human_bowler'),
-           min = c(1, -10, 10, 0.1, 0, 0, 0, 0.3, 0, 0, 0.3, -10, 1.9, 0, 0, 0), 
-           max = c(2, 30, 40, 16, 6, 8, 2, 2, 1, 1, 2.6, 10, 3.7, 1, 9, 9),
-           log = c(F, F, F, F, F, T, T, T, F, F, T, F, T, F, F, F),
-           len = c(2, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
-           discrete = c(T, F, F, F, F, F, F, F, F, F, F, F, F, F, F, F),
-           REALM = c(rep('Freshwater', 15), 'Marine'),
-           REALM2 = c(rep('TerrFresh', 15), 'Marine'),
+ints <- data.frame(vars = c('tsign', 'tempave_metab', 'seas', 'microclim', 'mass', 'speed', 
+                            'consumerfrac', 'nspp', 'thermal_bias', 'npp', 'veg', 'duration', 
+                            'human_bowler', 'human_bowler'),
+           min =      c(1, -10, 0.1, 0,   0,   0,   0,   0.3, -10, 1.9, 0,   0.5, 0,   0), 
+           max =      c(2, 30,  16,  6,   8,   2,   1,   2.6, 10,  3.7, 1,   2,   9,   9),
+           log =      c(F, F,   F,   F,   T,   T,   F,   T,   F,   T,   F,   T,   F,   F),
+           len =      c(2, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
+           discrete = c(T, F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F),
+           REALM = c(rep('Freshwater', 13), 'Marine'),
+           REALM2 = c(rep('TerrFresh', 13), 'Marine'),
            stringsAsFactors = FALSE)
 basetab <- data.frame(tempave.sc = 0, tempave_metab.sc = 0, 
                       seas.sc = 0, microclim.sc = 0, mass.sc = 0, 
@@ -738,6 +705,9 @@ for(j in 1:length(intplots)){
 #grid.arrange(grobs = intplots, '+', theme(plot.margin = unit(c(0,0,0,0), 'cm'))), ncol=2)
 #do.call('grid.arrange', c(intplots, ncol = 2))
 grid.arrange(grobs = intplots, ncol = 3)
+
+# write out the interactions
+write.csv(newdat, file = 'temp/interactions.csv')
 
 ```
 
@@ -1055,7 +1025,8 @@ if(file.exists('temp/modTsimpJturem0.rds')){
                          temptrend_abs.sc*veg.sc +
                          temptrend_abs.sc*duration.sc +
                          temptrend_abs.sc*human_bowler.sc:REALM2,
-                       random = randef, weights = varef, data = trends[i1,], method = 'ML')
+                       random = randef, weights = varef, data = trends[i1,], method = 'ML',
+                       control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
   modTsimpJturem0 <- stepAIC(modTfullJturem0ML, direction = 'backward')
   saveRDS(modTsimpJturem0, file = 'temp/modTsimpJturem0.rds')
 }
@@ -1114,18 +1085,18 @@ summary(modTsimpHornrem0)
 
 ## Make realm-specific models
 ```{r LME Horn models by realm, fig.width=10, fig.height=8}
-i1 <- trends[, REALM == 'Terrestrial' & complete.cases(Horntrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
+i1 <- trends[, REALM == 'Terrestrial' & complete.cases(Horntrendrem0, tempave_metab.sc, seas.sc, microclim.sc, 
                              temptrend_abs.sc, mass.sc, speed.sc, 
                              consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
                              veg.sc, duration.sc, human_bowler.sc)]
-i2 <- trends[, REALM == 'Freshwater' & complete.cases(Horntrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
+i2 <- trends[, REALM == 'Freshwater' & complete.cases(Horntrendrem0, tempave_metab.sc, seas.sc, microclim.sc, 
+                             temptrend_abs.sc, mass.sc, speed.sc, 
+                             nspp.sc, thermal_bias.sc, npp.sc, 
+                             veg.sc, duration.sc, human_bowler.sc)] # no consumerfrac
+i3 <- trends[, REALM == 'Marine' & complete.cases(Horntrendrem0, tempave_metab.sc, seas.sc, microclim.sc, 
                              temptrend_abs.sc, mass.sc, speed.sc, 
                              consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                             veg.sc, duration.sc, human_bowler.sc)]
-i3 <- trends[, REALM == 'Marine' & complete.cases(Horntrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
-                             temptrend_abs.sc, mass.sc, speed.sc, 
-                             consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                             veg.sc, duration.sc, human_bowler.sc)]
+                             duration.sc, human_bowler.sc)] # no veg
 
 print(paste('Terrestrial', sum(i1)))
 print(paste('Freshwater', sum(i2)))
@@ -1152,7 +1123,8 @@ if(file.exists('temp/modTfullHornTerr.rds')){
                          temptrend_abs.sc*veg.sc +
                          temptrend_abs.sc*duration.sc +
                          temptrend_abs.sc*human_bowler.sc,
-                       random = randef, weights = varef, data = trends[i1,], method = 'REML')
+                       random = randef, weights = varef, data = trends[i1,], method = 'REML',
+                       control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
   saveRDS(modTfullHornTerr, file = 'temp/modTfullHornTerr.rds')
 }
 
@@ -1167,7 +1139,6 @@ if(file.exists('temp/modTfullHornFresh.rds')){
                          temptrend_abs.sc*microclim.sc + 
                          temptrend_abs.sc*mass.sc + 
                          temptrend_abs.sc*speed.sc + 
-                         temptrend_abs.sc*consumerfrac.sc +
                          temptrend_abs.sc*nspp.sc +
                          temptrend_abs.sc*thermal_bias.sc:tsign +
                          temptrend_abs.sc*npp.sc +
@@ -1193,7 +1164,6 @@ if(file.exists('temp/modTfullHornMar.rds')){
                          temptrend_abs.sc*nspp.sc +
                          temptrend_abs.sc*thermal_bias.sc:tsign +
                          temptrend_abs.sc*npp.sc +
-                         temptrend_abs.sc*veg.sc +
                          temptrend_abs.sc*duration.sc +
                          temptrend_abs.sc*human_bowler.sc,
                        random = randef, weights = varef, data = trends[i3,], method = 'REML')
@@ -1204,4 +1174,66 @@ summary(modTfullHornTerr)
 summary(modTfullHornFresh)
 summary(modTfullHornMar)
 ```
+### Plot the realm-specific coefficients
+Also uses the full models across all realms
+```{r plot realm mods, fig.height=12, fig.width=9}
+
+coefs1 <- summary(modTfullHornrem0)$tTable
+coefs2 <- summary(modTfullHornTerr)$tTable
+coefs3 <- summary(modTfullHornFresh)$tTable
+coefs4 <- summary(modTfullHornMar)$tTable
+
+varstoplot <- unique(c(rownames(coefs1), rownames(coefs2), rownames(coefs3), rownames(coefs4)))
+varstoplot <- varstoplot[which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot))] # vars to plot
+
+rows1_1 <- which(rownames(coefs1) %in% varstoplot) # rows in coefs
+rows1_2 <- which(rownames(coefs2) %in% varstoplot)
+rows1_3 <- which(rownames(coefs3) %in% varstoplot)
+rows1_4 <- which(rownames(coefs4) %in% varstoplot)
+xlims <- range(c(coefs1[rows1_1,1] - coefs1[rows1_1,2], coefs1[rows1_1,1] + coefs1[rows1_1,2], 
+                 coefs2[rows1_2,1] - coefs2[rows1_2,2], coefs2[rows1_2,1] + coefs2[rows1_2,2], 
+                 coefs3[rows1_3,1] - coefs3[rows1_3,2], coefs3[rows1_3,1] + coefs3[rows1_3,2],
+                 coefs4[rows1_4,1] - coefs4[rows1_4,2], coefs4[rows1_4,1] + coefs4[rows1_4,2]))
+
+
+cols <- brewer.pal(4, 'Dark2') # for full, terr, fresh, mar
+pchs <- c(1, 16, 16, 16)
+offs <- c(0.1, 0, -0.1, -0.2) # offset vertically for each model
+
+
+par(las = 1, mai = c(0.5, 4, 0.1, 0.1))
+
+plot(0,0, col = 'white', xlim = xlims, ylim = c(1,length(varstoplot)), yaxt='n', xlab = '', ylab ='')
+axis(2, at = length(varstoplot):1, labels = varstoplot, cex.axis = 0.7)
+abline(v = 0, col = 'grey', lty = 2)
+abline(h = 1:length(varstoplot), col = 'grey', lty = 3)
+for(i in 1:length(varstoplot)){
+  if(varstoplot[i] %in% rownames(coefs1)){
+    x = coefs1[rownames(coefs1) == varstoplot[i], 1]
+    se = coefs1[rownames(coefs1) == varstoplot[i], 2]
+    points(x, length(varstoplot) + 1 - i + offs[1], pch = pchs[1], col = cols[1])
+    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[1], length(varstoplot) + 1 - i + offs[1]), col = cols[1])
+  }
+  if(varstoplot[i] %in% rownames(coefs2)){
+    x = coefs2[rownames(coefs2) == varstoplot[i], 1]
+    se = coefs2[rownames(coefs2) == varstoplot[i], 2]
+    points(x, length(varstoplot) + 1 - i + offs[2], pch = pchs[2], col = cols[2])
+    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[2], length(varstoplot) + 1 - i + offs[2]), col = cols[2])
+  }
+  if(varstoplot[i] %in% rownames(coefs3)){
+    x = coefs3[rownames(coefs3) == varstoplot[i], 1]
+    se = coefs3[rownames(coefs3) == varstoplot[i], 2]
+    points(x, length(varstoplot) + 1 - i + offs[3], pch = pchs[3], col = cols[3])
+    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[3], length(varstoplot) + 1 - i + offs[3]), col = cols[3])
+  }
+  if(varstoplot[i] %in% rownames(coefs4)){
+    x = coefs4[rownames(coefs4) == varstoplot[i], 1]
+    se = coefs4[rownames(coefs4) == varstoplot[i], 2]
+    points(x, length(varstoplot) + 1 - i + offs[4], pch = pchs[4], col = cols[4])
+    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[4], length(varstoplot) + 1 - i + offs[4]), col = cols[4])
+  }
+}
+legend('bottomleft', col = cols, pch = pchs, lwd = 1, legend = c('All', 'Terestrial', 'Freshwater', 'Marine'))
+```
+
 [End text in hopes this helps the last figure show up when knitted]
