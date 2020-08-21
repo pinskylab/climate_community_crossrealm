@@ -113,16 +113,17 @@ ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in')
 #########################
 newdat <- fread('temp/interactions.csv')
 
-intstoplot <- c('tempave_metab', 'microclim', 'npp', 'human_bowler', 'human_bowler')
-realms <- c(NA, NA, NA, 'Marine', 'TerrFresh')
-logs <- c(FALSE, FALSE, TRUE, FALSE, FALSE)
-tags <- c('A', 'B', 'C', 'D', 'E')
+intstoplot <- c('tempave_metab', 'microclim', 'npp', 'human_bowler')
+titles <- c('Metabolic temperature', 'Microclimates', 'NPP', 'Human impacts')
+realms <- c(NA, NA, NA, 'TerrFresh')
+logs <- c(FALSE, FALSE, TRUE, FALSE)
+tags <- c('A', 'B', 'C', 'D')
 # prep the plots
 intplots <- vector('list', length(intstoplot))
 for(j in 1:length(intstoplot)){
-    subs <- newdat$var == intstoplot[j] & newdat$temptrend > 0 # select warming side
+    subs <- newdat$var == intstoplot[j] & newdat$temptrend < 0 # select one side side
     xvar <- 'temptrend_abs'
-    title <- intstoplot[j]
+    title <- titles[j]
     if(intstoplot[j] %in% c('tsign')){
         subs <- newdat$var == intstoplot[j]
     } 
@@ -131,8 +132,7 @@ for(j in 1:length(intstoplot)){
         xvar <- 'temptrend'
     } 
     if(intstoplot[j] %in% c('human_bowler')){
-        subs <- newdat$var == intstoplot[j] & newdat$temptrend > 0 & newdat$REALM2 == realms[j]
-        title <- paste0('human:', realms[j])
+        subs <- newdat$var == intstoplot[j] & newdat$temptrend < 0 & newdat$REALM2 == realms[j]
     } 
     
     thisplot <- ggplot(newdat[subs, ], 
@@ -140,9 +140,9 @@ for(j in 1:length(intstoplot)){
                                   group = intstoplot[j], 
                                   color = intstoplot[j])) +
         geom_line() +
-        coord_cartesian(ylim = c(-0.3, 0.3)) +
+        coord_cartesian(ylim = c(-0.05, 0.4)) +
         theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm')) +
-        labs(title = title, y = 'Slope', tag = tags[j]) +
+        labs(title = title, y = 'Slope', x = 'Temperature trend (°C/yr)', tag = tags[j]) +
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
               panel.background = element_blank(), axis.line = element_line(colour = "black"),
               legend.key=element_blank(),
@@ -159,6 +159,6 @@ for(j in 1:length(intstoplot)){
 
 }
 
-fig2 <- arrangeGrob(grobs = intplots, ncol = 3)
+fig2 <- arrangeGrob(grobs = intplots, ncol = 2)
 
-ggsave('figures/fig2.png', fig2, width = 10, height = 6, units = 'in')
+ggsave('figures/fig2.png', fig2, width = 7, height = 6, units = 'in')

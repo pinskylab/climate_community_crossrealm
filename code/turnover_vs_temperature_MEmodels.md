@@ -1291,7 +1291,7 @@ legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Hor
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20fullTmods-1.png)<!-- -->
 
-#### Plot interactions (Jaccard turnover) without year 1
+#### Plot interactions (Jaccard turnover)
 
 ``` r
 # set up the interactions to plot
@@ -1299,20 +1299,54 @@ legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Hor
 ints <- data.frame(vars = c('tsign', 'tempave_metab', 'seas', 'microclim', 'mass', 'speed', 
                             'consumerfrac', 'nspp', 'thermal_bias', 'npp', 'veg', 'duration', 
                             'human_bowler', 'human_bowler'),
-           min =      c(1, -10, 0.1, -2,  0,   0,   0,   0.3, -10, 1.9, 0,   0.5, 0,   0), 
-           max =      c(2, 30,  16,  0.8, 8,   2,   1,   2.6, 10,  3.7, 0.3, 2,   1,   1),
-           log =      c(F, F,   F,   T,   T,   T,   F,   T,   F,   T,   T,   T,   T,   T),
-           len =      c(2, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
-           discrete = c(T, F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F),
-           REALM = c(rep('Freshwater', 13), 'Marine'),
+           min =      c(1,  0,   0.1, -2,  0,   0,   0,   0.3, -10, 1.9, 0,   0.5, 0,   0), 
+           max =      c(2,  30,  16,  0.8, 8,   2,   1,   2.6, 10,  3.7, 0.3, 2,   1,   1),
+           log =      c(F,  F,   F,   T,   T,   T,   F,   T,   F,   T,   T,   T,   T,   T),
+           len =      c(2,  100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
+           discrete = c(T,  F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F),
+           plus =     c(0,  0,   0,   0,   0,   1,   0,   0,   0,   0,   1,   0,   1,   1), # what to add before log-scaling
+           REALM = c(rep('Terrestrial', 12), 'Terrestrial', 'Marine'),
            REALM2 = c(rep('TerrFresh', 13), 'Marine'),
            stringsAsFactors = FALSE)
-basetab <- data.frame(tempave.sc = 0, tempave_metab.sc = 0, 
-                      seas.sc = 0, microclim.sc = 0, mass.sc = 0, 
-                      speed.sc = 0, lifespan.sc = 0, endothermfrac.sc = 0, 
-                      nspp.sc = 0, thermal_bias.sc = 0, npp.sc = 0, human_bowler.sc = 0, veg.sc = 0,
-                      consumerfrac.sc = 0, duration.sc = 0,
-                      nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_514668')
+baseall <- trends[, .(type = 'all', tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                      seas.sc = mean(seas.sc, na.rm=TRUE), 
+                      microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                      speed.sc = mean(speed.sc, na.rm=TRUE), 
+                      mass.sc = mean(mass.sc, na.rm=TRUE), 
+                      nspp.sc = 0, 
+                      thermal_bias.sc = mean(thermal_bias.sc, na.rm=TRUE), 
+                      npp.sc = mean(npp.sc, na.rm=TRUE), 
+                      human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
+                      veg.sc = mean(veg.sc, na.rm=TRUE), 
+                      consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
+baseterr <- trends[REALM == 'Terrestrial', 
+                   .(type = 'Terrestrial', 
+                     tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                     seas.sc = mean(seas.sc, na.rm=TRUE), 
+                     microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                     speed.sc = mean(speed.sc, na.rm=TRUE), 
+                     mass.sc = mean(mass.sc, na.rm=TRUE), 
+                     nspp.sc = 0, 
+                     thermal_bias.sc = 0, 
+                     npp.sc = mean(npp.sc, na.rm=TRUE), 
+                     human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
+                     veg.sc = mean(veg.sc, na.rm=TRUE), 
+                     consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
+basemar <- trends[REALM == 'Marine', 
+                  .(type = 'Marine',
+                    tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                    seas.sc = mean(seas.sc, na.rm=TRUE), 
+                    microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                    speed.sc = mean(speed.sc, na.rm=TRUE), 
+                    mass.sc = mean(mass.sc, na.rm=TRUE), 
+                    nspp.sc = 0, 
+                    thermal_bias.sc = 0, 
+                    npp.sc = mean(npp.sc, na.rm=TRUE), 
+                    human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
+                    veg.sc = mean(veg.sc, na.rm=TRUE), 
+                    consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
+basetab <- rbind(baseall, baseterr, basemar)
+basetab[, ':='(duration.sc = 0, nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_514668')]
 
 # make the data frames for each interaction to plot                
 for(j in 1:nrow(ints)){
@@ -1330,15 +1364,24 @@ for(j in 1:nrow(ints)){
   cent <- attr(trends[[paste0(ints$var[j], '.sc')]], 'scaled:center')
   scl <- attr(trends[[paste0(ints$var[j], '.sc')]], 'scaled:scale')
   if(!is.null(cent) & !is.null(scl)){
-    if(ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (log(thisdat[[ints$var[j]]]) - cent)/scl
+    if(ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (log(thisdat[[ints$vars[j]]] + ints$plus[j]) - cent)/scl
     if(!ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (thisdat[[ints$var[j]]] - cent)/scl
   }
 
   # merge with the rest of the columns
-  if(ints$var[j] != 'tsign') colnamestouse <- setdiff(colnames(basetab), paste0(ints$var[j], '.sc'))
-  if(ints$var[j] == 'tsign') colnamestouse <- setdiff(colnames(basetab), ints$var[j])
-  thisdat <- cbind(thisdat, basetab[, colnamestouse])
-
+  # use realm-specific averages for human impacts
+  if(ints$vars[j] != 'tsign') colnamestouse <- setdiff(colnames(basetab), paste0(ints$var[j], '.sc'))
+  if(ints$vars[j] == 'tsign') colnamestouse <- setdiff(colnames(basetab), ints$var[j])
+  if(ints$vars[j] != 'human_bowler'){
+    thisdat <- cbind(thisdat, basetab[type == 'all', ..colnamestouse])
+  }
+  if(ints$vars[j] == 'human_bowler' & ints$REALM[j] == 'Terrestrial'){
+    thisdat <- cbind(thisdat, basetab[type == 'Terrestrial', ..colnamestouse])
+  }
+  if(ints$vars[j] == 'human_bowler' & ints$REALM[j] == 'Marine'){
+    thisdat <- cbind(thisdat, basetab[type == 'Marine', ..colnamestouse])
+  }
+  
   # add realm
   thisdat$REALM <- ints$REALM[j]
   thisdat$REALM2 <- ints$REALM2[j]
@@ -1365,10 +1408,10 @@ newdat$REALM <- as.character(newdat$REALM)
 newdat$REALM2 <- as.character(newdat$REALM2)
 
 # add extra rows so that all factor levels are represented (for predict.lme to work)
-newdat <- rbind(newdat[1:4, ], newdat)
-newdat$REALM[1:4] <- c('Marine', 'Marine', 'Terrestrial', 'Terrestrial')
-newdat$REALM2[1:4] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh')
-newdat$temptrend[1:4] <- c(-1, 1, -1, 1)
+newdat <- rbind(newdat[1:6, ], newdat)
+newdat$REALM[1:6] <- c('Marine', 'Marine', 'Freshwater', 'Freshwater', 'Terrestrial', 'Terrestrial')
+newdat$REALM2[1:6] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh', 'TerrFresh', 'TerrFresh')
+newdat$temptrend[1:6] <- c(-1, 1, -1, 1, -1, 1)
 
 # trim to at least some temperature change (so that tsign is -1 or 1)
 newdat <- newdat[newdat$temptrend != 0,]
@@ -1408,7 +1451,7 @@ for(j in 1:length(intplots)){
                                 group = ints$vars[j], 
                                 color = ints$vars[j])) +
     geom_line() +
-    coord_cartesian(ylim = c(-0.6, 0.6)) +
+    coord_cartesian(ylim = c(-0.2, 0.4)) +
     theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm')) +
     labs(title = title)
   if(ints$log[j] & !ints$discrete[j]){
