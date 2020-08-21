@@ -140,7 +140,7 @@ for(j in 1:length(intstoplot)){
                                   group = intstoplot[j], 
                                   color = intstoplot[j])) +
         geom_line() +
-        coord_cartesian(ylim = c(-0.6, 0.6)) +
+        coord_cartesian(ylim = c(-0.3, 0.3)) +
         theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm')) +
         labs(title = title, y = 'Slope', tag = tags[j]) +
         theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
