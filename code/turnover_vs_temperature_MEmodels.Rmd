@@ -2,9 +2,9 @@
 title: 'Drivers of variation in the community response to temperature change across realms'
 subtitle: '(using mixed effects models)'
 output: 
-    html_notebook: default
-    #html_document: default
     github_document: default
+    #html_document: default
+    html_notebook: default
 ---
 
 Collaborators: Shane Blowes, Jon Chase, Helmut Hillebrand, Michael Burrows, Amanda Bates, Uli Brose, Benoit Gauzens, Laura Antao, Ruben Remelgado, Carsten Meyer, Myriam Hirt, maybe others
@@ -59,6 +59,7 @@ library(gridExtra) # to combine ggplots together
 library(grid) # to combine ggplots together
 library(RColorBrewer)
 library(MASS) # for stepAIC
+library(piecewiseSEM) # for rsquared() for nlme models
 
 options(width=500) # turn off most text wrapping
 
@@ -390,6 +391,10 @@ i1 <- trends[, complete.cases(Jtutrendrem0, REALM, tempave_metab.sc, seas.sc, mi
 randef <- list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)
 varef <- varPower(-0.5, ~nyrBT)
 
+if(file.exists('temp/modTfullbowlerrem0.rds')){
+  modTfullbowlerrem0 <- readRDS('temp/modTfullbowlerrem0.rds')
+} else {
+
 modTfullbowlerrem0 <- lme(Jtutrendrem0 ~ temptrend_abs.sc*REALM +
                      temptrend_abs.sc*tsign + 
                      temptrend_abs.sc*tempave_metab.sc + 
@@ -405,8 +410,13 @@ modTfullbowlerrem0 <- lme(Jtutrendrem0 ~ temptrend_abs.sc*REALM +
                      temptrend_abs.sc*duration.sc +
                      temptrend_abs.sc*human_bowler.sc:REALM2,
                    random = randef, weights = varef, data = trends[i1,], method = 'REML')
+  saveRDS(modTfullbowlerrem0, file = 'temp/modTfullbowlerrem0.rds')
+}
 
 # using Venter/Halpern for human impact
+if(file.exists('temp/modTfullfootprintrem0.rds')){
+  modTfullfootprintrem0 <- readRDS('temp/modTfullfootprintrem0.rds')
+} else {
 modTfullfootprintrem0 <- lme(Jtutrendrem0 ~ temptrend_abs.sc*REALM + 
                      temptrend_abs.sc*tsign + 
                      temptrend_abs.sc*tempave_metab.sc + 
@@ -423,7 +433,9 @@ modTfullfootprintrem0 <- lme(Jtutrendrem0 ~ temptrend_abs.sc*REALM +
                      temptrend_abs.sc*human_footprint.sc:REALM2,
                    random = randef, weights = varef, data = trends[i1,], method = 'REML',
                    control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
+  saveRDS(modTfullfootprintrem0, file = 'temp/modTfullfootprintrem0.rds')
 
+}
 AIC(modTfullbowlerrem0, modTfullfootprintrem0)
 
 ```
@@ -513,6 +525,11 @@ if(file.exists('temp/modTfullHornrem0.rds')){
 summary(modTfullJturem0)
 summary(modTfullJbetarem0)
 summary(modTfullHornrem0)
+
+rsquared(modTfullJturem0)
+rsquared(modTfullJbetarem0)
+rsquared(modTfullHornrem0)
+
 ```
 
 ### Plots from the full models
@@ -573,15 +590,16 @@ legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Hor
 
 
 #### Plot interactions (Jaccard turnover) without year 1
-```{r interaction plots modTfullrem0, fig.height = 13, fig.width = 9}
+```{r interaction plots modTfullJturem0, fig.height = 13, fig.width = 9}
 
 # set up the interactions to plot
+# if variable is logged before scaling (see 'center and scale' above), then need to mark it here and express the limits on a log10 scale (even though log transforming is log)
 ints <- data.frame(vars = c('tsign', 'tempave_metab', 'seas', 'microclim', 'mass', 'speed', 
                             'consumerfrac', 'nspp', 'thermal_bias', 'npp', 'veg', 'duration', 
                             'human_bowler', 'human_bowler'),
-           min =      c(1, -10, 0.1, 0,   0,   0,   0,   0.3, -10, 1.9, 0,   0.5, 0,   0), 
-           max =      c(2, 30,  16,  6,   8,   2,   1,   2.6, 10,  3.7, 1,   2,   9,   9),
-           log =      c(F, F,   F,   F,   T,   T,   F,   T,   F,   T,   F,   T,   F,   F),
+           min =      c(1, -10, 0.1, -2,  0,   0,   0,   0.3, -10, 1.9, 0,   0.5, 0,   0), 
+           max =      c(2, 30,  16,  0.8, 8,   2,   1,   2.6, 10,  3.7, 0.3, 2,   1,   1),
+           log =      c(F, F,   F,   T,   T,   T,   F,   T,   F,   T,   T,   T,   T,   T),
            len =      c(2, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
            discrete = c(T, F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F),
            REALM = c(rep('Freshwater', 13), 'Marine'),
@@ -660,7 +678,7 @@ newdat$temptrend_abs.sc <- (newdat$temptrend_abs)/attr(trends$temptrend_abs.sc, 
 newdat$tsign <- factor(sign(newdat$temptrend))
 
 # make predictions
-newdat$preds <- predict(object = modTfullrem0, newdata = newdat, level = 0)
+newdat$preds <- predict(object = modTfullJturem0, newdata = newdat, level = 0)
 
 #remove the extra rows
 newdat <- newdat[5:nrow(newdat), ]
@@ -713,8 +731,8 @@ write.csv(newdat, file = 'temp/interactions.csv')
 
 #### Plot residuals against each predictor (Jaccard turnover)
 ```{r resids modTfull1, fig.height = 10, fig.width=10}
-resids <- resid(modTfull1)
-preds <- getData(modTfull1)
+resids <- resid(modTfullJturem0)
+preds <- getData(modTfullJturem0)
 col = '#00000033'
 cex = 0.5
 par(mfrow = c(5,4))
@@ -989,7 +1007,7 @@ Clear that removing temperature trend makes the model quite a bit worse and has 
 
 
 ## Simplify the full models
-This takes a couple days on a laptop to run.
+This takes a couple days on a laptop to run if temp/ files not available.
 ```{r simplify the full models}
 i1 <- trends[, complete.cases(Jtutrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
                              temptrend_abs.sc, mass.sc, speed.sc, 
