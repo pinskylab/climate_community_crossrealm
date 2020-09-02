@@ -217,29 +217,105 @@ Mostly northern hemisphere, but spread all over. Not so much in Africa or much o
 
 
 
-Average rates of turnover (without year 1)
+##Average rates of turnover (without year 1)
 ```{r rates of turnover rem0}
-trends[abs(temptrend) >= 0.5, .(ave = mean(Jtutrendrem0, na.rm=TRUE), 
-                                sd = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N))] # turnover per year for locations changing temperature
-trends[abs(temptrend) < 0.1, .(ave = mean(Jtutrendrem0, na.rm=TRUE), 
-                               sd = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N))] # not changing temperature
-trends[temptrend >= 0.5, .(ave = mean(Jtutrendrem0, na.rm=TRUE), 
-                           sd = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N))] # warming
-trends[temptrend <= -0.5, .(ave = mean(Jtutrendrem0, na.rm=TRUE), 
-                            sd = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N))] # cooling
+trends[abs(temptrend) >= 0.5, temptrendtext1 := 'Changing']
+trends[abs(temptrend) <= 0.05, temptrendtext1 := 'Stable']
+trends[temptrend <= -0.5, temptrendtext2 := 'Cooling']
+trends[abs(temptrend) <= 0.05, temptrendtext2 := 'Stable']
+trends[temptrend >= 0.5, temptrendtext2 := 'Warming']
 
-trends[abs(temptrend) >= 0.5 & abs(rarefyID_y) < 35, 
-       .(ave = mean(Jtutrendrem0, na.rm=TRUE), 
-         sd = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N))] # tropics and sub-tropics
-trends[abs(temptrend) >= 0.5 & abs(rarefyID_y) >= 35 & abs(rarefyID_y) < 66.56339, 
-       .(ave = mean(Jtutrendrem0, na.rm=TRUE), 
-         sd = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N))] # temperate
-trends[abs(temptrend) >= 0.5 & abs(rarefyID_y) >= 66.56339, 
-       .(ave = mean(Jtutrendrem0, na.rm=TRUE), 
-         sd = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N))] # arctic
+trendsum1 <- trends[!is.na(temptrendtext1), 
+                    .(type = 'Jtu', 
+                      ave = mean(Jtutrendrem0, na.rm=TRUE), 
+                      se = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Jtutrendrem0))),
+                    by = temptrendtext1] # turnover per year for locations changing temperature
+trendsum1 <- rbind(trendsum1, trends[!is.na(temptrendtext1), 
+                    .(type = 'Jbeta', 
+                      ave = mean(Jbetatrendrem0, na.rm=TRUE), 
+                      se = sd(Jbetatrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Jbetatrendrem0))),
+                    by = temptrendtext1])
+trendsum1 <- rbind(trendsum1, trends[!is.na(temptrendtext1), 
+                    .(type = 'Horn', 
+                      ave = mean(Horntrendrem0, na.rm=TRUE), 
+                      se = sd(Horntrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Horntrendrem0))),
+                    by = temptrendtext1])
+
+trendsum2 <- trends[!is.na(temptrendtext2), 
+                    .(type = 'Jtu', 
+                      ave = mean(Jtutrendrem0, na.rm=TRUE), 
+                      se = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Jtutrendrem0))),
+                    by = temptrendtext2] # turnover per year for locations changing temperature (inc. direction)
+trendsum2 <- rbind(trendsum2, trends[!is.na(temptrendtext2), 
+                    .(type = 'Jbeta', 
+                      ave = mean(Jbetatrendrem0, na.rm=TRUE), 
+                      se = sd(Jbetatrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Jbetatrendrem0))),
+                    by = temptrendtext2])
+trendsum2 <- rbind(trendsum2, trends[!is.na(temptrendtext2), 
+                    .(type = 'Horn', 
+                      ave = mean(Horntrendrem0, na.rm=TRUE), 
+                      se = sd(Horntrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Horntrendrem0))),
+                    by = temptrendtext2])
+
+
+
+trendsum1
+trendsum2
 ```
 
+### Plots of turnover rates
+```{r turnover vs. temperature violin plot}
+p1 <- ggplot(trends[!is.na(temptrendtext1), ], aes(temptrendtext1, Horntrendrem0)) +
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
+  labs(x = '', y = 'Turnover', tag = 'A', title = 'Rate of temperature change') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10)) +
+  geom_abline(intercept = 0, slope = 0)
 
+p2 <- ggplot(trends[!is.na(temptrendtext2), ], aes(temptrendtext2, Horntrendrem0)) +
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
+  labs(x = '', y = 'Turnover', tag = 'A', title = 'Rate of temperature change') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10)) +
+  geom_abline(intercept = 0, slope = 0)
+
+p3 <- ggplot(trendsum1, aes(temptrendtext1, ave, group = type, color = type)) +
+  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
+  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
+  labs(x = '', y = 'Temporal turnover', title = 'Jaccard turnover') +
+  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10)) +
+  coord_cartesian(ylim = c(0,0.04))
+
+p4 <- ggplot(trendsum2, aes(temptrendtext2, ave, group = type, color = type)) +
+  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
+  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
+  labs(x = '', y = 'Temporal turnover', title = 'Jaccard turnover') +
+  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10))
+
+grid.arrange(p1, p2, p3, p4, ncol = 2)
+```
 
 ## Temperature-only model (Jtutrend, Jbetatrend, Horntrend)
 ```{r LME temperature only rem0}
@@ -282,6 +358,7 @@ summary(modonlyTtrendHornrem0)
 
 ```
 
+
 ### Plot the temp-only coefficients
 ```{r modonlyTtrendsimp coefs}
 colors <- brewer.pal(3, 'Dark2')
@@ -322,41 +399,6 @@ legend('bottomright', col = colors, lwd = 1, pch = 16,
        legend = c('Jaccard turnover', 'Jaccard total', 'Horn-Morisita',
                   'Jaccard turnover rem0', 'Jaccard total rem0', 'Horn-Morisita rem0'))
 
-```
-
-### Nicer plots of turnover vs. temperature data
-Violin plots
-```{r turnover vs. temperature big plot, fig.width=6, fig.height=4.5}
-# on macbook: fig.width=3, fig.height=2.375, fig.retina=3, out.width=3, out.height=2.375
-# on external monitor: fig.width=6, fig.height=4.5
-trends[temptrend <= -0.7, temptrendtext := 'Cooling']
-trends[abs(temptrend) <= 0.05, temptrendtext := 'Stable']
-trends[temptrend >= 0.7, temptrendtext := 'Warming']
-
-trends[abs(rarefyID_y) < 35, latzone := 'Subtropics']
-trends[abs(rarefyID_y) >= 35 & abs(rarefyID_x) < 66.56339, latzone := 'Temperate'] 
-trends[abs(rarefyID_y) >= 66.56339, latzone := 'Polar']
-
-p1 <- ggplot(trends[!is.na(temptrendtext), ], aes(temptrendtext, Horntrendrem0)) +
-  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
-  labs(x = '', y = 'Turnover', tag = 'A', title = 'Rate of temperature change') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=10))
-
-p2 <- ggplot(trends[abs(temptrend) >= 0.1 & !is.na(latzone), ], aes(latzone, Horntrendrem0)) +
-  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') + 
-  labs(x = '', y = '', tag = 'C', title = 'Warming regions') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=7),
-        axis.title=element_text(size=10))
-
-
-grid.arrange(p1, p2, ncol = 2)
 ```
 
 ## Full models
