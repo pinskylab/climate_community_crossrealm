@@ -374,65 +374,150 @@ ggplot(world, aes(x = long, y = lat, group = group)) +
 Mostly northern hemisphere, but spread all over. Not so much in Africa
 or much of Asia.
 
-Average rates of turnover (without year 1)
+\#\#Average rates of turnover (without year 1)
 
 ``` r
-trends[abs(temptrend) >= 0.5, .(ave = mean(Jtutrendrem0, na.rm=TRUE), 
-                                sd = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N))] # turnover per year for locations changing temperature
+trends[abs(temptrend) >= 0.5, temptrendtext1 := 'Changing']
+trends[abs(temptrend) <= 0.05, temptrendtext1 := 'Stable']
+trends[temptrend <= -0.5, temptrendtext2 := 'Cooling']
+trends[abs(temptrend) <= 0.05, temptrendtext2 := 'Stable']
+trends[temptrend >= 0.5, temptrendtext2 := 'Warming']
+
+trendsum1 <- trends[!is.na(temptrendtext1), 
+                    .(type = 'Jtu', 
+                      ave = mean(Jtutrendrem0, na.rm=TRUE), 
+                      se = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Jtutrendrem0))),
+                    by = .(text = temptrendtext1)] # turnover per year for locations changing temperature
+trendsum1 <- rbind(trendsum1, trends[!is.na(temptrendtext1), 
+                    .(type = 'Jbeta', 
+                      ave = mean(Jbetatrendrem0, na.rm=TRUE), 
+                      se = sd(Jbetatrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Jbetatrendrem0))),
+                    by = .(text = temptrendtext1)])
+trendsum1 <- rbind(trendsum1, trends[!is.na(temptrendtext1), 
+                    .(type = 'Horn', 
+                      ave = mean(Horntrendrem0, na.rm=TRUE), 
+                      se = sd(Horntrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Horntrendrem0))),
+                    by = .(text = temptrendtext1)])
+
+trendsum2 <- trends[!is.na(temptrendtext2), 
+                    .(type = 'Jtu', 
+                      ave = mean(Jtutrendrem0, na.rm=TRUE), 
+                      se = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Jtutrendrem0))),
+                    by = .(text = temptrendtext2)] # inc. direction
+trendsum2 <- rbind(trendsum2, trends[!is.na(temptrendtext2), 
+                    .(type = 'Jbeta', 
+                      ave = mean(Jbetatrendrem0, na.rm=TRUE), 
+                      se = sd(Jbetatrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Jbetatrendrem0))),
+                    by = .(text = temptrendtext2)])
+trendsum2 <- rbind(trendsum2, trends[!is.na(temptrendtext2), 
+                    .(type = 'Horn', 
+                      ave = mean(Horntrendrem0, na.rm=TRUE), 
+                      se = sd(Horntrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Horntrendrem0))),
+                    by = .(text = temptrendtext2)])
+
+
+trendsum3 <- rbind(trendsum1, trendsum2[text != 'Stable',])
+
+write.csv(trendsum3, file = 'output/trendsummary.csv', row.names = FALSE)
+
+trendsum1
 ```
 
-    ##           ave         sd
-    ## 1: 0.01886862 0.01194967
+    ##        text  type         ave           se     n
+    ## 1:   Stable   Jtu 0.005268427 0.0005163947 25654
+    ## 2: Changing   Jtu 0.018868620 0.0119496715   375
+    ## 3:   Stable Jbeta 0.005594700 0.0003261123 25654
+    ## 4: Changing Jbeta 0.026547974 0.0081610193   375
+    ## 5:   Stable  Horn 0.007078349 0.0004990133 25094
+    ## 6: Changing  Horn 0.029872733 0.0112592629   373
 
 ``` r
-trends[abs(temptrend) < 0.1, .(ave = mean(Jtutrendrem0, na.rm=TRUE), 
-                               sd = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N))] # not changing temperature
+trendsum2
 ```
 
-    ##            ave           sd
-    ## 1: 0.006235547 0.0005238714
+    ##       text  type         ave           se     n
+    ## 1:  Stable   Jtu 0.005268427 0.0005163947 25654
+    ## 2: Cooling   Jtu 0.020361270 0.0135748363   255
+    ## 3: Warming   Jtu 0.015696739 0.0238012397   120
+    ## 4:  Stable Jbeta 0.005594700 0.0003261123 25654
+    ## 5: Cooling Jbeta 0.022997186 0.0089694581   255
+    ## 6: Warming Jbeta 0.034093398 0.0169859342   120
+    ## 7:  Stable  Horn 0.007078349 0.0004990133 25094
+    ## 8: Cooling  Horn 0.037672421 0.0129565844   255
+    ## 9: Warming  Horn 0.013017474 0.0219465463   118
+
+### Plots of turnover rates
 
 ``` r
-trends[temptrend >= 0.5, .(ave = mean(Jtutrendrem0, na.rm=TRUE), 
-                           sd = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N))] # warming
+p1 <- ggplot(trends[!is.na(text), ], aes(temptrendtext1, Horntrendrem0)) +
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
+  labs(x = '', y = 'Turnover', tag = 'A', title = 'Rate of temperature change') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10)) +
+  geom_abline(intercept = 0, slope = 0)
 ```
 
-    ##           ave         sd
-    ## 1: 0.01569674 0.02380124
+    ## Warning in is.na(text): is.na() applied to non-(list or vector) of type 'closure'
 
 ``` r
-trends[temptrend <= -0.5, .(ave = mean(Jtutrendrem0, na.rm=TRUE), 
-                            sd = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N))] # cooling
+p2 <- ggplot(trends[!is.na(text), ], aes(temptrendtext2, Horntrendrem0)) +
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
+  labs(x = '', y = 'Turnover', tag = 'A', title = 'Rate of temperature change') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10)) +
+  geom_abline(intercept = 0, slope = 0)
 ```
 
-    ##           ave         sd
-    ## 1: 0.02036127 0.01357484
+    ## Warning in is.na(text): is.na() applied to non-(list or vector) of type 'closure'
 
 ``` r
-trends[abs(temptrend) >= 0.5 & abs(rarefyID_y) < 35, 
-       .(ave = mean(Jtutrendrem0, na.rm=TRUE), 
-         sd = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N))] # tropics and sub-tropics
+p3 <- ggplot(trendsum1, aes(text, ave, group = type, color = type)) +
+  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
+  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
+  labs(x = '', y = 'Temporal turnover', title = 'Jaccard turnover') +
+  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10)) +
+  coord_cartesian(ylim = c(0,0.04))
+
+p4 <- ggplot(trendsum2, aes(text, ave, group = type, color = type)) +
+  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
+  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
+  labs(x = '', y = 'Temporal turnover', title = 'Jaccard turnover') +
+  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10))
+
+grid.arrange(p1, p2, p3, p4, ncol = 2)
 ```
 
-    ##    ave sd
-    ## 1: 0.2 NA
+    ## Warning: Removed 1007 rows containing non-finite values (stat_ydensity).
 
-``` r
-trends[abs(temptrend) >= 0.5 & abs(rarefyID_y) >= 35 & abs(rarefyID_y) < 66.56339, 
-       .(ave = mean(Jtutrendrem0, na.rm=TRUE), 
-         sd = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N))] # temperate
-```
+    ## Warning in regularize.values(x, y, ties, missing(ties)): collapsing to unique 'x' values
 
-    ##           ave         sd
-    ## 1: 0.01838431 0.01197182
+    ## Warning: Removed 1007 rows containing non-finite values (stat_ydensity).
 
-``` r
-trends[abs(temptrend) >= 0.5 & abs(rarefyID_y) >= 66.56339, 
-       .(ave = mean(Jtutrendrem0, na.rm=TRUE), 
-         sd = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N))] # arctic
-```
+    ## Warning in regularize.values(x, y, ties, missing(ties)): collapsing to unique 'x' values
 
-    ## Empty data.table (0 rows and 2 cols): ave,sd
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-1.png)<!-- -->
 
 ## Temperature-only model (Jtutrend, Jbetatrend, Horntrend)
 
@@ -665,51 +750,6 @@ legend('bottomright', col = colors, lwd = 1, pch = 16,
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/modonlyTtrendsimp%20coefs-1.png)<!-- -->
 
-### Nicer plots of turnover vs. temperature data
-
-Violin plots
-
-``` r
-# on macbook: fig.width=3, fig.height=2.375, fig.retina=3, out.width=3, out.height=2.375
-# on external monitor: fig.width=6, fig.height=4.5
-trends[temptrend <= -0.7, temptrendtext := 'Cooling']
-trends[abs(temptrend) <= 0.05, temptrendtext := 'Stable']
-trends[temptrend >= 0.7, temptrendtext := 'Warming']
-
-trends[abs(rarefyID_y) < 35, latzone := 'Subtropics']
-trends[abs(rarefyID_y) >= 35 & abs(rarefyID_x) < 66.56339, latzone := 'Temperate'] 
-trends[abs(rarefyID_y) >= 66.56339, latzone := 'Polar']
-
-p1 <- ggplot(trends[!is.na(temptrendtext), ], aes(temptrendtext, Horntrendrem0)) +
-  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
-  labs(x = '', y = 'Turnover', tag = 'A', title = 'Rate of temperature change') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=10))
-
-p2 <- ggplot(trends[abs(temptrend) >= 0.1 & !is.na(latzone), ], aes(latzone, Horntrendrem0)) +
-  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') + 
-  labs(x = '', y = '', tag = 'C', title = 'Warming regions') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=7),
-        axis.title=element_text(size=10))
-
-
-grid.arrange(p1, p2, ncol = 2)
-```
-
-    ## Warning: Removed 560 rows containing non-finite values (stat_ydensity).
-
-    ## Warning in regularize.values(x, y, ties, missing(ties)): collapsing to unique 'x' values
-
-    ## Warning: Removed 72 rows containing non-finite values (stat_ydensity).
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/turnover%20vs.%20temperature%20big%20plot-1.png)<!-- -->
-
 ## Full models
 
 Try static covariates plus interactions of abs temperature trend with
@@ -731,7 +771,7 @@ each covariate:
 
 Except for thermal bias: interact with temperature trend (not abs)
 
-### Fit full models
+### Fit/load full models
 
 #### Bowler vs Venter/Halpern human impact
 
@@ -1290,6 +1330,214 @@ legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Hor
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20fullTmods-1.png)<!-- -->
+
+#### Plot the main effects
+
+##### Manually
+
+``` r
+# set up the variables to plot
+# if variable is logged before scaling (see 'center and scale' above), then need to mark it here and express the limits on a log10 scale (even though log transforming is log)
+vars <- data.frame(vars = c('temptrend_abs', 'tempave_metab', 'seas', 'microclim', 'mass', 'speed', 
+                            'consumerfrac', 'nspp', 'thermal_bias', 'npp', 'veg', 'duration', 
+                            'human_bowler', 'human_bowler'),
+           min =      c(0,  0,   0.1, -2,  0,   0,   0,   0.3, -10, 1.9, 0,   0.5, 0,   0), 
+           max =      c(2,  30,  16,  0.8, 8,   2,   1,   2.6, 10,  3.7, 0.3, 2,   1,   1),
+           log =      c(F,  F,   F,   T,   T,   T,   F,   T,   F,   T,   T,   T,   T,   T),
+           len =      c(100,  100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
+           discrete = c(F,  F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F),
+           plus =     c(0,  0,   0,   0,   0,   1,   0,   0,   0,   0,   1,   0,   1,   1), # what to add before log-scaling
+           REALM = c(rep('Terrestrial', 13), 'Marine'),
+           REALM2 = c(rep('TerrFresh', 13), 'Marine'),
+           stringsAsFactors = FALSE)
+baseall <- trends[, .(type = 'all', 
+                      temptrend = -0.0001,
+                      temptrend_abs.sc = 0.0001,
+                      tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                      seas.sc = mean(seas.sc, na.rm=TRUE), 
+                      microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                      speed.sc = mean(speed.sc, na.rm=TRUE), 
+                      mass.sc = mean(mass.sc, na.rm=TRUE), 
+                      nspp.sc = 0, 
+                      thermal_bias.sc = mean(thermal_bias.sc, na.rm=TRUE), 
+                      npp.sc = mean(npp.sc, na.rm=TRUE), 
+                      human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
+                      veg.sc = mean(veg.sc, na.rm=TRUE), 
+                      consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
+baseterr <- trends[REALM == 'Terrestrial', 
+                   .(type = 'Terrestrial', 
+                     temptrend = -0.0001,
+                     temptrend_abs.sc = 0.0001,
+                     tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                     seas.sc = mean(seas.sc, na.rm=TRUE), 
+                     microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                     speed.sc = mean(speed.sc, na.rm=TRUE), 
+                     mass.sc = mean(mass.sc, na.rm=TRUE), 
+                     nspp.sc = 0, 
+                     thermal_bias.sc = 0, 
+                     npp.sc = mean(npp.sc, na.rm=TRUE), 
+                     human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
+                     veg.sc = mean(veg.sc, na.rm=TRUE), 
+                     consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
+basemar <- trends[REALM == 'Marine', 
+                  .(type = 'Marine',
+                    temptrend = -0.0001,
+                    temptrend_abs.sc = 0.0001,
+                    tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                    seas.sc = mean(seas.sc, na.rm=TRUE), 
+                    microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                    speed.sc = mean(speed.sc, na.rm=TRUE), 
+                    mass.sc = mean(mass.sc, na.rm=TRUE), 
+                    nspp.sc = 0, 
+                    thermal_bias.sc = 0, 
+                    npp.sc = mean(npp.sc, na.rm=TRUE), 
+                    human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
+                    veg.sc = mean(veg.sc, na.rm=TRUE), 
+                    consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
+basetab <- rbind(baseall, baseterr, basemar)
+basetab[, ':='(duration.sc = 0, nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_514668')]
+
+# make the data frames for each interaction to plot                
+for(j in 1:nrow(vars)){
+  # set up the main effects
+  if(vars$log[j]){
+    thisdat <- data.frame(new = 10^seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
+                          var = vars$vars[j], stringsAsFactors = FALSE)
+  } 
+  if(!vars$log[j]){
+    thisdat <- data.frame(new = seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
+                          var = vars$vars[j], stringsAsFactors = FALSE)
+  }
+  names(thisdat) <- c(vars$vars[j], 'var')
+
+  # scale the variable
+  cent <- attr(trends[[paste0(vars$vars[j], '.sc')]], 'scaled:center')
+  scl <- attr(trends[[paste0(vars$vars[j], '.sc')]], 'scaled:scale')
+  if(is.null(cent)) cent <- 0
+  if(!is.null(cent) & !is.null(scl)){
+    if(vars$log[j]) thisdat[[paste0(vars$var[j], '.sc')]] <- (log(thisdat[[vars$vars[j]]] + vars$plus[j]) - cent)/scl
+    if(!vars$log[j]) thisdat[[paste0(vars$var[j], '.sc')]] <- (thisdat[[vars$var[j]]] - cent)/scl
+  }
+
+  # merge with the rest of the columns
+  # use realm-specific averages for human impacts
+  if(vars$vars[j] != 'tsign') colnamestouse <- setdiff(colnames(basetab), paste0(vars$vars[j], '.sc'))
+  if(vars$vars[j] == 'tsign') colnamestouse <- setdiff(colnames(basetab), vars$var[j])
+  if(vars$vars[j] != 'human_bowler'){
+    thisdat <- cbind(thisdat, basetab[type == 'all', ..colnamestouse])
+  }
+  if(vars$vars[j] == 'human_bowler' & vars$REALM[j] == 'Terrestrial'){
+    thisdat <- cbind(thisdat, basetab[type == 'Terrestrial', ..colnamestouse])
+  }
+  if(vars$vars[j] == 'human_bowler' & vars$REALM[j] == 'Marine'){
+    thisdat <- cbind(thisdat, basetab[type == 'Marine', ..colnamestouse])
+  }
+  
+  # add realm
+  thisdat$REALM <- vars$REALM[j]
+  thisdat$REALM2 <- vars$REALM2[j]
+  
+  # merge with the previous iterations
+  if(j == 1) newdat <- thisdat
+  if(j > 1){
+    colstoadd <- setdiff(colnames(thisdat), colnames(newdat))
+    for(toadd in colstoadd){
+      newdat[[toadd]] <- NA
+    }
+    
+    colstoadd2 <- setdiff(colnames(newdat), colnames(thisdat))
+    for(toadd in colstoadd2){
+      thisdat[[toadd]] <- NA
+    }
+    
+    newdat <- rbind(newdat, thisdat)
+  } 
+}
+
+# character so that new levels can be added
+newdat$REALM <- as.character(newdat$REALM)
+newdat$REALM2 <- as.character(newdat$REALM2)
+
+# add extra rows so that all factor levels are represented (for predict.lme to work)
+newdat <- rbind(newdat[1:6, ], newdat)
+newdat$REALM[1:6] <- c('Marine', 'Marine', 'Freshwater', 'Freshwater', 'Terrestrial', 'Terrestrial')
+newdat$REALM2[1:6] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh', 'TerrFresh', 'TerrFresh')
+newdat$temptrend_abs.sc[1:6] <- rep(0.0001, 6)
+newdat$temptrend[1:6] <- rep(c(0.0001, -0.0001), 3)
+newdat$var[1:6] <- 'test'
+
+# trim to at least some temperature change (so that tsign is -1 or 1)
+newdat <- newdat[newdat$temptrend_abs.sc != 0,]
+
+# set up tsign
+newdat$tsign <- factor(sign(newdat$temptrend))
+
+
+# make predictions
+newdat$predsJtu <- predict(object = modTfullJturem0, newdata = newdat, level = 0)
+newdat$predsJbeta <- predict(object = modTfullJbetarem0, newdata = newdat, level = 0)
+newdat$predsHorn <- predict(object = modTfullHornrem0, newdata = newdat, level = 0)
+
+#compute standard error for predictions
+# from https://stackoverflow.com/questions/14358811/extract-prediction-band-from-lme-fit
+DesignmatJtu <- model.matrix(eval(eval(modTfullJturem0$call$fixed)[-2]), newdat)
+DesignmatJbeta <- model.matrix(eval(eval(modTfullJbetarem0$call$fixed)[-2]), newdat)
+DesignmatHorn <- model.matrix(eval(eval(modTfullHornrem0$call$fixed)[-2]), newdat)
+
+predvarJtu <- diag(DesignmatJtu %*% modTfullJturem0$varFix %*% t(DesignmatJtu))
+predvarJbeta <- diag(DesignmatJbeta %*% modTfullJbetarem0$varFix %*% t(DesignmatJbeta))
+predvarHorn <- diag(DesignmatHorn %*% modTfullHornrem0$varFix %*% t(DesignmatHorn))
+
+newdat$SE_Jtu <- sqrt(predvarJtu) 
+newdat$SE_Jbeta <- sqrt(predvarJbeta) 
+newdat$SE_Horn <- sqrt(predvarHorn) 
+
+# prep the plots
+varplots <- vector('list', nrow(vars))
+for(j in 1:length(varplots)){
+  subs <- newdat$var == vars$vars[j] # which rows of newdat
+  xvar <- vars$vars[j]
+  title <- vars$vars[j]
+  if(vars$vars[j] %in% c('human_bowler')){
+    subs <- newdat$var == vars$vars[j] & newdat$REALM2 == vars$REALM2[j]
+    title <- paste0('human:', vars$REALM2[j])
+  } 
+
+  thisplot <- ggplot(newdat[subs, ], 
+                     aes_string(x = xvar, y = 'predsJtu')) +
+    geom_line() +
+    geom_ribbon(aes(ymin = predsJtu - 1.96*SE_Jtu, ymax = predsJtu + 1.96*SE_Jtu), alpha = 0.5, fill = "grey") +
+    geom_line(aes(y = predsJbeta), color = 'red') +
+    geom_ribbon(aes(ymin = predsJbeta - 1.96*SE_Jbeta, ymax = predsJbeta + 1.96*SE_Jbeta), alpha = 0.5, fill = "red") +
+    geom_line(aes(y = predsHorn), color = 'blue') +
+    geom_ribbon(aes(ymin = predsHorn - 1.96*SE_Horn, ymax = predsHorn + 1.96*SE_Horn), alpha = 0.5, fill = "blue") +
+    #coord_cartesian(ylim = c(0, 0.4)) +
+    theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm')) +
+    labs(title = title) 
+  varplots[[j]] <- thisplot
+  if(vars$log[j] & !vars$discrete[j]){
+    varplots[[j]] <- thisplot + scale_x_log10()
+  }
+}
+
+grid.arrange(grobs = varplots, ncol = 3)
+```
+
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/main%20effect%20plots%20modTfullJturem0-1.png)<!-- -->
+
+``` r
+# write out the interactions
+write.csv(newdat, file = 'output/maineffects.csv')
+```
+
+##### Using sjPlot
+
+Doesn’t work now
+
+``` r
+require(sjPlot)
+# p1 <- sjPlot::plot_model(modTfullJturem0, type = 'est', terms = c('temptrend_abs.sc'))
+```
 
 #### Plot interactions (Jaccard turnover)
 

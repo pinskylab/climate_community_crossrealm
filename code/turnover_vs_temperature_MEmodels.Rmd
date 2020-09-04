@@ -230,40 +230,43 @@ trendsum1 <- trends[!is.na(temptrendtext1),
                       ave = mean(Jtutrendrem0, na.rm=TRUE), 
                       se = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N),
                       n = sum(!is.na(Jtutrendrem0))),
-                    by = temptrendtext1] # turnover per year for locations changing temperature
+                    by = .(text = temptrendtext1)] # turnover per year for locations changing temperature
 trendsum1 <- rbind(trendsum1, trends[!is.na(temptrendtext1), 
                     .(type = 'Jbeta', 
                       ave = mean(Jbetatrendrem0, na.rm=TRUE), 
                       se = sd(Jbetatrendrem0, na.rm=TRUE)/sqrt(.N),
                       n = sum(!is.na(Jbetatrendrem0))),
-                    by = temptrendtext1])
+                    by = .(text = temptrendtext1)])
 trendsum1 <- rbind(trendsum1, trends[!is.na(temptrendtext1), 
                     .(type = 'Horn', 
                       ave = mean(Horntrendrem0, na.rm=TRUE), 
                       se = sd(Horntrendrem0, na.rm=TRUE)/sqrt(.N),
                       n = sum(!is.na(Horntrendrem0))),
-                    by = temptrendtext1])
+                    by = .(text = temptrendtext1)])
 
 trendsum2 <- trends[!is.na(temptrendtext2), 
                     .(type = 'Jtu', 
                       ave = mean(Jtutrendrem0, na.rm=TRUE), 
                       se = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N),
                       n = sum(!is.na(Jtutrendrem0))),
-                    by = temptrendtext2] # turnover per year for locations changing temperature (inc. direction)
+                    by = .(text = temptrendtext2)] # inc. direction
 trendsum2 <- rbind(trendsum2, trends[!is.na(temptrendtext2), 
                     .(type = 'Jbeta', 
                       ave = mean(Jbetatrendrem0, na.rm=TRUE), 
                       se = sd(Jbetatrendrem0, na.rm=TRUE)/sqrt(.N),
                       n = sum(!is.na(Jbetatrendrem0))),
-                    by = temptrendtext2])
+                    by = .(text = temptrendtext2)])
 trendsum2 <- rbind(trendsum2, trends[!is.na(temptrendtext2), 
                     .(type = 'Horn', 
                       ave = mean(Horntrendrem0, na.rm=TRUE), 
                       se = sd(Horntrendrem0, na.rm=TRUE)/sqrt(.N),
                       n = sum(!is.na(Horntrendrem0))),
-                    by = temptrendtext2])
+                    by = .(text = temptrendtext2)])
 
 
+trendsum3 <- rbind(trendsum1, trendsum2[text != 'Stable',])
+
+write.csv(trendsum3, file = 'output/trendsummary.csv', row.names = FALSE)
 
 trendsum1
 trendsum2
@@ -271,7 +274,7 @@ trendsum2
 
 ### Plots of turnover rates
 ```{r turnover vs. temperature violin plot}
-p1 <- ggplot(trends[!is.na(temptrendtext1), ], aes(temptrendtext1, Horntrendrem0)) +
+p1 <- ggplot(trends[!is.na(text), ], aes(temptrendtext1, Horntrendrem0)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
   labs(x = '', y = 'Turnover', tag = 'A', title = 'Rate of temperature change') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -281,7 +284,7 @@ p1 <- ggplot(trends[!is.na(temptrendtext1), ], aes(temptrendtext1, Horntrendrem0
         axis.title=element_text(size=10)) +
   geom_abline(intercept = 0, slope = 0)
 
-p2 <- ggplot(trends[!is.na(temptrendtext2), ], aes(temptrendtext2, Horntrendrem0)) +
+p2 <- ggplot(trends[!is.na(text), ], aes(temptrendtext2, Horntrendrem0)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
   labs(x = '', y = 'Turnover', tag = 'A', title = 'Rate of temperature change') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -291,7 +294,7 @@ p2 <- ggplot(trends[!is.na(temptrendtext2), ], aes(temptrendtext2, Horntrendrem0
         axis.title=element_text(size=10)) +
   geom_abline(intercept = 0, slope = 0)
 
-p3 <- ggplot(trendsum1, aes(temptrendtext1, ave, group = type, color = type)) +
+p3 <- ggplot(trendsum1, aes(text, ave, group = type, color = type)) +
   geom_point(position = position_dodge(width = 0.25), size = 0.5) +
   geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
   labs(x = '', y = 'Temporal turnover', title = 'Jaccard turnover') +
@@ -303,7 +306,7 @@ p3 <- ggplot(trendsum1, aes(temptrendtext1, ave, group = type, color = type)) +
         axis.title=element_text(size=10)) +
   coord_cartesian(ylim = c(0,0.04))
 
-p4 <- ggplot(trendsum2, aes(temptrendtext2, ave, group = type, color = type)) +
+p4 <- ggplot(trendsum2, aes(text, ave, group = type, color = type)) +
   geom_point(position = position_dodge(width = 0.25), size = 0.5) +
   geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
   labs(x = '', y = 'Temporal turnover', title = 'Jaccard turnover') +
@@ -629,6 +632,7 @@ legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Hor
 
 
 #### Plot the main effects
+##### Manually
 ```{r main effect plots modTfullJturem0, fig.width=6, fig.height=6}
 
 # set up the variables to plot
@@ -697,11 +701,11 @@ for(j in 1:nrow(vars)){
   # set up the main effects
   if(vars$log[j]){
     thisdat <- data.frame(new = 10^seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
-                          var = vars$vars[j])
+                          var = vars$vars[j], stringsAsFactors = FALSE)
   } 
   if(!vars$log[j]){
     thisdat <- data.frame(new = seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
-                          var = vars$vars[j])
+                          var = vars$vars[j], stringsAsFactors = FALSE)
   }
   names(thisdat) <- c(vars$vars[j], 'var')
 
@@ -759,6 +763,7 @@ newdat$REALM[1:6] <- c('Marine', 'Marine', 'Freshwater', 'Freshwater', 'Terrestr
 newdat$REALM2[1:6] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh', 'TerrFresh', 'TerrFresh')
 newdat$temptrend_abs.sc[1:6] <- rep(0.0001, 6)
 newdat$temptrend[1:6] <- rep(c(0.0001, -0.0001), 3)
+newdat$var[1:6] <- 'test'
 
 # trim to at least some temperature change (so that tsign is -1 or 1)
 newdat <- newdat[newdat$temptrend_abs.sc != 0,]
@@ -768,10 +773,23 @@ newdat$tsign <- factor(sign(newdat$temptrend))
 
 
 # make predictions
-newdat$preds <- predict(object = modTfullJturem0, newdata = newdat, level = 0)
+newdat$predsJtu <- predict(object = modTfullJturem0, newdata = newdat, level = 0)
+newdat$predsJbeta <- predict(object = modTfullJbetarem0, newdata = newdat, level = 0)
+newdat$predsHorn <- predict(object = modTfullHornrem0, newdata = newdat, level = 0)
 
-#remove the extra rows
-newdat <- newdat[7:nrow(newdat), ]
+#compute standard error for predictions
+# from https://stackoverflow.com/questions/14358811/extract-prediction-band-from-lme-fit
+DesignmatJtu <- model.matrix(eval(eval(modTfullJturem0$call$fixed)[-2]), newdat)
+DesignmatJbeta <- model.matrix(eval(eval(modTfullJbetarem0$call$fixed)[-2]), newdat)
+DesignmatHorn <- model.matrix(eval(eval(modTfullHornrem0$call$fixed)[-2]), newdat)
+
+predvarJtu <- diag(DesignmatJtu %*% modTfullJturem0$varFix %*% t(DesignmatJtu))
+predvarJbeta <- diag(DesignmatJbeta %*% modTfullJbetarem0$varFix %*% t(DesignmatJbeta))
+predvarHorn <- diag(DesignmatHorn %*% modTfullHornrem0$varFix %*% t(DesignmatHorn))
+
+newdat$SE_Jtu <- sqrt(predvarJtu) 
+newdat$SE_Jbeta <- sqrt(predvarJbeta) 
+newdat$SE_Horn <- sqrt(predvarHorn) 
 
 # prep the plots
 varplots <- vector('list', nrow(vars))
@@ -785,11 +803,17 @@ for(j in 1:length(varplots)){
   } 
 
   thisplot <- ggplot(newdat[subs, ], 
-                     aes_string(x = xvar, y = 'preds')) +
+                     aes_string(x = xvar, y = 'predsJtu')) +
     geom_line() +
-    coord_cartesian(ylim = c(0, 0.4)) +
+    geom_ribbon(aes(ymin = predsJtu - 1.96*SE_Jtu, ymax = predsJtu + 1.96*SE_Jtu), alpha = 0.5, fill = "grey") +
+    geom_line(aes(y = predsJbeta), color = 'red') +
+    geom_ribbon(aes(ymin = predsJbeta - 1.96*SE_Jbeta, ymax = predsJbeta + 1.96*SE_Jbeta), alpha = 0.5, fill = "red") +
+    geom_line(aes(y = predsHorn), color = 'blue') +
+    geom_ribbon(aes(ymin = predsHorn - 1.96*SE_Horn, ymax = predsHorn + 1.96*SE_Horn), alpha = 0.5, fill = "blue") +
+    #coord_cartesian(ylim = c(0, 0.4)) +
     theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm')) +
-    labs(title = title)
+    labs(title = title) 
+  varplots[[j]] <- thisplot
   if(vars$log[j] & !vars$discrete[j]){
     varplots[[j]] <- thisplot + scale_x_log10()
   }
@@ -798,10 +822,16 @@ for(j in 1:length(varplots)){
 grid.arrange(grobs = varplots, ncol = 3)
 
 # write out the interactions
-write.csv(newdat, file = 'temp/maineffects.csv')
+write.csv(newdat, file = 'output/maineffects.csv')
 
 ```
+##### Using sjPlot
+Doesn't work now
+```{r sjPlot for full model, eval = FALSE}
+require(sjPlot)
+# p1 <- sjPlot::plot_model(modTfullJturem0, type = 'est', terms = c('temptrend_abs.sc'))
 
+```
 
 #### Plot interactions (Jaccard turnover)
 ```{r interaction plots modTfullJturem0, fig.height = 13, fig.width = 9}
