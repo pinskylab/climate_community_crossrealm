@@ -219,11 +219,12 @@ Mostly northern hemisphere, but spread all over. Not so much in Africa or much o
 
 ##Average rates of turnover (without year 1)
 ```{r rates of turnover rem0}
-trends[abs(temptrend) >= 0.5, temptrendtext1 := 'Changing']
-trends[abs(temptrend) <= 0.05, temptrendtext1 := 'Stable']
-trends[temptrend <= -0.5, temptrendtext2 := 'Cooling']
-trends[abs(temptrend) <= 0.05, temptrendtext2 := 'Stable']
-trends[temptrend >= 0.5, temptrendtext2 := 'Warming']
+trends[abs(temptrend) >= 0.5, temptrendtext1 := 'Changing >=0.5']
+trends[abs(temptrend) <= 0.05, temptrendtext1 := 'Stable <=0.05']
+trends[temptrend <= -0.5, temptrendtext2 := 'Cooling <= -0.5']
+trends[temptrend >= 0.5, temptrendtext2 := 'Warming >= 0.5']
+trends[abs(temptrend) >= 0.5 & abs(temptrend) < 1, temptrendtext3 := 'Slow Changing >=0.5 & <1']
+trends[abs(temptrend) >= 1, temptrendtext3 := 'Fast Changing >=1']
 
 trendsum1 <- trends[!is.na(temptrendtext1), 
                     .(type = 'Jtu', 
@@ -263,13 +264,31 @@ trendsum2 <- rbind(trendsum2, trends[!is.na(temptrendtext2),
                       n = sum(!is.na(Horntrendrem0))),
                     by = .(text = temptrendtext2)])
 
+trendsum3 <- trends[!is.na(temptrendtext3), 
+                    .(type = 'Jtu', 
+                      ave = mean(Jtutrendrem0, na.rm=TRUE), 
+                      se = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Jtutrendrem0))),
+                    by = .(text = temptrendtext3)] # inc. rate
+trendsum3 <- rbind(trendsum3, trends[!is.na(temptrendtext3), 
+                    .(type = 'Jbeta', 
+                      ave = mean(Jbetatrendrem0, na.rm=TRUE), 
+                      se = sd(Jbetatrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Jbetatrendrem0))),
+                    by = .(text = temptrendtext3)])
+trendsum3 <- rbind(trendsum3, trends[!is.na(temptrendtext3), 
+                    .(type = 'Horn', 
+                      ave = mean(Horntrendrem0, na.rm=TRUE), 
+                      se = sd(Horntrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Horntrendrem0))),
+                    by = .(text = temptrendtext3)])
 
-trendsum3 <- rbind(trendsum1, trendsum2[text != 'Stable',])
+trendsum4 <- rbind(trendsum1, trendsum2, trendsum3)
+setorder(trendsum4, type, text)
 
-write.csv(trendsum3, file = 'output/trendsummary.csv', row.names = FALSE)
+write.csv(trendsum4, file = 'output/trendsummary.csv', row.names = FALSE)
 
-trendsum1
-trendsum2
+trendsum4
 ```
 
 ### Plots of turnover rates
@@ -294,30 +313,23 @@ p2 <- ggplot(trends[!is.na(text), ], aes(temptrendtext2, Horntrendrem0)) +
         axis.title=element_text(size=10)) +
   geom_abline(intercept = 0, slope = 0)
 
-p3 <- ggplot(trendsum1, aes(text, ave, group = type, color = type)) +
+p3 <- ggplot(trendsum4, aes(text, ave, group = type, color = type)) +
   geom_point(position = position_dodge(width = 0.25), size = 0.5) +
   geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
-  labs(x = '', y = 'Temporal turnover', title = 'Jaccard turnover') +
+  labs(x = '', y = 'Slope of temporal turnover') +
   geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"),
         legend.key=element_blank(),
         axis.text=element_text(size=8),
-        axis.title=element_text(size=10)) +
-  coord_cartesian(ylim = c(0,0.04))
+        axis.title=element_text(size=10),
+        axis.text.x = element_text(angle = 45, vjust = 0.7)) +
+  coord_cartesian(ylim = c(-0.01,0.08))
 
-p4 <- ggplot(trendsum2, aes(text, ave, group = type, color = type)) +
-  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
-  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
-  labs(x = '', y = 'Temporal turnover', title = 'Jaccard turnover') +
-  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=10))
 
-grid.arrange(p1, p2, p3, p4, ncol = 2)
+grid.arrange(p1, p2, p3, ncol = 2, 
+             layout_matrix = rbind(c(1,2), c(3,3)),
+             heights=c(unit(0.4, "npc"), unit(0.6, "npc")))
 ```
 
 ## Temperature-only model (Jtutrend, Jbetatrend, Horntrend)

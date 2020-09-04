@@ -377,11 +377,12 @@ or much of Asia.
 \#\#Average rates of turnover (without year 1)
 
 ``` r
-trends[abs(temptrend) >= 0.5, temptrendtext1 := 'Changing']
-trends[abs(temptrend) <= 0.05, temptrendtext1 := 'Stable']
-trends[temptrend <= -0.5, temptrendtext2 := 'Cooling']
-trends[abs(temptrend) <= 0.05, temptrendtext2 := 'Stable']
-trends[temptrend >= 0.5, temptrendtext2 := 'Warming']
+trends[abs(temptrend) >= 0.5, temptrendtext1 := 'Changing >=0.5']
+trends[abs(temptrend) <= 0.05, temptrendtext1 := 'Stable <=0.05']
+trends[temptrend <= -0.5, temptrendtext2 := 'Cooling <= -0.5']
+trends[temptrend >= 0.5, temptrendtext2 := 'Warming >= 0.5']
+trends[abs(temptrend) >= 0.5 & abs(temptrend) < 1, temptrendtext3 := 'Slow Changing >=0.5 & <1']
+trends[abs(temptrend) >= 1, temptrendtext3 := 'Fast Changing >=1']
 
 trendsum1 <- trends[!is.na(temptrendtext1), 
                     .(type = 'Jtu', 
@@ -421,36 +422,52 @@ trendsum2 <- rbind(trendsum2, trends[!is.na(temptrendtext2),
                       n = sum(!is.na(Horntrendrem0))),
                     by = .(text = temptrendtext2)])
 
+trendsum3 <- trends[!is.na(temptrendtext3), 
+                    .(type = 'Jtu', 
+                      ave = mean(Jtutrendrem0, na.rm=TRUE), 
+                      se = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Jtutrendrem0))),
+                    by = .(text = temptrendtext3)] # inc. rate
+trendsum3 <- rbind(trendsum3, trends[!is.na(temptrendtext3), 
+                    .(type = 'Jbeta', 
+                      ave = mean(Jbetatrendrem0, na.rm=TRUE), 
+                      se = sd(Jbetatrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Jbetatrendrem0))),
+                    by = .(text = temptrendtext3)])
+trendsum3 <- rbind(trendsum3, trends[!is.na(temptrendtext3), 
+                    .(type = 'Horn', 
+                      ave = mean(Horntrendrem0, na.rm=TRUE), 
+                      se = sd(Horntrendrem0, na.rm=TRUE)/sqrt(.N),
+                      n = sum(!is.na(Horntrendrem0))),
+                    by = .(text = temptrendtext3)])
 
-trendsum3 <- rbind(trendsum1, trendsum2[text != 'Stable',])
+trendsum4 <- rbind(trendsum1, trendsum2, trendsum3)
+setorder(trendsum4, type, text)
 
-write.csv(trendsum3, file = 'output/trendsummary.csv', row.names = FALSE)
+write.csv(trendsum4, file = 'output/trendsummary.csv', row.names = FALSE)
 
-trendsum1
+trendsum4
 ```
 
-    ##        text  type         ave           se     n
-    ## 1:   Stable   Jtu 0.005268427 0.0005163947 25654
-    ## 2: Changing   Jtu 0.018868620 0.0119496715   375
-    ## 3:   Stable Jbeta 0.005594700 0.0003261123 25654
-    ## 4: Changing Jbeta 0.026547974 0.0081610193   375
-    ## 5:   Stable  Horn 0.007078349 0.0004990133 25094
-    ## 6: Changing  Horn 0.029872733 0.0112592629   373
-
-``` r
-trendsum2
-```
-
-    ##       text  type         ave           se     n
-    ## 1:  Stable   Jtu 0.005268427 0.0005163947 25654
-    ## 2: Cooling   Jtu 0.020361270 0.0135748363   255
-    ## 3: Warming   Jtu 0.015696739 0.0238012397   120
-    ## 4:  Stable Jbeta 0.005594700 0.0003261123 25654
-    ## 5: Cooling Jbeta 0.022997186 0.0089694581   255
-    ## 6: Warming Jbeta 0.034093398 0.0169859342   120
-    ## 7:  Stable  Horn 0.007078349 0.0004990133 25094
-    ## 8: Cooling  Horn 0.037672421 0.0129565844   255
-    ## 9: Warming  Horn 0.013017474 0.0219465463   118
+    ##                         text  type         ave           se     n
+    ##  1:           Changing >=0.5  Horn 0.029872733 0.0112592629   373
+    ##  2:          Cooling <= -0.5  Horn 0.037672421 0.0129565844   255
+    ##  3:        Fast Changing >=1  Horn 0.047259969 0.0316426807    39
+    ##  4: Slow Changing >=0.5 & <1  Horn 0.027842486 0.0120281386   334
+    ##  5:            Stable <=0.05  Horn 0.007078349 0.0004990133 25094
+    ##  6:           Warming >= 0.5  Horn 0.013017474 0.0219465463   118
+    ##  7:           Changing >=0.5 Jbeta 0.026547974 0.0081610193   375
+    ##  8:          Cooling <= -0.5 Jbeta 0.022997186 0.0089694581   255
+    ##  9:        Fast Changing >=1 Jbeta 0.023790408 0.0193258485    39
+    ## 10: Slow Changing >=0.5 & <1 Jbeta 0.026868048 0.0088355035   336
+    ## 11:            Stable <=0.05 Jbeta 0.005594700 0.0003261123 25654
+    ## 12:           Warming >= 0.5 Jbeta 0.034093398 0.0169859342   120
+    ## 13:           Changing >=0.5   Jtu 0.018868620 0.0119496715   375
+    ## 14:          Cooling <= -0.5   Jtu 0.020361270 0.0135748363   255
+    ## 15:        Fast Changing >=1   Jtu 0.045305535 0.0295638380    39
+    ## 16: Slow Changing >=0.5 & <1   Jtu 0.015800050 0.0128897069   336
+    ## 17:            Stable <=0.05   Jtu 0.005268427 0.0005163947 25654
+    ## 18:           Warming >= 0.5   Jtu 0.015696739 0.0238012397   120
 
 ### Plots of turnover rates
 
@@ -483,30 +500,23 @@ p2 <- ggplot(trends[!is.na(text), ], aes(temptrendtext2, Horntrendrem0)) +
     ## Warning in is.na(text): is.na() applied to non-(list or vector) of type 'closure'
 
 ``` r
-p3 <- ggplot(trendsum1, aes(text, ave, group = type, color = type)) +
+p3 <- ggplot(trendsum4, aes(text, ave, group = type, color = type)) +
   geom_point(position = position_dodge(width = 0.25), size = 0.5) +
   geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
-  labs(x = '', y = 'Temporal turnover', title = 'Jaccard turnover') +
+  labs(x = '', y = 'Slope of temporal turnover') +
   geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"),
         legend.key=element_blank(),
         axis.text=element_text(size=8),
-        axis.title=element_text(size=10)) +
-  coord_cartesian(ylim = c(0,0.04))
+        axis.title=element_text(size=10),
+        axis.text.x = element_text(angle = 45, vjust = 0.7)) +
+  coord_cartesian(ylim = c(-0.01,0.08))
 
-p4 <- ggplot(trendsum2, aes(text, ave, group = type, color = type)) +
-  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
-  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
-  labs(x = '', y = 'Temporal turnover', title = 'Jaccard turnover') +
-  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=10))
 
-grid.arrange(p1, p2, p3, p4, ncol = 2)
+grid.arrange(p1, p2, p3, ncol = 2, 
+             layout_matrix = rbind(c(1,2), c(3,3)),
+             heights=c(unit(0.4, "npc"), unit(0.6, "npc")))
 ```
 
     ## Warning: Removed 1007 rows containing non-finite values (stat_ydensity).
@@ -514,8 +524,6 @@ grid.arrange(p1, p2, p3, p4, ncol = 2)
     ## Warning in regularize.values(x, y, ties, missing(ties)): collapsing to unique 'x' values
 
     ## Warning: Removed 1007 rows containing non-finite values (stat_ydensity).
-
-    ## Warning in regularize.values(x, y, ties, missing(ties)): collapsing to unique 'x' values
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-1.png)<!-- -->
 
