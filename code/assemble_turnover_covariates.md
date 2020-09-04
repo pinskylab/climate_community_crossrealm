@@ -235,8 +235,6 @@ trends[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 
 ### Do some basic checks of the turnover calculations
 
-#### Histograms of temporal change
-
 ``` r
 # basic checks
 trends
@@ -362,6 +360,50 @@ trends
     ## 53465:        0            1           NA      8.710693   0
     ## 53466:        0            1           NA      8.704291   0
     ## 53467:        0            1           NA      7.336845   0
+
+``` r
+summary(trends$Jtutrendrem0)
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+    ##  -1.000  -0.005   0.000   0.007   0.020   1.000   14157
+
+``` r
+summary(trends$Jbetatrendrem0)
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+    ##  -1.000  -0.004   0.003   0.007   0.017   1.000   14157
+
+``` r
+summary(trends$Horntrendrem0)
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+    ##  -1.000  -0.008   0.001   0.009   0.023   1.000   15168
+
+``` r
+summary(trends$Jtulast)
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##  0.0000  0.1583  0.5000  0.4855  0.7692  1.0000
+
+``` r
+summary(trends$Jbetalast)
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##  0.0000  0.5000  0.6667  0.6621  0.8571  1.0000
+
+``` r
+summary(trends$Hornlast)
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+    ##  0.0000  0.1956  0.6293  0.5742  0.9804  1.0000    1451
+
+#### Histograms of temporal change
 
 ``` r
 x <- trends[, hist(Jtutrend)]

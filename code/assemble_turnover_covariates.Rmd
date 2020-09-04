@@ -226,11 +226,22 @@ trends[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 ```
 
 ### Do some basic checks of the turnover calculations
-#### Histograms of temporal change
-```{r histograms of change, messages = FALSE}
+```{r summary of change}
 # basic checks
 trends
 
+summary(trends$Jtutrendrem0)
+summary(trends$Jbetatrendrem0)
+summary(trends$Horntrendrem0)
+
+summary(trends$Jtulast)
+summary(trends$Jbetalast)
+summary(trends$Hornlast)
+
+```
+
+#### Histograms of temporal change
+```{r histograms of change, messages = FALSE}
 x <- trends[, hist(Jtutrend)]
 x <- trends[, hist(Jbetatrend)]
 x <- trends[, hist(Horntrend)]
