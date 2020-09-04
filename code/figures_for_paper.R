@@ -18,6 +18,9 @@ gg_color_hue <- function(n) {
     hcl(h = hues, l = 65, c = 100)[1:n]
 }
 
+signedsqrt = function(x) sign(x)*sqrt(abs(x))
+signedsq = function(x) sign(x) * x^2
+signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, inverse = signedsq)
 
 
 ####################
@@ -54,8 +57,8 @@ p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
 
 p2 <- ggplot(temptrends[REALM == 'Terrestrial & Freshwater'], aes(x = trend, fill = type)) +
     geom_density(alpha = 0.25) +
-    scale_y_sqrt(limits = c(0,16)) +
-    scale_x_continuous(limits = c(-2, 2.5)) +
+    scale_y_sqrt() +
+    scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans) +
     labs(tag = 'B)', x = 'Temperature trend (°C/yr)', title = 'Terrestrial & Freshwater') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -66,8 +69,8 @@ p2 <- ggplot(temptrends[REALM == 'Terrestrial & Freshwater'], aes(x = trend, fil
 
 p3 <- ggplot(temptrends[REALM == 'Marine'], aes(x = trend, fill = type)) +
     geom_density(alpha = 0.25) +
-    scale_y_sqrt(limits = c(0,16)) +
-    scale_x_continuous(limits = c(-2, 2.5)) +
+    scale_y_sqrt() +
+    scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans) +
     labs(tag = 'C)', x = 'Temperature trend (°C/yr)', title = 'Marine') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -79,32 +82,35 @@ p3 <- ggplot(temptrends[REALM == 'Marine'], aes(x = trend, fill = type)) +
 p4 <- ggplot(trends, aes(x = Jbetatrendrem0)) +
     geom_density() +
     scale_y_sqrt() +
+    scale_x_continuous(trans = signedsqrttrans) +
     labs(tag = 'D)', x = 'Slope', title = 'Jaccard') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
-          axis.text=element_text(size=10),
+          axis.text=element_text(size=8),
           axis.title=element_text(size=12))
 
-p5 <- ggplot(trends, aes(x = Jtutrendrem0)) +
-    geom_density() +
-    scale_y_sqrt() +
-    labs(tag = 'E)', x = 'Slope', title = 'Jaccard turnover') +
+p5 <- ggplot(trends, aes(x = Jbetatrendrem0, y = Jtutrendrem0)) +
+    geom_point(size = 0.1, alpha = 0.2) +
+    geom_abline(intercept = 0, slope = 1, color = 'grey') +
+    labs(tag = 'E)', x = 'Slope', y = 'Slope', title = 'Jaccard turnover vs. total') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
-          axis.text=element_text(size=10),
-          axis.title=element_text(size=12))
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=12),
+          plot.title=element_text(size=8))
 
-p6 <- ggplot(trends, aes(x = Horntrendrem0)) +
-    geom_density() +
-    scale_y_sqrt() +
-    labs(tag = 'F)', x = 'Slope', title = 'Horn-Morisita') +
+p6 <- ggplot(trends[!is.na(Horntrendrem0),], aes(x = Jbetatrendrem0, y = Horntrendrem0)) +
+    geom_point(size = 0.1, alpha = 0.2) +
+    geom_abline(intercept = 0, slope = 1, color = 'grey') +
+    labs(tag = 'F)', x = 'Slope', y = 'Slope', title = 'H-M vs. Jaccard total') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
-          axis.text=element_text(size=10),
-          axis.title=element_text(size=12))
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=12),
+          plot.title=element_text(size=8))
 
 fig1 <- arrangeGrob(p1, p2, p3, p4, p5, p6, ncol = 6, 
                    layout_matrix = rbind(c(1,1,1,1,1,1), c(2,2,2,3,3,3), c(4,4,5,5,6,6)),
@@ -167,15 +173,12 @@ aicsfromfulllong <- reshape(aicsfromfull, direction = 'long',
                             timevar = 'type',
                             times = c('Jtu', 'Jbeta', 'Horn'))
 
-signedsqrt = function(x) sign(x)*sqrt(abs(x))
-signedsq = function(x) sign(x) * x^2
-newtrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, inverse = signedsq)
 aicsfromfulllong$row[aicsfromfulllong$type == 'Jtu'] <- aicsfromfulllong$row[aicsfromfulllong$type == 'Jtu'] + 0.1
 aicsfromfulllong$row[aicsfromfulllong$type == 'Horn'] <- aicsfromfulllong$row[aicsfromfulllong$type == 'Horn'] - 0.1
 
 # plot
 p3 <- ggplot(aicsfromfulllong, aes(x = dAIC, y = row, group = type, color = type)) +
-    scale_x_continuous(trans = newtrans) +
+    scale_x_continuous(trans = signedsqrttrans) +
     scale_y_continuous(breaks = nrow(aicsfromfull):1, labels = aicsfromfull$mod) +
     geom_vline(xintercept = 0, linetype = 'dashed', color = 'grey') + 
     geom_hline(yintercept = nrow(aicsfromfull):1, linetype = 'dashed', color = 'grey', size = 0.2) + 
