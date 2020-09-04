@@ -1503,14 +1503,15 @@ for(j in 1:length(varplots)){
     title <- paste0('human:', vars$REALM2[j])
   } 
 
+  se <- 1
   thisplot <- ggplot(newdat[subs, ], 
                      aes_string(x = xvar, y = 'predsJtu')) +
     geom_line() +
-    geom_ribbon(aes(ymin = predsJtu - 1.96*SE_Jtu, ymax = predsJtu + 1.96*SE_Jtu), alpha = 0.5, fill = "grey") +
+    geom_ribbon(aes(ymin = predsJtu - se*SE_Jtu, ymax = predsJtu + se*SE_Jtu), alpha = 0.5, fill = "grey") +
     geom_line(aes(y = predsJbeta), color = 'red') +
-    geom_ribbon(aes(ymin = predsJbeta - 1.96*SE_Jbeta, ymax = predsJbeta + 1.96*SE_Jbeta), alpha = 0.5, fill = "red") +
+    geom_ribbon(aes(ymin = predsJbeta - se*SE_Jbeta, ymax = predsJbeta + se*SE_Jbeta), alpha = 0.5, fill = "red") +
     geom_line(aes(y = predsHorn), color = 'blue') +
-    geom_ribbon(aes(ymin = predsHorn - 1.96*SE_Horn, ymax = predsHorn + 1.96*SE_Horn), alpha = 0.5, fill = "blue") +
+    geom_ribbon(aes(ymin = predsHorn - se*SE_Horn, ymax = predsHorn + se*SE_Horn), alpha = 0.5, fill = "blue") +
     #coord_cartesian(ylim = c(0, 0.4)) +
     theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm')) +
     labs(title = title) 
@@ -1523,7 +1524,7 @@ for(j in 1:length(varplots)){
 grid.arrange(grobs = varplots, ncol = 3)
 ```
 
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/main%20effect%20plots%20modTfullJturem0-1.png)<!-- -->
+<img src="turnover_vs_temperature_MEmodels_files/figure-gfm/main effect plots-1.png" width="24" height="24" />
 
 ``` r
 # write out the interactions
