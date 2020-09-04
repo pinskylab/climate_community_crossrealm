@@ -140,39 +140,78 @@ calctrendrem0 <- function(y, YEAR, nm = 'y'){
 
 }
 
+calcfirstlast <- function(y, YEAR, nm = 'y'){ # function to get distance from last to first year
+  # turn off warnings for the following
+  defaultW <- getOption("warn")
+  options(warn = -1)
+  
+  if(length(YEAR)>1){
+    o <- order(YEAR)
+    YEAR2 <- YEAR[o][2:length(YEAR)]
+    y2 <- y[o][2:length(y)]
+    
+    out <- list(y = y2[length(y2)], # dissimilarity for last year
+                y_se = NA_real_)
+  } else {
+    out <- list(y = NA_real_, y_se = NA_real_)
+  }
+
+  names(out) <- c(nm, paste0(nm, '_se'))
+  options(warn = defaultW)
+  return(out)
+}
+
+
 
 setkey(bt, STUDY_ID, rarefyID, YEAR)
 
-
-trends <- bt[, calctrend(Jtu_base, YEAR, 'Jtutrend'), 
-    by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover from first year, plus SEs
-trends2 <- bt[, calctrend(Jbeta_base, YEAR, 'Jbetatrend'), 
-    by = .(rarefyID)] # calculate trend in total Jaccard' beta diversity's from first year, 
-trends3 <- bt[, calctrend(1-Horn_base, YEAR, 'Horntrend'), 
-    by = .(rarefyID)] # calculate trend in Horn-Morisita from first year. Convert to dissimilarity.
-#trends4 <- bt[, .(Strend = coef(lm(I(log(S)) ~ YEAR))[2]), by = .(rarefyID)] # trend in log(S)
-
-trends5 <- bt[, calctrendrem0(Jtu_base, YEAR, 'Jtutrendrem0'), 
-    by = .(rarefyID)] # calculate trend in Jaccard turnover without first year
-trends6 <- bt[, calctrendrem0(Jbeta_base, YEAR, 'Jbetatrendrem0'), 
-    by = .(rarefyID)]
-trends7 <- bt[, calctrendrem0(1-Horn_base, YEAR, 'Horntrendrem0'), 
-    by = .(rarefyID)]
-
-
-nyrBT <-  bt[, .(nyrBT = length(YEAR), 
-                 minyrBT = min(YEAR), 
-                 maxyrBT = max(YEAR),
-                 medianyrBT = median(YEAR),
-                 meanyrBT = mean(YEAR)), 
-             by = .(rarefyID)] # number of years in time-series
-
-trends <- merge(trends, trends2) # merge in total J and Horn-Morisita
-trends <- merge(trends, trends3)
-trends <- merge(trends, trends5)
-trends <- merge(trends, trends6)
-trends <- merge(trends, trends7)
-trends <- merge(trends, nyrBT)
+if(file.exists('temp/trendstemp.rds')){
+  trends <- readRDS('temp/trendstemp.rds')
+} else {
+  
+  trends1 <- bt[, calctrend(Jtu_base, YEAR, 'Jtutrend'),
+                by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover from first year, plus SEs
+  trends2 <- bt[, calctrend(Jbeta_base, YEAR, 'Jbetatrend'),
+                by = .(rarefyID)] # calculate trend in total Jaccard' beta diversity's from first year,
+  trends3 <- bt[, calctrend(1-Horn_base, YEAR, 'Horntrend'),
+                by = .(rarefyID)] # calculate trend in Horn-Morisita from first year. Convert to dissimilarity.
+  trends4 <- bt[, .(Strend = coef(lm(I(log(S)) ~ YEAR))[2]), by = .(rarefyID)] # trend in log(S)
+  
+  trends5 <- bt[, calctrendrem0(Jtu_base, YEAR, 'Jtutrendrem0'), 
+                by = .(rarefyID)] # calculate trend in Jaccard turnover without first year
+  trends6 <- bt[, calctrendrem0(Jbeta_base, YEAR, 'Jbetatrendrem0'),
+                by = .(rarefyID)]
+  trends7 <- bt[, calctrendrem0(1-Horn_base, YEAR, 'Horntrendrem0'),
+                by = .(rarefyID)]
+  
+  trends8 <- bt[, calcfirstlast(Jtu_base, YEAR, 'Jtulast'),
+                by = .(rarefyID)]
+  trends9 <- bt[, calcfirstlast(Jbeta_base, YEAR, 'Jbetalast'),
+                by = .(rarefyID)]
+  trends10 <- bt[, calcfirstlast(1-Horn_base, YEAR, 'Hornlast'),
+                 by = .(rarefyID)]
+  
+  
+  nyrBT <-  bt[, .(nyrBT = length(YEAR),
+                   minyrBT = min(YEAR),
+                   maxyrBT = max(YEAR),
+                   medianyrBT = median(YEAR),
+                   meanyrBT = mean(YEAR)),
+               by = .(rarefyID)] # number of years in time-series
+  
+  trends <- merge(trends1, trends2) # merge in total J and Horn-Morisita
+  trends <- merge(trends, trends3)
+  trends <- merge(trends, trends5)
+  trends <- merge(trends, trends6)
+  trends <- merge(trends, trends7)
+  trends <- merge(trends, trends8)
+  trends <- merge(trends, trends9)
+  trends <- merge(trends, trends10)
+  trends <- merge(trends, nyrBT)
+  
+  saveRDS(trends, file = 'temp/trendstemp.rds')
+  
+}
 ```
 
 Add covariates
@@ -194,7 +233,9 @@ trends <- merge(trends, veg[, .(rarefyID, veg = veg)], all.x = TRUE) # vegetatio
 trends[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 ```
 
-Do some basic checks of the turnover calculations
+### Do some basic checks of the turnover calculations
+
+#### Histograms of temporal change
 
 ``` r
 # basic checks
@@ -249,18 +290,30 @@ trends
     ## 53465:              NA             NA                NA            NA
     ## 53466:     0.056131276    0.014285714      0.0467378789            NA
     ## 53467:              NA             NA                NA            NA
-    ##        Horntrendrem0_se nyrBT minyrBT maxyrBT medianyrBT meanyrBT
-    ##     1:     0.0016045472    31    1981    2011     1996.0 1996.000
-    ##     2:     0.0009087936    31    1981    2011     1996.0 1996.000
-    ##     3:               NA     2    1985    1999     1992.0 1992.000
-    ##     4:               NA     2    1985    1993     1989.0 1989.000
-    ##     5:               NA     2    1985    1993     1989.0 1989.000
-    ##    ---                                                           
-    ## 53463:               NA     3    1982    1997     1983.0 1987.333
-    ## 53464:               NA     2    1982    1990     1986.0 1986.000
-    ## 53465:               NA     2    1986    1988     1987.0 1987.000
-    ## 53466:               NA     4    1982    1989     1984.5 1985.000
-    ## 53467:               NA     2    1982    1987     1984.5 1984.500
+    ##        Horntrendrem0_se   Jtulast Jtulast_se Jbetalast Jbetalast_se
+    ##     1:     0.0016045472 0.4324324         NA 0.5000000           NA
+    ##     2:     0.0009087936 0.0000000         NA 0.5000000           NA
+    ##     3:               NA 1.0000000         NA 1.0000000           NA
+    ##     4:               NA 0.8000000         NA 0.8571429           NA
+    ##     5:               NA 0.5000000         NA 0.7142857           NA
+    ##    ---                                                             
+    ## 53463:               NA 0.0000000         NA 0.8571429           NA
+    ## 53464:               NA 0.0000000         NA 0.0000000           NA
+    ## 53465:               NA 0.0000000         NA 0.5000000           NA
+    ## 53466:               NA 0.7500000         NA 0.8000000           NA
+    ## 53467:               NA 0.0000000         NA 0.4000000           NA
+    ##         Hornlast Hornlast_se nyrBT minyrBT maxyrBT medianyrBT meanyrBT
+    ##     1: 0.3642417          NA    31    1981    2011     1996.0 1996.000
+    ##     2: 0.1541960          NA    31    1981    2011     1996.0 1996.000
+    ##     3: 1.0000000          NA     2    1985    1999     1992.0 1992.000
+    ##     4: 0.9177154          NA     2    1985    1993     1989.0 1989.000
+    ##     5: 0.7026207          NA     2    1985    1993     1989.0 1989.000
+    ##    ---                                                                
+    ## 53463:        NA          NA     3    1982    1997     1983.0 1987.333
+    ## 53464:        NA          NA     2    1982    1990     1986.0 1986.000
+    ## 53465:        NA          NA     2    1986    1988     1987.0 1987.000
+    ## 53466:        NA          NA     4    1982    1989     1984.5 1985.000
+    ## 53467:        NA          NA     2    1982    1987     1984.5 1984.500
     ##          tempave tempave_metab    temptrend      seas  microclim       npp
     ##     1: 12.051350      12.05135  0.041129329 3.0760983 0.23603834 1685.9467
     ##     2: 12.051350      12.05135  0.041129329 3.0760983 0.23603834 1685.9467
@@ -311,32 +364,100 @@ trends
     ## 53467:        0            1           NA      7.336845   0
 
 ``` r
-trends[, .(minJtu = min(Jtutrend), maxJtu = max(Jtutrend), minJbe = min(Jbetatrend), maxJbe = max(Jbetatrend), 
-           minHo = min(Horntrend, na.rm = TRUE), maxHo = max(Horntrend, na.rm = TRUE)), by = REALM]
+x <- trends[, hist(Jtutrend)]
 ```
 
-    ##          REALM      minJtu maxJtu      minJbe maxJbe       minHo maxHo
-    ## 1:      Marine -0.10000000    0.5 -0.08000000    0.5 -0.09421855   0.5
-    ## 2: Terrestrial -0.10000000    0.5 -0.07142857    0.5 -0.09373434   0.5
-    ## 3:  Freshwater -0.06666667    0.5 -0.04166667    0.5 -0.06129032   0.5
+![](assemble_turnover_covariates_files/figure-gfm/histograms%20of%20change-1.png)<!-- -->
 
 ``` r
-trends[, .(nJtu = sum(Jtutrend < 0)), by = REALM] # why are some turnover trends < 0? first year more diverged than future years
+x <- trends[, hist(Jbetatrend)]
 ```
 
-    ##          REALM nJtu
-    ## 1:      Marine 2891
-    ## 2: Terrestrial  223
-    ## 3:  Freshwater   71
+![](assemble_turnover_covariates_files/figure-gfm/histograms%20of%20change-2.png)<!-- -->
 
 ``` r
-trends[, .(nJ = sum(Jtutrend > 0)), by = REALM]
+x <- trends[, hist(Horntrend)]
 ```
 
-    ##          REALM    nJ
-    ## 1:      Marine 39219
-    ## 2: Terrestrial  2854
-    ## 3:  Freshwater   693
+![](assemble_turnover_covariates_files/figure-gfm/histograms%20of%20change-3.png)<!-- -->
+
+``` r
+x <- trends[, hist(Jtutrendrem0)]
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/histograms%20of%20change-4.png)<!-- -->
+
+``` r
+x <- trends[, hist(Jbetatrendrem0)]
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/histograms%20of%20change-5.png)<!-- -->
+
+``` r
+x <- trends[, hist(Horntrendrem0)]
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/histograms%20of%20change-6.png)<!-- -->
+
+``` r
+x <- trends[, hist(Jtulast)]
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/histograms%20of%20change-7.png)<!-- -->
+
+``` r
+x <- trends[, hist(Jbetalast)]
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/histograms%20of%20change-8.png)<!-- -->
+
+``` r
+x <- trends[, hist(Hornlast)]
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/histograms%20of%20change-9.png)<!-- -->
+
+#### Change compared to number of years in time-series
+
+``` r
+# number of year
+trends[, summary(nyrBT)]
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   2.000   2.000   4.000   5.519   7.000  97.000
+
+``` r
+x <- trends[, hist(nyrBT)]
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20num%20years-1.png)<!-- -->
+
+``` r
+trends[, plot(nyrBT, Jtutrend, log = 'x', col = '#00000033')]
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20num%20years-2.png)<!-- -->
+
+    ## NULL
+
+``` r
+trends[, plot(nyrBT, Jtutrendrem0, log = 'x', col = '#00000033')]
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20num%20years-3.png)<!-- -->
+
+    ## NULL
+
+``` r
+trends[, plot(nyrBT, Jtulast, log = 'x', col = '#00000033')]
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20num%20years-4.png)<!-- -->
+
+    ## NULL
+
+#### Change compared to number of species in time-series
 
 ``` r
 # number of species
@@ -347,10 +468,32 @@ trends[, summary(Nspp)]
     ##    1.00    6.00   11.00   19.35   24.00 1427.00
 
 ``` r
-trends[, plot(Nspp, Jtutrend, log = 'x')]
+x <- trends[, hist(Nspp)]
 ```
 
-![](assemble_turnover_covariates_files/figure-gfm/basic%20checks-1.png)<!-- -->
+![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20number%20of%20species-1.png)<!-- -->
+
+``` r
+trends[, plot(Nspp, Jtutrend, log = 'x', col = '#00000033')]
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20number%20of%20species-2.png)<!-- -->
+
+    ## NULL
+
+``` r
+trends[, plot(Nspp, Jtutrendrem0, log = 'x', col = '#00000033')]
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20number%20of%20species-3.png)<!-- -->
+
+    ## NULL
+
+``` r
+trends[, plot(Nspp, Jtulast, log = 'x', col = '#00000033')]
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20number%20of%20species-4.png)<!-- -->
 
     ## NULL
 
@@ -399,6 +542,7 @@ ggplot(trends, aes(Jbetatrendrem0, Horntrendrem0)) +
     ## Warning: Removed 14825 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/basic%20pairwise%20graphs%20of%20turnover%20metrics-2.png)<!-- -->
+
 Temporal turnover is not all that correlated between including first
 year or not.
 
