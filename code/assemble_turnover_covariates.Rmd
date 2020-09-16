@@ -2,7 +2,7 @@
 title: "Turnover covariate data prep"
 output:
   github_document: default
-  html_notebook: default
+  #html_notebook: default
 ---
 
 ```{r setup}
@@ -159,51 +159,53 @@ calcfirstlast <- function(y, YEAR, nm = 'y'){ # function to get distance from la
 setkey(bt, STUDY_ID, rarefyID, YEAR)
 
 if(file.exists('temp/trendstemp.rds')){
-  trends <- readRDS('temp/trendstemp.rds')
+    trends <- readRDS('temp/trendstemp.rds')
+    print('Loaded from file')
 } else {
-  
-  trends1 <- bt[, calctrend(Jtu_base, YEAR, 'Jtutrend'),
-                by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover from first year, plus SEs
-  trends2 <- bt[, calctrend(Jbeta_base, YEAR, 'Jbetatrend'),
-                by = .(rarefyID)] # calculate trend in total Jaccard' beta diversity's from first year,
-  trends3 <- bt[, calctrend(1-Horn_base, YEAR, 'Horntrend'),
-                by = .(rarefyID)] # calculate trend in Horn-Morisita from first year. Convert to dissimilarity.
-  trends4 <- bt[, .(Strend = coef(lm(I(log(S)) ~ YEAR))[2]), by = .(rarefyID)] # trend in log(S)
-  
-  trends5 <- bt[, calctrendrem0(Jtu_base, YEAR, 'Jtutrendrem0'), 
-                by = .(rarefyID)] # calculate trend in Jaccard turnover without first year
-  trends6 <- bt[, calctrendrem0(Jbeta_base, YEAR, 'Jbetatrendrem0'),
-                by = .(rarefyID)]
-  trends7 <- bt[, calctrendrem0(1-Horn_base, YEAR, 'Horntrendrem0'),
-                by = .(rarefyID)]
-  
-  trends8 <- bt[, calcfirstlast(Jtu_base, YEAR, 'Jtulast'),
-                by = .(rarefyID)]
-  trends9 <- bt[, calcfirstlast(Jbeta_base, YEAR, 'Jbetalast'),
-                by = .(rarefyID)]
-  trends10 <- bt[, calcfirstlast(1-Horn_base, YEAR, 'Hornlast'),
-                 by = .(rarefyID)]
-  
-  
-  nyrBT <-  bt[, .(nyrBT = length(YEAR),
-                   minyrBT = min(YEAR),
-                   maxyrBT = max(YEAR),
-                   medianyrBT = median(YEAR),
-                   meanyrBT = mean(YEAR)),
-               by = .(rarefyID)] # number of years in time-series
-  
-  trends <- merge(trends1, trends2) # merge in total J and Horn-Morisita
-  trends <- merge(trends, trends3)
-  trends <- merge(trends, trends5)
-  trends <- merge(trends, trends6)
-  trends <- merge(trends, trends7)
-  trends <- merge(trends, trends8)
-  trends <- merge(trends, trends9)
-  trends <- merge(trends, trends10)
-  trends <- merge(trends, nyrBT)
-  
-  saveRDS(trends, file = 'temp/trendstemp.rds')
-  
+    print('Calculating from scratch')
+    
+    trends1 <- bt[, calctrend(Jtu_base, YEAR, 'Jtutrend'),
+                  by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover from first year, plus SEs
+    trends2 <- bt[, calctrend(Jbeta_base, YEAR, 'Jbetatrend'),
+                  by = .(rarefyID)] # calculate trend in total Jaccard' beta diversity's from first year,
+    trends3 <- bt[, calctrend(1-Horn_base, YEAR, 'Horntrend'),
+                  by = .(rarefyID)] # calculate trend in Horn-Morisita from first year. Convert to dissimilarity.
+    trends4 <- bt[, .(Strend = coef(lm(I(log(S)) ~ YEAR))[2]), by = .(rarefyID)] # trend in log(S)
+    
+    trends5 <- bt[, calctrendrem0(Jtu_base, YEAR, 'Jtutrendrem0'), 
+                  by = .(rarefyID)] # calculate trend in Jaccard turnover without first year
+    trends6 <- bt[, calctrendrem0(Jbeta_base, YEAR, 'Jbetatrendrem0'),
+                  by = .(rarefyID)]
+    trends7 <- bt[, calctrendrem0(1-Horn_base, YEAR, 'Horntrendrem0'),
+                  by = .(rarefyID)]
+    
+    trends8 <- bt[, calcfirstlast(Jtu_base, YEAR, 'Jtulast'),
+                  by = .(rarefyID)]
+    trends9 <- bt[, calcfirstlast(Jbeta_base, YEAR, 'Jbetalast'),
+                  by = .(rarefyID)]
+    trends10 <- bt[, calcfirstlast(1-Horn_base, YEAR, 'Hornlast'),
+                   by = .(rarefyID)]
+    
+    
+    nyrBT <-  bt[, .(nyrBT = length(YEAR),
+                     minyrBT = min(YEAR),
+                     maxyrBT = max(YEAR),
+                     medianyrBT = median(YEAR),
+                     meanyrBT = mean(YEAR)),
+                 by = .(rarefyID)] # number of years in time-series
+    
+    trends <- merge(trends1, trends2) # merge in total J and Horn-Morisita
+    trends <- merge(trends, trends3)
+    trends <- merge(trends, trends5)
+    trends <- merge(trends, trends6)
+    trends <- merge(trends, trends7)
+    trends <- merge(trends, trends8)
+    trends <- merge(trends, trends9)
+    trends <- merge(trends, trends10)
+    trends <- merge(trends, nyrBT)
+    
+    saveRDS(trends, file = 'temp/trendstemp.rds')
+    
 }
 ```
 
@@ -223,6 +225,51 @@ trends <- merge(trends, endofrac[, .(rarefyID, endofrac)], all.x = TRUE) # endot
 trends <- merge(trends, human[, .(rarefyID, human_bowler = atc, human_venter = hfp, human_halpern = himp)], all.x = TRUE) # human impact
 trends <- merge(trends, veg[, .(rarefyID, veg = veg)], all.x = TRUE) # vegetation index
 trends[REALM == 'Marine', veg := 0] # veg index is 0 at sea
+```
+
+
+Remove studies with only 1 species
+```{r remove 1-spp studies}
+nrow(trends)
+trends <- trends[Nspp > 1, ]
+nrow(trends)
+```
+
+#### Output a file with plots of every Jtu timeseries (a lot!)
+Not run during knitting
+```{r plot of all ts, eval=FALSE}
+rids <- trends[Nspp > 1 & nyrBT > 2, sort(unique(rarefyID))]
+setkey(bt, rarefyID, YEAR)
+print(paste(length(rids), ' rarefyIDs'))
+filenum <- 1
+plotnum <- 1
+for(i in 1:length(rids)){
+  jtutrend <- trends[rarefyID == rids[i], Jtutrend]
+  jtutrendrem0 <- trends[rarefyID == rids[i], Jtutrendrem0]
+  nspp <- trends[rarefyID == rids[i], Nspp]
+  x <- bt[rarefyID == rids[i], YEAR]
+  y <- bt[rarefyID == rids[i], Jtu_base]
+  
+  if(length(x) > 2 & nspp > 1){
+    if(plotnum %% 400 == 1){
+      if(plotnum >1) dev.off()
+      png(file = paste0('figures/jtu_plots/jtu_plots', formatC(filenum, width = 3, format = 'd', flag = '0'), '.png'), width = 36, height = 36, units = 'in', res = 100)
+      par(mfrow=c(20,20), mai = c(0.4, 0.5, 0.5, 0.1))
+      filenum <- filenum + 1
+    }
+    plot(x, y, main = paste('Jtu:', signif(jtutrend, 3), '  rem0:', signif(jtutrendrem0, 3), '\nNspp:', nspp, '\nrID:', rids[i]), xlab = '', ylab = 'Jtu',
+         cex.main = 0.7)
+    abline(lm(y ~ x))
+    
+    x2 <- x[2:length(x)]
+    y2 <- y[2:length(y)]
+    abline(lm(y2 ~ x2), col = 'red')
+    
+    plotnum <- plotnum + 1
+  }
+}
+  
+dev.off()
 ```
 
 ### Do some basic checks of the turnover calculations
@@ -261,26 +308,30 @@ x <- trends[, hist(Hornlast)]
 # number of year
 trends[, summary(nyrBT)]
 x <- trends[, hist(nyrBT)]
-trends[, plot(nyrBT, Jtutrend, log = 'x', col = '#00000033')]
-trends[, plot(nyrBT, Jtutrendrem0, log = 'x', col = '#00000033')]
-trends[, plot(nyrBT, Jtulast, log = 'x', col = '#00000033')]
+trends[, plot(nyrBT, Jtutrend, log = 'x', col = '#00000033')]; abline(h = 0)
+trends[, plot(nyrBT, Jtutrendrem0, log = 'x', col = '#00000033')]; abline(h = 0)
+trends[, plot(nyrBT, Jtulast, log = 'x', col = '#00000033')]; abline(h = 0)
 ```
+
+##### Average change compared to number of years in time-series
+```{r ave change vs. num years}
+# number of year
+ggplot(trends, aes(nyrBT, Jtutrendrem0)) +
+    geom_smooth() +
+    scale_x_log10() +
+    geom_abline(intercept = 0, slope = 0)
+
+```
+
 
 #### Change compared to number of species in time-series
 ```{r change vs. number of species}
 # number of species
 trends[, summary(Nspp)]
 x <- trends[, hist(Nspp)]
-trends[, plot(Nspp, Jtutrend, log = 'x', col = '#00000033')]
-trends[, plot(Nspp, Jtutrendrem0, log = 'x', col = '#00000033')]
+trends[, plot(Nspp, Jtutrend, log = 'x', col = '#00000033')]; abline(h=0)
+trends[, plot(Nspp, Jtutrendrem0, log = 'x', col = '#00000033')]; abline(h=0)
 trends[, plot(Nspp, Jtulast, log = 'x', col = '#00000033')]
-```
-
-Remove studies with only 1 species
-```{r remove 1-spp studies}
-nrow(trends)
-trends <- trends[Nspp > 1, ]
-nrow(trends)
 ```
 
 Turnover calculations are correlated, though less so for Horn
@@ -297,22 +348,22 @@ ggplot(trends, aes(Jbetatrendrem0, Horntrendrem0)) +
 ```
 
 
-Temporal turnover is not all that correlated between including first year or not.
+Removing the first year creates a very different calculation of temporal change.
 ```{r turnover metrics with and without first year}
 ggplot(trends, aes(Jtutrend, Jtutrendrem0)) +
   geom_point(alpha = 0.3) +
   geom_smooth() +
-  geom_abline(a = 0, b = 1)
+  geom_abline(intercept = 0, slope = 1)
 
 ggplot(trends, aes(Jbetatrend, Jbetatrendrem0)) +
   geom_point(alpha = 0.3) +
   geom_smooth() +
-  geom_abline(a = 0, b = 1)
+  geom_abline(intercept = 0, slope = 1)
 
 ggplot(trends, aes(Horntrend, Horntrendrem0)) +
   geom_point(alpha = 0.3) +
   geom_smooth() +
-  geom_abline(a = 0, b = 1)
+  geom_abline(intercept = 0, slope = 1)
 
 ```
 

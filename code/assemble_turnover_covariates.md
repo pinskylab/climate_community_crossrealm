@@ -166,53 +166,57 @@ calcfirstlast <- function(y, YEAR, nm = 'y'){ # function to get distance from la
 setkey(bt, STUDY_ID, rarefyID, YEAR)
 
 if(file.exists('temp/trendstemp.rds')){
-  trends <- readRDS('temp/trendstemp.rds')
+    trends <- readRDS('temp/trendstemp.rds')
+    print('Loaded from file')
 } else {
-  
-  trends1 <- bt[, calctrend(Jtu_base, YEAR, 'Jtutrend'),
-                by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover from first year, plus SEs
-  trends2 <- bt[, calctrend(Jbeta_base, YEAR, 'Jbetatrend'),
-                by = .(rarefyID)] # calculate trend in total Jaccard' beta diversity's from first year,
-  trends3 <- bt[, calctrend(1-Horn_base, YEAR, 'Horntrend'),
-                by = .(rarefyID)] # calculate trend in Horn-Morisita from first year. Convert to dissimilarity.
-  trends4 <- bt[, .(Strend = coef(lm(I(log(S)) ~ YEAR))[2]), by = .(rarefyID)] # trend in log(S)
-  
-  trends5 <- bt[, calctrendrem0(Jtu_base, YEAR, 'Jtutrendrem0'), 
-                by = .(rarefyID)] # calculate trend in Jaccard turnover without first year
-  trends6 <- bt[, calctrendrem0(Jbeta_base, YEAR, 'Jbetatrendrem0'),
-                by = .(rarefyID)]
-  trends7 <- bt[, calctrendrem0(1-Horn_base, YEAR, 'Horntrendrem0'),
-                by = .(rarefyID)]
-  
-  trends8 <- bt[, calcfirstlast(Jtu_base, YEAR, 'Jtulast'),
-                by = .(rarefyID)]
-  trends9 <- bt[, calcfirstlast(Jbeta_base, YEAR, 'Jbetalast'),
-                by = .(rarefyID)]
-  trends10 <- bt[, calcfirstlast(1-Horn_base, YEAR, 'Hornlast'),
-                 by = .(rarefyID)]
-  
-  
-  nyrBT <-  bt[, .(nyrBT = length(YEAR),
-                   minyrBT = min(YEAR),
-                   maxyrBT = max(YEAR),
-                   medianyrBT = median(YEAR),
-                   meanyrBT = mean(YEAR)),
-               by = .(rarefyID)] # number of years in time-series
-  
-  trends <- merge(trends1, trends2) # merge in total J and Horn-Morisita
-  trends <- merge(trends, trends3)
-  trends <- merge(trends, trends5)
-  trends <- merge(trends, trends6)
-  trends <- merge(trends, trends7)
-  trends <- merge(trends, trends8)
-  trends <- merge(trends, trends9)
-  trends <- merge(trends, trends10)
-  trends <- merge(trends, nyrBT)
-  
-  saveRDS(trends, file = 'temp/trendstemp.rds')
-  
+    print('Calculating from scratch')
+    
+    trends1 <- bt[, calctrend(Jtu_base, YEAR, 'Jtutrend'),
+                  by = .(REALM, Biome, taxa_mod, STUDY_ID, rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover from first year, plus SEs
+    trends2 <- bt[, calctrend(Jbeta_base, YEAR, 'Jbetatrend'),
+                  by = .(rarefyID)] # calculate trend in total Jaccard' beta diversity's from first year,
+    trends3 <- bt[, calctrend(1-Horn_base, YEAR, 'Horntrend'),
+                  by = .(rarefyID)] # calculate trend in Horn-Morisita from first year. Convert to dissimilarity.
+    trends4 <- bt[, .(Strend = coef(lm(I(log(S)) ~ YEAR))[2]), by = .(rarefyID)] # trend in log(S)
+    
+    trends5 <- bt[, calctrendrem0(Jtu_base, YEAR, 'Jtutrendrem0'), 
+                  by = .(rarefyID)] # calculate trend in Jaccard turnover without first year
+    trends6 <- bt[, calctrendrem0(Jbeta_base, YEAR, 'Jbetatrendrem0'),
+                  by = .(rarefyID)]
+    trends7 <- bt[, calctrendrem0(1-Horn_base, YEAR, 'Horntrendrem0'),
+                  by = .(rarefyID)]
+    
+    trends8 <- bt[, calcfirstlast(Jtu_base, YEAR, 'Jtulast'),
+                  by = .(rarefyID)]
+    trends9 <- bt[, calcfirstlast(Jbeta_base, YEAR, 'Jbetalast'),
+                  by = .(rarefyID)]
+    trends10 <- bt[, calcfirstlast(1-Horn_base, YEAR, 'Hornlast'),
+                   by = .(rarefyID)]
+    
+    
+    nyrBT <-  bt[, .(nyrBT = length(YEAR),
+                     minyrBT = min(YEAR),
+                     maxyrBT = max(YEAR),
+                     medianyrBT = median(YEAR),
+                     meanyrBT = mean(YEAR)),
+                 by = .(rarefyID)] # number of years in time-series
+    
+    trends <- merge(trends1, trends2) # merge in total J and Horn-Morisita
+    trends <- merge(trends, trends3)
+    trends <- merge(trends, trends5)
+    trends <- merge(trends, trends6)
+    trends <- merge(trends, trends7)
+    trends <- merge(trends, trends8)
+    trends <- merge(trends, trends9)
+    trends <- merge(trends, trends10)
+    trends <- merge(trends, nyrBT)
+    
+    saveRDS(trends, file = 'temp/trendstemp.rds')
+    
 }
 ```
+
+    ## [1] "Loaded from file"
 
 Add covariates
 
@@ -233,6 +237,60 @@ trends <- merge(trends, veg[, .(rarefyID, veg = veg)], all.x = TRUE) # vegetatio
 trends[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 ```
 
+Remove studies with only 1 species
+
+``` r
+nrow(trends)
+```
+
+    ## [1] 53467
+
+``` r
+trends <- trends[Nspp > 1, ]
+nrow(trends)
+```
+
+    ## [1] 53013
+
+#### Output a file with plots of every Jtu timeseries (a lot\!)
+
+Not run during knitting
+
+``` r
+rids <- trends[Nspp > 1 & nyrBT > 2, sort(unique(rarefyID))]
+setkey(bt, rarefyID, YEAR)
+print(paste(length(rids), ' rarefyIDs'))
+filenum <- 1
+plotnum <- 1
+for(i in 1:length(rids)){
+  jtutrend <- trends[rarefyID == rids[i], Jtutrend]
+  jtutrendrem0 <- trends[rarefyID == rids[i], Jtutrendrem0]
+  nspp <- trends[rarefyID == rids[i], Nspp]
+  x <- bt[rarefyID == rids[i], YEAR]
+  y <- bt[rarefyID == rids[i], Jtu_base]
+  
+  if(length(x) > 2 & nspp > 1){
+    if(plotnum %% 400 == 1){
+      if(plotnum >1) dev.off()
+      png(file = paste0('figures/jtu_plots/jtu_plots', formatC(filenum, width = 3, format = 'd', flag = '0'), '.png'), width = 36, height = 36, units = 'in', res = 300)
+      par(mfrow=c(20,20), mai = c(0.4, 0.5, 0.5, 0.1))
+      filenum <- filenum + 1
+    }
+    plot(x, y, main = paste('Jtu:', signif(jtutrend, 3), '  rem0:', signif(jtutrendrem0, 3), '\nNspp:', nspp, '\nrID:', rids[i]), xlab = '', ylab = 'Jtu',
+         cex.main = 0.7)
+    abline(lm(y ~ x))
+    
+    x2 <- x[2:length(x)]
+    y2 <- y[2:length(y)]
+    abline(lm(y2 ~ x2), col = 'red')
+    
+    plotnum <- plotnum + 1
+  }
+}
+  
+dev.off()
+```
+
 ### Do some basic checks of the turnover calculations
 
 ``` r
@@ -247,11 +305,11 @@ trends
     ##     4: 108_3941181 Marine Continental_High_Antarctic         Birds
     ##     5: 108_3941182 Marine Continental_High_Antarctic         Birds
     ##    ---                                                            
-    ## 53463:  99_4377155 Marine Northwest_Australian_Shelf          Fish
-    ## 53464:  99_4383724 Marine Northwest_Australian_Shelf          Fish
-    ## 53465:  99_4386651 Marine Northwest_Australian_Shelf          Fish
-    ## 53466:  99_4390299 Marine Northwest_Australian_Shelf          Fish
-    ## 53467:  99_4394671 Marine Northwest_Australian_Shelf          Fish
+    ## 53009:  99_4377155 Marine Northwest_Australian_Shelf          Fish
+    ## 53010:  99_4383724 Marine Northwest_Australian_Shelf          Fish
+    ## 53011:  99_4386651 Marine Northwest_Australian_Shelf          Fish
+    ## 53012:  99_4390299 Marine Northwest_Australian_Shelf          Fish
+    ## 53013:  99_4394671 Marine Northwest_Australian_Shelf          Fish
     ##        STUDY_ID rarefyID_x rarefyID_y     Jtutrend Jtutrend_se  Jbetatrend
     ##     1:      100    -3.0800   51.14000  0.004763952 0.001601483 0.004886186
     ##     2:      101    -3.0800   51.14000  0.000000000 0.000000000 0.005573571
@@ -259,11 +317,11 @@ trends
     ##     4:      108    59.9275  -66.29250  0.100000000         NaN 0.107142857
     ##     5:      108    59.9700  -66.19500  0.062500000         NaN 0.089285714
     ##    ---                                                                    
-    ## 53463:       99   116.8010  -19.84227 -0.010268562 0.020521929 0.043500339
-    ## 53464:       99   117.5515  -19.61040  0.000000000         NaN 0.000000000
-    ## 53465:       99   117.8600  -18.80625  0.000000000         NaN 0.250000000
-    ## 53466:       99   118.3213  -18.79645  0.088888889 0.071860741 0.092380952
-    ## 53467:       99   118.8110  -19.35420  0.000000000         NaN 0.080000000
+    ## 53009:       99   116.8010  -19.84227 -0.010268562 0.020521929 0.043500339
+    ## 53010:       99   117.5515  -19.61040  0.000000000         NaN 0.000000000
+    ## 53011:       99   117.8600  -18.80625  0.000000000         NaN 0.250000000
+    ## 53012:       99   118.3213  -18.79645  0.088888889 0.071860741 0.092380952
+    ## 53013:       99   118.8110  -19.35420  0.000000000         NaN 0.080000000
     ##        Jbetatrend_se    Horntrend Horntrend_se Jtutrendrem0
     ##     1:   0.001622134 0.0031009875 0.0015680649   0.00297623
     ##     2:   0.002121344 0.0004638415 0.0008664591   0.00000000
@@ -271,11 +329,11 @@ trends
     ##     4:           NaN 0.1147144190          NaN           NA
     ##     5:           NaN 0.0878275862          NaN           NA
     ##    ---                                                     
-    ## 53463:   0.027264849           NA           NA  -0.02380952
-    ## 53464:           NaN           NA           NA           NA
-    ## 53465:           NaN           NA           NA           NA
-    ## 53466:   0.072315133           NA           NA   0.01388889
-    ## 53467:           NaN           NA           NA           NA
+    ## 53009:   0.027264849           NA           NA  -0.02380952
+    ## 53010:           NaN           NA           NA           NA
+    ## 53011:           NaN           NA           NA           NA
+    ## 53012:   0.072315133           NA           NA   0.01388889
+    ## 53013:           NaN           NA           NA           NA
     ##        Jtutrendrem0_se Jbetatrendrem0 Jbetatrendrem0_se Horntrendrem0
     ##     1:     0.001309059    0.002587992      0.0009975709  0.0023147105
     ##     2:     0.000000000    0.002208307      0.0009103225  0.0001735803
@@ -283,11 +341,11 @@ trends
     ##     4:              NA             NA                NA            NA
     ##     5:              NA             NA                NA            NA
     ##    ---                                                               
-    ## 53463:             NaN    0.025510204               NaN            NA
-    ## 53464:              NA             NA                NA            NA
-    ## 53465:              NA             NA                NA            NA
-    ## 53466:     0.056131276    0.014285714      0.0467378789            NA
-    ## 53467:              NA             NA                NA            NA
+    ## 53009:             NaN    0.025510204               NaN            NA
+    ## 53010:              NA             NA                NA            NA
+    ## 53011:              NA             NA                NA            NA
+    ## 53012:     0.056131276    0.014285714      0.0467378789            NA
+    ## 53013:              NA             NA                NA            NA
     ##        Horntrendrem0_se   Jtulast Jtulast_se Jbetalast Jbetalast_se
     ##     1:     0.0016045472 0.4324324         NA 0.5000000           NA
     ##     2:     0.0009087936 0.0000000         NA 0.5000000           NA
@@ -295,11 +353,11 @@ trends
     ##     4:               NA 0.8000000         NA 0.8571429           NA
     ##     5:               NA 0.5000000         NA 0.7142857           NA
     ##    ---                                                             
-    ## 53463:               NA 0.0000000         NA 0.8571429           NA
-    ## 53464:               NA 0.0000000         NA 0.0000000           NA
-    ## 53465:               NA 0.0000000         NA 0.5000000           NA
-    ## 53466:               NA 0.7500000         NA 0.8000000           NA
-    ## 53467:               NA 0.0000000         NA 0.4000000           NA
+    ## 53009:               NA 0.0000000         NA 0.8571429           NA
+    ## 53010:               NA 0.0000000         NA 0.0000000           NA
+    ## 53011:               NA 0.0000000         NA 0.5000000           NA
+    ## 53012:               NA 0.7500000         NA 0.8000000           NA
+    ## 53013:               NA 0.0000000         NA 0.4000000           NA
     ##         Hornlast Hornlast_se nyrBT minyrBT maxyrBT medianyrBT meanyrBT
     ##     1: 0.3642417          NA    31    1981    2011     1996.0 1996.000
     ##     2: 0.1541960          NA    31    1981    2011     1996.0 1996.000
@@ -307,11 +365,11 @@ trends
     ##     4: 0.9177154          NA     2    1985    1993     1989.0 1989.000
     ##     5: 0.7026207          NA     2    1985    1993     1989.0 1989.000
     ##    ---                                                                
-    ## 53463:        NA          NA     3    1982    1997     1983.0 1987.333
-    ## 53464:        NA          NA     2    1982    1990     1986.0 1986.000
-    ## 53465:        NA          NA     2    1986    1988     1987.0 1987.000
-    ## 53466:        NA          NA     4    1982    1989     1984.5 1985.000
-    ## 53467:        NA          NA     2    1982    1987     1984.5 1984.500
+    ## 53009:        NA          NA     3    1982    1997     1983.0 1987.333
+    ## 53010:        NA          NA     2    1982    1990     1986.0 1986.000
+    ## 53011:        NA          NA     2    1986    1988     1987.0 1987.000
+    ## 53012:        NA          NA     4    1982    1989     1984.5 1985.000
+    ## 53013:        NA          NA     2    1982    1987     1984.5 1984.500
     ##          tempave tempave_metab    temptrend      seas  microclim       npp
     ##     1: 12.051350      12.05135  0.041129329 3.0760983 0.23603834 1685.9467
     ##     2: 12.051350      12.05135  0.041129329 3.0760983 0.23603834 1685.9467
@@ -319,11 +377,11 @@ trends
     ##     4: -1.271692      40.00000 -0.004529737 0.5261527 0.01186496  152.3814
     ##     5: -1.271692      40.00000 -0.004529737 0.5261527 0.01315645  150.4591
     ##    ---                                                                    
-    ## 53463: 26.938956      26.93896 -0.003552321 2.0045745 0.04537952  552.9129
-    ## 53464:        NA            NA           NA        NA 0.03587447  543.8439
-    ## 53465: 27.370296      27.37030  0.620516857 1.8875665 0.03082215  366.2237
-    ## 53466: 27.549504      27.54950 -0.002693142 1.8875665 0.05193555  384.6634
-    ## 53467:        NA            NA           NA        NA 0.04392091  694.7807
+    ## 53009: 26.938956      26.93896 -0.003552321 2.0045745 0.04537952  552.9129
+    ## 53010:        NA            NA           NA        NA 0.03587447  543.8439
+    ## 53011: 27.370296      27.37030  0.620516857 1.8875665 0.03082215  366.2237
+    ## 53012: 27.549504      27.54950 -0.002693142 1.8875665 0.05193555  384.6634
+    ## 53013:        NA            NA           NA        NA 0.04392091  694.7807
     ##        mass_mean_weight mass_sd_weight speed_mean_weight speed_sd_weight
     ##     1:       4576.35361    16081.00494         12.020663        9.883453
     ##     2:         15.46288       65.75757          5.701894        6.033516
@@ -331,11 +389,11 @@ trends
     ##     4:        380.26044      360.69826        106.398871       18.543573
     ##     5:       2559.31968     2480.08226         73.390318       57.378463
     ##    ---                                                                  
-    ## 53463:      11098.73495    17185.06309         21.061352       10.977955
-    ## 53464:       4376.39609     9104.03188         14.427234        8.894618
-    ## 53465:       4546.03260    12646.27215         12.384251        9.922576
-    ## 53466:      15949.56141    49280.74146         15.765330       11.647149
-    ## 53467:       6295.59279     9783.92682         17.989658        8.753660
+    ## 53009:      11098.73495    17185.06309         21.061352       10.977955
+    ## 53010:       4376.39609     9104.03188         14.427234        8.894618
+    ## 53011:       4546.03260    12646.27215         12.384251        9.922576
+    ## 53012:      15949.56141    49280.74146         15.765330       11.647149
+    ## 53013:       6295.59279     9783.92682         17.989658        8.753660
     ##        lifespan_mean_weight lifespan_sd_weight thermal_bias consfrac Nspp
     ##     1:            24.368790         13.8561561   -0.1166378        1   83
     ##     2:             6.855411          5.5954324   -1.3322161        1   15
@@ -343,11 +401,11 @@ trends
     ##     4:             1.835437          0.3587385    5.5271034        1    7
     ##     5:             2.628751          0.8313121    3.0517163        1    7
     ##    ---                                                                   
-    ## 53463:             9.477088          3.5699526    0.8561218        1   37
-    ## 53464:                   NA                 NA           NA        1   23
-    ## 53465:             6.184025          3.6468843    0.4429424        1   46
-    ## 53466:             7.722453          4.3764322    0.1860061        1   50
-    ## 53467:                   NA                 NA           NA        1   36
+    ## 53009:             9.477088          3.5699526    0.8561218        1   37
+    ## 53010:                   NA                 NA           NA        1   23
+    ## 53011:             6.184025          3.6468843    0.4429424        1   46
+    ## 53012:             7.722453          4.3764322    0.1860061        1   50
+    ## 53013:                   NA                 NA           NA        1   36
     ##        endofrac human_bowler human_venter human_halpern veg
     ##     1:        0            6     33.00286            NA   0
     ##     2:        0            6     33.00286            NA   0
@@ -355,53 +413,53 @@ trends
     ##     4:        1            0           NA      1.041834   0
     ##     5:        1            0           NA      1.091445   0
     ##    ---                                                     
-    ## 53463:        0            2           NA      6.855058   0
-    ## 53464:        0            2           NA      1.672769   0
-    ## 53465:        0            1           NA      8.710693   0
-    ## 53466:        0            1           NA      8.704291   0
-    ## 53467:        0            1           NA      7.336845   0
+    ## 53009:        0            2           NA      6.855058   0
+    ## 53010:        0            2           NA      1.672769   0
+    ## 53011:        0            1           NA      8.710693   0
+    ## 53012:        0            1           NA      8.704291   0
+    ## 53013:        0            1           NA      7.336845   0
 
 ``` r
 summary(trends$Jtutrendrem0)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##  -1.000  -0.005   0.000   0.007   0.020   1.000   14157
+    ##  -1.000  -0.005   0.000   0.007   0.020   1.000   13818
 
 ``` r
 summary(trends$Jbetatrendrem0)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##  -1.000  -0.004   0.003   0.007   0.017   1.000   14157
+    ##  -1.000  -0.004   0.003   0.007   0.017   1.000   13818
 
 ``` r
 summary(trends$Horntrendrem0)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##  -1.000  -0.008   0.001   0.009   0.023   1.000   15168
+    ##  -1.000  -0.008   0.002   0.009   0.023   1.000   14825
 
 ``` r
 summary(trends$Jtulast)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.0000  0.1583  0.5000  0.4855  0.7692  1.0000
+    ##  0.0000  0.1818  0.5000  0.4896  0.7692  1.0000
 
 ``` r
 summary(trends$Jbetalast)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.0000  0.5000  0.6667  0.6621  0.8571  1.0000
+    ##  0.0000  0.5000  0.6667  0.6678  0.8571  1.0000
 
 ``` r
 summary(trends$Hornlast)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##  0.0000  0.1956  0.6293  0.5742  0.9804  1.0000    1451
+    ##  0.0000  0.2039  0.6378  0.5791  0.9816  1.0000    1435
 
 #### Histograms of temporal change
 
@@ -467,7 +525,7 @@ trends[, summary(nyrBT)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##   2.000   2.000   4.000   5.519   7.000  97.000
+    ##   2.000   2.000   4.000   5.545   7.000  97.000
 
 ``` r
 x <- trends[, hist(nyrBT)]
@@ -476,28 +534,44 @@ x <- trends[, hist(nyrBT)]
 ![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20num%20years-1.png)<!-- -->
 
 ``` r
-trends[, plot(nyrBT, Jtutrend, log = 'x', col = '#00000033')]
+trends[, plot(nyrBT, Jtutrend, log = 'x', col = '#00000033')]; abline(h = 0)
 ```
+
+    ## NULL
 
 ![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20num%20years-2.png)<!-- -->
 
-    ## NULL
-
 ``` r
-trends[, plot(nyrBT, Jtutrendrem0, log = 'x', col = '#00000033')]
+trends[, plot(nyrBT, Jtutrendrem0, log = 'x', col = '#00000033')]; abline(h = 0)
 ```
+
+    ## NULL
 
 ![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20num%20years-3.png)<!-- -->
 
-    ## NULL
-
 ``` r
-trends[, plot(nyrBT, Jtulast, log = 'x', col = '#00000033')]
+trends[, plot(nyrBT, Jtulast, log = 'x', col = '#00000033')]; abline(h = 0)
 ```
+
+    ## NULL
 
 ![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20num%20years-4.png)<!-- -->
 
-    ## NULL
+##### Average change compared to number of years in time-series
+
+``` r
+# number of year
+ggplot(trends, aes(nyrBT, Jtutrendrem0)) +
+    geom_smooth() +
+    scale_x_log10() +
+    geom_abline(intercept = 0, slope = 0)
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 13818 rows containing non-finite values (stat_smooth).
+
+![](assemble_turnover_covariates_files/figure-gfm/ave%20change%20vs.%20num%20years-1.png)<!-- -->
 
 #### Change compared to number of species in time-series
 
@@ -507,7 +581,7 @@ trends[, summary(Nspp)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##    1.00    6.00   11.00   19.35   24.00 1427.00
+    ##    2.00    6.00   11.00   19.51   24.00 1427.00
 
 ``` r
 x <- trends[, hist(Nspp)]
@@ -516,20 +590,20 @@ x <- trends[, hist(Nspp)]
 ![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20number%20of%20species-1.png)<!-- -->
 
 ``` r
-trends[, plot(Nspp, Jtutrend, log = 'x', col = '#00000033')]
+trends[, plot(Nspp, Jtutrend, log = 'x', col = '#00000033')]; abline(h=0)
 ```
+
+    ## NULL
 
 ![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20number%20of%20species-2.png)<!-- -->
 
-    ## NULL
-
 ``` r
-trends[, plot(Nspp, Jtutrendrem0, log = 'x', col = '#00000033')]
+trends[, plot(Nspp, Jtutrendrem0, log = 'x', col = '#00000033')]; abline(h=0)
 ```
 
-![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20number%20of%20species-3.png)<!-- -->
-
     ## NULL
+
+![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20number%20of%20species-3.png)<!-- -->
 
 ``` r
 trends[, plot(Nspp, Jtulast, log = 'x', col = '#00000033')]
@@ -538,21 +612,6 @@ trends[, plot(Nspp, Jtulast, log = 'x', col = '#00000033')]
 ![](assemble_turnover_covariates_files/figure-gfm/change%20vs.%20number%20of%20species-4.png)<!-- -->
 
     ## NULL
-
-Remove studies with only 1 species
-
-``` r
-nrow(trends)
-```
-
-    ## [1] 53467
-
-``` r
-trends <- trends[Nspp > 1, ]
-nrow(trends)
-```
-
-    ## [1] 53013
 
 Turnover calculations are correlated, though less so for Horn
 
@@ -585,17 +644,15 @@ ggplot(trends, aes(Jbetatrendrem0, Horntrendrem0)) +
 
 ![](assemble_turnover_covariates_files/figure-gfm/basic%20pairwise%20graphs%20of%20turnover%20metrics-2.png)<!-- -->
 
-Temporal turnover is not all that correlated between including first
-year or not.
+Removing the first year creates a very different calculation of temporal
+change.
 
 ``` r
 ggplot(trends, aes(Jtutrend, Jtutrendrem0)) +
   geom_point(alpha = 0.3) +
   geom_smooth() +
-  geom_abline(a = 0, b = 1)
+  geom_abline(intercept = 0, slope = 1)
 ```
-
-    ## Warning: Ignoring unknown parameters: a, b
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
@@ -609,10 +666,8 @@ ggplot(trends, aes(Jtutrend, Jtutrendrem0)) +
 ggplot(trends, aes(Jbetatrend, Jbetatrendrem0)) +
   geom_point(alpha = 0.3) +
   geom_smooth() +
-  geom_abline(a = 0, b = 1)
+  geom_abline(intercept = 0, slope = 1)
 ```
-
-    ## Warning: Ignoring unknown parameters: a, b
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
@@ -626,10 +681,8 @@ ggplot(trends, aes(Jbetatrend, Jbetatrendrem0)) +
 ggplot(trends, aes(Horntrend, Horntrendrem0)) +
   geom_point(alpha = 0.3) +
   geom_smooth() +
-  geom_abline(a = 0, b = 1)
+  geom_abline(intercept = 0, slope = 1)
 ```
-
-    ## Warning: Ignoring unknown parameters: a, b
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
