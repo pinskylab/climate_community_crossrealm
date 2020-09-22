@@ -4,7 +4,7 @@ subtitle: '(using mixed effects models)'
 output: 
     github_document: default
     #html_document: default
-    html_notebook: default
+    #html_notebook: default
 ---
 
 Collaborators: Shane Blowes, Jon Chase, Helmut Hillebrand, Michael Burrows, Amanda Bates, Uli Brose, Benoit Gauzens, Laura Antao, Ruben Remelgado, Carsten Meyer, Myriam Hirt, maybe others
