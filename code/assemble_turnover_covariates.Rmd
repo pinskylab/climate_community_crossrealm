@@ -2,7 +2,6 @@
 title: "Turnover covariate data prep"
 output:
   github_document: default
-  #html_notebook: default
 ---
 
 ```{r setup}
@@ -23,16 +22,8 @@ signedsqrt_trans <- function() trans_new('signedsqrt',
 
 # Load data
 ```{r load data}
-# BioTime
-load('data/biotime_blowes/bt_malin.Rdata') # loads bt_malin
-bt <- data.table(bt_malin); rm(bt_malin) # rename
-
-# BioTime data type
-load('data/biotime_blowes/time_series_data_type.Rdata') # loads rarefyID_type
-bt <- merge(bt, rarefyID_type, by = 'rarefyID', all.x = TRUE) # merge with biotime
-
-# BioTime temporal turnover null model
-load('data/biotime_blowes/z_scores_SAD.Rdata') # loads sim_summary
+# Load BioTime trends calculated by calc_turnover.Rmd
+trends <- readRDS('temp/trendstemp2.rds')
 
 # Temperature average, trends, and seasonality
 temperature <- fread('output/temperature_byrarefyID.csv.gz')
@@ -74,189 +65,6 @@ veg <- as.data.table(readRDS('output/vct_by_rarefyID.rds'))
 veg[, veg := (`tree cover % (mean)` + 0.5 * `non-tree veg. % (mean)`)/100] # veg index from 0 (all non-veg) to 1 (all tree). Non-tree veg counts as 0.5.
 ```
 
-## Plot a turnover example
-First is a long time-series, next one shows an example result of removing the first year of self-comparison.
-```{r plot turnover}
-#bt[, .(n = .N), by = rarefyID][n > 50,]
-
-ggplot(bt[rarefyID == '339_1085477'], aes(YEAR, Jtu_base)) +
-    geom_point() +
-    geom_smooth(method = 'lm') +
-    xlab('Year') + ylab('Jaccard dissimilarity')
-
-ggplot(bt[rarefyID == '489_16754'], aes(YEAR, Jtu_base)) +
-    geom_point() +
-    geom_smooth(method = 'lm', se = FALSE) +
-    xlab('Year') + ylab('Jaccard dissimilarity') +
-  geom_smooth(data = bt[rarefyID == '489_16754' & YEAR != 2000], method = 'lm', se = FALSE, color = 'red')
-```
-
-## Assemble dataset of beta diversity trends (temporal turnover) and covariates
-Also trim to count data
-```{r assemble trends, warning=FALSE, message=FALSE}
-# function to calc trends, removing first year with 0
-calctrendrem0 <- function(y, YEAR, nm = 'y'){
-  # turn off warnings for the following
-  defaultW <- getOption("warn")
-  options(warn = -1)
-  
-  if(length(YEAR)>2){
-    o <- order(YEAR)
-    YEAR2 <- YEAR[o][2:length(YEAR)]
-    y2 <- y[o][2:length(y)]
-    
-    if(sum(!is.na(y2)) >= 2){ # make sure enough values to fit a line
-      mod <- lm(y2 ~ YEAR2)
-      out <- list(y = coef(mod)[2], # coef for the slope
-                  y_se = sqrt(diag(vcov(mod)))[2]) # SE
-      names(out) <- c(nm, paste0(nm, '_se'))
-      options(warn = defaultW)
-      return(out)
-      
-    } else {
-      out <- list(y = NA_real_, y_se = NA_real_)
-      names(out) <- c(nm, paste0(nm, '_se'))
-      
-      options(warn = defaultW)
-      return(out)
-    }
-    
-  } else {
-    out <- list(y = NA_real_, y_se = NA_real_)
-    names(out) <- c(nm, paste0(nm, '_se'))
-  
-    options(warn = defaultW)
-    return(out)
-  }
-  
-
-}
-
-calcfirstlast <- function(y, YEAR, nm = 'y'){ # function to get distance from last to first year
-  # turn off warnings for the following
-  defaultW <- getOption("warn")
-  options(warn = -1)
-  
-  if(length(YEAR)>1){
-    o <- order(YEAR)
-    YEAR2 <- YEAR[o][2:length(YEAR)]
-    y2 <- y[o][2:length(y)]
-    
-    out <- list(y = y2[length(y2)], # dissimilarity for last year
-                y_se = NA_real_)
-  } else {
-    out <- list(y = NA_real_, y_se = NA_real_)
-  }
-
-  names(out) <- c(nm, paste0(nm, '_se'))
-  options(warn = defaultW)
-  return(out)
-}
-
-
-
-setkey(bt, STUDY_ID, rarefyID, YEAR)
-
-if(file.exists('temp/trendstemp.rds')){
-    trends <- readRDS('temp/trendstemp.rds')
-    print('Loaded from file')
-} else {
-    print('Calculating from scratch')
-    
-    trends5 <- bt[BROAD_TYPE == 'count', calctrendrem0(Jtu_base, YEAR, 'Jtutrendrem0'), 
-                  by = .(REALM, Biome, taxa_mod, STUDY_ID, 
-                         rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover without first year
-    trends6 <- bt[BROAD_TYPE == 'count', calctrendrem0(Jbeta_base, YEAR, 'Jbetatrendrem0'),
-                  by = .(rarefyID)]
-    trends7 <- bt[BROAD_TYPE == 'count', calctrendrem0(1-Horn_base, YEAR, 'Horntrendrem0'),
-                  by = .(rarefyID)]
-    
-    trends8 <- bt[BROAD_TYPE == 'count', calcfirstlast(Jtu_base, YEAR, 'Jtulast'),
-                  by = .(rarefyID)]
-    trends9 <- bt[BROAD_TYPE == 'count', calcfirstlast(Jbeta_base, YEAR, 'Jbetalast'),
-                  by = .(rarefyID)]
-    trends10 <- bt[BROAD_TYPE == 'count', calcfirstlast(1-Horn_base, YEAR, 'Hornlast'),
-                   by = .(rarefyID)]
-    
-    
-    nyrBT <-  bt[BROAD_TYPE == 'count', .(nyrBT = length(YEAR),
-                     minyrBT = min(YEAR),
-                     maxyrBT = max(YEAR),
-                     medianyrBT = median(YEAR),
-                     meanyrBT = mean(YEAR)),
-                 by = .(rarefyID)] # number of years in time-series
-    
-    trends <- merge(trends5, trends6)
-    trends <- merge(trends, trends7)
-    trends <- merge(trends, trends8)
-    trends <- merge(trends, trends9)
-    trends <- merge(trends, trends10)
-    trends <- merge(trends, nyrBT)
-    
-    saveRDS(trends, file = 'temp/trendstemp.rds')
-    
-}
-
-nrow(trends)
-```
-
-
-### Standardize slope values against null model simulations
-```{r plot sds}
-# remove some duplicates
-sim_summary <- as.data.table(sim_summary)
-sim_summary <- sim_summary[!duplicated(sim_summary), ]
-
-# hist
-hist(sim_summary[metric == 'Jaccard (total)', sd], breaks = 200, col = 'grey')
-hist(sim_summary[metric == 'Nestedness', sd], breaks = 200, col = 'grey')
-hist(sim_summary[metric == 'Morisita-Horn', sd], breaks = 200, col = 'grey')
-
-# plot
-sim_summary[metric == 'Jaccard (total)', plot(expected, log10(sd+1))]
-abline(h = 0, col = 'red')
-
-sim_summary[metric == 'Nestedness', plot(expected, log10(sd+1))]
-abline(h = 0, col = 'red')
-
-sim_summary[metric == 'Morisita-Horn', plot(expected, log10(sd+1))]
-abline(h = 0, col = 'red')
-
-# vs #yrs
-sim_summary[metric == 'Jaccard (total)', plot(Nyrs, sd+0.001, log = 'y', main = 'Null SD declines with #yrs')]
-abline(h = 0.001, col = 'red')
-abline(h = 0.001+0.001, col = 'green')
-abline(h = 0.01+0.001, col = 'grey')
-
-
-# vs #spp
-sim_summary[metric == 'Jaccard (total)', plot(Nspp, sd+0.001, log = 'y')]
-abline(h = 0.001, col = 'red')
-abline(h = 0.001+0.001, col = 'green')
-abline(h = 0.01+0.001, col = 'grey')
-```
-
-Merge null model
-```{r merge nul model}
-# merge
-trends <- merge(trends, sim_summary[metric == 'Jaccard (total)', .(Jbeta_exp = expected, Jbeta_sd = sd, rarefyID)], by = 'rarefyID', all.x = TRUE)
-trends <- merge(trends, sim_summary[metric == 'Nestedness', .(Jtu_exp = expected, Jtu_sd = sd, rarefyID)], by = 'rarefyID', all.x = TRUE)
-trends <- merge(trends, sim_summary[metric == 'Morisita-Horn', .(Horn_exp = expected, Horn_sd = sd, rarefyID)], by = 'rarefyID', all.x = TRUE)
-```
-
-Set a threshold and only standardize those timeseries with SD > 0.001
-```{r standardize}
-# standardize, only where sd >0
-trends[, Jtutrendz := NA_real_]
-trends[, Jbetatrendz := NA_real_]
-trends[, Horntrendz := NA_real_]
-
-trends[Jtu_sd > 0.001, Jtutrendz := (Jtutrendrem0 - Jtu_exp)/Jtu_sd]
-trends[Jbeta_sd > 0.001, Jbetatrendz := (Jbetatrendrem0 - Jbeta_exp)/Jbeta_sd]
-trends[Horn_sd > 0.001, Horntrendz := (Horntrendrem0 - Horn_exp)/Horn_sd]
-
-nrow(trends)
-```
 
 Add covariates
 ```{r add covariate data}
@@ -275,238 +83,6 @@ trends <- merge(trends, human[, .(rarefyID, human_bowler = atc, human_venter = h
 trends <- merge(trends, veg[, .(rarefyID, veg = veg)], all.x = TRUE) # vegetation index
 trends[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 ```
-
-
-Remove studies with only 1 species
-```{r remove 1-spp studies}
-nrow(trends)
-trends <- trends[Nspp > 1, ]
-nrow(trends)
-```
-
-#### Output a file with plots of every Jtu timeseries (a lot!)
-Not run during knitting
-```{r plot of all ts, eval=FALSE}
-rids <- trends[Nspp > 1 & nyrBT > 2, sort(unique(rarefyID))]
-setkey(bt, rarefyID, YEAR)
-print(paste(length(rids), ' rarefyIDs'))
-filenum <- 1
-plotnum <- 1
-for(i in 1:length(rids)){
-  jtutrendrem0 <- trends[rarefyID == rids[i], Jtutrendrem0]
-  nspp <- trends[rarefyID == rids[i], Nspp]
-  x <- bt[rarefyID == rids[i], YEAR]
-  y <- bt[rarefyID == rids[i], Jtu_base]
-  
-  if(length(x) > 2 & nspp > 1){
-    if(plotnum %% 400 == 1){
-      if(plotnum >1) dev.off()
-      png(file = paste0('figures/jtu_plots/jtu_plots', formatC(filenum, width = 3, format = 'd', flag = '0'), '.png'), width = 36, height = 36, units = 'in', res = 100)
-      par(mfrow=c(20,20), mai = c(0.4, 0.5, 0.5, 0.1))
-      filenum <- filenum + 1
-    }
-    plot(x, y, main = paste('Jtu rem0:', signif(jtutrendrem0, 3), '\nNspp:', nspp, '\nrID:', rids[i]), xlab = '', ylab = 'Jtu',
-         cex.main = 0.7)
-    abline(lm(y ~ x))
-    
-    x2 <- x[2:length(x)]
-    y2 <- y[2:length(y)]
-    abline(lm(y2 ~ x2), col = 'red')
-    
-    plotnum <- plotnum + 1
-  }
-}
-  
-dev.off()
-```
-
-### Do some basic checks of the turnover calculations
-```{r summary of change}
-# basic checks
-trends
-
-summary(trends$Jtutrendrem0)
-summary(trends$Jbetatrendrem0)
-summary(trends$Horntrendrem0)
-
-summary(trends$Jtutrendz)
-summary(trends$Jbetatrendz)
-summary(trends$Horntrendz)
-
-summary(trends$Jtulast)
-summary(trends$Jbetalast)
-summary(trends$Hornlast)
-
-```
-
-#### Histograms of temporal change
-Standardized slopes have very large and small values
-```{r histograms of change, messages = FALSE}
-x <- trends[, hist(Jtutrendrem0)]
-x <- trends[, hist(Jbetatrendrem0)]
-x <- trends[, hist(Horntrendrem0)]
-
-x <- trends[, hist(Jtutrendz, breaks = 100)]
-x <- trends[, hist(Jbetatrendz, breaks = 100)]
-x <- trends[, hist(Horntrendz, breaks = 100)]
-
-x <- trends[, hist(Jtulast)]
-x <- trends[, hist(Jbetalast)]
-x <- trends[, hist(Hornlast)]
-
-```
-
-#### Turnover calculations are correlated, though less so for Horn
-```{r basic pairwise graphs of turnover metrics}
-# are turnover calculations correlated?
-ggplot(trends, aes(Jbetatrendrem0, Jtutrendrem0)) +
-    geom_point(alpha = 0.3) +
-    geom_smooth()
-
-ggplot(trends, aes(Jbetatrendrem0, Horntrendrem0)) +
-    geom_point(alpha = 0.3) +
-    geom_smooth()
-
-ggplot(trends, aes(Jbetatrendrem0, Jbetatrendz)) +
-    geom_point(alpha = 0.3) +
-    geom_smooth()
-
-ggplot(trends, aes(Jtutrendrem0, Jtutrendz)) +
-    geom_point(alpha = 0.3) +
-    geom_smooth()
-
-ggplot(trends, aes(Horntrendrem0, Horntrendz)) +
-    geom_point(alpha = 0.3) +
-    geom_smooth()
-
-ggplot(trends, aes(Jbetatrendz, Jtutrendz)) +
-    geom_point(alpha = 0.3) +
-    geom_smooth()
-
-ggplot(trends, aes(Jbetatrendz, Horntrendz)) +
-    geom_point(alpha = 0.3) +
-    geom_smooth()
-
-ggplot(trends, aes(Jbetatrendrem0, Jbetalast)) +
-    geom_point(alpha = 0.3) +
-    geom_smooth()
-
-ggplot(trends, aes(Jtutrendrem0, Jtulast)) +
-    geom_point(alpha = 0.3) +
-    geom_smooth()
-
-ggplot(trends, aes(Horntrendrem0, Hornlast)) +
-    geom_point(alpha = 0.3) +
-    geom_smooth()
-
-ggplot(trends, aes(Jbetalast, Jtulast)) +
-    geom_point(alpha = 0.3) +
-    geom_smooth()
-
-ggplot(trends, aes(Jbetalast, Hornlast)) +
-    geom_point(alpha = 0.3) +
-    geom_smooth()
-
-```
-Standardization	has the effect of up-weighting some of the smaller trends, as expected
-Strange that Jbetatrendz and Jtutrendz are not really correlated
-\*last correlated to \*trendrem0. Also constrained to a parallelogram
-Jtulast is lower diagonal of Jbetalast, which makes sense
-Hornlast correlated but with lots of scatter to Jbetalast
-
-
-#### Change compared to number of years in time-series
-```{r change vs. num years}
-# number of year
-trends[, summary(nyrBT)]
-x <- trends[, hist(nyrBT)]
-par(mfrow=c(1,3))
-trends[, plot(nyrBT, Jtutrendrem0, log = 'x', col = '#00000033')]; abline(h = 0)
-trends[, plot(nyrBT, Jbetatrendrem0, log = 'x', col = '#00000033')]; abline(h = 0)
-trends[, plot(nyrBT, Horntrendrem0, log = 'x', col = '#00000033')]; abline(h = 0)
-
-trends[, plot(nyrBT, Jtutrendz, log = 'x', col = '#00000033')]; abline(h = 0)
-trends[, plot(nyrBT, Jbetatrendz, log = 'x', col = '#00000033')]; abline(h = 0)
-trends[, plot(nyrBT, Horntrendz, log = 'x', col = '#00000033')]; abline(h = 0)
-
-trends[, plot(nyrBT, Jtulast, log = 'x', col = '#00000033')]; abline(h = 0)
-trends[, plot(nyrBT, Jbetalast, log = 'x', col = '#00000033')]; abline(h = 0)
-trends[, plot(nyrBT, Hornlast, log = 'x', col = '#00000033')]; abline(h = 0)
-```
-
-#### Change compared to number of species in time-series
-```{r change vs. number of species}
-# number of species
-trends[, summary(Nspp)]
-x <- trends[, hist(Nspp)]
-par(mfrow=c(1,3))
-trends[, plot(Nspp, Jtutrendrem0, log = 'x', col = '#00000033')]; abline(h=0)
-trends[, plot(Nspp, Jbetatrendrem0, log = 'x', col = '#00000033')]; abline(h=0)
-trends[, plot(Nspp, Horntrendrem0, log = 'x', col = '#00000033')]; abline(h=0)
-
-trends[, plot(Nspp, Jtutrendz, log = 'x', col = '#00000033')]; abline(h=0)
-trends[, plot(Nspp, Jbetatrendz, log = 'x', col = '#00000033')]; abline(h=0)
-trends[, plot(Nspp, Horntrendz, log = 'x', col = '#00000033')]; abline(h=0)
-
-trends[, plot(Nspp, Jtulast, log = 'x', col = '#00000033')]
-trends[, plot(Nspp, Jbetalast, log = 'x', col = '#00000033')]
-trends[, plot(Nspp, Hornlast, log = 'x', col = '#00000033')]
-```
-
-
-#### Average change compared to #years, #species in time-series
-```{r ave change vs. num years}
-# number of years
-ggplot(trends, aes(nyrBT, Jtutrendrem0, color = 'Jtu trend')) +
-  geom_smooth() +
-  geom_smooth(aes(y = Jbetatrendrem0, color = 'Jbeta trend')) +
-  geom_smooth(aes(y = Horntrendrem0, color = 'Horn trend')) +
-  scale_x_log10() +
-  labs(y = 'Slope') +
-  geom_abline(intercept = 0, slope = 0)
-
-ggplot(trends, aes(nyrBT, Jtutrendz, color = 'Jtu z')) +
-  geom_smooth() +
-  geom_smooth(aes(y = Jbetatrendz, color = 'Jbeta z')) +
-  geom_smooth(aes(y = Horntrendz, color = 'Horn z')) +
-  scale_x_log10() +
-  labs(y = 'Dissimilarity') +
-  geom_abline(intercept = 0, slope = 0)
-
-ggplot(trends, aes(nyrBT, Jtulast, color = 'Jtu last')) +
-  geom_smooth() +
-  geom_smooth(aes(y = Jbetalast, color = 'Jbeta last')) +
-  geom_smooth(aes(y = Hornlast, color = 'Horn last')) +
-  scale_x_log10() +
-  labs(y = 'Dissimilarity') +
-  geom_abline(intercept = 0, slope = 0)
-
-# number of species
-ggplot(trends, aes(Nspp, Jtutrendrem0, color = 'Jtu trend')) +
-  geom_smooth() +
-  geom_smooth(aes(y = Jbetatrendrem0, color = 'Jbeta trend')) +
-  geom_smooth(aes(y = Horntrendrem0, color = 'Horn trend')) +
-  scale_x_log10() +
-  labs(y = 'Slope') +
-  geom_abline(intercept = 0, slope = 0)
-
-ggplot(trends, aes(Nspp, Jtutrendz, color = 'Jtu z')) +
-  geom_smooth() +
-  geom_smooth(aes(y = Jbetatrendz, color = 'Jbeta z')) +
-  geom_smooth(aes(y = Horntrendz, color = 'Horn z')) +
-  scale_x_log10() +
-  labs(y = 'Slope') +
-  geom_abline(intercept = 0, slope = 0)
-
-ggplot(trends, aes(Nspp, Jtulast, color = 'Jtu last')) +
-  geom_smooth() +
-  geom_smooth(aes(y = Jbetalast, color = 'Jbeta last')) +
-  geom_smooth(aes(y = Hornlast, color = 'Horn last')) +
-  scale_x_log10() +
-  labs(y = 'Dissimilarity') +
-  geom_abline(intercept = 0, slope = 0)
-```
-
 
 
 ## Compare covariates across realms
@@ -601,8 +177,25 @@ p9 <- ggplot(trends, aes(temptrend, Hornlast, color = REALM, size = nyrBT)) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn last value')
 
+p10 <- ggplot(trends, aes(temptrend, Jtuexp, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover half-saturation year', title = 'Half-saturation')
 
-grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, ncol = 3)
+p11 <- ggplot(trends, aes(temptrend, Jbetaexp, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total half-saturation year')
+
+p12 <- ggplot(trends, aes(temptrend, Hornexp, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn half-saturation year')
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, ncol = 3)
 ```
 
 ### Time-series length and temperature trend?
