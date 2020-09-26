@@ -118,7 +118,7 @@ Marine has a lot of slow, crawling organisms, but land has plants. Land also has
 
 
 ## Plot turnover vs. temperature
-```{r plot turnover vs temp trend, echo=FALSE, fig.height = 8, fig.width = 9,}
+```{r plot turnover vs temp trend, echo=FALSE, fig.height = 11, fig.width = 11,}
 # removing year 1
 p1 <- ggplot(trends, aes(temptrend, Jtutrendrem0, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
@@ -181,19 +181,22 @@ p10 <- ggplot(trends, aes(temptrend, Jtuexp, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover half-saturation year', title = 'Half-saturation')
+  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover half-saturation year', title = 'Half-saturation') +
+  scale_y_log10()
 
 p11 <- ggplot(trends, aes(temptrend, Jbetaexp, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total half-saturation year')
+  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total half-saturation year') +
+  scale_y_log10()
 
 p12 <- ggplot(trends, aes(temptrend, Hornexp, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn half-saturation year')
+  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn half-saturation year') +
+  scale_y_log10()
 
 grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, ncol = 3)
 ```
@@ -208,7 +211,7 @@ ggplot(trends, aes(temptrend, nyrBT)) +
 
 ## Plot turnover vs. explanatory variables
 Lines are ggplot smoother fits.
-```{r plot turnover v explanatory vars, echo=FALSE, fig.height = 16, fig.width = 9,}
+```{r plot turnover v explanatory vars, echo=FALSE, warning = FALSE, message = FALSE, fig.height = 16, fig.width = 9}
 
 p1 <- ggplot(trends, aes(REALM, Jtutrendrem0)) +
   geom_boxplot(na.rm = TRUE) + 

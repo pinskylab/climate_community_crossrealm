@@ -154,10 +154,6 @@ ggplot(trends, aes(temptrend, nyrBT)) +
 ## Plot turnover vs. explanatory variables
 
 Lines are ggplot smoother fits.
-
-    ## Warning: Computation failed in `stat_smooth()`:
-    ## x has insufficient unique values to support 5 knots: reduce k.
-
 ![](assemble_turnover_covariates_files/figure-gfm/plot%20turnover%20v%20explanatory%20vars-1.png)<!-- -->
 
 Strong trends with temperature change, but trends are pretty symmetric
