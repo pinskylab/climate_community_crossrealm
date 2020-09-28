@@ -110,6 +110,9 @@ Vertical lines are the half-saturations.
 
 # Calculate temporal trends (temporal turnover)
 
+This only recalculates from scratch if temp/trendstemp.rds is not
+available. \#\# Set up functions
+
 ``` r
 # function to calc linear trend, removing first year with 0
 calctrendrem0 <- function(y, YEAR, nm = 'y'){
@@ -159,7 +162,9 @@ calcfirstlast <- function(y, YEAR, nm = 'y'){
 }
 
 # calc half-saturation constant from exponential fit
-calcexp <- function(y, YEAR, nm = 'y'){
+# if pred = FALSE, return half-saturation
+# if pred = TRUE, return prediction data.frame
+calcexp <- function(y, YEAR, nm = 'y', pred = FALSE){
     if(length(YEAR)>2){
         o <- order(YEAR)
         YEAR2 <- YEAR[o][2:length(YEAR)] - YEAR[1]
@@ -175,90 +180,247 @@ calcexp <- function(y, YEAR, nm = 'y'){
                               lower = c(-Inf, 0),
                               upper = c(0, 1))
                 
-                # calc half-saturations
-                cexp <- coef(modexp)
-                hsexp <- with(as.data.frame(t(cexp)), log(1/2)/a)
-                
-                out <- list(y = hsexp) # half-saturation
-                names(out) <- nm
+                if(!pred){
+                  # calc half-saturations
+                  cexp <- coef(modexp)
+                  hsexp <- with(as.data.frame(t(cexp)), log(1/2)/a)
+                  
+                  out <- list(y = hsexp) # half-saturation
+                  names(out) <- nm
+                }
+                if(pred){
+                  # make predictions
+                  out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
+                  out$YEAR <- out$YEAR2 + YEAR[1]
+                  out$pred <- predict(modexp, newdata = out)
+                }
                 out
                 
             }, warning = function(w) {
-                #print('warning')
+              #print('warning')
+              if(!pred){
                 out <- list(y = NA_real_)
                 names(out) <- nm
                 return(out)
+                
+              }
+              if(pred){
+                out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
+                out$YEAR <- out$YEAR2 + YEAR[1]
+                out$pred <- NA
+                return(out)
+              }
             }, error = function(e) {
-                #print('error')
+              #print('error')
+              if(!pred){
                 out <- list(y = NA_real_)
                 names(out) <- nm
                 return(out)
+                
+              }
+              if(pred){
+                out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
+                out$YEAR <- out$YEAR2 + YEAR[1]
+                out$pred <- NA
+                return(out)
+              }
             })
             return(out)
             
         } else {
+          if(!pred){
             out <- list(y = NA_real_)
             names(out) <- nm
             return(out)
+            
+          }
+          if(pred){
+            out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
+            out$YEAR <- out$YEAR2 + YEAR[1]
+            out$pred <- NA
+            return(out)
+          }
         }
         
     } else {
+      if(!pred){
         out <- list(y = NA_real_)
         names(out) <- nm
         return(out)
+        
+      }
+      if(pred){
+        out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
+        out$YEAR <- out$YEAR2 + YEAR[1]
+        out$pred <- NA
+        return(out)
+      }
     }
 }
 
-# do calculations
+# calc half-saturation constant from Michaelis-Menton fits
+calcmm <- function(y, YEAR, nm = 'y', pred = FALSE){
+    if(length(YEAR)>2){
+        o <- order(YEAR)
+        YEAR2 <- YEAR[o][2:length(YEAR)] - YEAR[1]
+        y2 <- y[o][2:length(y)]
+        
+        if(sum(!is.na(y2)) >= 1){ # make sure enough values to fit
+          #print('fit model')
+          out <- tryCatch({
+            
+            modmm <- nls(y2 ~ Vm * YEAR2/(K + YEAR2), 
+                         start = list(K = mean(YEAR2), Vm = 1),
+                         algorithm = 'port', 
+                         lower = c(0, 0),
+                         upper = c(1000, 1))
+            
+            if(!pred){
+              #print('calc half-saturations')
+              cmm <- coef(modmm)
+              hsmm <- cmm[['K']]
+              
+              out <- list(y = hsmm)
+              names(out) <- nm
+            }
+            if(pred){
+              #print('make predictions')
+              out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
+              out$YEAR <- out$YEAR2 + YEAR[1]
+              out$pred <- predict(modmm, newdata = out)
+            }
+            out
+          }, warning = function(w) {
+            #print('warning')
+            if(!pred){
+              out <- list(y = NA_real_)
+              names(out) <- nm
+              return(out)
+              
+            }
+            if(pred){
+              out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
+              out$YEAR <- out$YEAR2 + YEAR[1]
+              out$pred <- NA
+              return(out)
+            }
+            
+          }, error = function(e) {
+            #print('error')
+            if(!pred){
+              out <- list(y = NA_real_)
+              names(out) <- nm
+              return(out)
+            }
+            if(pred){
+              out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
+              out$YEAR <- out$YEAR2 + YEAR[1]
+              out$pred <- NA
+              return(out)
+            }
+            
+          })
+          return(out)
+          
+        } else {
+          if(!pred){
+            out <- list(y = NA_real_)
+            names(out) <- nm
+            return(out)
+          }
+          if(pred){
+            out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
+            out$YEAR <- out$YEAR2 + YEAR[1]
+            out$pred <- NA
+            return(out)
+          }
+        }
+        
+    } else {
+      if(!pred){
+        out <- list(y = NA_real_)
+        names(out) <- nm
+        return(out)
+      }
+      if(pred){
+        out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
+        out$YEAR <- out$YEAR2 + YEAR[1]
+        out$pred <- NA
+        return(out)
+      }
+    }
+}
+```
+
+## Do calculations
+
+And write out trendstemp.rds
+
+``` r
 setkey(bt, STUDY_ID, rarefyID, YEAR)
 
 if(file.exists('temp/trendstemp.rds')){
     print('File already exists. Will not do calculations')
     trends <- readRDS('temp/trendstemp.rds')
 } else {
-    print('Calculating from scratch')
-    
-    trends1 <- bt[, calctrendrem0(Jtu_base, YEAR, 'Jtutrendrem0'), 
-                  by = .(REALM, Biome, taxa_mod, STUDY_ID, 
-                         rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover without first year
-    trends2 <- bt[, calctrendrem0(Jbeta_base, YEAR, 'Jbetatrendrem0'),
-                  by = .(rarefyID)]
-    trends3 <- bt[, calctrendrem0(1-Horn_base, YEAR, 'Horntrendrem0'),
-                  by = .(rarefyID)]
-    
-    trends4 <- bt[, calcfirstlast(Jtu_base, YEAR, 'Jtulast'),
-                  by = .(rarefyID)]
-    trends5 <- bt[, calcfirstlast(Jbeta_base, YEAR, 'Jbetalast'),
-                  by = .(rarefyID)]
-    trends6 <- bt[, calcfirstlast(1-Horn_base, YEAR, 'Hornlast'),
-                   by = .(rarefyID)]
-    
-    trends7 <- bt[, calcexp(Jtu_base, YEAR, 'Jtuexp'),
-                  by = .(rarefyID)]
-    trends8 <- bt[, calcexp(Jbeta_base, YEAR, 'Jbetaexp'),
-                  by = .(rarefyID)]
-    trends9 <- bt[, calcexp(1-Horn_base, YEAR, 'Hornexp'),
-                   by = .(rarefyID)]
-    
-    nyrBT <-  bt[, .(nyrBT = length(YEAR),
-                     minyrBT = min(YEAR),
-                     maxyrBT = max(YEAR),
-                     medianyrBT = median(YEAR),
-                     meanyrBT = mean(YEAR)),
-                 by = .(rarefyID)] # number of years in time-series
-    
-    trends <- merge(trends1, trends2)
-    trends <- merge(trends, trends3)
-    trends <- merge(trends, trends4)
-    trends <- merge(trends, trends5)
-    trends <- merge(trends, trends6)
-    trends <- merge(trends, trends7)
-    trends <- merge(trends, trends8)
-    trends <- merge(trends, trends9)
-    trends <- merge(trends, nyrBT)
-    
-    saveRDS(trends, file = 'temp/trendstemp.rds')
-    
+  print('Calculating from scratch')
+  
+  # remove the next file (with standardized slopes) as well if we are recalculting this from scratch
+  if(file.exists('temp/trendstemp2.rds')){
+    file.remove('temp/trendstemp2.rds')
+  }
+  
+  trends1 <- bt[, calctrendrem0(Jtu_base, YEAR, 'Jtutrendrem0'), 
+                by = .(REALM, Biome, taxa_mod, STUDY_ID, 
+                       rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover without first year
+  trends2 <- bt[, calctrendrem0(Jbeta_base, YEAR, 'Jbetatrendrem0'),
+                by = .(rarefyID)]
+  trends3 <- bt[, calctrendrem0(1-Horn_base, YEAR, 'Horntrendrem0'),
+                by = .(rarefyID)]
+  
+  trends4 <- bt[, calcfirstlast(Jtu_base, YEAR, 'Jtulast'),
+                by = .(rarefyID)]
+  trends5 <- bt[, calcfirstlast(Jbeta_base, YEAR, 'Jbetalast'),
+                by = .(rarefyID)]
+  trends6 <- bt[, calcfirstlast(1-Horn_base, YEAR, 'Hornlast'),
+                by = .(rarefyID)]
+  
+  trends7 <- bt[, calcexp(Jtu_base, YEAR, 'Jtuexp'),
+                by = .(rarefyID)]
+  trends8 <- bt[, calcexp(Jbeta_base, YEAR, 'Jbetaexp'),
+                by = .(rarefyID)]
+  trends9 <- bt[, calcexp(1-Horn_base, YEAR, 'Hornexp'),
+                by = .(rarefyID)]
+  
+  trends10 <- bt[, calcmm(Jtu_base, YEAR, 'Jtumm'),
+                by = .(rarefyID)]
+  trends11 <- bt[, calcmm(Jbeta_base, YEAR, 'Jbetamm'),
+                by = .(rarefyID)]
+  trends12 <- bt[, calcmm(1-Horn_base, YEAR, 'Hornmm'),
+                by = .(rarefyID)]
+  
+  nyrBT <-  bt[, .(nyrBT = length(YEAR),
+                   minyrBT = min(YEAR),
+                   maxyrBT = max(YEAR),
+                   medianyrBT = median(YEAR),
+                   meanyrBT = mean(YEAR)),
+               by = .(rarefyID)] # number of years in time-series
+  
+  trends <- merge(trends1, trends2)
+  trends <- merge(trends, trends3)
+  trends <- merge(trends, trends4)
+  trends <- merge(trends, trends5)
+  trends <- merge(trends, trends6)
+  trends <- merge(trends, trends7)
+  trends <- merge(trends, trends8)
+  trends <- merge(trends, trends9)
+  trends <- merge(trends, trends10)
+  trends <- merge(trends, trends11)
+  trends <- merge(trends, trends12)
+  trends <- merge(trends, nyrBT)
+  
+  saveRDS(trends, file = 'temp/trendstemp.rds')
+  
 }
 ```
 
@@ -276,7 +438,7 @@ Add species richness
 trends <- merge(trends, rich, all.x = TRUE) # species richness
 ```
 
-## Output a file with plots of every Jtu timeseries (a lot\!)
+## Plot every Jtu timeseries (a lot\!)
 
 Not run during knitting
 
@@ -287,8 +449,10 @@ print(paste(length(rids), ' rarefyIDs'))
 filenum <- 1
 plotnum <- 1
 for(i in 1:length(rids)){
+#for(i in 1:400){ # for testing
   jtutrendrem0 <- trends[rarefyID == rids[i], Jtutrendrem0]
   jtuexp <- trends[rarefyID == rids[i], Jtuexp]
+  jtumm <- trends[rarefyID == rids[i], Jtumm]
   nspp <- trends[rarefyID == rids[i], Nspp]
   x <- bt[rarefyID == rids[i], YEAR]
   y <- bt[rarefyID == rids[i], Jtu_base]
@@ -301,13 +465,23 @@ for(i in 1:length(rids)){
       par(mfrow=c(20,20), mai = c(0.4, 0.5, 0.5, 0.1))
       filenum <- filenum + 1
     }
-    plot(x, y, main = paste('Jtu rem0:', signif(jtutrendrem0, 3), 'Jtu exp:', signif(jtuexp, 3), '\nNspp:', nspp, '\nrID:', rids[i]), xlab = '', ylab = 'Jtu',
+    plot(x, y, main = paste('Jtu rem0:', signif(jtutrendrem0, 3), 'Jtu exp:', signif(jtuexp, 3), '\nJtu mm:', signif(jtumm, 3), 'Nspp:', nspp, '\nrID:', rids[i]), xlab = '', ylab = 'Jtu',
          cex.main = 0.7)
     abline(lm(y ~ x))
+    if(plotnum %% 400 == 1){
+      legend('topleft', legend = c('linear', 'rem0', 'exp', 'mm'), lty = 1, 
+             col = c('black', 'red', 'blue', 'green'), cex = 0.5)
+    }
     
     x2 <- x[2:length(x)]
     y2 <- y[2:length(y)]
     abline(lm(y2 ~ x2), col = 'red')
+    
+    x3 <- calcexp(y, x, pred = TRUE)
+    lines(x3$YEAR, x3$pred, col = 'blue')
+    
+    x4 <- calcmm(y, x, pred = TRUE)
+    lines(x4$YEAR, x4$pred, col = 'green')
     
     plotnum <- plotnum + 1
   }
@@ -316,7 +490,9 @@ for(i in 1:length(rids)){
 dev.off()
 ```
 
-### Standardize slope values against null model simulations
+## Standardize slope values against null model simulations
+
+Set up null model sims
 
 ``` r
 # remove some duplicates
@@ -418,6 +594,7 @@ trends <- merge(trends, sim_summary[metric == 'Morisita-Horn', .(Horn_exp = expe
 ```
 
 Set a threshold and only standardize those timeseries with SD \> 0.001
+Write out trendstemp2.rds
 
 ``` r
 # standardize, only where sd >0
@@ -429,12 +606,48 @@ trends[Jtu_sd > 0.001, Jtutrendz := (Jtutrendrem0 - Jtu_exp)/Jtu_sd]
 trends[Jbeta_sd > 0.001, Jbetatrendz := (Jbetatrendrem0 - Jbeta_exp)/Jbeta_sd]
 trends[Horn_sd > 0.001, Horntrendz := (Horntrendrem0 - Horn_exp)/Horn_sd]
 
+
+if(file.exists('temp/trendstemp2.rds')){
+    print('File already exists. Will not write out')
+} else {
+    print('writing out')
+    saveRDS(trends[, .(rarefyID, REALM, Biome, taxa_mod, STUDY_ID, rarefyID_x, rarefyID_y,
+                       Jtutrendrem0, Jtutrendrem0_se, Jbetatrendrem0, Jbetatrendrem0_se,
+                       Horntrendrem0, Horntrendrem0_se, Jtulast, Jtulast_se, Jbetalast,
+                       Jbetalast_se, Hornlast, Hornlast_se, Jtuexp, Jbetaexp, Hornexp,
+                       nyrBT, minyrBT, maxyrBT, medianyrBT, meanyrBT, 
+                       Jtutrendz, Jbetatrendz, Horntrendz)], file = 'temp/trendstemp2.rds')
+}
+```
+
+    ## [1] "File already exists. Will not write out"
+
+``` r
 nrow(trends)
 ```
 
     ## [1] 51578
 
-### Do some basic checks of the turnover calculations
+# Examine the turnover calculations
+
+## How many values?
+
+``` r
+apply(trends[, .(Jtutrendrem0, Jbetatrendrem0, Horntrendrem0,
+                 Jtutrendz, Jbetatrendz, Horntrendz,
+                Jtulast, Jbetalast, Hornlast, 
+                Jtuexp, Jbetaexp, Hornexp, Jtumm, Jbetamm, Hornmm)], MARGIN = 2, 
+      function(x) sum(!is.na(x)))
+```
+
+    ##   Jtutrendrem0 Jbetatrendrem0  Horntrendrem0      Jtutrendz    Jbetatrendz 
+    ##          38188          38188          38188          33381          34684 
+    ##     Horntrendz        Jtulast      Jbetalast       Hornlast         Jtuexp 
+    ##          34584          51578          51578          51578          26550 
+    ##       Jbetaexp        Hornexp          Jtumm        Jbetamm         Hornmm 
+    ##          25924          24769          38063          38096          38053
+
+## Do some basic checks of the turnover calculations
 
 ``` r
 # basic checks
@@ -501,30 +714,42 @@ trends
     ## 51576:         NA        NA      NA     2    1973    1975     1974.0
     ## 51577:         NA        NA      NA     2    1973    1975     1974.0
     ## 51578:         NA        NA      NA     2    1971    1973     1972.0
-    ##        meanyrBT Nspp     Jbeta_exp     Jbeta_sd       Jtu_exp       Jtu_sd
-    ##     1: 1996.000   83  4.991765e-05 0.0008978943 -2.209763e-05 0.0006692022
-    ##     2: 1996.000   15 -5.224876e-05 0.0014642102 -1.270871e-05 0.0012548416
-    ##     3: 1992.000    4           NaN           NA           NaN           NA
-    ##     4: 1989.000    7           NaN           NA           NaN           NA
-    ##     5: 1989.000    7           NaN           NA           NaN           NA
-    ##    ---                                                                    
-    ## 51574: 1945.333   42            NA           NA            NA           NA
-    ## 51575: 1944.500   37            NA           NA            NA           NA
-    ## 51576: 1974.000    9            NA           NA            NA           NA
-    ## 51577: 1974.000   23            NA           NA            NA           NA
-    ## 51578: 1972.000   17            NA           NA            NA           NA
-    ##             Horn_exp      Horn_sd  Jtutrendz Jbetatrendz Horntrendz
-    ##     1:  3.092595e-05 0.0006016976         NA          NA         NA
-    ##     2: -3.276256e-05 0.0008557850 0.01012774    1.543874         NA
-    ##     3:           NaN           NA         NA          NA         NA
-    ##     4:           NaN           NA         NA          NA         NA
-    ##     5:           NaN           NA         NA          NA         NA
-    ##    ---                                                             
-    ## 51574:            NA           NA         NA          NA         NA
-    ## 51575:            NA           NA         NA          NA         NA
-    ## 51576:            NA           NA         NA          NA         NA
-    ## 51577:            NA           NA         NA          NA         NA
-    ## 51578:            NA           NA         NA          NA         NA
+    ##        meanyrBT      Jtumm   Jbetamm   Hornmm Nspp     Jbeta_exp
+    ##     1: 1996.000  0.1253377 0.1942427 1.043563   83  4.991765e-05
+    ##     2: 1996.000 15.5000000 0.1336071 0.000000   15 -5.224876e-05
+    ##     3: 1992.000         NA        NA       NA    4           NaN
+    ##     4: 1989.000         NA        NA       NA    7           NaN
+    ##     5: 1989.000         NA        NA       NA    7           NaN
+    ##    ---                                                          
+    ## 51574: 1945.333  0.0000000 0.0000000 0.000000   42            NA
+    ## 51575: 1944.500         NA        NA       NA   37            NA
+    ## 51576: 1974.000         NA        NA       NA    9            NA
+    ## 51577: 1974.000         NA        NA       NA   23            NA
+    ## 51578: 1972.000         NA        NA       NA   17            NA
+    ##            Jbeta_sd       Jtu_exp       Jtu_sd      Horn_exp      Horn_sd
+    ##     1: 0.0008978943 -2.209763e-05 0.0006692022  3.092595e-05 0.0006016976
+    ##     2: 0.0014642102 -1.270871e-05 0.0012548416 -3.276256e-05 0.0008557850
+    ##     3:           NA           NaN           NA           NaN           NA
+    ##     4:           NA           NaN           NA           NaN           NA
+    ##     5:           NA           NaN           NA           NaN           NA
+    ##    ---                                                                   
+    ## 51574:           NA            NA           NA            NA           NA
+    ## 51575:           NA            NA           NA            NA           NA
+    ## 51576:           NA            NA           NA            NA           NA
+    ## 51577:           NA            NA           NA            NA           NA
+    ## 51578:           NA            NA           NA            NA           NA
+    ##         Jtutrendz Jbetatrendz Horntrendz
+    ##     1:         NA          NA         NA
+    ##     2: 0.01012774    1.543874         NA
+    ##     3:         NA          NA         NA
+    ##     4:         NA          NA         NA
+    ##     5:         NA          NA         NA
+    ##    ---                                  
+    ## 51574:         NA          NA         NA
+    ## 51575:         NA          NA         NA
+    ## 51576:         NA          NA         NA
+    ## 51577:         NA          NA         NA
+    ## 51578:         NA          NA         NA
 
 ``` r
 summary(trends$Jtutrendrem0)
@@ -610,7 +835,28 @@ summary(trends$Hornexp)
     ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
     ##    0.002    0.355    1.346    6.712    4.626 1683.947    26809
 
-#### Histograms of temporal change
+``` r
+summary(trends$Jtumm)
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+    ##   0.000   0.000   0.323   5.195   4.000 924.180   13515
+
+``` r
+summary(trends$Jbetamm)
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+    ##   0.000   0.000   0.113   1.547   0.996 511.455   13482
+
+``` r
+summary(trends$Hornmm)
+```
+
+    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
+    ##    0.000    0.000    0.106    9.960    2.839 1000.000    13525
+
+## Histograms of temporal change
 
 Standardized slopes have very large and small values
 
@@ -669,24 +915,42 @@ x <- trends[, hist(Hornlast)]
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-9.png)<!-- -->
 
 ``` r
-x <- trends[, hist(log10(Jtuexp))]
+x <- trends[, hist(log10(Jtuexp), breaks = 20)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-10.png)<!-- -->
 
 ``` r
-x <- trends[, hist(log10(Jbetaexp))]
+x <- trends[, hist(log10(Jbetaexp), breaks = 20)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-11.png)<!-- -->
 
 ``` r
-x <- trends[, hist(log10(Hornexp))]
+x <- trends[, hist(log10(Hornexp), breaks = 20)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-12.png)<!-- -->
 
-#### Turnover calculations are correlated, though less so for Horn
+``` r
+x <- trends[, hist(log10(Jtumm), breaks = 20)]
+```
+
+![](calc_turnover_files/figure-gfm/histograms%20of%20change-13.png)<!-- -->
+
+``` r
+x <- trends[, hist(log10(Jbetamm), breaks = 20)]
+```
+
+![](calc_turnover_files/figure-gfm/histograms%20of%20change-14.png)<!-- -->
+
+``` r
+x <- trends[, hist(log10(Hornmm), breaks = 20)]
+```
+
+![](calc_turnover_files/figure-gfm/histograms%20of%20change-15.png)<!-- -->
+
+## Turnover calculations are correlated, though less so for Horn
 
 ``` r
 panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
@@ -699,8 +963,11 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
     if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
     text(0.5, 0.5, txt, cex = 0.5) #, cex = cex.cor * r)
 }
-pairs(formula = ~ Jtutrendrem0 + Jbetatrendrem0 + Horntrendrem0 + Jtutrendz + Jbetatrendz + Horntrendz + 
-          Jtulast + Jbetalast + Hornlast + log10(Jtuexp) + log10(Jbetaexp) + log10(Hornexp), 
+pairs(formula = ~ Jtutrendrem0 + Jbetatrendrem0 + Horntrendrem0 + 
+        Jtutrendz + Jbetatrendz + Horntrendz + 
+          Jtulast + Jbetalast + Hornlast + 
+        log10(Jtuexp) + log10(Jbetaexp) + log10(Hornexp) +
+        log10(Jtumm) + log10(Jbetamm) + log10(Hornmm), 
       data = trends, gap = 1/10, cex = 0.2, col = '#00000022', 
       lower.panel = panel.cor,
       upper.panel = panel.smooth)
@@ -713,7 +980,9 @@ correlated to \*trendrem0. Also constrained to a parallelogram Jtulast
 is lower diagonal of Jbetalast, which makes sense Hornlast correlated
 but with lots of scatter to Jbetalast
 
-#### Change compared to number of years in time-series
+# Change compared to number of years and number of species in time-series
+
+## Number of years
 
 ``` r
 # number of year
@@ -810,7 +1079,27 @@ trends[, plot(nyrBT, Hornexp, log = 'xy', col = '#00000033')]; abline(h = 0)
 
 ![](calc_turnover_files/figure-gfm/change%20vs.%20num%20years-5.png)<!-- -->
 
-#### Change compared to number of species in time-series
+``` r
+trends[, plot(nyrBT, Jtumm, log = 'xy', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+``` r
+trends[, plot(nyrBT, Jbetamm, log = 'xy', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+``` r
+trends[, plot(nyrBT, Hornmm, log = 'xy', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+![](calc_turnover_files/figure-gfm/change%20vs.%20num%20years-6.png)<!-- -->
+
+## Number of species
 
 ``` r
 # number of species
@@ -907,7 +1196,27 @@ trends[, plot(Nspp, Hornexp, log = 'xy', col = '#00000033')]
 
     ## NULL
 
-#### Average change compared to \#years, \#species in time-series
+``` r
+trends[, plot(Nspp, Jtumm, log = 'xy', col = '#00000033')]
+```
+
+    ## NULL
+
+``` r
+trends[, plot(Nspp, Jbetamm, log = 'xy', col = '#00000033')]
+```
+
+    ## NULL
+
+``` r
+trends[, plot(Nspp, Hornmm, log = 'xy', col = '#00000033')]
+```
+
+![](calc_turnover_files/figure-gfm/change%20vs.%20number%20of%20species-6.png)<!-- -->
+
+    ## NULL
+
+## Average change compared to \#years, \#species
 
 ``` r
 # number of years
@@ -919,10 +1228,6 @@ ggplot(trends, aes(nyrBT, Jtutrendrem0, color = 'Jtu trend')) +
     labs(y = 'Slope') +
     geom_abline(intercept = 0, slope = 0)
 ```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
 ![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-1.png)<!-- -->
 
@@ -936,10 +1241,6 @@ ggplot(trends, aes(nyrBT, Jtutrendz, color = 'Jtu z')) +
     geom_abline(intercept = 0, slope = 0)
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
 ![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-2.png)<!-- -->
 
 ``` r
@@ -951,10 +1252,6 @@ ggplot(trends, aes(nyrBT, Jtulast, color = 'Jtu last')) +
     labs(y = 'Dissimilarity') +
     geom_abline(intercept = 0, slope = 0)
 ```
-
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
 ![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-3.png)<!-- -->
 
@@ -969,11 +1266,20 @@ ggplot(trends, aes(nyrBT, Jtuexp, color = 'Jtu exp')) +
     geom_abline(intercept = 0, slope = 0)
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
 ![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-4.png)<!-- -->
+
+``` r
+ggplot(trends, aes(nyrBT, Jtumm, color = 'Jtu mm')) +
+    geom_smooth() +
+    geom_smooth(aes(y = Jbetamm, color = 'Jbeta mm')) +
+    geom_smooth(aes(y = Hornmm, color = 'Horn mm')) +
+    scale_x_log10() +
+    scale_y_log10() +
+    labs(y = 'Half-saturation year') +
+    geom_abline(intercept = 0, slope = 0)
+```
+
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-5.png)<!-- -->
 
 ``` r
 # number of species
@@ -986,11 +1292,7 @@ ggplot(trends, aes(Nspp, Jtutrendrem0, color = 'Jtu trend')) +
     geom_abline(intercept = 0, slope = 0)
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-5.png)<!-- -->
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-6.png)<!-- -->
 
 ``` r
 ggplot(trends, aes(Nspp, Jtutrendz, color = 'Jtu z')) +
@@ -1002,11 +1304,7 @@ ggplot(trends, aes(Nspp, Jtutrendz, color = 'Jtu z')) +
     geom_abline(intercept = 0, slope = 0)
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-6.png)<!-- -->
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-7.png)<!-- -->
 
 ``` r
 ggplot(trends, aes(Nspp, Jtulast, color = 'Jtu last')) +
@@ -1018,11 +1316,7 @@ ggplot(trends, aes(Nspp, Jtulast, color = 'Jtu last')) +
     geom_abline(intercept = 0, slope = 0)
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-
-![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-7.png)<!-- -->
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-8.png)<!-- -->
 
 ``` r
 ggplot(trends, aes(Nspp, Jtuexp, color = 'Jtu exp')) +
@@ -1035,8 +1329,17 @@ ggplot(trends, aes(Nspp, Jtuexp, color = 'Jtu exp')) +
     geom_abline(intercept = 0, slope = 0)
 ```
 
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
-    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-9.png)<!-- -->
 
-![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-8.png)<!-- -->
+``` r
+ggplot(trends, aes(Nspp, Jtumm, color = 'Jtu mm')) +
+    geom_smooth() +
+    geom_smooth(aes(y = Jbetamm, color = 'Jbeta mm')) +
+    geom_smooth(aes(y = Hornmm, color = 'Horn mm')) +
+    scale_x_log10() +
+    scale_y_log10() +
+    labs(y = 'Half-saturation year') +
+    geom_abline(intercept = 0, slope = 0)
+```
+
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-10.png)<!-- -->
