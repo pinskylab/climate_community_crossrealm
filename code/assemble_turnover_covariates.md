@@ -66,7 +66,7 @@ veg <- as.data.table(readRDS('output/vct_by_rarefyID.rds'))
 veg[, veg := (`tree cover % (mean)` + 0.5 * `non-tree veg. % (mean)`)/100] # veg index from 0 (all non-veg) to 1 (all tree). Non-tree veg counts as 0.5.
 ```
 
-Add covariates
+## Add covariates
 
 ``` r
 # add covariates
@@ -85,7 +85,13 @@ trends <- merge(trends, veg[, .(rarefyID, veg = veg)], all.x = TRUE) # vegetatio
 trends[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 ```
 
-## Compare covariates across realms
+## Write out
+
+``` r
+write.csv(trends, gzfile('output/turnover_w_covariates.csv.gz'), row.names = FALSE)
+```
+
+# Compare covariates across realms
 
 ``` r
 i <- trends[, !duplicated(rarefyID)]; sum(i)
@@ -130,11 +136,23 @@ small masses (plankton), but much of dataset is similar to terrestrial.
 Marine has a lot of slow, crawling organisms, but land has plants. Land
 also has birds (fast).
 
-## Plot turnover vs. temperature
+# Plot turnover vs. temperature trend
+
+    ## Warning: Transformation introduced infinite values in continuous y-axis
+    
+    ## Warning: Transformation introduced infinite values in continuous y-axis
+    
+    ## Warning: Transformation introduced infinite values in continuous y-axis
+    
+    ## Warning: Transformation introduced infinite values in continuous y-axis
+    
+    ## Warning: Transformation introduced infinite values in continuous y-axis
+    
+    ## Warning: Transformation introduced infinite values in continuous y-axis
 
 ![](assemble_turnover_covariates_files/figure-gfm/plot%20turnover%20vs%20temp%20trend-1.png)<!-- -->
 
-### Time-series length and temperature trend?
+# Time-series length and temperature trend
 
 ``` r
 ggplot(trends, aes(temptrend, nyrBT)) +
@@ -151,7 +169,9 @@ ggplot(trends, aes(temptrend, nyrBT)) +
 
 ![](assemble_turnover_covariates_files/figure-gfm/ts%20length%20and%20temp%20trend-1.png)<!-- -->
 
-## Plot turnover vs. explanatory variables
+# Plot turnover vs. explanatory variables
+
+## Linear fit
 
 Lines are ggplot smoother fits.
 ![](assemble_turnover_covariates_files/figure-gfm/plot%20turnover%20v%20explanatory%20vars-1.png)<!-- -->
@@ -163,13 +183,14 @@ for larger organisms (mass) Higher turnover on land with higher
 seasonality? More turnover for shorter-lived organisms? No really clear
 differences among realms.
 
-### Write out
+## MM fit
 
-``` r
-write.csv(trends, gzfile('output/turnover_w_covariates.csv.gz'), row.names = FALSE)
-```
+Lines are ggplot smoother fits.
+![](assemble_turnover_covariates_files/figure-gfm/plot%20MM%20turnover%20v%20explanatory%20vars-1.png)<!-- -->
 
-### Useful variables
+# A bit more prep for visualization
+
+## Add Useful variables
 
 ``` r
 # realm that combined Terrestrial and Freshwater, for interacting with human impact
@@ -181,7 +202,7 @@ trends[, taxa_mod2 := taxa_mod]
 trends[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
 ```
 
-### Log-transform some variables, then center and scale.
+## Log-transform some variables, then center and scale.
 
 ``` r
 trends[, tempave.sc := scale(tempave)]
@@ -204,9 +225,9 @@ trends[REALM2 == 'TerrFresh', human_footprint.sc := scale(log(human_venter+1))]
 trends[REALM2 == 'Marine', human_footprint.sc := scale(log(human_halpern))]
 ```
 
-### Do the variables look ok?
+# Do the variables look ok?
 
-#### Unscaled
+## Unscaled
 
 ``` r
 # histograms to examine
@@ -236,7 +257,7 @@ invisible(trends[, hist(human_halpern, main = 'Human impact score (Halpern)', ce
 
 ![](assemble_turnover_covariates_files/figure-gfm/histograms%20unscaled-1.png)<!-- -->
 
-#### Scaled
+## Scaled
 
 ``` r
 # histograms to examine
@@ -263,7 +284,7 @@ invisible(trends[, hist(human_footprint.sc, main = 'log Human impact score (Vent
 
 ![](assemble_turnover_covariates_files/figure-gfm/histograms%20scaled-1.png)<!-- -->
 
-### Check correlations among variables. Pearson’s r is on the lower diagonal.
+# Check correlations among variables. Pearson’s r is on the lower diagonal.
 
 ``` r
 panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)

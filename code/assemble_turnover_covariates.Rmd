@@ -66,7 +66,7 @@ veg[, veg := (`tree cover % (mean)` + 0.5 * `non-tree veg. % (mean)`)/100] # veg
 ```
 
 
-Add covariates
+## Add covariates
 ```{r add covariate data}
 # add covariates
 trends <- merge(trends, temperature[, .(rarefyID, tempave, tempave_metab, temptrend, seas)], all.x = TRUE, by = 'rarefyID') # temperature ave, ave metabolic, trend, and seasonality
@@ -85,7 +85,12 @@ trends[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 ```
 
 
-## Compare covariates across realms
+## Write out
+```{r write out}
+write.csv(trends, gzfile('output/turnover_w_covariates.csv.gz'), row.names = FALSE)
+```
+
+# Compare covariates across realms
 ```{r compare across realms, fig.height=12, fig.width=9}
 i <- trends[, !duplicated(rarefyID)]; sum(i)
 par(mfrow=c(5,3))
@@ -115,93 +120,112 @@ Marine has a lot of slow, crawling organisms, but land has plants. Land also has
 
 
 
-
-
-## Plot turnover vs. temperature
+# Plot turnover vs. temperature trend
 ```{r plot turnover vs temp trend, echo=FALSE, fig.height = 11, fig.width = 11,}
 # removing year 1
 p1 <- ggplot(trends, aes(temptrend, Jtutrendrem0, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover slope w/out year 1', title = 'Without year 1')
+  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover', title = 'Without year 1')
 
 p2 <- ggplot(trends, aes(temptrend, Jbetatrendrem0, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total slope w/out year 1')
+  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total')
 
 p3 <- ggplot(trends, aes(temptrend, Horntrendrem0, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn slope w/out year 1')
+  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn')
 
 p4 <- ggplot(trends, aes(temptrend, Jtutrendz, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover std slope w/out year 1', title = 'Standardized') +
+  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover', title = 'Standardized') +
   coord_trans(y = 'signedsqrt')
 
 p5 <- ggplot(trends, aes(temptrend, Jbetatrendz, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total std slope w/out year 1') +
+  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total') +
   coord_trans(y = 'signedsqrt')
 
 p6 <- ggplot(trends, aes(temptrend, Horntrendz, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn std slope w/out year 1') +
+  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn') +
   coord_trans(y = 'signedsqrt')
 
 p7 <- ggplot(trends, aes(temptrend, Jtulast, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover last value', title = 'Last')
+  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover', title = 'Last')
 
 p8 <- ggplot(trends, aes(temptrend, Jbetalast, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total last value')
+  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total')
 
 p9 <- ggplot(trends, aes(temptrend, Hornlast, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn last value')
+  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn')
 
 p10 <- ggplot(trends, aes(temptrend, Jtuexp, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover half-saturation year', title = 'Half-saturation') +
+  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover', title = 'Exponential half-saturation') +
   scale_y_log10()
 
 p11 <- ggplot(trends, aes(temptrend, Jbetaexp, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total half-saturation year') +
+  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total') +
   scale_y_log10()
 
 p12 <- ggplot(trends, aes(temptrend, Hornexp, color = REALM, size = nyrBT)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn half-saturation year') +
+  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn') +
   scale_y_log10()
 
-grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, ncol = 3)
+p13 <- ggplot(trends, aes(temptrend, Jtumm, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover', title = 'Michalis-Menton half-saturation') +
+  scale_y_log10()
+
+p14 <- ggplot(trends, aes(temptrend, Jbetamm, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/year)', y = 'Jaccard total') +
+  scale_y_log10()
+
+p15 <- ggplot(trends, aes(temptrend, Hornmm, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature trend (°C/year)', y = 'Morisita-Horn') +
+  scale_y_log10()
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, ncol = 3)
 ```
 
-### Time-series length and temperature trend?
+# Time-series length and temperature trend
 ```{r ts length and temp trend}
 ggplot(trends, aes(temptrend, nyrBT)) +
   geom_point() +
@@ -209,7 +233,8 @@ ggplot(trends, aes(temptrend, nyrBT)) +
   scale_y_log10()
 ```
 
-## Plot turnover vs. explanatory variables
+# Plot turnover vs. explanatory variables
+## Linear fit
 Lines are ggplot smoother fits.
 ```{r plot turnover v explanatory vars, echo=FALSE, warning = FALSE, message = FALSE, fig.height = 16, fig.width = 9}
 
@@ -329,13 +354,140 @@ Higher turnover on land with higher seasonality?
 More turnover for shorter-lived organisms?
 No really clear differences among realms.
 
-### Write out
-```{r write out}
-write.csv(trends, gzfile('output/turnover_w_covariates.csv.gz'), row.names = FALSE)
+## MM fit
+Lines are ggplot smoother fits.
+```{r plot MM turnover v explanatory vars, echo=FALSE, warning = FALSE, message = FALSE, fig.height = 16, fig.width = 9}
+
+p1 <- ggplot(trends, aes(REALM, Jtumm)) +
+  geom_boxplot(na.rm = TRUE) + 
+  labs(x = 'Realm', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p2 <- ggplot(trends, aes(tempave, Jtumm, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature (°C)', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p3 <- ggplot(trends, aes(tempave_metab, Jtumm, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Metabolic temperature (°C)', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p4 <- ggplot(trends, aes(seas, Jtumm, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Seasonality (°C)', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p5 <- ggplot(trends, aes(microclim, Jtumm, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
+  labs(x = 'Microclimate availability (°C)', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p6 <- ggplot(trends, aes(mass_mean_weight, Jtumm, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
+  labs(x = 'Mass (g))', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p7 <- ggplot(trends, aes(speed_mean_weight+1, Jtumm, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
+  labs(x = 'Speed (km / hr))', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p8 <- ggplot(trends, aes(lifespan_mean_weight, Jtumm, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
+  labs(x = 'Lifespan (yr))', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p9 <- ggplot(trends, aes(consfrac, Jtumm, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 3), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Fraction consumers', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p10 <- ggplot(trends, aes(endofrac, Jtumm, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 3), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Fraction endotherms', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p11 <- ggplot(trends, aes(Nspp, Jtumm, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
+  labs(x = 'Number of species', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p12 <- ggplot(trends, aes(thermal_bias, Jtumm, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Thermal bias (°C)', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p13 <- ggplot(trends, aes(npp, Jtumm, size = nyrBT)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
+  labs(x = 'Net primary productivity (mg C / m2 / day)', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p14 <- ggplot(trends, aes(veg, Jtumm, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Vegetation score', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p15 <- ggplot(trends, aes(human_bowler, Jtumm, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Bowler human impact score', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p16 <- ggplot(trends, aes(human_venter, Jtumm, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'scaled Human impact score (Venter)', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+p17 <- ggplot(trends, aes(human_halpern, Jtumm, color = REALM, size = nyrBT)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'scaled Human impact score (Halpern)', y = 'Jaccard turnover half-saturation (MM)') +
+  scale_y_log10()
+
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, ncol = 2)
 ```
 
 
-### Useful variables
+# A bit more prep for visualization
+## Add Useful variables
 ```{r useful vars}
 # realm that combined Terrestrial and Freshwater, for interacting with human impact
 trends[, REALM2 := REALM]
@@ -347,7 +499,7 @@ trends[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
 ```
 
 
-### Log-transform some variables, then center and scale. 
+## Log-transform some variables, then center and scale. 
 ``` {r center and scale}
 trends[, tempave.sc := scale(tempave)]
 trends[, tempave_metab.sc := scale(tempave_metab)]
@@ -370,8 +522,8 @@ trends[REALM2 == 'Marine', human_footprint.sc := scale(log(human_halpern))]
 ```
 
 
-### Do the variables look ok?
-#### Unscaled
+# Do the variables look ok?
+## Unscaled
 ```{r histograms unscaled, fig.height = 9}
 # histograms to examine
 cexmain = 0.6
@@ -399,7 +551,7 @@ invisible(trends[, hist(human_halpern, main = 'Human impact score (Halpern)', ce
 
 ```
 
-#### Scaled
+## Scaled
 ```{r histograms scaled, fig.height = 9}
 # histograms to examine
 cexmain = 0.6
@@ -426,7 +578,7 @@ invisible(trends[, hist(human_footprint.sc, main = 'log Human impact score (Vent
 
 
 
-### Check correlations among variables. Pearson's r is on the lower diagonal.
+# Check correlations among variables. Pearson's r is on the lower diagonal.
 ```{r pairs, fig.height=10, fig.width=10}
 panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 {

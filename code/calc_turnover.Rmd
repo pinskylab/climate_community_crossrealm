@@ -3,7 +3,7 @@ title: "Calculate biodiversity urnover"
 output:
   github_document: default
 ---
-
+# Set up
 ```{r setup, include=FALSE}
 library(data.table)
 library(ggplot2)
@@ -547,7 +547,7 @@ if(file.exists('temp/trendstemp2.rds')){
                        Jtutrendrem0, Jtutrendrem0_se, Jbetatrendrem0, Jbetatrendrem0_se,
                        Horntrendrem0, Horntrendrem0_se, 
                        Jtutrendz, Jbetatrendz, Horntrendz,
-                       Jtulast, Jtulast_se, Jbetalast,
+                       Jtulast, Jbetalast, Hornlast,
                        Jtuexp, Jbetaexp, Hornexp,
                        Jtumm, Jbetamm, Hornmm,
                        nyrBT, minyrBT, maxyrBT, medianyrBT, meanyrBT)], file = 'temp/trendstemp2.rds')
