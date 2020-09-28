@@ -613,10 +613,12 @@ if(file.exists('temp/trendstemp2.rds')){
     print('writing out')
     saveRDS(trends[, .(rarefyID, REALM, Biome, taxa_mod, STUDY_ID, rarefyID_x, rarefyID_y,
                        Jtutrendrem0, Jtutrendrem0_se, Jbetatrendrem0, Jbetatrendrem0_se,
-                       Horntrendrem0, Horntrendrem0_se, Jtulast, Jtulast_se, Jbetalast,
-                       Jbetalast_se, Hornlast, Hornlast_se, Jtuexp, Jbetaexp, Hornexp,
-                       nyrBT, minyrBT, maxyrBT, medianyrBT, meanyrBT, 
-                       Jtutrendz, Jbetatrendz, Horntrendz)], file = 'temp/trendstemp2.rds')
+                       Horntrendrem0, Horntrendrem0_se, 
+                       Jtutrendz, Jbetatrendz, Horntrendz,
+                       Jtulast, Jtulast_se, Jbetalast,
+                       Jtuexp, Jbetaexp, Hornexp,
+                       Jtumm, Jbetamm, Hornmm,
+                       nyrBT, minyrBT, maxyrBT, medianyrBT, meanyrBT)], file = 'temp/trendstemp2.rds')
 }
 ```
 
