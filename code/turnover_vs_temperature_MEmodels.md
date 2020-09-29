@@ -181,19 +181,19 @@ Just turnover
 cat('Overall # time-series: ', nrow(trends), '\n')
 ```
 
-    ## Overall # time-series:  39195
+    ## Overall # time-series:  38188
 
 ``` r
 cat('# studies: ', trends[, length(unique(STUDY_ID))], '\n')
 ```
 
-    ## # studies:  307
+    ## # studies:  268
 
 ``` r
 cat('Data points: ', trends[, sum(nyrBT)], '\n')
 ```
 
-    ## Data points:  266337
+    ## Data points:  258879
 
 ``` r
 trends[, table(REALM)]
@@ -201,7 +201,7 @@ trends[, table(REALM)]
 
     ## REALM
     ##  Freshwater      Marine Terrestrial 
-    ##         628       35742        2825
+    ##         628       34752        2808
 
 ``` r
 trends[, table(taxa_mod)]
@@ -209,7 +209,7 @@ trends[, table(taxa_mod)]
 
     ## taxa_mod
     ##                         All                  Amphibians                     Benthos                       Birds                        Fish               Invertebrates                     Mammals Marine invertebrates/plants                       Plant                    Reptiles 
-    ##                        1447                         352                        4310                        8719                       21708                        1799                         504                         104                         248                           4
+    ##                        1442                         352                        4305                        8674                       21198                        1391                         504                         104                         214                           4
 
 ``` r
 trends[, table(taxa_mod, REALM)]
@@ -217,15 +217,15 @@ trends[, table(taxa_mod, REALM)]
 
     ##                              REALM
     ## taxa_mod                      Freshwater Marine Terrestrial
-    ##   All                                  0   1444           3
+    ##   All                                  0   1439           3
     ##   Amphibians                           2      0         350
-    ##   Benthos                              0   4310           0
-    ##   Birds                                0   6542        2177
-    ##   Fish                               610  21098           0
-    ##   Invertebrates                       14   1705          80
+    ##   Benthos                              0   4305           0
+    ##   Birds                                0   6499        2175
+    ##   Fish                               610  20588           0
+    ##   Invertebrates                       14   1298          79
     ##   Mammals                              0    459          45
     ##   Marine invertebrates/plants          0    104           0
-    ##   Plant                                1     80         167
+    ##   Plant                                1     60         153
     ##   Reptiles                             1      0           3
 
 With all covariates (Bowler for human)
@@ -236,26 +236,26 @@ apply(trends[, .(Jtutrendrem0, REALM, tempave.sc, tempave_metab.sc, seas.sc, mic
 ```
 
     ##     Jtutrendrem0            REALM       tempave.sc tempave_metab.sc          seas.sc     microclim.sc     temptrend.sc          mass.sc         speed.sc      lifespan.sc  consumerfrac.sc endothermfrac.sc          nspp.sc  thermal_bias.sc           npp.sc           veg.sc  human_bowler.sc 
-    ##            39195            39195            36747            36747            36747            38291            36747            39114            39082            38045            39195            39195            39195            36286            39089            39099            39195
+    ##            38188            38188            36005            36005            36005            37289            36005            38113            38127            37299            38188            38188            38188            35580            38090            38095            38188
 
 ``` r
 i <- trends[, complete.cases(Jtutrendrem0, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, temptrend.sc, mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
 cat('Overall # time-series: ', sum(i), '\n')
 ```
 
-    ## Overall # time-series:  36017
+    ## Overall # time-series:  35327
 
 ``` r
 cat('# studies: ', trends[i, length(unique(STUDY_ID))], '\n')
 ```
 
-    ## # studies:  231
+    ## # studies:  200
 
 ``` r
 cat('Data points: ', trends[i, sum(nyrBT)], '\n')
 ```
 
-    ## Data points:  243237
+    ## Data points:  238085
 
 ``` r
 trends[i, table(REALM)]
@@ -263,7 +263,7 @@ trends[i, table(REALM)]
 
     ## REALM
     ##  Freshwater      Marine Terrestrial 
-    ##         608       33098        2311
+    ##         608       32420        2299
 
 ``` r
 trends[i, table(taxa_mod)]
@@ -271,7 +271,7 @@ trends[i, table(taxa_mod)]
 
     ## taxa_mod
     ##                         All                  Amphibians                     Benthos                       Birds                        Fish               Invertebrates                     Mammals Marine invertebrates/plants                       Plant                    Reptiles 
-    ##                        1422                          12                        4288                        7198                       20810                        1517                         495                         104                         169                           2
+    ##                        1417                          12                        4283                        7164                       20413                        1297                         495                         104                         140                           2
 
 ``` r
 trends[i, table(taxa_mod, REALM)]
@@ -279,15 +279,15 @@ trends[i, table(taxa_mod, REALM)]
 
     ##                              REALM
     ## taxa_mod                      Freshwater Marine Terrestrial
-    ##   All                                  0   1420           2
+    ##   All                                  0   1415           2
     ##   Amphibians                           2      0          10
-    ##   Benthos                              0   4288           0
-    ##   Birds                                0   5116        2082
-    ##   Fish                               597  20213           0
-    ##   Invertebrates                        8   1443          66
+    ##   Benthos                              0   4283           0
+    ##   Birds                                0   5084        2080
+    ##   Fish                               597  19816           0
+    ##   Invertebrates                        8   1224          65
     ##   Mammals                              0    459          36
     ##   Marine invertebrates/plants          0    104           0
-    ##   Plant                                1     55         113
+    ##   Plant                                1     35         104
     ##   Reptiles                             0      0           2
 
 ### Choose the variance structure for mixed effects models
@@ -374,7 +374,7 @@ ggplot(world, aes(x = long, y = lat, group = group)) +
 Mostly northern hemisphere, but spread all over. Not so much in Africa
 or much of Asia.
 
-\#\#Average rates of turnover (without year 1)
+## Average rates of turnover
 
 ``` r
 trends[abs(temptrend) >= 0.5, temptrendtext1 := 'Changing >=0.5']
@@ -384,63 +384,34 @@ trends[temptrend >= 0.5, temptrendtext2 := 'Warming >= 0.5']
 trends[abs(temptrend) >= 0.5 & abs(temptrend) < 1, temptrendtext3 := 'Slow Changing >=0.5 & <1']
 trends[abs(temptrend) >= 1, temptrendtext3 := 'Fast Changing >=1']
 
-trendsum1 <- trends[!is.na(temptrendtext1), 
-                    .(type = 'Jtu', 
-                      ave = mean(Jtutrendrem0, na.rm=TRUE), 
-                      se = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N),
-                      n = sum(!is.na(Jtutrendrem0))),
-                    by = .(text = temptrendtext1)] # turnover per year for locations changing temperature
-trendsum1 <- rbind(trendsum1, trends[!is.na(temptrendtext1), 
-                    .(type = 'Jbeta', 
-                      ave = mean(Jbetatrendrem0, na.rm=TRUE), 
-                      se = sd(Jbetatrendrem0, na.rm=TRUE)/sqrt(.N),
-                      n = sum(!is.na(Jbetatrendrem0))),
-                    by = .(text = temptrendtext1)])
-trendsum1 <- rbind(trendsum1, trends[!is.na(temptrendtext1), 
-                    .(type = 'Horn', 
-                      ave = mean(Horntrendrem0, na.rm=TRUE), 
-                      se = sd(Horntrendrem0, na.rm=TRUE)/sqrt(.N),
-                      n = sum(!is.na(Horntrendrem0))),
-                    by = .(text = temptrendtext1)])
+# reshape to long format
+measurenms <- c('Jtutrendrem0', 'Jtutrendrem0_se', 'Jbetatrendrem0', 'Jbetatrendrem0_se', 'Horntrendrem0', 'Horntrendrem0_se', 'Jtutrendz', 'Jbetatrendz', 'Horntrendz', 'Jtulast', 'Jbetalast', 'Hornlast', 'Jtuexp', 'Jbetaexp', 'Hornexp', 'Jtumm', 'Jbetamm', 'Hornmm')
+idnms <- setdiff(names(trends), measurenms)
+trends2 <- melt(trends, id.vars = idnms, measure.vars = measurenms)
 
-trendsum2 <- trends[!is.na(temptrendtext2), 
-                    .(type = 'Jtu', 
-                      ave = mean(Jtutrendrem0, na.rm=TRUE), 
-                      se = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N),
-                      n = sum(!is.na(Jtutrendrem0))),
-                    by = .(text = temptrendtext2)] # inc. direction
-trendsum2 <- rbind(trendsum2, trends[!is.na(temptrendtext2), 
-                    .(type = 'Jbeta', 
-                      ave = mean(Jbetatrendrem0, na.rm=TRUE), 
-                      se = sd(Jbetatrendrem0, na.rm=TRUE)/sqrt(.N),
-                      n = sum(!is.na(Jbetatrendrem0))),
-                    by = .(text = temptrendtext2)])
-trendsum2 <- rbind(trendsum2, trends[!is.na(temptrendtext2), 
-                    .(type = 'Horn', 
-                      ave = mean(Horntrendrem0, na.rm=TRUE), 
-                      se = sd(Horntrendrem0, na.rm=TRUE)/sqrt(.N),
-                      n = sum(!is.na(Horntrendrem0))),
-                    by = .(text = temptrendtext2)])
+# changing vs. stable
+trendsum1 <- trends2[!is.na(temptrendtext1), 
+                    .(ave = mean(value, na.rm=TRUE), 
+                      se = sd(value, na.rm=TRUE)/sqrt(sum(!is.na(value))),
+                      n = sum(!is.na(value))),
+                    by = .(text = temptrendtext1, type = variable)] # turnover per year for locations changing temperature
 
-trendsum3 <- trends[!is.na(temptrendtext3), 
-                    .(type = 'Jtu', 
-                      ave = mean(Jtutrendrem0, na.rm=TRUE), 
-                      se = sd(Jtutrendrem0, na.rm=TRUE)/sqrt(.N),
-                      n = sum(!is.na(Jtutrendrem0))),
-                    by = .(text = temptrendtext3)] # inc. rate
-trendsum3 <- rbind(trendsum3, trends[!is.na(temptrendtext3), 
-                    .(type = 'Jbeta', 
-                      ave = mean(Jbetatrendrem0, na.rm=TRUE), 
-                      se = sd(Jbetatrendrem0, na.rm=TRUE)/sqrt(.N),
-                      n = sum(!is.na(Jbetatrendrem0))),
-                    by = .(text = temptrendtext3)])
-trendsum3 <- rbind(trendsum3, trends[!is.na(temptrendtext3), 
-                    .(type = 'Horn', 
-                      ave = mean(Horntrendrem0, na.rm=TRUE), 
-                      se = sd(Horntrendrem0, na.rm=TRUE)/sqrt(.N),
-                      n = sum(!is.na(Horntrendrem0))),
-                    by = .(text = temptrendtext3)])
 
+# warming vs. cooling
+trendsum2 <- trends2[!is.na(temptrendtext2), 
+                    .(ave = mean(value, na.rm=TRUE), 
+                      se = sd(value, na.rm=TRUE)/sqrt(sum(!is.na(value))),
+                      n = sum(!is.na(value))),
+                    by = .(text = temptrendtext2, type = variable)] # inc. direction
+
+# slow vs. fast changing
+trendsum3 <- trends2[!is.na(temptrendtext3), 
+                    .(ave = mean(value, na.rm=TRUE), 
+                      se = sd(value, na.rm=TRUE)/sqrt(sum(!is.na(value))),
+                      n = sum(!is.na(value))),
+                    by = .(text = temptrendtext3, type = variable)] # inc. rate
+
+# combine
 trendsum4 <- rbind(trendsum1, trendsum2, trendsum3)
 setorder(trendsum4, type, text)
 
@@ -449,61 +420,47 @@ write.csv(trendsum4, file = 'output/trendsummary.csv', row.names = FALSE)
 trendsum4
 ```
 
-    ##                         text  type         ave           se     n
-    ##  1:           Changing >=0.5  Horn 0.029872733 0.0112592629   373
-    ##  2:          Cooling <= -0.5  Horn 0.037672421 0.0129565844   255
-    ##  3:        Fast Changing >=1  Horn 0.047259969 0.0316426807    39
-    ##  4: Slow Changing >=0.5 & <1  Horn 0.027842486 0.0120281386   334
-    ##  5:            Stable <=0.05  Horn 0.007078349 0.0004990133 25094
-    ##  6:           Warming >= 0.5  Horn 0.013017474 0.0219465463   118
-    ##  7:           Changing >=0.5 Jbeta 0.026547974 0.0081610193   375
-    ##  8:          Cooling <= -0.5 Jbeta 0.022997186 0.0089694581   255
-    ##  9:        Fast Changing >=1 Jbeta 0.023790408 0.0193258485    39
-    ## 10: Slow Changing >=0.5 & <1 Jbeta 0.026868048 0.0088355035   336
-    ## 11:            Stable <=0.05 Jbeta 0.005594700 0.0003261123 25654
-    ## 12:           Warming >= 0.5 Jbeta 0.034093398 0.0169859342   120
-    ## 13:           Changing >=0.5   Jtu 0.018868620 0.0119496715   375
-    ## 14:          Cooling <= -0.5   Jtu 0.020361270 0.0135748363   255
-    ## 15:        Fast Changing >=1   Jtu 0.045305535 0.0295638380    39
-    ## 16: Slow Changing >=0.5 & <1   Jtu 0.015800050 0.0128897069   336
-    ## 17:            Stable <=0.05   Jtu 0.005268427 0.0005163947 25654
-    ## 18:           Warming >= 0.5   Jtu 0.015696739 0.0238012397   120
+    ##                          text         type          ave           se     n
+    ##   1:           Changing >=0.5 Jtutrendrem0  0.019110224 0.0120121948   373
+    ##   2:          Cooling <= -0.5 Jtutrendrem0  0.020361270 0.0135748363   255
+    ##   3:        Fast Changing >=1 Jtutrendrem0  0.045305535 0.0295638380    39
+    ##   4: Slow Changing >=0.5 & <1 Jtutrendrem0  0.016051490 0.0129653010   334
+    ##   5:            Stable <=0.05 Jtutrendrem0  0.005197229 0.0005253826 25094
+    ##  ---                                                                      
+    ## 104:          Cooling <= -0.5       Hornmm  1.194348117 0.1256875210   254
+    ## 105:        Fast Changing >=1       Hornmm  1.398230131 0.3094748400    39
+    ## 106: Slow Changing >=0.5 & <1       Hornmm  1.138034377 0.1346812870   333
+    ## 107:            Stable <=0.05       Hornmm 10.247314407 0.4161829010 24994
+    ## 108:           Warming >= 0.5       Hornmm  1.102813567 0.2865771292   118
 
 ### Plots of turnover rates
 
 ``` r
 p1 <- ggplot(trends[!is.na(text), ], aes(temptrendtext1, Horntrendrem0)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
-  labs(x = '', y = 'Turnover', tag = 'A', title = 'Rate of temperature change') +
+  labs(x = '', y = 'Slope (Horn)', tag = 'A', title = 'Rate of temperature change') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"),
         legend.key=element_blank(),
         axis.text=element_text(size=8),
         axis.title=element_text(size=10)) +
   geom_abline(intercept = 0, slope = 0)
-```
 
-    ## Warning in is.na(text): is.na() applied to non-(list or vector) of type 'closure'
-
-``` r
 p2 <- ggplot(trends[!is.na(text), ], aes(temptrendtext2, Horntrendrem0)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
-  labs(x = '', y = 'Turnover', tag = 'A', title = 'Rate of temperature change') +
+  labs(x = '', y = 'Slope (Horn)', tag = 'B', title = 'Rate of temperature change') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"),
         legend.key=element_blank(),
         axis.text=element_text(size=8),
         axis.title=element_text(size=10)) +
   geom_abline(intercept = 0, slope = 0)
-```
 
-    ## Warning in is.na(text): is.na() applied to non-(list or vector) of type 'closure'
-
-``` r
-p3 <- ggplot(trendsum4, aes(text, ave, group = type, color = type)) +
+p3 <- ggplot(trendsum4[type %in% c('Jtutrendrem0', 'Jbetatrendrem0', 'Horntrendrem0')], 
+             aes(text, ave, group = type, color = type)) +
   geom_point(position = position_dodge(width = 0.25), size = 0.5) +
   geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
-  labs(x = '', y = 'Slope of temporal turnover') +
+  labs(x = '', y = 'Slope', title = 'Slope of dissimilarity vs. time') +
   geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
         panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -513,55 +470,201 @@ p3 <- ggplot(trendsum4, aes(text, ave, group = type, color = type)) +
         axis.text.x = element_text(angle = 45, vjust = 0.7)) +
   coord_cartesian(ylim = c(-0.01,0.08))
 
+p4 <- ggplot(trendsum4[type %in% c('Jtutrendz', 'Jbetatrendz', 'Horntrendz')], 
+             aes(text, ave, group = type, color = type)) +
+  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
+  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
+  labs(x = '', y = 'Standardized slope', title = 'Null model standardized slope') +
+  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10),
+        axis.text.x = element_text(angle = 45, vjust = 0.7))
 
-grid.arrange(p1, p2, p3, ncol = 2, 
-             layout_matrix = rbind(c(1,2), c(3,3)),
-             heights=c(unit(0.4, "npc"), unit(0.6, "npc")))
+p5 <- ggplot(trendsum4[type %in% c('Jtulast', 'Jbetalast', 'Hornlast')], 
+             aes(text, ave, group = type, color = type)) +
+  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
+  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
+  labs(x = '', y = 'Dissimilarity', title = 'First to last year') +
+  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10),
+        axis.text.x = element_text(angle = 45, vjust = 0.7))
+
+p6 <- ggplot(trendsum4[type %in% c('Jtuexp', 'Jbetaexp', 'Hornexp')], 
+             aes(text, ave, group = type, color = type)) +
+  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
+  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
+  labs(x = '', y = 'Years', title = 'Exponential half-saturation') +
+  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10),
+        axis.text.x = element_text(angle = 45, vjust = 0.7))
+
+p7 <- ggplot(trendsum4[type %in% c('Jtumm', 'Jbetamm', 'Hornmm')], 
+             aes(text, ave, group = type, color = type)) +
+  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
+  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
+  labs(x = '', y = 'Years', title = 'MM half-saturation') +
+  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10),
+        axis.text.x = element_text(angle = 45, vjust = 0.7))
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, ncol = 2, 
+             layout_matrix = rbind(c(1,2), c(3,3), c(4,4), c(5,5), c(6,6), c(7,7)),
+             heights=c(unit(0.1, "npc"), unit(0.18, "npc"), 
+                       unit(0.18, "npc"), unit(0.18, "npc"), 
+                       unit(0.18, "npc"), unit(0.18, "npc")))
 ```
-
-    ## Warning: Removed 1007 rows containing non-finite values (stat_ydensity).
-
-    ## Warning in regularize.values(x, y, ties, missing(ties)): collapsing to unique 'x' values
-
-    ## Warning: Removed 1007 rows containing non-finite values (stat_ydensity).
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-1.png)<!-- -->
 
-## Temperature-only model (Jtutrend, Jbetatrend, Horntrend)
+## Temperature-only models
+
+### Fit the models
 
 ``` r
-i4 <- trends[, complete.cases(Jtutrendrem0, REALM, temptrend)]
-
 randef <- list(STUDY_ID = ~ abs(temptrend), rarefyID = ~1)
 varef <- varPower(-0.5, ~nyrBT)
 
+# *trendrem0
 if(file.exists('temp/modonlyTtrendrem0.rds')){
   modonlyTtrendrem0 <- readRDS('temp/modonlyTtrendrem0.rds')
 } else {
+  i <- trends[, complete.cases(Jtutrendrem0, REALM, temptrend)]
   modonlyTtrendrem0 <- lme(Jtutrendrem0 ~ abs(temptrend)*REALM,
-                   random = randef, weights = varef, data = trends[i4,], method = 'REML')
+                   random = randef, weights = varef, data = trends[i,], method = 'REML')
   saveRDS(modonlyTtrendrem0, file = 'temp/modonlyTtrendrem0.rds')
 }
 
-i5 <- trends[, complete.cases(Jbetatrendrem0, REALM, temptrend)]
 if(file.exists('temp/modonlyTtrendJbetarem0.rds')){
   modonlyTtrendJbetarem0 <- readRDS('temp/modonlyTtrendJbetarem0.rds')
 } else {
+  i <- trends[, complete.cases(Jbetatrendrem0, REALM, temptrend)]
   modonlyTtrendJbetarem0 <- lme(Jbetatrendrem0 ~ abs(temptrend)*REALM,
-                   random = randef, weights = varef, data = trends[i5,], method = 'REML', 
+                   random = randef, weights = varef, data = trends[i,], method = 'REML', 
                    control=lmeControl(msMaxIter = 100, maxIter = 100))
   saveRDS(modonlyTtrendJbetarem0, file = 'temp/modonlyTtrendJbetarem0.rds')
 }
 
-i6 <- trends[, complete.cases(Horntrendrem0, REALM, temptrend)]
 if(file.exists('temp/modonlyTtrendHornrem0.rds')){
   modonlyTtrendHornrem0 <- readRDS('temp/modonlyTtrendHornrem0.rds')
 } else {
+  i <- trends[, complete.cases(Horntrendrem0, REALM, temptrend)]
   modonlyTtrendHornrem0 <- lme(Horntrendrem0 ~ abs(temptrend)*REALM,
-                   random = randef, weights = varef, data = trends[i6,], method = 'REML')
+                   random = randef, weights = varef, data = trends[i,], method = 'REML')
   saveRDS(modonlyTtrendHornrem0, file = 'temp/modonlyTtrendHornrem0.rds')
 }
 
+# *trendz
+# doesn't converge
+# if(file.exists('temp/modonlyTtrendJtuz.rds')){
+#   modonlyTtrendJtuz <- readRDS('temp/modonlyTtrendJtuz.rds')
+# } else {
+#   i <- trends[, complete.cases(Jtutrendz, REALM, temptrend)]
+#   modonlyTtrendJtuz <- lme(Jtutrendz ~ abs(temptrend)*REALM,
+#                    random = randef, weights = varef, data = trends[i,], method = 'REML', 
+#                    control=lmeControl(msMaxIter = 100, maxIter = 100))
+#   saveRDS(modonlyTtrendJtuz, file = 'temp/modonlyTtrendJtuz.rds')
+# }
+
+if(file.exists('temp/modonlyTtrendJbetaz.rds')){
+  modonlyTtrendJbetaz <- readRDS('temp/modonlyTtrendJbetaz.rds')
+} else {
+  i <- trends[, complete.cases(Jbetatrendz, REALM, temptrend)]
+  modonlyTtrendJbetaz <- lme(Jbetatrendz ~ abs(temptrend)*REALM,
+                   random = randef, weights = varef, data = trends[i,], method = 'REML', 
+                   control=lmeControl(msMaxIter = 100, maxIter = 100))
+  saveRDS(modonlyTtrendJbetaz, file = 'temp/modonlyTtrendJbetaz.rds')
+}
+
+if(file.exists('temp/modonlyTtrendHornz.rds')){
+  modonlyTtrendHornz <- readRDS('temp/modonlyTtrendHornz.rds')
+} else {
+  i <- trends[, complete.cases(Horntrendz, REALM, temptrend)]
+  modonlyTtrendHornz <- lme(Horntrendz ~ abs(temptrend)*REALM,
+                   random = randef, weights = varef, data = trends[i,], method = 'REML')
+  saveRDS(modonlyTtrendHornz, file = 'temp/modonlyTtrendHornz.rds')
+}
+
+# *exp
+if(file.exists('temp/modonlyTtrendJtuexp.rds')){
+  modonlyTtrendJtuexp <- readRDS('temp/modonlyTtrendJtuexp.rds')
+} else {
+  i <- trends[, complete.cases(Jtuexp, REALM, temptrend)]
+  modonlyTtrendJtuexp <- lme(log(Jtuexp) ~ abs(temptrend)*REALM,
+                   random = randef, weights = varef, data = trends[i,], method = 'REML',
+                   control=lmeControl(msMaxIter = 100, maxIter = 100, opt = 'optim'))
+  saveRDS(modonlyTtrendJtuexp, file = 'temp/modonlyTtrendJtuexp.rds')
+}
+
+if(file.exists('temp/modonlyTtrendJbetaexp.rds')){
+  modonlyTtrendJbetaexp <- readRDS('temp/modonlyTtrendJbetaexp.rds')
+} else {
+  i <- trends[, complete.cases(Jbetaexp, REALM, temptrend)]
+  modonlyTtrendJbetaexp <- lme(log(Jbetaexp) ~ abs(temptrend)*REALM,
+                   random = randef, weights = varef, data = trends[i,], method = 'REML', 
+                   control=lmeControl(msMaxIter = 100, maxIter = 100))
+  saveRDS(modonlyTtrendJbetaexp, file = 'temp/modonlyTtrendJbetaexp.rds')
+}
+
+if(file.exists('temp/modonlyTtrendHornexp.rds')){
+  modonlyTtrendHornexp <- readRDS('temp/modonlyTtrendHornexp.rds')
+} else {
+  i <- trends[, complete.cases(Hornexp, REALM, temptrend)]
+  modonlyTtrendHornexp <- lme(log(Hornexp) ~ abs(temptrend)*REALM,
+                   random = randef, weights = varef, data = trends[i,], method = 'REML',
+                   control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
+  saveRDS(modonlyTtrendHornexp, file = 'temp/modonlyTtrendHornexp.rds')
+}
+
+
+# *mm
+if(file.exists('temp/modonlyTtrendJtumm.rds')){
+  modonlyTtrendJtumm <- readRDS('temp/modonlyTtrendJtumm.rds')
+} else {
+  i <- trends[, complete.cases(Jtumm, REALM, temptrend)]
+  modonlyTtrendJtumm <- lme(log(Jtumm+1) ~ abs(temptrend)*REALM,
+                   random = randef, weights = varef, data = trends[i,], method = 'REML')
+  saveRDS(modonlyTtrendJtumm, file = 'temp/modonlyTtrendJtumm.rds')
+}
+
+if(file.exists('temp/modonlyTtrendJbetamm.rds')){
+  modonlyTtrendJbetamm <- readRDS('temp/modonlyTtrendJbetamm.rds')
+} else {
+  i <- trends[, complete.cases(Jbetamm, REALM, temptrend)]
+  modonlyTtrendJbetamm <- lme(log(Jbetamm+1) ~ abs(temptrend)*REALM,
+                   random = randef, weights = varef, data = trends[i,], method = 'REML', 
+                   control=lmeControl(msMaxIter = 100, maxIter = 100))
+  saveRDS(modonlyTtrendJbetamm, file = 'temp/modonlyTtrendJbetamm.rds')
+}
+
+if(file.exists('temp/modonlyTtrendHornmm.rds')){
+  modonlyTtrendHornmm <- readRDS('temp/modonlyTtrendHornmm.rds')
+} else {
+  i <- trends[, complete.cases(Hornmm, REALM, temptrend)]
+  modonlyTtrendHornmm <- lme(log(Hornmm+1) ~ abs(temptrend)*REALM,
+                   random = randef, weights = varef, data = trends[i,], method = 'REML', 
+                   control=lmeControl(msMaxIter = 100, maxIter = 100))
+  saveRDS(modonlyTtrendHornmm, file = 'temp/modonlyTtrendHornmm.rds')
+}
+```
+
+### Summary: Slope of dissimilarity
+
+``` r
 summary(modonlyTtrendrem0)
 ```
 
@@ -714,6 +817,371 @@ summary(modonlyTtrendHornrem0)
     ##               STUDY_ID rarefyID %in% STUDY_ID 
     ##                    257                  36005
 
+### Summary: Standardized slope of dissimilarity
+
+``` r
+# summary(modonlyTtrendJtuz)
+summary(modonlyTtrendJbetaz)
+```
+
+    ## Linear mixed-effects model fit by REML
+    ##  Data: trends[i, ] 
+    ##      AIC      BIC    logLik
+    ##   105975 106075.7 -52975.52
+    ## 
+    ## Random effects:
+    ##  Formula: ~abs(temptrend) | STUDY_ID
+    ##  Structure: General positive-definite, Log-Cholesky parametrization
+    ##                StdDev    Corr  
+    ## (Intercept)     3.191278 (Intr)
+    ## abs(temptrend) 17.052110 0     
+    ## 
+    ##  Formula: ~1 | rarefyID %in% STUDY_ID
+    ##         (Intercept)  Residual
+    ## StdDev:    1.141586 785627979
+    ## 
+    ## Variance function:
+    ##  Structure: Power of variance covariate
+    ##  Formula: ~nyrBT 
+    ##  Parameter estimates:
+    ##     power 
+    ## -18.77909 
+    ## Fixed effects: Jbetatrendz ~ abs(temptrend) * REALM 
+    ##                                     Value Std.Error    DF    t-value p-value
+    ## (Intercept)                      0.932458  1.159832 32428  0.8039600  0.4214
+    ## abs(temptrend)                   0.526978  7.927470 32428  0.0664749  0.9470
+    ## REALMMarine                     -0.180835  1.219576   180 -0.1482770  0.8823
+    ## REALMTerrestrial                 0.845357  1.224345   180  0.6904560  0.4908
+    ## abs(temptrend):REALMMarine      -5.110251  8.291061 32428 -0.6163566  0.5377
+    ## abs(temptrend):REALMTerrestrial -4.893105  8.692704 32428 -0.5628979  0.5735
+    ##  Correlation: 
+    ##                                 (Intr) abs(t) REALMM REALMT a():REALMM
+    ## abs(temptrend)                  -0.199                                
+    ## REALMMarine                     -0.951  0.190                         
+    ## REALMTerrestrial                -0.947  0.189  0.901                  
+    ## abs(temptrend):REALMMarine       0.191 -0.956 -0.191 -0.181           
+    ## abs(temptrend):REALMTerrestrial  0.182 -0.912 -0.173 -0.222  0.872    
+    ## 
+    ## Standardized Within-Group Residuals:
+    ##           Min            Q1           Med            Q3           Max 
+    ## -6.878401e+05 -5.275427e-04 -1.431198e-08  2.544332e-06  1.855959e+04 
+    ## 
+    ## Number of Observations: 32614
+    ## Number of Groups: 
+    ##               STUDY_ID rarefyID %in% STUDY_ID 
+    ##                    183                  32614
+
+``` r
+summary(modonlyTtrendHornz)
+```
+
+    ## Linear mixed-effects model fit by REML
+    ##  Data: trends[i, ] 
+    ##      AIC      BIC    logLik
+    ##   167291 167391.6 -83633.48
+    ## 
+    ## Random effects:
+    ##  Formula: ~abs(temptrend) | STUDY_ID
+    ##  Structure: General positive-definite, Log-Cholesky parametrization
+    ##                StdDev    Corr  
+    ## (Intercept)     5.322111 (Intr)
+    ## abs(temptrend) 37.053865 -0.39 
+    ## 
+    ##  Formula: ~1 | rarefyID %in% STUDY_ID
+    ##         (Intercept) Residual
+    ## StdDev:    3.129784 1.439185
+    ## 
+    ## Variance function:
+    ##  Structure: Power of variance covariate
+    ##  Formula: ~nyrBT 
+    ##  Parameter estimates:
+    ##     power 
+    ## -4.601958 
+    ## Fixed effects: Horntrendz ~ abs(temptrend) * REALM 
+    ##                                      Value Std.Error    DF    t-value p-value
+    ## (Intercept)                       1.536020  2.198935 32339  0.6985294  0.4849
+    ## abs(temptrend)                   10.313924 17.463360 32339  0.5906036  0.5548
+    ## REALMMarine                       0.393828  2.294248   171  0.1716589  0.8639
+    ## REALMTerrestrial                  0.449837  2.323632   171  0.1935921  0.8467
+    ## abs(temptrend):REALMMarine      -16.091723 18.273936 32339 -0.8805833  0.3785
+    ## abs(temptrend):REALMTerrestrial  -4.990263 19.002943 32339 -0.2626047  0.7929
+    ##  Correlation: 
+    ##                                 (Intr) abs(t) REALMM REALMT a():REALMM
+    ## abs(temptrend)                  -0.516                                
+    ## REALMMarine                     -0.958  0.495                         
+    ## REALMTerrestrial                -0.946  0.488  0.907                  
+    ## abs(temptrend):REALMMarine       0.493 -0.956 -0.510 -0.467           
+    ## abs(temptrend):REALMTerrestrial  0.474 -0.919 -0.455 -0.521  0.878    
+    ## 
+    ## Standardized Within-Group Residuals:
+    ##           Min            Q1           Med            Q3           Max 
+    ## -5.155624e-02 -7.990445e-05 -2.495224e-06  1.888799e-05  9.571167e-02 
+    ## 
+    ## Number of Observations: 32516
+    ## Number of Groups: 
+    ##               STUDY_ID rarefyID %in% STUDY_ID 
+    ##                    174                  32516
+
+### Summary: Half-saturation exponential fits
+
+``` r
+#summary(modonlyTtrendJtuexp)
+summary(modonlyTtrendJbetaexp)
+```
+
+    ## Linear mixed-effects model fit by REML
+    ##  Data: trends[i, ] 
+    ##        AIC      BIC    logLik
+    ##   86640.16 86737.37 -43308.08
+    ## 
+    ## Random effects:
+    ##  Formula: ~abs(temptrend) | STUDY_ID
+    ##  Structure: General positive-definite, Log-Cholesky parametrization
+    ##                StdDev    Corr  
+    ## (Intercept)    0.9162896 (Intr)
+    ## abs(temptrend) 2.7519536 -0.78 
+    ## 
+    ##  Formula: ~1 | rarefyID %in% STUDY_ID
+    ##         (Intercept) Residual
+    ## StdDev:    1.147013 2.019918
+    ## 
+    ## Variance function:
+    ##  Structure: Power of variance covariate
+    ##  Formula: ~nyrBT 
+    ##  Parameter estimates:
+    ##      power 
+    ## -0.5356668 
+    ## Fixed effects: log(Jbetaexp) ~ abs(temptrend) * REALM 
+    ##                                     Value Std.Error    DF   t-value p-value
+    ## (Intercept)                      0.514941 0.3178907 24122  1.619867  0.1053
+    ## abs(temptrend)                  -5.857213 1.6869493 24122 -3.472074  0.0005
+    ## REALMMarine                     -1.184732 0.3381153   230 -3.503929  0.0006
+    ## REALMTerrestrial                -0.361446 0.3493468   230 -1.034635  0.3019
+    ## abs(temptrend):REALMMarine       3.126224 1.7609791 24122  1.775276  0.0759
+    ## abs(temptrend):REALMTerrestrial  2.857828 1.8409701 24122  1.552349  0.1206
+    ##  Correlation: 
+    ##                                 (Intr) abs(t) REALMM REALMT a():REALMM
+    ## abs(temptrend)                  -0.596                                
+    ## REALMMarine                     -0.940  0.560                         
+    ## REALMTerrestrial                -0.910  0.542  0.856                  
+    ## abs(temptrend):REALMMarine       0.571 -0.958 -0.598 -0.519           
+    ## abs(temptrend):REALMTerrestrial  0.546 -0.916 -0.513 -0.599  0.878    
+    ## 
+    ## Standardized Within-Group Residuals:
+    ##         Min          Q1         Med          Q3         Max 
+    ## -2.21781048 -0.31408890  0.02948519  0.37833591  2.08374807 
+    ## 
+    ## Number of Observations: 24358
+    ## Number of Groups: 
+    ##               STUDY_ID rarefyID %in% STUDY_ID 
+    ##                    233                  24358
+
+``` r
+summary(modonlyTtrendHornexp)
+```
+
+    ## Linear mixed-effects model fit by REML
+    ##  Data: trends[i, ] 
+    ##        AIC      BIC    logLik
+    ##   91586.04 91682.69 -45781.02
+    ## 
+    ## Random effects:
+    ##  Formula: ~abs(temptrend) | STUDY_ID
+    ##  Structure: General positive-definite, Log-Cholesky parametrization
+    ##                StdDev   Corr  
+    ## (Intercept)    1.148612 (Intr)
+    ## abs(temptrend) 1.557478 -0.752
+    ## 
+    ##  Formula: ~1 | rarefyID %in% STUDY_ID
+    ##         (Intercept) Residual
+    ## StdDev:    1.659098   241.26
+    ## 
+    ## Variance function:
+    ##  Structure: Power of variance covariate
+    ##  Formula: ~nyrBT 
+    ##  Parameter estimates:
+    ##     power 
+    ## -5.069527 
+    ## Fixed effects: log(Hornexp) ~ abs(temptrend) * REALM 
+    ##                                     Value Std.Error    DF   t-value p-value
+    ## (Intercept)                      0.806719 0.4137573 23040  1.949740  0.0512
+    ## abs(temptrend)                  -6.802335 1.6448215 23040 -4.135607  0.0000
+    ## REALMMarine                     -0.769217 0.4377119   217 -1.757359  0.0803
+    ## REALMTerrestrial                 0.284607 0.4495483   217  0.633094  0.5273
+    ## abs(temptrend):REALMMarine       3.918334 1.6868767 23040  2.322834  0.0202
+    ## abs(temptrend):REALMTerrestrial  4.191470 1.7269449 23040  2.427101  0.0152
+    ##  Correlation: 
+    ##                                 (Intr) abs(t) REALMM REALMT a():REALMM
+    ## abs(temptrend)                  -0.446                                
+    ## REALMMarine                     -0.945  0.421                         
+    ## REALMTerrestrial                -0.920  0.410  0.870                  
+    ## abs(temptrend):REALMMarine       0.435 -0.975 -0.447 -0.400           
+    ## abs(temptrend):REALMTerrestrial  0.425 -0.952 -0.401 -0.451  0.929    
+    ## 
+    ## Standardized Within-Group Residuals:
+    ##           Min            Q1           Med            Q3           Max 
+    ## -1.256505e+00 -1.265922e-02  1.461626e-06  2.322678e-02  1.576644e+00 
+    ## 
+    ## Number of Observations: 23263
+    ## Number of Groups: 
+    ##               STUDY_ID rarefyID %in% STUDY_ID 
+    ##                    220                  23263
+
+### Summary: Half-saturation MM fits
+
+``` r
+summary(modonlyTtrendJtumm)
+```
+
+    ## Linear mixed-effects model fit by REML
+    ##  Data: trends[i, ] 
+    ##        AIC      BIC   logLik
+    ##   106495.8 106597.7 -53235.9
+    ## 
+    ## Random effects:
+    ##  Formula: ~abs(temptrend) | STUDY_ID
+    ##  Structure: General positive-definite, Log-Cholesky parametrization
+    ##                StdDev    Corr  
+    ## (Intercept)    0.8077487 (Intr)
+    ## abs(temptrend) 2.0197857 -0.95 
+    ## 
+    ##  Formula: ~1 | rarefyID %in% STUDY_ID
+    ##         (Intercept)  Residual
+    ## StdDev:    1.060674 0.2603565
+    ## 
+    ## Variance function:
+    ##  Structure: Power of variance covariate
+    ##  Formula: ~nyrBT 
+    ##  Parameter estimates:
+    ##     power 
+    ## -6.504057 
+    ## Fixed effects: log(Jtumm + 1) ~ abs(temptrend) * REALM 
+    ##                                      Value Std.Error    DF   t-value p-value
+    ## (Intercept)                      1.2469474 0.2642367 35624  4.719055  0.0000
+    ## abs(temptrend)                  -2.1831560 1.0045077 35624 -2.173359  0.0298
+    ## REALMMarine                     -0.5286037 0.2810840   254 -1.880590  0.0612
+    ## REALMTerrestrial                 0.2427881 0.2859494   254  0.849060  0.3966
+    ## abs(temptrend):REALMMarine       1.4043803 1.0474772 35624  1.340726  0.1800
+    ## abs(temptrend):REALMTerrestrial -0.1519933 1.0773398 35624 -0.141082  0.8878
+    ##  Correlation: 
+    ##                                 (Intr) abs(t) REALMM REALMT a():REALMM
+    ## abs(temptrend)                  -0.713                                
+    ## REALMMarine                     -0.940  0.670                         
+    ## REALMTerrestrial                -0.924  0.659  0.869                  
+    ## abs(temptrend):REALMMarine       0.683 -0.959 -0.721 -0.632           
+    ## abs(temptrend):REALMTerrestrial  0.665 -0.932 -0.625 -0.718  0.894    
+    ## 
+    ## Standardized Within-Group Residuals:
+    ##           Min            Q1           Med            Q3           Max 
+    ## -2.020779e-02 -6.743656e-06 -6.577972e-08  1.102194e-06  7.561373e-04 
+    ## 
+    ## Number of Observations: 35884
+    ## Number of Groups: 
+    ##               STUDY_ID rarefyID %in% STUDY_ID 
+    ##                    257                  35884
+
+``` r
+summary(modonlyTtrendJbetamm)
+```
+
+    ## Linear mixed-effects model fit by REML
+    ##  Data: trends[i, ] 
+    ##        AIC     BIC    logLik
+    ##   75562.64 75664.5 -37769.32
+    ## 
+    ## Random effects:
+    ##  Formula: ~abs(temptrend) | STUDY_ID
+    ##  Structure: General positive-definite, Log-Cholesky parametrization
+    ##                StdDev    Corr  
+    ## (Intercept)    0.8884553 (Intr)
+    ## abs(temptrend) 1.7297848 -0.972
+    ## 
+    ##  Formula: ~1 | rarefyID %in% STUDY_ID
+    ##         (Intercept)  Residual
+    ## StdDev:   0.4492306 0.7432453
+    ## 
+    ## Variance function:
+    ##  Structure: Power of variance covariate
+    ##  Formula: ~nyrBT 
+    ##  Parameter estimates:
+    ##      power 
+    ## -0.2098961 
+    ## Fixed effects: log(Jbetamm + 1) ~ abs(temptrend) * REALM 
+    ##                                      Value Std.Error    DF   t-value p-value
+    ## (Intercept)                      1.2546199 0.2336348 35656  5.370006  0.0000
+    ## abs(temptrend)                  -2.3026681 0.6987494 35656 -3.295413  0.0010
+    ## REALMMarine                     -0.9064721 0.2533266   254 -3.578274  0.0004
+    ## REALMTerrestrial                -0.1271445 0.2519655   254 -0.504611  0.6143
+    ## abs(temptrend):REALMMarine       1.9840897 0.7339632 35656  2.703255  0.0069
+    ## abs(temptrend):REALMTerrestrial  0.7690663 0.7462662 35656  1.030552  0.3028
+    ##  Correlation: 
+    ##                                 (Intr) abs(t) REALMM REALMT a():REALMM
+    ## abs(temptrend)                  -0.715                                
+    ## REALMMarine                     -0.922  0.660                         
+    ## REALMTerrestrial                -0.927  0.663  0.855                  
+    ## abs(temptrend):REALMMarine       0.681 -0.952 -0.729 -0.631           
+    ## abs(temptrend):REALMTerrestrial  0.670 -0.936 -0.618 -0.721  0.891    
+    ## 
+    ## Standardized Within-Group Residuals:
+    ##        Min         Q1        Med         Q3        Max 
+    ## -4.3629146 -0.4699047 -0.2537973  0.2518276  5.0759496 
+    ## 
+    ## Number of Observations: 35916
+    ## Number of Groups: 
+    ##               STUDY_ID rarefyID %in% STUDY_ID 
+    ##                    257                  35916
+
+``` r
+summary(modonlyTtrendHornmm)
+```
+
+    ## Linear mixed-effects model fit by REML
+    ##  Data: trends[i, ] 
+    ##      AIC      BIC    logLik
+    ##   112157 112258.8 -56066.48
+    ## 
+    ## Random effects:
+    ##  Formula: ~abs(temptrend) | STUDY_ID
+    ##  Structure: General positive-definite, Log-Cholesky parametrization
+    ##                StdDev   Corr  
+    ## (Intercept)    1.195801 (Intr)
+    ## abs(temptrend) 1.395683 -0.945
+    ## 
+    ##  Formula: ~1 | rarefyID %in% STUDY_ID
+    ##         (Intercept) Residual
+    ## StdDev:    1.099728 13.50166
+    ## 
+    ## Variance function:
+    ##  Structure: Power of variance covariate
+    ##  Formula: ~nyrBT 
+    ##  Parameter estimates:
+    ##     power 
+    ## -2.794175 
+    ## Fixed effects: log(Hornmm + 1) ~ abs(temptrend) * REALM 
+    ##                                      Value Std.Error    DF   t-value p-value
+    ## (Intercept)                      1.4549714 0.3356369 35617  4.334956  0.0000
+    ## abs(temptrend)                  -2.7052076 0.9172299 35617 -2.949323  0.0032
+    ## REALMMarine                     -0.7159379 0.3614531   254 -1.980721  0.0487
+    ## REALMTerrestrial                 0.4560898 0.3618769   254  1.260345  0.2087
+    ## abs(temptrend):REALMMarine       2.3639551 0.9458474 35617  2.499299  0.0124
+    ## abs(temptrend):REALMTerrestrial  1.1245810 0.9605334 35617  1.170788  0.2417
+    ##  Correlation: 
+    ##                                 (Intr) abs(t) REALMM REALMT a():REALMM
+    ## abs(temptrend)                  -0.519                                
+    ## REALMMarine                     -0.929  0.482                         
+    ## REALMTerrestrial                -0.927  0.482  0.861                  
+    ## abs(temptrend):REALMMarine       0.504 -0.970 -0.531 -0.467           
+    ## abs(temptrend):REALMTerrestrial  0.496 -0.955 -0.460 -0.529  0.926    
+    ## 
+    ## Standardized Within-Group Residuals:
+    ##         Min          Q1         Med          Q3         Max 
+    ## -1.04398348 -0.09256434 -0.01407641  0.02435333  2.54821772 
+    ## 
+    ## Number of Observations: 35877
+    ## Number of Groups: 
+    ##               STUDY_ID rarefyID %in% STUDY_ID 
+    ##                    257                  35877
+
 ### Plot the temp-only coefficients
 
 ``` r
@@ -752,8 +1220,7 @@ for(i in 1:nrow(allcoefs)){
   with(allcoefs[i, ], lines(x = c(lCI, uCI), y = c(y, y), col = col))
 }
 legend('bottomright', col = colors, lwd = 1, pch = 16, 
-       legend = c('Jaccard turnover', 'Jaccard total', 'Horn-Morisita',
-                  'Jaccard turnover rem0', 'Jaccard total rem0', 'Horn-Morisita rem0'))
+       legend = c('Jaccard turnover rem0', 'Jaccard total rem0', 'Horn-Morisita rem0'))
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/modonlyTtrendsimp%20coefs-1.png)<!-- -->
@@ -847,71 +1314,75 @@ AIC(modTfullbowlerrem0, modTfullfootprintrem0)
     ## modTfullbowlerrem0    42 -101579.8
     ## modTfullfootprintrem0 42 -101568.7
 
-#### Full models
+#### Fit/load full models
 
 ``` r
-i1 <- trends[, complete.cases(Jtutrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
-                             temptrend_abs.sc, mass.sc, speed.sc, 
-                             consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                             veg.sc, duration.sc, human_bowler.sc)]
-i2 <- trends[, complete.cases(Jbetatrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
-                             temptrend_abs.sc, mass.sc, speed.sc, 
-                             consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                             veg.sc, duration.sc, human_bowler.sc)]
-i3 <- trends[, complete.cases(Horntrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
-                             temptrend_abs.sc, mass.sc, speed.sc, 
-                             consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                             veg.sc, duration.sc, human_bowler.sc)]
-
 randef <- list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)
 varef <- varPower(-0.5, ~nyrBT)
 
-# full models
+# rem0
 if(file.exists('temp/modTfullJturem0.rds')){
   modTfullJturem0 <- readRDS('temp/modTfullJturem0.rds')
 } else {
+  i <- trends[, complete.cases(Jtutrendrem0, REALM, tempave_metab.sc, 
+                                seas.sc, microclim.sc, 
+                                temptrend_abs.sc, mass.sc, speed.sc, 
+                                consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
+                                veg.sc, duration.sc, human_bowler.sc)]
   modTfullJturem0 <- lme(Jtutrendrem0 ~ temptrend_abs.sc*REALM + 
-                         temptrend_abs.sc*tsign +
-                         temptrend_abs.sc*tempave_metab.sc + 
-                         temptrend_abs.sc*seas.sc + 
-                         temptrend_abs.sc*microclim.sc + 
-                         temptrend_abs.sc*mass.sc + 
-                         temptrend_abs.sc*speed.sc + 
-                         temptrend_abs.sc*consumerfrac.sc +
-                         temptrend_abs.sc*nspp.sc +
-                         temptrend_abs.sc*thermal_bias.sc:tsign +
-                         temptrend_abs.sc*npp.sc +
-                         temptrend_abs.sc*veg.sc +
-                         temptrend_abs.sc*duration.sc +
-                         temptrend_abs.sc*human_bowler.sc:REALM2,
-                       random = randef, weights = varef, data = trends[i2,], method = 'REML')
+                           temptrend_abs.sc*tsign +
+                           temptrend_abs.sc*tempave_metab.sc + 
+                           temptrend_abs.sc*seas.sc + 
+                           temptrend_abs.sc*microclim.sc + 
+                           temptrend_abs.sc*mass.sc + 
+                           temptrend_abs.sc*speed.sc + 
+                           temptrend_abs.sc*consumerfrac.sc +
+                           temptrend_abs.sc*nspp.sc +
+                           temptrend_abs.sc*thermal_bias.sc:tsign +
+                           temptrend_abs.sc*npp.sc +
+                           temptrend_abs.sc*veg.sc +
+                           temptrend_abs.sc*duration.sc +
+                           temptrend_abs.sc*human_bowler.sc:REALM2,
+                         random = randef, weights = varef, data = trends[i,], 
+                         method = 'REML')
   saveRDS(modTfullJturem0, file = 'temp/modTfullJturem0.rds')
 }
 
 if(file.exists('temp/modTfullJbetarem0.rds')){
   modTfullJbetarem0 <- readRDS('temp/modTfullJbetarem0.rds')
 } else {
+  i <- trends[, complete.cases(Jbetatrendrem0, REALM, tempave_metab.sc, 
+                                seas.sc, microclim.sc, 
+                                temptrend_abs.sc, mass.sc, speed.sc, 
+                                consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
+                                veg.sc, duration.sc, human_bowler.sc)]
   modTfullJbetarem0 <- lme(Jbetatrendrem0 ~ temptrend_abs.sc*REALM + 
-                         temptrend_abs.sc*tsign +
-                         temptrend_abs.sc*tempave_metab.sc + 
-                         temptrend_abs.sc*seas.sc + 
-                         temptrend_abs.sc*microclim.sc + 
-                         temptrend_abs.sc*mass.sc + 
-                         temptrend_abs.sc*speed.sc + 
-                         temptrend_abs.sc*consumerfrac.sc +
-                         temptrend_abs.sc*nspp.sc +
-                         temptrend_abs.sc*thermal_bias.sc:tsign +
-                         temptrend_abs.sc*npp.sc +
-                         temptrend_abs.sc*veg.sc +
-                         temptrend_abs.sc*duration.sc +
-                         temptrend_abs.sc*human_bowler.sc:REALM2,
-                       random = randef, weights = varef, data = trends[i2,], method = 'REML')
+                             temptrend_abs.sc*tsign +
+                             temptrend_abs.sc*tempave_metab.sc + 
+                             temptrend_abs.sc*seas.sc + 
+                             temptrend_abs.sc*microclim.sc + 
+                             temptrend_abs.sc*mass.sc + 
+                             temptrend_abs.sc*speed.sc + 
+                             temptrend_abs.sc*consumerfrac.sc +
+                             temptrend_abs.sc*nspp.sc +
+                             temptrend_abs.sc*thermal_bias.sc:tsign +
+                             temptrend_abs.sc*npp.sc +
+                             temptrend_abs.sc*veg.sc +
+                             temptrend_abs.sc*duration.sc +
+                             temptrend_abs.sc*human_bowler.sc:REALM2,
+                           random = randef, weights = varef, data = trends[i,], 
+                           method = 'REML')
   saveRDS(modTfullJbetarem0, file = 'temp/modTfullJbetarem0.rds')
 }
 
 if(file.exists('temp/modTfullHornrem0.rds')){
   modTfullHornrem0 <- readRDS('temp/modTfullHornrem0.rds')
 } else {
+  i <- trends[, complete.cases(Horntrendrem0, REALM, tempave_metab.sc, 
+                                seas.sc, microclim.sc, 
+                                temptrend_abs.sc, mass.sc, speed.sc, 
+                                consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
+                                veg.sc, duration.sc, human_bowler.sc)]
   modTfullHornrem0 <- lme(Horntrendrem0 ~ temptrend_abs.sc*REALM + 
                         temptrend_abs.sc*tsign +
                         temptrend_abs.sc*tempave_metab.sc + 
@@ -926,10 +1397,184 @@ if(file.exists('temp/modTfullHornrem0.rds')){
                         temptrend_abs.sc*veg.sc +
                         temptrend_abs.sc*duration.sc +
                         temptrend_abs.sc*human_bowler.sc:REALM2,
-                      random = randef, weights = varef, data = trends[i3,], method = 'REML')
+                      random = randef, weights = varef, data = trends[i,], 
+                      method = 'REML')
   saveRDS(modTfullHornrem0, file = 'temp/modTfullHornrem0.rds')
 }
 
+# exp
+if(file.exists('temp/modTfullJtuexp.rds')){
+  modTfullJtuexp <- readRDS('temp/modTfullJtuexp.rds')
+} else {
+  i <- trends[, complete.cases(Jtuexp, REALM, tempave_metab.sc, 
+                                seas.sc, microclim.sc, 
+                                temptrend_abs.sc, mass.sc, speed.sc, 
+                                consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
+                                veg.sc, duration.sc, human_bowler.sc)]
+  modTfullJtuexp <- lme(log(Jtuexp) ~ temptrend_abs.sc*REALM + 
+                           temptrend_abs.sc*tsign +
+                           temptrend_abs.sc*tempave_metab.sc + 
+                           temptrend_abs.sc*seas.sc + 
+                           temptrend_abs.sc*microclim.sc + 
+                           temptrend_abs.sc*mass.sc + 
+                           temptrend_abs.sc*speed.sc + 
+                           temptrend_abs.sc*consumerfrac.sc +
+                           temptrend_abs.sc*nspp.sc +
+                           temptrend_abs.sc*thermal_bias.sc:tsign +
+                           temptrend_abs.sc*npp.sc +
+                           temptrend_abs.sc*veg.sc +
+                           temptrend_abs.sc*duration.sc +
+                           temptrend_abs.sc*human_bowler.sc:REALM2,
+                         random = randef, weights = varef, data = trends[i,], 
+                         method = 'REML',
+                   control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500, opt = 'optim'))
+  saveRDS(modTfullJtuexp, file = 'temp/modTfullJtuexp.rds')
+}
+
+if(file.exists('temp/modTfullJbetaexp.rds')){
+  modTfullJbetaexp <- readRDS('temp/modTfullJbetaexp.rds')
+} else {
+  i <- trends[, complete.cases(Jbetaexp, REALM, tempave_metab.sc, 
+                                seas.sc, microclim.sc, 
+                                temptrend_abs.sc, mass.sc, speed.sc, 
+                                consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
+                                veg.sc, duration.sc, human_bowler.sc)]
+  modTfullJbetaexp <- lme(log(Jbetaexp) ~ temptrend_abs.sc*REALM + 
+                             temptrend_abs.sc*tsign +
+                             temptrend_abs.sc*tempave_metab.sc + 
+                             temptrend_abs.sc*seas.sc + 
+                             temptrend_abs.sc*microclim.sc + 
+                             temptrend_abs.sc*mass.sc + 
+                             temptrend_abs.sc*speed.sc + 
+                             temptrend_abs.sc*consumerfrac.sc +
+                             temptrend_abs.sc*nspp.sc +
+                             temptrend_abs.sc*thermal_bias.sc:tsign +
+                             temptrend_abs.sc*npp.sc +
+                             temptrend_abs.sc*veg.sc +
+                             temptrend_abs.sc*duration.sc +
+                             temptrend_abs.sc*human_bowler.sc:REALM2,
+                           random = randef, weights = varef, data = trends[i,], 
+                           method = 'REML')
+  saveRDS(modTfullJbetaexp, file = 'temp/modTfullJbetaexp.rds')
+}
+
+if(file.exists('temp/modTfullHornexp.rds')){
+  modTfullHornexp <- readRDS('temp/modTfullHornexp.rds')
+} else {
+  i <- trends[, complete.cases(Hornexp, REALM, tempave_metab.sc, 
+                               seas.sc, microclim.sc, 
+                               temptrend_abs.sc, mass.sc, speed.sc, 
+                               consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
+                               veg.sc, duration.sc, human_bowler.sc)]
+  modTfullHornexp <- lme(log(Hornexp) ~ temptrend_abs.sc*REALM + 
+                           temptrend_abs.sc*tsign +
+                           temptrend_abs.sc*tempave_metab.sc + 
+                           temptrend_abs.sc*seas.sc + 
+                           temptrend_abs.sc*microclim.sc + 
+                           temptrend_abs.sc*mass.sc + 
+                           temptrend_abs.sc*speed.sc + 
+                           temptrend_abs.sc*consumerfrac.sc +
+                           temptrend_abs.sc*nspp.sc +
+                           temptrend_abs.sc*thermal_bias.sc:tsign +
+                           temptrend_abs.sc*npp.sc +
+                           temptrend_abs.sc*veg.sc +
+                           temptrend_abs.sc*duration.sc +
+                           temptrend_abs.sc*human_bowler.sc:REALM2,
+                         random = randef, weights = varef, data = trends[i,], 
+                         method = 'REML',
+                         control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
+  saveRDS(modTfullHornexp, file = 'temp/modTfullHornexp.rds')
+}
+
+# mm
+if(file.exists('temp/modTfullJtumm.rds')){
+  modTfullJtumm <- readRDS('temp/modTfullJtumm.rds')
+} else {
+  i <- trends[, complete.cases(Jtumm, REALM, tempave_metab.sc, 
+                               seas.sc, microclim.sc, 
+                               temptrend_abs.sc, mass.sc, speed.sc, 
+                               consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
+                               veg.sc, duration.sc, human_bowler.sc)]
+  modTfullJtumm <- lme(log(Jtumm+1) ~ temptrend_abs.sc*REALM + 
+                         temptrend_abs.sc*tsign +
+                         temptrend_abs.sc*tempave_metab.sc + 
+                         temptrend_abs.sc*seas.sc + 
+                         temptrend_abs.sc*microclim.sc + 
+                         temptrend_abs.sc*mass.sc + 
+                         temptrend_abs.sc*speed.sc + 
+                         temptrend_abs.sc*consumerfrac.sc +
+                         temptrend_abs.sc*nspp.sc +
+                         temptrend_abs.sc*thermal_bias.sc:tsign +
+                         temptrend_abs.sc*npp.sc +
+                         temptrend_abs.sc*veg.sc +
+                         temptrend_abs.sc*duration.sc +
+                         temptrend_abs.sc*human_bowler.sc:REALM2,
+                       random = randef, weights = varef, data = trends[i,], 
+                       method = 'REML',
+                       control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
+  saveRDS(modTfullJtumm, file = 'temp/modTfullJtumm.rds')
+}
+
+if(file.exists('temp/modTfullJbetamm.rds')){
+  modTfullJbetamm <- readRDS('temp/modTfullJbetamm.rds')
+} else {
+  i <- trends[, complete.cases(Jbetamm, REALM, tempave_metab.sc, 
+                                seas.sc, microclim.sc, 
+                               temptrend_abs.sc, mass.sc, speed.sc, 
+                               consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
+                               veg.sc, duration.sc, human_bowler.sc)]
+  modTfullJbetamm <- lme(log(Jbetamm+1) ~ temptrend_abs.sc*REALM + 
+                           temptrend_abs.sc*tsign +
+                           temptrend_abs.sc*tempave_metab.sc + 
+                           temptrend_abs.sc*seas.sc + 
+                           temptrend_abs.sc*microclim.sc + 
+                           temptrend_abs.sc*mass.sc + 
+                           temptrend_abs.sc*speed.sc + 
+                           temptrend_abs.sc*consumerfrac.sc +
+                           temptrend_abs.sc*nspp.sc +
+                           temptrend_abs.sc*thermal_bias.sc:tsign +
+                           temptrend_abs.sc*npp.sc +
+                           temptrend_abs.sc*veg.sc +
+                           temptrend_abs.sc*duration.sc +
+                           temptrend_abs.sc*human_bowler.sc:REALM2,
+                         random = randef, weights = varef, data = trends[i,], 
+                         method = 'REML',
+                         control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
+  saveRDS(modTfullJbetamm, file = 'temp/modTfullJbetamm.rds')
+}
+
+if(file.exists('temp/modTfullHornmm.rds')){
+  modTfullHornmm <- readRDS('temp/modTfullHornmm.rds')
+} else {
+  i <- trends[, complete.cases(Hornmm, REALM, tempave_metab.sc, 
+                                seas.sc, microclim.sc, 
+                                temptrend_abs.sc, mass.sc, speed.sc, 
+                                consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
+                                veg.sc, duration.sc, human_bowler.sc)]
+  modTfullHornmm <- lme(log(Hornmm+1) ~ temptrend_abs.sc*REALM + 
+                        temptrend_abs.sc*tsign +
+                        temptrend_abs.sc*tempave_metab.sc + 
+                        temptrend_abs.sc*seas.sc + 
+                        temptrend_abs.sc*microclim.sc + 
+                        temptrend_abs.sc*mass.sc + 
+                        temptrend_abs.sc*speed.sc + 
+                        temptrend_abs.sc*consumerfrac.sc +
+                        temptrend_abs.sc*nspp.sc +
+                        temptrend_abs.sc*thermal_bias.sc:tsign +
+                        temptrend_abs.sc*npp.sc +
+                        temptrend_abs.sc*veg.sc +
+                        temptrend_abs.sc*duration.sc +
+                        temptrend_abs.sc*human_bowler.sc:REALM2,
+                        random = randef, weights = varef, data = trends[i,], 
+                        method = 'REML',
+                        control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
+  saveRDS(modTfullHornmm, file = 'temp/modTfullHornmm.rds')
+}
+```
+
+#### Summary rem0
+
+``` r
 summary(modTfullJturem0)
 ```
 
@@ -1282,6 +1927,718 @@ rsquared(modTfullHornrem0)
 
     ##        Response   family     link method    Marginal Conditional
     ## 1 Horntrendrem0 gaussian identity   none 5.11082e-05 0.000265083
+
+#### Summary exp
+
+``` r
+summary(modTfullJtuexp)
+```
+
+    ## Linear mixed-effects model fit by REML
+    ##  Data: trends[i, ] 
+    ##        AIC      BIC    logLik
+    ##   93829.02 94169.38 -46872.51
+    ## 
+    ## Random effects:
+    ##  Formula: ~temptrend_abs.sc | STUDY_ID
+    ##  Structure: General positive-definite, Log-Cholesky parametrization
+    ##                  StdDev    Corr  
+    ## (Intercept)      0.8595795 (Intr)
+    ## temptrend_abs.sc 0.1287652 -0.75 
+    ## 
+    ##  Formula: ~1 | rarefyID %in% STUDY_ID
+    ##         (Intercept) Residual
+    ## StdDev:    1.244636  1.31512
+    ## 
+    ## Variance function:
+    ##  Structure: Power of variance covariate
+    ##  Formula: ~nyrBT 
+    ##  Parameter estimates:
+    ##      power 
+    ## -0.1319939 
+    ## Fixed effects: log(Jtuexp) ~ temptrend_abs.sc * REALM + temptrend_abs.sc * tsign +      temptrend_abs.sc * tempave_metab.sc + temptrend_abs.sc *      seas.sc + temptrend_abs.sc * microclim.sc + temptrend_abs.sc *      mass.sc + temptrend_abs.sc * speed.sc + temptrend_abs.sc *      consumerfrac.sc + temptrend_abs.sc * nspp.sc + temptrend_abs.sc *      thermal_bias.sc:tsign + temptrend_abs.sc * npp.sc + temptrend_abs.sc *      veg.sc + temptrend_abs.sc * duration.sc + temptrend_abs.sc *      human_bowler.sc:REALM2 
+    ##                                                       Value Std.Error    DF    t-value p-value
+    ## (Intercept)                                       0.3864821 0.4175784 24264   0.925532  0.3547
+    ## temptrend_abs.sc                                  0.3788824 0.2116710 24264   1.789959  0.0735
+    ## REALMMarine                                      -0.3361403 0.4424627   174  -0.759703  0.4485
+    ## REALMTerrestrial                                  1.1247181 0.3993170   174   2.816604  0.0054
+    ## tsign1                                           -0.0800175 0.0336012 24264  -2.381390  0.0173
+    ## tempave_metab.sc                                 -0.3937535 0.0546561 24264  -7.204204  0.0000
+    ## seas.sc                                          -0.1574622 0.0353950 24264  -4.448718  0.0000
+    ## microclim.sc                                     -0.1175621 0.0184129 24264  -6.384756  0.0000
+    ## mass.sc                                           0.0004837 0.0272330 24264   0.017761  0.9858
+    ## speed.sc                                          0.0572922 0.0356703 24264   1.606158  0.1083
+    ## consumerfrac.sc                                   0.0538704 0.0214783 24264   2.508137  0.0121
+    ## nspp.sc                                          -0.3347941 0.0271760 24264 -12.319496  0.0000
+    ## npp.sc                                           -0.0226195 0.0256037 24264  -0.883448  0.3770
+    ## veg.sc                                            0.0283953 0.0685632 24264   0.414148  0.6788
+    ## duration.sc                                       0.4862212 0.0209236 24264  23.237962  0.0000
+    ## temptrend_abs.sc:REALMMarine                     -0.3212715 0.2140331 24264  -1.501037  0.1334
+    ## temptrend_abs.sc:REALMTerrestrial                -0.2928269 0.2228085 24264  -1.314254  0.1888
+    ## temptrend_abs.sc:tsign1                           0.0434855 0.0359460 24264   1.209743  0.2264
+    ## temptrend_abs.sc:tempave_metab.sc                 0.0447311 0.0395536 24264   1.130899  0.2581
+    ## temptrend_abs.sc:seas.sc                          0.0213296 0.0287205 24264   0.742663  0.4577
+    ## temptrend_abs.sc:microclim.sc                     0.0436269 0.0195268 24264   2.234209  0.0255
+    ## temptrend_abs.sc:mass.sc                          0.0164231 0.0256233 24264   0.640944  0.5216
+    ## temptrend_abs.sc:speed.sc                        -0.0047824 0.0331303 24264  -0.144353  0.8852
+    ## temptrend_abs.sc:consumerfrac.sc                 -0.0521381 0.0226744 24264  -2.299429  0.0215
+    ## temptrend_abs.sc:nspp.sc                          0.0896528 0.0254677 24264   3.520252  0.0004
+    ## tsign-1:thermal_bias.sc                          -0.0950776 0.0317883 24264  -2.990965  0.0028
+    ## tsign1:thermal_bias.sc                           -0.0378730 0.0255918 24264  -1.479891  0.1389
+    ## temptrend_abs.sc:npp.sc                           0.0464496 0.0272289 24264   1.705896  0.0880
+    ## temptrend_abs.sc:veg.sc                          -0.0920762 0.0393699 24264  -2.338743  0.0194
+    ## temptrend_abs.sc:duration.sc                      0.0798909 0.0263741 24264   3.029149  0.0025
+    ## human_bowler.sc:REALM2TerrFresh                   0.1237597 0.0583907 24264   2.119511  0.0341
+    ## human_bowler.sc:REALM2Marine                      0.0365949 0.0222430 24264   1.645238  0.0999
+    ## temptrend_abs.sc:tsign-1:thermal_bias.sc          0.0532641 0.0242091 24264   2.200170  0.0278
+    ## temptrend_abs.sc:tsign1:thermal_bias.sc           0.0289804 0.0225008 24264   1.287971  0.1978
+    ## temptrend_abs.sc:human_bowler.sc:REALM2TerrFresh -0.0536190 0.0258276 24264  -2.076037  0.0379
+    ## temptrend_abs.sc:human_bowler.sc:REALM2Marine    -0.0401650 0.0275629 24264  -1.457213  0.1451
+    ##  Correlation: 
+    ##                                                  (Intr) tmpt_. REALMM REALMT tsign1 tmpv_. ses.sc mcrcl. mss.sc spd.sc cnsmr. nspp.s npp.sc veg.sc drtn.s t_.:REALMM t_.:REALMT tm_.:1 tm_.:_. tmptrnd_bs.sc:ss. tmptrnd_bs.sc:mc. tmptrnd_bs.sc:ms. tmptrnd_bs.sc:sp. tmptrnd_bs.sc:c. tmptrnd_bs.sc:ns. t-1:_. ts1:_. tmptrnd_bs.sc:np. tmptrnd_bs.sc:v. tmptrnd_bs.sc:d. h_.:REALM2T h_.:REALM2M t_.:-1 t_.:1: t_.:_.:REALM2T
+    ## temptrend_abs.sc                                 -0.454                                                                                                                                                                                                                                                                                                                                                                         
+    ## REALMMarine                                      -0.959  0.433                                                                                                                                                                                                                                                                                                                                                                  
+    ## REALMTerrestrial                                 -0.746  0.313  0.696                                                                                                                                                                                                                                                                                                                                                           
+    ## tsign1                                           -0.056  0.055 -0.002  0.027                                                                                                                                                                                                                                                                                                                                                    
+    ## tempave_metab.sc                                  0.094 -0.018 -0.074 -0.189 -0.044                                                                                                                                                                                                                                                                                                                                             
+    ## seas.sc                                          -0.084  0.034  0.134 -0.095 -0.075  0.078                                                                                                                                                                                                                                                                                                                                      
+    ## microclim.sc                                     -0.059  0.057  0.068 -0.006 -0.008 -0.101  0.084                                                                                                                                                                                                                                                                                                                               
+    ## mass.sc                                           0.062  0.006 -0.033 -0.035  0.010  0.137  0.063  0.006                                                                                                                                                                                                                                                                                                                        
+    ## speed.sc                                          0.079 -0.058 -0.028 -0.051 -0.055 -0.129 -0.004  0.067 -0.444                                                                                                                                                                                                                                                                                                                 
+    ## consumerfrac.sc                                  -0.025  0.030  0.015  0.103  0.060 -0.125 -0.085  0.008 -0.049 -0.075                                                                                                                                                                                                                                                                                                          
+    ## nspp.sc                                           0.016 -0.059 -0.047 -0.072  0.052 -0.131  0.012 -0.024 -0.075  0.178  0.082                                                                                                                                                                                                                                                                                                   
+    ## npp.sc                                            0.050  0.001 -0.069  0.068 -0.009 -0.002 -0.306 -0.301 -0.040  0.078 -0.008 -0.168                                                                                                                                                                                                                                                                                            
+    ## veg.sc                                           -0.532  0.295  0.554  0.012 -0.015  0.001  0.107  0.031  0.005 -0.005  0.001  0.015 -0.173                                                                                                                                                                                                                                                                                     
+    ## duration.sc                                      -0.001  0.019  0.028  0.049 -0.170  0.014 -0.063 -0.016 -0.043  0.025 -0.001 -0.282  0.040  0.000                                                                                                                                                                                                                                                                              
+    ## temptrend_abs.sc:REALMMarine                      0.456 -0.958 -0.467 -0.306 -0.017  0.040 -0.078 -0.062 -0.014  0.032 -0.019  0.072  0.022 -0.326 -0.037                                                                                                                                                                                                                                                                       
+    ## temptrend_abs.sc:REALMTerrestrial                 0.268 -0.618 -0.246 -0.432 -0.016  0.107  0.168  0.018 -0.044  0.081 -0.046  0.148 -0.106  0.037 -0.054  0.590                                                                                                                                                                                                                                                                
+    ## temptrend_abs.sc:tsign1                           0.029 -0.148 -0.001 -0.010 -0.545  0.013 -0.006 -0.019  0.008  0.039 -0.032 -0.007 -0.004  0.017  0.098  0.058      0.021                                                                                                                                                                                                                                                     
+    ## temptrend_abs.sc:tempave_metab.sc                -0.022  0.026  0.014  0.089 -0.050 -0.398 -0.091  0.052 -0.169  0.206  0.098  0.037 -0.031  0.001  0.024 -0.022     -0.254      0.051                                                                                                                                                                                                                                          
+    ## temptrend_abs.sc:seas.sc                          0.043 -0.086 -0.064  0.103  0.034 -0.033 -0.520 -0.080 -0.028  0.009  0.040 -0.001  0.140 -0.094 -0.024  0.128     -0.390      0.020  0.124                                                                                                                                                                                                                                   
+    ## temptrend_abs.sc:microclim.sc                     0.032 -0.065 -0.036  0.002 -0.015  0.083 -0.061 -0.545 -0.002 -0.043 -0.013  0.006  0.122 -0.005 -0.033  0.065     -0.075      0.063 -0.044   0.156                                                                                                                                                                                                                           
+    ## temptrend_abs.sc:mass.sc                          0.000 -0.036 -0.004 -0.017  0.005 -0.116 -0.038  0.004 -0.557  0.319  0.099  0.034  0.003 -0.013  0.075  0.051      0.114     -0.031  0.361   0.007            -0.040                                                                                                                                                                                                         
+    ## temptrend_abs.sc:speed.sc                        -0.026  0.100  0.020  0.048  0.048  0.136  0.026 -0.044  0.341 -0.520 -0.008 -0.138 -0.014 -0.005 -0.019 -0.087     -0.199     -0.078 -0.505  -0.001             0.076            -0.636                                                                                                                                                                                       
+    ## temptrend_abs.sc:consumerfrac.sc                  0.001 -0.023  0.001 -0.025 -0.025  0.078  0.051 -0.009  0.088 -0.020 -0.573 -0.058 -0.010  0.009 -0.001  0.026      0.045      0.046 -0.187  -0.048             0.001            -0.228             0.055                                                                                                                                                                     
+    ## temptrend_abs.sc:nspp.sc                         -0.029  0.151  0.026  0.082  0.001  0.020 -0.013  0.007 -0.001 -0.130 -0.039 -0.497  0.084 -0.023  0.070 -0.140     -0.311     -0.054  0.030  -0.016             0.035             0.033             0.251             0.092                                                                                                                                                   
+    ## tsign-1:thermal_bias.sc                           0.034 -0.012 -0.033 -0.055 -0.039  0.285 -0.125 -0.055  0.000 -0.066 -0.010 -0.043 -0.020  0.007  0.043  0.022      0.021     -0.036 -0.043   0.115             0.024             0.003             0.031            -0.002            0.032                                                                                                                                  
+    ## tsign1:thermal_bias.sc                            0.074 -0.064 -0.074 -0.093  0.020  0.439 -0.188 -0.180  0.029 -0.105 -0.023 -0.031 -0.054 -0.008  0.044  0.051      0.038      0.085 -0.086   0.142             0.084             0.002             0.042             0.006            0.000             0.374                                                                                                                
+    ## temptrend_abs.sc:npp.sc                           0.003 -0.026  0.001 -0.064  0.009 -0.011  0.110  0.116  0.002 -0.015 -0.011  0.070 -0.524  0.093 -0.016 -0.006      0.195     -0.034  0.110  -0.192            -0.213             0.060            -0.042             0.033           -0.061             0.003  0.018                                                                                                         
+    ## temptrend_abs.sc:veg.sc                           0.267 -0.509 -0.278  0.018 -0.005 -0.010 -0.125  0.001 -0.003 -0.001  0.010 -0.027  0.178 -0.529 -0.011  0.566     -0.132      0.048 -0.004   0.278            -0.029            -0.001             0.028            -0.026            0.019             0.013  0.012 -0.328                                                                                                  
+    ## temptrend_abs.sc:duration.sc                     -0.021  0.189 -0.014 -0.028 -0.012  0.115 -0.061  0.007  0.062 -0.046  0.023  0.104  0.011  0.005 -0.339  0.014      0.043     -0.035 -0.052   0.048             0.007            -0.123             0.003             0.040           -0.094             0.002 -0.058 -0.026             0.013                                                                                
+    ## human_bowler.sc:REALM2TerrFresh                  -0.063  0.032  0.067 -0.050  0.009  0.023  0.026  0.074  0.024 -0.018 -0.027 -0.004 -0.088  0.136 -0.006 -0.039      0.055     -0.007 -0.013  -0.068            -0.019            -0.005             0.017             0.013            0.015             0.025  0.044  0.053            -0.123            0.000                                                               
+    ## human_bowler.sc:REALM2Marine                      0.031 -0.042 -0.035 -0.012 -0.001  0.069 -0.198 -0.084 -0.026  0.013 -0.014 -0.032 -0.138  0.010 -0.014  0.053      0.028      0.024 -0.075   0.182             0.034             0.046            -0.045             0.047            0.016             0.131  0.149  0.124            -0.004            0.035            0.005                                              
+    ## temptrend_abs.sc:tsign-1:thermal_bias.sc         -0.004  0.008  0.008  0.019 -0.061 -0.068  0.117  0.010 -0.006  0.061 -0.007  0.022 -0.005  0.000 -0.037 -0.032     -0.030      0.246  0.088  -0.232            -0.034             0.037            -0.126             0.014           -0.040            -0.559 -0.249  0.022            -0.045            0.026           -0.003      -0.137                                  
+    ## temptrend_abs.sc:tsign1:thermal_bias.sc          -0.039  0.082  0.037  0.041  0.074 -0.116  0.136  0.065 -0.002  0.058  0.004  0.003  0.015  0.022 -0.072 -0.062     -0.082     -0.222  0.147  -0.207            -0.108             0.015            -0.105            -0.003            0.017            -0.234 -0.578  0.015            -0.028            0.058           -0.032      -0.160       0.450                      
+    ## temptrend_abs.sc:human_bowler.sc:REALM2TerrFresh  0.076 -0.244 -0.083  0.046 -0.009 -0.026 -0.110 -0.049 -0.006  0.018  0.014  0.007  0.105 -0.180  0.000  0.273     -0.158      0.048  0.048   0.306             0.045            -0.020            -0.025            -0.014           -0.043            -0.027 -0.032 -0.182             0.543            0.002           -0.550       0.010       0.049  0.054               
+    ## temptrend_abs.sc:human_bowler.sc:REALM2Marine    -0.028  0.077  0.029  0.018  0.020 -0.051  0.120  0.045  0.019 -0.032  0.058  0.003  0.106  0.002  0.005 -0.084     -0.052     -0.028  0.136  -0.284            -0.061            -0.065             0.078            -0.149           -0.002            -0.095 -0.106 -0.237             0.019           -0.020            0.005      -0.608       0.193  0.223 -0.025        
+    ## 
+    ## Standardized Within-Group Residuals:
+    ##          Min           Q1          Med           Q3          Max 
+    ## -2.885226292 -0.380500449 -0.001856242  0.466334961  2.171027700 
+    ## 
+    ## Number of Observations: 24474
+    ## Number of Groups: 
+    ##               STUDY_ID rarefyID %in% STUDY_ID 
+    ##                    177                  24474
+
+``` r
+summary(modTfullJbetaexp)
+```
+
+    ## Linear mixed-effects model fit by REML
+    ##  Data: trends[i, ] 
+    ##        AIC      BIC    logLik
+    ##   83728.68 84068.01 -41822.34
+    ## 
+    ## Random effects:
+    ##  Formula: ~temptrend_abs.sc | STUDY_ID
+    ##  Structure: General positive-definite, Log-Cholesky parametrization
+    ##                  StdDev    Corr  
+    ## (Intercept)      0.7664634 (Intr)
+    ## temptrend_abs.sc 0.2104152 -0.605
+    ## 
+    ##  Formula: ~1 | rarefyID %in% STUDY_ID
+    ##         (Intercept) Residual
+    ## StdDev:    1.128957 1.976458
+    ## 
+    ## Variance function:
+    ##  Structure: Power of variance covariate
+    ##  Formula: ~nyrBT 
+    ##  Parameter estimates:
+    ##      power 
+    ## -0.5576954 
+    ## Fixed effects: log(Jbetaexp) ~ temptrend_abs.sc * REALM + temptrend_abs.sc *      tsign + temptrend_abs.sc * tempave_metab.sc + temptrend_abs.sc *      seas.sc + temptrend_abs.sc * microclim.sc + temptrend_abs.sc *      mass.sc + temptrend_abs.sc * speed.sc + temptrend_abs.sc *      consumerfrac.sc + temptrend_abs.sc * nspp.sc + temptrend_abs.sc *      thermal_bias.sc:tsign + temptrend_abs.sc * npp.sc + temptrend_abs.sc *      veg.sc + temptrend_abs.sc * duration.sc + temptrend_abs.sc *      human_bowler.sc:REALM2 
+    ##                                                       Value Std.Error    DF    t-value p-value
+    ## (Intercept)                                       0.0511188 0.3544972 23661   0.144201  0.8853
+    ## temptrend_abs.sc                                  0.2423180 0.2159690 23661   1.122004  0.2619
+    ## REALMMarine                                      -0.4545082 0.3765213   183  -1.207125  0.2289
+    ## REALMTerrestrial                                  1.0638992 0.3423216   183   3.107894  0.0022
+    ## tsign1                                           -0.1117519 0.0292229 23661  -3.824121  0.0001
+    ## tempave_metab.sc                                 -0.3670294 0.0481278 23661  -7.626140  0.0000
+    ## seas.sc                                          -0.1939765 0.0308779 23661  -6.282047  0.0000
+    ## microclim.sc                                     -0.0749242 0.0160586 23661  -4.665681  0.0000
+    ## mass.sc                                          -0.0175319 0.0238479 23661  -0.735153  0.4623
+    ## speed.sc                                         -0.0076774 0.0310290 23661  -0.247426  0.8046
+    ## consumerfrac.sc                                  -0.0189446 0.0182447 23661  -1.038363  0.2991
+    ## nspp.sc                                          -0.4976847 0.0240866 23661 -20.662299  0.0000
+    ## npp.sc                                           -0.0148788 0.0224377 23661  -0.663114  0.5073
+    ## veg.sc                                            0.0130916 0.0568179 23661   0.230412  0.8178
+    ## duration.sc                                       0.4566283 0.0190243 23661  24.002350  0.0000
+    ## temptrend_abs.sc:REALMMarine                     -0.1706954 0.2206148 23661  -0.773726  0.4391
+    ## temptrend_abs.sc:REALMTerrestrial                -0.5288397 0.2380377 23661  -2.221663  0.0263
+    ## temptrend_abs.sc:tsign1                           0.0308175 0.0333701 23661   0.923506  0.3558
+    ## temptrend_abs.sc:tempave_metab.sc                 0.1430030 0.0476167 23661   3.003215  0.0027
+    ## temptrend_abs.sc:seas.sc                          0.0707029 0.0274229 23661   2.578246  0.0099
+    ## temptrend_abs.sc:microclim.sc                     0.0163360 0.0188590 23661   0.866218  0.3864
+    ## temptrend_abs.sc:mass.sc                         -0.0034863 0.0240136 23661  -0.145179  0.8846
+    ## temptrend_abs.sc:speed.sc                         0.0074005 0.0322485 23661   0.229485  0.8185
+    ## temptrend_abs.sc:consumerfrac.sc                  0.0308452 0.0215601 23661   1.430665  0.1525
+    ## temptrend_abs.sc:nspp.sc                          0.1893196 0.0248692 23661   7.612622  0.0000
+    ## tsign-1:thermal_bias.sc                          -0.0576764 0.0279701 23661  -2.062070  0.0392
+    ## tsign1:thermal_bias.sc                            0.0123483 0.0226538 23661   0.545086  0.5857
+    ## temptrend_abs.sc:npp.sc                           0.0570277 0.0270578 23661   2.107623  0.0351
+    ## temptrend_abs.sc:veg.sc                          -0.0495616 0.0358338 23661  -1.383097  0.1666
+    ## temptrend_abs.sc:duration.sc                      0.0939020 0.0239036 23661   3.928353  0.0001
+    ## human_bowler.sc:REALM2TerrFresh                   0.1380299 0.0473741 23661   2.913612  0.0036
+    ## human_bowler.sc:REALM2Marine                      0.0263521 0.0194029 23661   1.358151  0.1744
+    ## temptrend_abs.sc:tsign-1:thermal_bias.sc          0.0281297 0.0236133 23661   1.191268  0.2336
+    ## temptrend_abs.sc:tsign1:thermal_bias.sc           0.0229682 0.0223267 23661   1.028735  0.3036
+    ## temptrend_abs.sc:human_bowler.sc:REALM2TerrFresh -0.0384541 0.0225661 23661  -1.704067  0.0884
+    ## temptrend_abs.sc:human_bowler.sc:REALM2Marine    -0.0454927 0.0258495 23661  -1.759906  0.0784
+    ##  Correlation: 
+    ##                                                  (Intr) tmpt_. REALMM REALMT tsign1 tmpv_. ses.sc mcrcl. mss.sc spd.sc cnsmr. nspp.s npp.sc veg.sc drtn.s t_.:REALMM t_.:REALMT tm_.:1 tm_.:_. tmptrnd_bs.sc:ss. tmptrnd_bs.sc:mc. tmptrnd_bs.sc:ms. tmptrnd_bs.sc:sp. tmptrnd_bs.sc:c. tmptrnd_bs.sc:ns. t-1:_. ts1:_. tmptrnd_bs.sc:np. tmptrnd_bs.sc:v. tmptrnd_bs.sc:d. h_.:REALM2T h_.:REALM2M t_.:-1 t_.:1: t_.:_.:REALM2T
+    ## temptrend_abs.sc                                 -0.488                                                                                                                                                                                                                                                                                                                                                                         
+    ## REALMMarine                                      -0.955  0.462                                                                                                                                                                                                                                                                                                                                                                  
+    ## REALMTerrestrial                                 -0.750  0.365  0.699                                                                                                                                                                                                                                                                                                                                                           
+    ## tsign1                                           -0.061  0.061  0.001  0.027                                                                                                                                                                                                                                                                                                                                                    
+    ## tempave_metab.sc                                  0.099 -0.035 -0.077 -0.194 -0.040                                                                                                                                                                                                                                                                                                                                             
+    ## seas.sc                                          -0.106  0.044  0.158 -0.079 -0.085  0.059                                                                                                                                                                                                                                                                                                                                      
+    ## microclim.sc                                     -0.071  0.065  0.079 -0.001 -0.004 -0.120  0.086                                                                                                                                                                                                                                                                                                                               
+    ## mass.sc                                           0.060  0.005 -0.030 -0.031  0.013  0.120  0.058  0.002                                                                                                                                                                                                                                                                                                                        
+    ## speed.sc                                          0.080 -0.063 -0.027 -0.053 -0.061 -0.099  0.009  0.067 -0.436                                                                                                                                                                                                                                                                                                                 
+    ## consumerfrac.sc                                  -0.019  0.027  0.010  0.095  0.051 -0.111 -0.081  0.010 -0.045 -0.073                                                                                                                                                                                                                                                                                                          
+    ## nspp.sc                                           0.001 -0.037 -0.038 -0.058  0.049 -0.133  0.019 -0.042 -0.079  0.168  0.078                                                                                                                                                                                                                                                                                                   
+    ## npp.sc                                            0.066 -0.014 -0.083  0.057 -0.003  0.006 -0.283 -0.295 -0.035  0.081 -0.020 -0.177                                                                                                                                                                                                                                                                                            
+    ## veg.sc                                           -0.523  0.261  0.545  0.024 -0.011  0.006  0.119  0.047  0.011 -0.006 -0.005  0.021 -0.198                                                                                                                                                                                                                                                                                     
+    ## duration.sc                                       0.002  0.016  0.026  0.045 -0.168  0.027 -0.060 -0.010 -0.032  0.020  0.005 -0.285  0.048 -0.005                                                                                                                                                                                                                                                                              
+    ## temptrend_abs.sc:REALMMarine                      0.482 -0.953 -0.496 -0.350 -0.027  0.046 -0.085 -0.071 -0.018  0.031 -0.016  0.060  0.039 -0.286 -0.030                                                                                                                                                                                                                                                                       
+    ## temptrend_abs.sc:REALMTerrestrial                 0.311 -0.661 -0.286 -0.486 -0.019  0.146  0.130  0.009 -0.038  0.077 -0.056  0.099 -0.069  0.022 -0.038  0.624                                                                                                                                                                                                                                                                
+    ## temptrend_abs.sc:tsign1                           0.032 -0.153 -0.004 -0.013 -0.539  0.008  0.002 -0.017 -0.008  0.044 -0.018 -0.011 -0.017  0.019  0.089  0.072      0.036                                                                                                                                                                                                                                                     
+    ## temptrend_abs.sc:tempave_metab.sc                -0.034  0.054  0.024  0.115 -0.044 -0.447 -0.061  0.063 -0.104  0.136  0.079  0.055 -0.066  0.010  0.012 -0.045     -0.325      0.050                                                                                                                                                                                                                                          
+    ## temptrend_abs.sc:seas.sc                          0.051 -0.081 -0.072  0.097  0.040 -0.025 -0.536 -0.093 -0.024 -0.007  0.044 -0.002  0.133 -0.097 -0.024  0.120     -0.327      0.000  0.088                                                                                                                                                                                                                                   
+    ## temptrend_abs.sc:microclim.sc                     0.044 -0.081 -0.047  0.001 -0.010  0.077 -0.064 -0.559  0.009 -0.035 -0.023  0.021  0.145 -0.026 -0.037  0.085     -0.059      0.046 -0.044   0.170                                                                                                                                                                                                                           
+    ## temptrend_abs.sc:mass.sc                         -0.002 -0.037 -0.004 -0.023 -0.009 -0.090 -0.026  0.012 -0.575  0.304  0.088  0.034  0.000 -0.014  0.058  0.062      0.101      0.003  0.215   0.002            -0.059                                                                                                                                                                                                         
+    ## temptrend_abs.sc:speed.sc                        -0.028  0.102  0.016  0.055  0.050  0.109  0.006 -0.041  0.305 -0.539  0.019 -0.119 -0.009 -0.011 -0.016 -0.070     -0.163     -0.080 -0.379   0.020             0.063            -0.547                                                                                                                                                                                       
+    ## temptrend_abs.sc:consumerfrac.sc                  0.001 -0.027 -0.002 -0.028 -0.013  0.064  0.049 -0.012  0.068  0.007 -0.623 -0.040  0.004  0.010 -0.018  0.025      0.078      0.024 -0.135  -0.065             0.013            -0.171            -0.026                                                                                                                                                                     
+    ## temptrend_abs.sc:nspp.sc                         -0.016  0.098  0.020  0.065 -0.003  0.035 -0.021  0.028  0.017 -0.119 -0.033 -0.521  0.079 -0.030  0.102 -0.110     -0.212     -0.033 -0.027  -0.001            -0.003             0.004             0.224             0.070                                                                                                                                                   
+    ## tsign-1:thermal_bias.sc                           0.037 -0.009 -0.036 -0.051 -0.036  0.283 -0.152 -0.046  0.000 -0.061 -0.006 -0.041 -0.023  0.010  0.049  0.018      0.017     -0.035 -0.066   0.126             0.013            -0.006             0.036            -0.003            0.028                                                                                                                                  
+    ## tsign1:thermal_bias.sc                            0.078 -0.056 -0.079 -0.091  0.026  0.428 -0.224 -0.170  0.029 -0.095 -0.015 -0.046 -0.039 -0.003  0.051  0.043      0.047      0.077 -0.123   0.147             0.071            -0.011             0.051             0.005            0.024             0.387                                                                                                                
+    ## temptrend_abs.sc:npp.sc                          -0.007  0.001  0.011 -0.049 -0.002 -0.026  0.095  0.136 -0.004 -0.019  0.004  0.071 -0.546  0.110 -0.013 -0.038      0.123     -0.007  0.174  -0.177            -0.261             0.066            -0.056             0.009           -0.056             0.012  0.010                                                                                                         
+    ## temptrend_abs.sc:veg.sc                           0.256 -0.452 -0.266  0.016 -0.012 -0.007 -0.129 -0.017 -0.014 -0.002  0.017 -0.032  0.208 -0.517 -0.014  0.502     -0.103      0.057 -0.031   0.272             0.007             0.016             0.041            -0.037            0.037             0.002  0.000 -0.365                                                                                                  
+    ## temptrend_abs.sc:duration.sc                     -0.023  0.158 -0.015 -0.026 -0.008  0.110 -0.062  0.002  0.047 -0.038  0.023  0.132  0.008  0.011 -0.358  0.015      0.045     -0.029 -0.041   0.040             0.016            -0.088            -0.014             0.035           -0.147             0.003 -0.057 -0.019             0.009                                                                                
+    ## human_bowler.sc:REALM2TerrFresh                  -0.078  0.040  0.081 -0.025  0.013  0.018  0.020  0.083  0.023 -0.020 -0.029  0.000 -0.095  0.144 -0.010 -0.046      0.038     -0.006 -0.008  -0.065            -0.007            -0.006             0.015             0.016            0.011             0.029  0.052  0.044            -0.126            0.002                                                               
+    ## human_bowler.sc:REALM2Marine                      0.031 -0.033 -0.035 -0.015 -0.001  0.074 -0.189 -0.068 -0.024  0.014 -0.004 -0.040 -0.133  0.014 -0.016  0.043      0.029      0.027 -0.072   0.154             0.031             0.047            -0.040             0.035            0.025             0.130  0.147  0.083            -0.005            0.041            0.009                                              
+    ## temptrend_abs.sc:tsign-1:thermal_bias.sc         -0.005 -0.006  0.009  0.020 -0.070 -0.105  0.145  0.004 -0.021  0.071 -0.003  0.030 -0.001 -0.008 -0.040 -0.012     -0.029      0.251  0.163  -0.247            -0.009             0.072            -0.158             0.006           -0.064            -0.548 -0.283  0.018            -0.022            0.033           -0.011      -0.133                                  
+    ## temptrend_abs.sc:tsign1:thermal_bias.sc          -0.041  0.058  0.039  0.043  0.060 -0.155  0.149  0.058 -0.014  0.067  0.002  0.029  0.008  0.019 -0.064 -0.037     -0.086     -0.186  0.224  -0.196            -0.082             0.052            -0.149            -0.004           -0.054            -0.255 -0.589  0.035            -0.009            0.054           -0.038      -0.149       0.498                      
+    ## temptrend_abs.sc:human_bowler.sc:REALM2TerrFresh  0.084 -0.223 -0.089  0.040 -0.010 -0.031 -0.109 -0.049 -0.006  0.019  0.019  0.003  0.110 -0.185  0.003  0.246     -0.137      0.046  0.050   0.294             0.036            -0.013            -0.026            -0.024           -0.025            -0.037 -0.045 -0.172             0.538           -0.007           -0.532       0.002       0.075  0.079               
+    ## temptrend_abs.sc:human_bowler.sc:REALM2Marine    -0.026  0.060  0.027  0.021  0.020 -0.059  0.107  0.042  0.029 -0.038  0.057  0.013  0.073  0.000  0.006 -0.068     -0.059     -0.035  0.139  -0.226            -0.067            -0.082             0.073            -0.131           -0.022            -0.095 -0.103 -0.143             0.015           -0.027            0.002      -0.619       0.185  0.203 -0.011        
+    ## 
+    ## Standardized Within-Group Residuals:
+    ##         Min          Q1         Med          Q3         Max 
+    ## -2.29626482 -0.30824477  0.03584154  0.38131979  1.91841260 
+    ## 
+    ## Number of Observations: 23880
+    ## Number of Groups: 
+    ##               STUDY_ID rarefyID %in% STUDY_ID 
+    ##                    186                  23880
+
+``` r
+summary(modTfullHornexp)
+```
+
+    ## Linear mixed-effects model fit by REML
+    ##  Data: trends[i, ] 
+    ##        AIC      BIC    logLik
+    ##   88747.37 89084.75 -44331.69
+    ## 
+    ## Random effects:
+    ##  Formula: ~temptrend_abs.sc | STUDY_ID
+    ##  Structure: General positive-definite, Log-Cholesky parametrization
+    ##                  StdDev    Corr  
+    ## (Intercept)      0.9519617 (Intr)
+    ## temptrend_abs.sc 0.1579174 -0.001
+    ## 
+    ##  Formula: ~1 | rarefyID %in% STUDY_ID
+    ##         (Intercept) Residual
+    ## StdDev:    1.620502 170.8519
+    ## 
+    ## Variance function:
+    ##  Structure: Power of variance covariate
+    ##  Formula: ~nyrBT 
+    ##  Parameter estimates:
+    ##     power 
+    ## -4.810054 
+    ## Fixed effects: log(Hornexp) ~ temptrend_abs.sc * REALM + temptrend_abs.sc *      tsign + temptrend_abs.sc * tempave_metab.sc + temptrend_abs.sc *      seas.sc + temptrend_abs.sc * microclim.sc + temptrend_abs.sc *      mass.sc + temptrend_abs.sc * speed.sc + temptrend_abs.sc *      consumerfrac.sc + temptrend_abs.sc * nspp.sc + temptrend_abs.sc *      thermal_bias.sc:tsign + temptrend_abs.sc * npp.sc + temptrend_abs.sc *      veg.sc + temptrend_abs.sc * duration.sc + temptrend_abs.sc *      human_bowler.sc:REALM2 
+    ##                                                       Value Std.Error    DF    t-value p-value
+    ## (Intercept)                                       0.7338419 0.4451620 22583   1.648483  0.0993
+    ## temptrend_abs.sc                                  0.4434973 0.2420115 22583   1.832546  0.0669
+    ## REALMMarine                                      -0.3829760 0.4723490   175  -0.810790  0.4186
+    ## REALMTerrestrial                                  1.6423131 0.4287598   175   3.830381  0.0002
+    ## tsign1                                           -0.0465806 0.0357630 22583  -1.302480  0.1928
+    ## tempave_metab.sc                                 -0.7074789 0.0579184 22583 -12.215103  0.0000
+    ## seas.sc                                          -0.2067921 0.0379832 22583  -5.444303  0.0000
+    ## microclim.sc                                     -0.1533234 0.0198651 22583  -7.718223  0.0000
+    ## mass.sc                                          -0.0403574 0.0290866 22583  -1.387491  0.1653
+    ## speed.sc                                          0.2591566 0.0382719 22583   6.771455  0.0000
+    ## consumerfrac.sc                                  -0.0147138 0.0228754 22583  -0.643213  0.5201
+    ## nspp.sc                                          -0.3567665 0.0295943 22583 -12.055257  0.0000
+    ## npp.sc                                           -0.0709740 0.0275581 22583  -2.575427  0.0100
+    ## veg.sc                                            0.0495502 0.0713164 22583   0.694795  0.4872
+    ## duration.sc                                       0.4616017 0.0227367 22583  20.302026  0.0000
+    ## temptrend_abs.sc:REALMMarine                     -0.3926933 0.2452954 22583  -1.600899  0.1094
+    ## temptrend_abs.sc:REALMTerrestrial                -0.2285477 0.2664713 22583  -0.857682  0.3911
+    ## temptrend_abs.sc:tsign1                          -0.0622542 0.0397755 22583  -1.565138  0.1176
+    ## temptrend_abs.sc:tempave_metab.sc                 0.1612868 0.0509504 22583   3.165568  0.0015
+    ## temptrend_abs.sc:seas.sc                         -0.0206426 0.0321187 22583  -0.642697  0.5204
+    ## temptrend_abs.sc:microclim.sc                     0.0609690 0.0225585 22583   2.702701  0.0069
+    ## temptrend_abs.sc:mass.sc                         -0.0031066 0.0289562 22583  -0.107286  0.9146
+    ## temptrend_abs.sc:speed.sc                        -0.0442968 0.0377725 22583  -1.172728  0.2409
+    ## temptrend_abs.sc:consumerfrac.sc                  0.0663566 0.0266048 22583   2.494163  0.0126
+    ## temptrend_abs.sc:nspp.sc                          0.1849798 0.0289103 22583   6.398410  0.0000
+    ## tsign-1:thermal_bias.sc                          -0.0469505 0.0340943 22583  -1.377077  0.1685
+    ## tsign1:thermal_bias.sc                           -0.0584104 0.0280626 22583  -2.081433  0.0374
+    ## temptrend_abs.sc:npp.sc                           0.0926844 0.0318092 22583   2.913759  0.0036
+    ## temptrend_abs.sc:veg.sc                          -0.1733157 0.0421955 22583  -4.107441  0.0000
+    ## temptrend_abs.sc:duration.sc                      0.0707925 0.0289942 22583   2.441608  0.0146
+    ## human_bowler.sc:REALM2TerrFresh                   0.1902327 0.0601915 22583   3.160457  0.0016
+    ## human_bowler.sc:REALM2Marine                      0.0080473 0.0239417 22583   0.336123  0.7368
+    ## temptrend_abs.sc:tsign-1:thermal_bias.sc          0.0116061 0.0277014 22583   0.418971  0.6752
+    ## temptrend_abs.sc:tsign1:thermal_bias.sc           0.0476509 0.0258639 22583   1.842373  0.0654
+    ## temptrend_abs.sc:human_bowler.sc:REALM2TerrFresh -0.1091558 0.0274908 22583  -3.970627  0.0001
+    ## temptrend_abs.sc:human_bowler.sc:REALM2Marine    -0.0721648 0.0310577 22583  -2.323572  0.0202
+    ##  Correlation: 
+    ##                                                  (Intr) tmpt_. REALMM REALMT tsign1 tmpv_. ses.sc mcrcl. mss.sc spd.sc cnsmr. nspp.s npp.sc veg.sc drtn.s t_.:REALMM t_.:REALMT tm_.:1 tm_.:_. tmptrnd_bs.sc:ss. tmptrnd_bs.sc:mc. tmptrnd_bs.sc:ms. tmptrnd_bs.sc:sp. tmptrnd_bs.sc:c. tmptrnd_bs.sc:ns. t-1:_. ts1:_. tmptrnd_bs.sc:np. tmptrnd_bs.sc:v. tmptrnd_bs.sc:d. h_.:REALM2T h_.:REALM2M t_.:-1 t_.:1: t_.:_.:REALM2T
+    ## temptrend_abs.sc                                 -0.323                                                                                                                                                                                                                                                                                                                                                                         
+    ## REALMMarine                                      -0.958  0.310                                                                                                                                                                                                                                                                                                                                                                  
+    ## REALMTerrestrial                                 -0.757  0.199  0.706                                                                                                                                                                                                                                                                                                                                                           
+    ## tsign1                                           -0.057  0.060 -0.001  0.027                                                                                                                                                                                                                                                                                                                                                    
+    ## tempave_metab.sc                                  0.089 -0.010 -0.069 -0.181 -0.048                                                                                                                                                                                                                                                                                                                                             
+    ## seas.sc                                          -0.082  0.026  0.132 -0.107 -0.078  0.058                                                                                                                                                                                                                                                                                                                                      
+    ## microclim.sc                                     -0.066  0.064  0.075 -0.003 -0.006 -0.110  0.087                                                                                                                                                                                                                                                                                                                               
+    ## mass.sc                                           0.043  0.026 -0.018 -0.016  0.008  0.143  0.057  0.005                                                                                                                                                                                                                                                                                                                        
+    ## speed.sc                                          0.077 -0.054 -0.028 -0.051 -0.051 -0.136  0.005  0.070 -0.434                                                                                                                                                                                                                                                                                                                 
+    ## consumerfrac.sc                                  -0.019  0.029  0.011  0.090  0.058 -0.127 -0.073  0.010 -0.053 -0.069                                                                                                                                                                                                                                                                                                          
+    ## nspp.sc                                           0.012 -0.061 -0.046 -0.070  0.048 -0.121  0.014 -0.034 -0.068  0.172  0.075                                                                                                                                                                                                                                                                                                   
+    ## npp.sc                                            0.049 -0.002 -0.067  0.073 -0.018 -0.002 -0.299 -0.299 -0.038  0.080 -0.019 -0.168                                                                                                                                                                                                                                                                                            
+    ## veg.sc                                           -0.523  0.260  0.544  0.023 -0.012  0.004  0.112  0.039  0.008 -0.006 -0.004  0.014 -0.182                                                                                                                                                                                                                                                                                     
+    ## duration.sc                                       0.001  0.027  0.026  0.050 -0.160  0.028 -0.064 -0.021 -0.039  0.013  0.002 -0.286  0.045 -0.001                                                                                                                                                                                                                                                                              
+    ## temptrend_abs.sc:REALMMarine                      0.325 -0.956 -0.329 -0.191 -0.024  0.030 -0.063 -0.072 -0.032  0.035 -0.020  0.073  0.024 -0.289 -0.036                                                                                                                                                                                                                                                                       
+    ## temptrend_abs.sc:REALMTerrestrial                 0.153 -0.629 -0.137 -0.301 -0.012  0.105  0.179  0.015 -0.065  0.088 -0.043  0.137 -0.097  0.050 -0.063  0.596                                                                                                                                                                                                                                                                
+    ## temptrend_abs.sc:tsign1                           0.034 -0.164 -0.004 -0.012 -0.542  0.015 -0.007 -0.020  0.003  0.037 -0.026 -0.012 -0.003  0.016  0.095  0.077      0.031                                                                                                                                                                                                                                                     
+    ## temptrend_abs.sc:tempave_metab.sc                -0.014  0.038  0.008  0.084 -0.058 -0.325 -0.080  0.051 -0.136  0.192  0.078  0.019 -0.052  0.005  0.016 -0.029     -0.304      0.056                                                                                                                                                                                                                                          
+    ## temptrend_abs.sc:seas.sc                          0.049 -0.112 -0.071  0.109  0.033 -0.032 -0.503 -0.094 -0.015 -0.008  0.037  0.004  0.134 -0.120 -0.019  0.154     -0.379      0.016  0.111                                                                                                                                                                                                                                   
+    ## temptrend_abs.sc:microclim.sc                     0.038 -0.081 -0.044 -0.002 -0.012  0.082 -0.065 -0.552  0.000 -0.037 -0.016  0.019  0.130 -0.011 -0.020  0.085     -0.070      0.048 -0.035   0.180                                                                                                                                                                                                                           
+    ## temptrend_abs.sc:mass.sc                          0.011 -0.042 -0.009 -0.037  0.002 -0.106 -0.026  0.003 -0.547  0.312  0.092  0.015  0.006 -0.009  0.071  0.064      0.117     -0.019  0.269  -0.008            -0.040                                                                                                                                                                                                         
+    ## temptrend_abs.sc:speed.sc                        -0.020  0.102  0.017  0.057  0.038  0.144  0.016 -0.039  0.328 -0.508  0.018 -0.121 -0.017 -0.012  0.001 -0.082     -0.185     -0.062 -0.436   0.024             0.063            -0.580                                                                                                                                                                                       
+    ## temptrend_abs.sc:consumerfrac.sc                 -0.001 -0.032  0.001 -0.017 -0.016  0.063  0.049 -0.007  0.078 -0.001 -0.590 -0.037  0.000  0.008 -0.009  0.032      0.073      0.028 -0.134  -0.056            -0.004            -0.176            -0.039                                                                                                                                                                     
+    ## temptrend_abs.sc:nspp.sc                         -0.023  0.102  0.022  0.076 -0.006  0.010 -0.014  0.024 -0.009 -0.118 -0.026 -0.484  0.076 -0.029  0.090 -0.107     -0.244     -0.032  0.026  -0.007             0.000             0.030             0.200             0.061                                                                                                                                                   
+    ## tsign-1:thermal_bias.sc                           0.028 -0.003 -0.026 -0.051 -0.050  0.273 -0.135 -0.033  0.003 -0.073 -0.015 -0.055 -0.025  0.013  0.057  0.009      0.010     -0.028 -0.021   0.111             0.011            -0.003             0.042            -0.003            0.043                                                                                                                                  
+    ## tsign1:thermal_bias.sc                            0.072 -0.049 -0.072 -0.086  0.025  0.425 -0.207 -0.170  0.040 -0.118 -0.027 -0.045 -0.040 -0.009  0.057  0.035      0.023      0.083 -0.056   0.138             0.079            -0.013             0.063             0.005            0.014             0.366                                                                                                                
+    ## temptrend_abs.sc:npp.sc                          -0.003  0.007  0.007 -0.056  0.011 -0.019  0.102  0.125  0.004 -0.017  0.005  0.066 -0.527  0.107 -0.023 -0.043      0.152     -0.021  0.152  -0.187            -0.238             0.049            -0.042             0.006           -0.063             0.003  0.006                                                                                                         
+    ## temptrend_abs.sc:veg.sc                           0.249 -0.455 -0.260  0.027 -0.013 -0.011 -0.143 -0.002 -0.009  0.000  0.015 -0.032  0.202 -0.515 -0.013  0.512     -0.154      0.058 -0.014   0.339            -0.021             0.013             0.035            -0.033            0.049             0.009  0.010 -0.374                                                                                                  
+    ## temptrend_abs.sc:duration.sc                     -0.024  0.172 -0.010 -0.026 -0.004  0.103 -0.052  0.011  0.053 -0.035  0.016  0.121  0.001  0.006 -0.350  0.013      0.056     -0.035 -0.024   0.020            -0.013            -0.097            -0.025             0.037           -0.132            -0.012 -0.065  0.003             0.007                                                                                
+    ## human_bowler.sc:REALM2TerrFresh                  -0.079  0.027  0.084 -0.034  0.004  0.025  0.037  0.079  0.016 -0.016 -0.025  0.006 -0.100  0.156 -0.009 -0.035      0.054      0.000 -0.007  -0.067            -0.019            -0.007             0.018             0.015            0.015             0.035  0.050  0.050            -0.130            0.002                                                               
+    ## human_bowler.sc:REALM2Marine                      0.029 -0.039 -0.033 -0.012 -0.003  0.071 -0.195 -0.078 -0.032  0.010 -0.007 -0.036 -0.136  0.010 -0.016  0.049      0.029      0.029 -0.070   0.158             0.031             0.049            -0.047             0.035            0.026             0.131  0.148  0.105            -0.002            0.033            0.006                                              
+    ## temptrend_abs.sc:tsign-1:thermal_bias.sc          0.006 -0.004 -0.001  0.010 -0.063 -0.057  0.123 -0.003 -0.015  0.075 -0.007  0.036 -0.003 -0.006 -0.047 -0.012     -0.016      0.242  0.115  -0.234            -0.012             0.056            -0.143             0.015           -0.075            -0.533 -0.247  0.023            -0.039            0.055           -0.013      -0.126                                  
+    ## temptrend_abs.sc:tsign1:thermal_bias.sc          -0.037  0.066  0.035  0.034  0.065 -0.116  0.137  0.061 -0.015  0.079  0.001  0.018  0.007  0.025 -0.072 -0.044     -0.074     -0.196  0.180  -0.197            -0.091             0.049            -0.148             0.006           -0.032            -0.231 -0.571  0.034            -0.024            0.063           -0.034      -0.150       0.471                      
+    ## temptrend_abs.sc:human_bowler.sc:REALM2TerrFresh  0.076 -0.220 -0.083  0.050 -0.007 -0.030 -0.120 -0.048 -0.006  0.019  0.016  0.005  0.116 -0.188 -0.001  0.250     -0.171      0.044  0.051   0.334             0.040            -0.006            -0.028            -0.021           -0.032            -0.036 -0.039 -0.192             0.553           -0.003           -0.539       0.007       0.064  0.067               
+    ## temptrend_abs.sc:human_bowler.sc:REALM2Marine    -0.027  0.071  0.029  0.021  0.022 -0.055  0.110  0.046  0.024 -0.035  0.059  0.007  0.090  0.003  0.008 -0.079     -0.058     -0.031  0.126  -0.230            -0.063            -0.072             0.087            -0.122           -0.016            -0.088 -0.098 -0.188             0.015           -0.022            0.002      -0.610       0.164  0.190 -0.018        
+    ## 
+    ## Standardized Within-Group Residuals:
+    ##           Min            Q1           Med            Q3           Max 
+    ## -1.356184e+00 -1.355293e-02  2.250806e-06  2.591982e-02  1.551790e+00 
+    ## 
+    ## Number of Observations: 22794
+    ## Number of Groups: 
+    ##               STUDY_ID rarefyID %in% STUDY_ID 
+    ##                    178                  22794
+
+``` r
+rsquared(modTfullJtuexp)
+```
+
+    ##   Response   family     link method   Marginal Conditional
+    ## 1   Jtuexp gaussian identity   none 0.07921369   0.6052232
+
+``` r
+rsquared(modTfullJbetaexp)
+```
+
+    ##   Response   family     link method   Marginal Conditional
+    ## 1 Jbetaexp gaussian identity   none 0.05292824   0.3635837
+
+``` r
+rsquared(modTfullHornexp)
+```
+
+    ##   Response   family     link method     Marginal  Conditional
+    ## 1  Hornexp gaussian identity   none 1.452585e-05 0.0001364047
+
+#### Summary mm
+
+``` r
+summary(modTfullJtumm)
+```
+
+    ## Linear mixed-effects model fit by REML
+    ##  Data: trends[i, ] 
+    ##        AIC      BIC    logLik
+    ##   103449.5 103805.2 -51682.77
+    ## 
+    ## Random effects:
+    ##  Formula: ~temptrend_abs.sc | STUDY_ID
+    ##  Structure: General positive-definite, Log-Cholesky parametrization
+    ##                  StdDev    Corr  
+    ## (Intercept)      0.6683633 (Intr)
+    ## temptrend_abs.sc 0.1715579 -0.967
+    ## 
+    ##  Formula: ~1 | rarefyID %in% STUDY_ID
+    ##         (Intercept)  Residual
+    ## StdDev:    1.042733 0.3150569
+    ## 
+    ## Variance function:
+    ##  Structure: Power of variance covariate
+    ##  Formula: ~nyrBT 
+    ##  Parameter estimates:
+    ##     power 
+    ## -6.801563 
+    ## Fixed effects: log(Jtumm + 1) ~ temptrend_abs.sc * REALM + temptrend_abs.sc *      tsign + temptrend_abs.sc * tempave_metab.sc + temptrend_abs.sc *      seas.sc + temptrend_abs.sc * microclim.sc + temptrend_abs.sc *      mass.sc + temptrend_abs.sc * speed.sc + temptrend_abs.sc *      consumerfrac.sc + temptrend_abs.sc * nspp.sc + temptrend_abs.sc *      thermal_bias.sc:tsign + temptrend_abs.sc * npp.sc + temptrend_abs.sc *      veg.sc + temptrend_abs.sc * duration.sc + temptrend_abs.sc *      human_bowler.sc:REALM2 
+    ##                                                       Value  Std.Error    DF    t-value p-value
+    ## (Intercept)                                       1.0479985 0.28393583 34973   3.690970  0.0002
+    ## temptrend_abs.sc                                  0.0266529 0.12667449 34973   0.210404  0.8334
+    ## REALMMarine                                      -0.1423867 0.30037066   197  -0.474037  0.6360
+    ## REALMTerrestrial                                  1.1357198 0.28161155   197   4.032930  0.0001
+    ## tsign1                                           -0.0014113 0.01784461 34973  -0.079091  0.9370
+    ## tempave_metab.sc                                 -0.3762870 0.03152904 34973 -11.934617  0.0000
+    ## seas.sc                                          -0.1351314 0.01960131 34973  -6.894000  0.0000
+    ## microclim.sc                                     -0.0343521 0.00997048 34973  -3.445384  0.0006
+    ## mass.sc                                           0.0218029 0.01530315 34973   1.424731  0.1542
+    ## speed.sc                                         -0.0058629 0.02001602 34973  -0.292911  0.7696
+    ## consumerfrac.sc                                   0.0119982 0.01227613 34973   0.977357  0.3284
+    ## nspp.sc                                          -0.3242936 0.01528028 34973 -21.223024  0.0000
+    ## npp.sc                                            0.0140982 0.01390437 34973   1.013939  0.3106
+    ## veg.sc                                           -0.0144594 0.03883551 34973  -0.372325  0.7097
+    ## duration.sc                                       0.2354274 0.01146070 34973  20.542157  0.0000
+    ## temptrend_abs.sc:REALMMarine                     -0.0106653 0.12927451 34973  -0.082501  0.9342
+    ## temptrend_abs.sc:REALMTerrestrial                -0.2726116 0.13522219 34973  -2.016027  0.0438
+    ## temptrend_abs.sc:tsign1                           0.0049447 0.01944852 34973   0.254244  0.7993
+    ## temptrend_abs.sc:tempave_metab.sc                 0.0572086 0.02229436 34973   2.566056  0.0103
+    ## temptrend_abs.sc:seas.sc                          0.0325672 0.01561363 34973   2.085820  0.0370
+    ## temptrend_abs.sc:microclim.sc                     0.0119697 0.01062005 34973   1.127084  0.2597
+    ## temptrend_abs.sc:mass.sc                         -0.0146844 0.01411803 34973  -1.040119  0.2983
+    ## temptrend_abs.sc:speed.sc                         0.0139177 0.01821733 34973   0.763980  0.4449
+    ## temptrend_abs.sc:consumerfrac.sc                  0.0014536 0.01181450 34973   0.123039  0.9021
+    ## temptrend_abs.sc:nspp.sc                          0.0731462 0.01387321 34973   5.272475  0.0000
+    ## tsign-1:thermal_bias.sc                          -0.0566822 0.01724546 34973  -3.286789  0.0010
+    ## tsign1:thermal_bias.sc                            0.0030399 0.01432648 34973   0.212191  0.8320
+    ## temptrend_abs.sc:npp.sc                           0.0010783 0.01508436 34973   0.071482  0.9430
+    ## temptrend_abs.sc:veg.sc                          -0.0093046 0.02095555 34973  -0.444015  0.6570
+    ## temptrend_abs.sc:duration.sc                      0.0101012 0.01433202 34973   0.704800  0.4809
+    ## human_bowler.sc:REALM2TerrFresh                   0.0478780 0.03308661 34973   1.447050  0.1479
+    ## human_bowler.sc:REALM2Marine                     -0.0005355 0.01204478 34973  -0.044462  0.9645
+    ## temptrend_abs.sc:tsign-1:thermal_bias.sc          0.0186701 0.01337529 34973   1.395863  0.1628
+    ## temptrend_abs.sc:tsign1:thermal_bias.sc           0.0071569 0.01253755 34973   0.570839  0.5681
+    ## temptrend_abs.sc:human_bowler.sc:REALM2TerrFresh -0.0037303 0.01360540 34973  -0.274181  0.7839
+    ## temptrend_abs.sc:human_bowler.sc:REALM2Marine    -0.0075594 0.01504766 34973  -0.502365  0.6154
+    ##  Correlation: 
+    ##                                                  (Intr) tmpt_. REALMM REALMT tsign1 tmpv_. ses.sc mcrcl. mss.sc spd.sc cnsmr. nspp.s npp.sc veg.sc drtn.s t_.:REALMM t_.:REALMT tm_.:1 tm_.:_. tmptrnd_bs.sc:ss. tmptrnd_bs.sc:mc. tmptrnd_bs.sc:ms. tmptrnd_bs.sc:sp. tmptrnd_bs.sc:c. tmptrnd_bs.sc:ns. t-1:_. ts1:_. tmptrnd_bs.sc:np. tmptrnd_bs.sc:v. tmptrnd_bs.sc:d. h_.:REALM2T h_.:REALM2M t_.:-1 t_.:1: t_.:_.:REALM2T
+    ## temptrend_abs.sc                                 -0.652                                                                                                                                                                                                                                                                                                                                                                         
+    ## REALMMarine                                      -0.955  0.618                                                                                                                                                                                                                                                                                                                                                                  
+    ## REALMTerrestrial                                 -0.801  0.526  0.752                                                                                                                                                                                                                                                                                                                                                           
+    ## tsign1                                           -0.043  0.053 -0.003  0.020                                                                                                                                                                                                                                                                                                                                                    
+    ## tempave_metab.sc                                  0.093 -0.045 -0.068 -0.149 -0.050                                                                                                                                                                                                                                                                                                                                             
+    ## seas.sc                                          -0.091  0.067  0.133 -0.058 -0.079  0.076                                                                                                                                                                                                                                                                                                                                      
+    ## microclim.sc                                     -0.054  0.060  0.060  0.000 -0.011 -0.119  0.086                                                                                                                                                                                                                                                                                                                               
+    ## mass.sc                                           0.055 -0.011 -0.026 -0.033  0.016  0.135  0.042  0.003                                                                                                                                                                                                                                                                                                                        
+    ## speed.sc                                          0.072 -0.064 -0.024 -0.040 -0.058 -0.036  0.019  0.064 -0.418                                                                                                                                                                                                                                                                                                                 
+    ## consumerfrac.sc                                  -0.016  0.024  0.012  0.080  0.049 -0.107 -0.063  0.016 -0.031 -0.062                                                                                                                                                                                                                                                                                                          
+    ## nspp.sc                                          -0.008 -0.020 -0.024 -0.042  0.044 -0.144  0.023 -0.025 -0.097  0.156  0.078                                                                                                                                                                                                                                                                                                   
+    ## npp.sc                                            0.053 -0.021 -0.067  0.048 -0.006 -0.020 -0.310 -0.298 -0.040  0.076 -0.014 -0.171                                                                                                                                                                                                                                                                                            
+    ## veg.sc                                           -0.448  0.278  0.468  0.014 -0.015  0.004  0.123  0.041  0.010 -0.005  0.000  0.022 -0.178                                                                                                                                                                                                                                                                                     
+    ## duration.sc                                       0.006  0.007  0.020  0.039 -0.176  0.011 -0.073 -0.008 -0.021  0.018 -0.007 -0.293  0.052 -0.011                                                                                                                                                                                                                                                                              
+    ## temptrend_abs.sc:REALMMarine                      0.642 -0.954 -0.667 -0.511 -0.015  0.053 -0.112 -0.065 -0.007  0.029 -0.015  0.045  0.044 -0.306 -0.028                                                                                                                                                                                                                                                                       
+    ## temptrend_abs.sc:REALMTerrestrial                 0.482 -0.673 -0.452 -0.649 -0.022  0.123  0.117  0.011 -0.019  0.066 -0.054  0.100 -0.085  0.028 -0.045  0.643                                                                                                                                                                                                                                                                
+    ## temptrend_abs.sc:tsign1                           0.019 -0.134  0.002 -0.005 -0.546  0.017 -0.002 -0.016  0.005  0.035 -0.025 -0.012 -0.012  0.025  0.099  0.051      0.020                                                                                                                                                                                                                                                     
+    ## temptrend_abs.sc:tempave_metab.sc                -0.039  0.045  0.027  0.089 -0.026 -0.524 -0.078  0.069 -0.153  0.144  0.099  0.065 -0.019 -0.001  0.020 -0.035     -0.239      0.035                                                                                                                                                                                                                                          
+    ## temptrend_abs.sc:seas.sc                          0.052 -0.087 -0.066  0.076  0.041 -0.025 -0.549 -0.089 -0.028 -0.002  0.029 -0.010  0.156 -0.111 -0.008  0.125     -0.343      0.009  0.104                                                                                                                                                                                                                                   
+    ## temptrend_abs.sc:microclim.sc                     0.035 -0.078 -0.034 -0.003 -0.010  0.084 -0.066 -0.561 -0.004 -0.034 -0.020  0.013  0.133 -0.021 -0.031  0.077     -0.054      0.053 -0.058   0.165                                                                                                                                                                                                                           
+    ## temptrend_abs.sc:mass.sc                         -0.005 -0.029 -0.003 -0.013  0.000 -0.103 -0.033  0.005 -0.589  0.312  0.068  0.044  0.009 -0.016  0.061  0.050      0.096     -0.043  0.343   0.018            -0.031                                                                                                                                                                                                         
+    ## temptrend_abs.sc:speed.sc                        -0.026  0.081  0.013  0.042  0.049  0.090  0.009 -0.041  0.325 -0.559 -0.001 -0.118 -0.018 -0.008 -0.023 -0.068     -0.161     -0.061 -0.469   0.005             0.060            -0.631                                                                                                                                                                                       
+    ## temptrend_abs.sc:consumerfrac.sc                  0.003 -0.021 -0.007 -0.022 -0.024  0.073  0.036 -0.014  0.053 -0.003 -0.613 -0.055 -0.002  0.005  0.007  0.024      0.051      0.052 -0.187  -0.047             0.010            -0.152             0.038                                                                                                                                                                     
+    ## temptrend_abs.sc:nspp.sc                         -0.009  0.107  0.011  0.057  0.002  0.037 -0.019  0.018  0.019 -0.113 -0.046 -0.536  0.089 -0.035  0.106 -0.104     -0.264     -0.036  0.013   0.001             0.016             0.018             0.238             0.109                                                                                                                                                   
+    ## tsign-1:thermal_bias.sc                           0.038 -0.022 -0.033 -0.047 -0.064  0.329 -0.119 -0.051  0.008 -0.043 -0.017 -0.058 -0.025  0.006  0.039  0.028      0.028     -0.025 -0.117   0.115             0.026             0.000             0.026             0.005            0.036                                                                                                                                  
+    ## tsign1:thermal_bias.sc                            0.069 -0.067 -0.066 -0.078  0.035  0.478 -0.179 -0.177  0.053 -0.077 -0.026 -0.056 -0.053 -0.007  0.035  0.056      0.049      0.073 -0.185   0.145             0.083            -0.016             0.045             0.017            0.022             0.399                                                                                                                
+    ## temptrend_abs.sc:npp.sc                          -0.005 -0.017  0.008 -0.048  0.004 -0.003  0.114  0.125  0.005 -0.018 -0.005  0.071 -0.545  0.103 -0.017 -0.014      0.183     -0.019  0.090  -0.199            -0.216             0.047            -0.033             0.029           -0.069             0.006  0.016                                                                                                         
+    ## temptrend_abs.sc:veg.sc                           0.233 -0.449 -0.244  0.017 -0.002 -0.009 -0.143 -0.011 -0.014 -0.003  0.012 -0.035  0.202 -0.545 -0.006  0.497     -0.125      0.040 -0.001   0.287            -0.007             0.011             0.028            -0.030            0.047             0.011  0.011 -0.357                                                                                                  
+    ## temptrend_abs.sc:duration.sc                     -0.018  0.168 -0.011 -0.022 -0.008  0.110 -0.047 -0.004  0.046 -0.034  0.031  0.122  0.005  0.010 -0.353  0.012      0.046     -0.032 -0.048   0.031             0.011            -0.098            -0.012             0.014           -0.116             0.005 -0.044 -0.024             0.011                                                                                
+    ## human_bowler.sc:REALM2TerrFresh                  -0.071  0.058  0.074 -0.027  0.009  0.022  0.040  0.050  0.010 -0.011 -0.020 -0.004 -0.077  0.142 -0.006 -0.064      0.024     -0.005 -0.013  -0.060             0.016             0.002             0.014             0.012            0.023             0.021  0.038  0.028            -0.114           -0.004                                                               
+    ## human_bowler.sc:REALM2Marine                      0.029 -0.039 -0.032 -0.010 -0.005  0.068 -0.199 -0.073 -0.021  0.013 -0.012 -0.034 -0.134  0.006 -0.015  0.050      0.025      0.022 -0.071   0.176             0.031             0.040            -0.040             0.056            0.016             0.133  0.145  0.115            -0.004            0.039            0.000                                              
+    ## temptrend_abs.sc:tsign-1:thermal_bias.sc         -0.012  0.007  0.013  0.019 -0.054 -0.123  0.121  0.012 -0.010  0.052  0.004  0.035 -0.001  0.001 -0.036 -0.027     -0.024      0.245  0.115  -0.231            -0.032             0.032            -0.127             0.002           -0.059            -0.576 -0.285  0.014            -0.040            0.035            0.001      -0.137                                  
+    ## temptrend_abs.sc:tsign1:thermal_bias.sc          -0.039  0.067  0.036  0.037  0.064 -0.187  0.132  0.072 -0.019  0.055  0.015  0.027  0.016  0.020 -0.061 -0.050     -0.073     -0.207  0.189  -0.198            -0.103             0.037            -0.121            -0.027           -0.012            -0.269 -0.612  0.018            -0.022            0.043           -0.022      -0.153       0.460                      
+    ## temptrend_abs.sc:human_bowler.sc:REALM2TerrFresh  0.069 -0.201 -0.073  0.035 -0.004 -0.025 -0.112 -0.037  0.002  0.013  0.014  0.004  0.106 -0.172  0.002  0.223     -0.131      0.039  0.040   0.273             0.023            -0.024            -0.020            -0.019           -0.032            -0.030 -0.026 -0.175             0.491            0.004           -0.585       0.008       0.050  0.042               
+    ## temptrend_abs.sc:human_bowler.sc:REALM2Marine    -0.025  0.065  0.026  0.013  0.019 -0.053  0.115  0.042  0.018 -0.030  0.059  0.006  0.098  0.004  0.007 -0.073     -0.049     -0.019  0.130  -0.268            -0.055            -0.062             0.070            -0.174           -0.001            -0.098 -0.102 -0.234             0.027           -0.031            0.010      -0.614       0.198  0.213 -0.015        
+    ## 
+    ## Standardized Within-Group Residuals:
+    ##           Min            Q1           Med            Q3           Max 
+    ## -2.070110e-01 -5.206507e-06 -4.626918e-08  1.262174e-06  1.837784e-01 
+    ## 
+    ## Number of Observations: 35206
+    ## Number of Groups: 
+    ##               STUDY_ID rarefyID %in% STUDY_ID 
+    ##                    200                  35206
+
+``` r
+summary(modTfullJbetamm)
+```
+
+    ## Linear mixed-effects model fit by REML
+    ##  Data: trends[i, ] 
+    ##        AIC     BIC   logLik
+    ##   72603.81 72959.5 -36259.9
+    ## 
+    ## Random effects:
+    ##  Formula: ~temptrend_abs.sc | STUDY_ID
+    ##  Structure: General positive-definite, Log-Cholesky parametrization
+    ##                  StdDev    Corr  
+    ## (Intercept)      0.7327520 (Intr)
+    ## temptrend_abs.sc 0.1775951 -0.993
+    ## 
+    ##  Formula: ~1 | rarefyID %in% STUDY_ID
+    ##         (Intercept)  Residual
+    ## StdDev:   0.4841602 0.7468424
+    ## 
+    ## Variance function:
+    ##  Structure: Power of variance covariate
+    ##  Formula: ~nyrBT 
+    ##  Parameter estimates:
+    ##      power 
+    ## -0.2818268 
+    ## Fixed effects: log(Jbetamm + 1) ~ temptrend_abs.sc * REALM + temptrend_abs.sc *      tsign + temptrend_abs.sc * tempave_metab.sc + temptrend_abs.sc *      seas.sc + temptrend_abs.sc * microclim.sc + temptrend_abs.sc *      mass.sc + temptrend_abs.sc * speed.sc + temptrend_abs.sc *      consumerfrac.sc + temptrend_abs.sc * nspp.sc + temptrend_abs.sc *      thermal_bias.sc:tsign + temptrend_abs.sc * npp.sc + temptrend_abs.sc *      veg.sc + temptrend_abs.sc * duration.sc + temptrend_abs.sc *      human_bowler.sc:REALM2 
+    ##                                                       Value  Std.Error    DF    t-value p-value
+    ## (Intercept)                                       0.8796929 0.23502864 35007   3.742918  0.0002
+    ## temptrend_abs.sc                                 -0.0544482 0.09119739 35007  -0.597036  0.5505
+    ## REALMMarine                                      -0.4080962 0.25112911   197  -1.625045  0.1058
+    ## REALMTerrestrial                                  0.7013623 0.24381465   197   2.876621  0.0045
+    ## tsign1                                           -0.0361529 0.01164193 35007  -3.105402  0.0019
+    ## tempave_metab.sc                                 -0.3499171 0.02159595 35007 -16.202901  0.0000
+    ## seas.sc                                          -0.1010895 0.01282390 35007  -7.882896  0.0000
+    ## microclim.sc                                     -0.0276120 0.00636313 35007  -4.339380  0.0000
+    ## mass.sc                                          -0.0003189 0.01020841 35007  -0.031239  0.9751
+    ## speed.sc                                         -0.0303364 0.01339044 35007  -2.265531  0.0235
+    ## consumerfrac.sc                                  -0.0130083 0.00778214 35007  -1.671553  0.0946
+    ## nspp.sc                                          -0.2352533 0.01006494 35007 -23.373554  0.0000
+    ## npp.sc                                            0.0029952 0.00896352 35007   0.334156  0.7383
+    ## veg.sc                                            0.0171835 0.02434648 35007   0.705791  0.4803
+    ## duration.sc                                       0.1549009 0.00761045 35007  20.353717  0.0000
+    ## temptrend_abs.sc:REALMMarine                      0.0723725 0.09372611 35007   0.772170  0.4400
+    ## temptrend_abs.sc:REALMTerrestrial                -0.1507651 0.09680841 35007  -1.557355  0.1194
+    ## temptrend_abs.sc:tsign1                           0.0173617 0.01315812 35007   1.319467  0.1870
+    ## temptrend_abs.sc:tempave_metab.sc                 0.0669633 0.01384398 35007   4.836996  0.0000
+    ## temptrend_abs.sc:seas.sc                          0.0165804 0.01038688 35007   1.596284  0.1104
+    ## temptrend_abs.sc:microclim.sc                     0.0014075 0.00699911 35007   0.201097  0.8406
+    ## temptrend_abs.sc:mass.sc                         -0.0012058 0.00938953 35007  -0.128421  0.8978
+    ## temptrend_abs.sc:speed.sc                         0.0180913 0.01217257 35007   1.486231  0.1372
+    ## temptrend_abs.sc:consumerfrac.sc                  0.0091304 0.00759663 35007   1.201897  0.2294
+    ## temptrend_abs.sc:nspp.sc                          0.0599296 0.00912440 35007   6.568065  0.0000
+    ## tsign-1:thermal_bias.sc                          -0.0598087 0.01144814 35007  -5.224313  0.0000
+    ## tsign1:thermal_bias.sc                           -0.0133489 0.00947768 35007  -1.408459  0.1590
+    ## temptrend_abs.sc:npp.sc                           0.0071515 0.00992763 35007   0.720368  0.4713
+    ## temptrend_abs.sc:veg.sc                          -0.0134573 0.01408441 35007  -0.955474  0.3393
+    ## temptrend_abs.sc:duration.sc                     -0.0010980 0.00950378 35007  -0.115531  0.9080
+    ## human_bowler.sc:REALM2TerrFresh                   0.0520693 0.02057148 35007   2.531141  0.0114
+    ## human_bowler.sc:REALM2Marine                     -0.0065215 0.00771954 35007  -0.844808  0.3982
+    ## temptrend_abs.sc:tsign-1:thermal_bias.sc          0.0196074 0.00889081 35007   2.205361  0.0274
+    ## temptrend_abs.sc:tsign1:thermal_bias.sc           0.0049637 0.00824548 35007   0.601990  0.5472
+    ## temptrend_abs.sc:human_bowler.sc:REALM2TerrFresh -0.0142871 0.00902761 35007  -1.582601  0.1135
+    ## temptrend_abs.sc:human_bowler.sc:REALM2Marine    -0.0035806 0.01002671 35007  -0.357106  0.7210
+    ##  Correlation: 
+    ##                                                  (Intr) tmpt_. REALMM REALMT tsign1 tmpv_. ses.sc mcrcl. mss.sc spd.sc cnsmr. nspp.s npp.sc veg.sc drtn.s t_.:REALMM t_.:REALMT tm_.:1 tm_.:_. tmptrnd_bs.sc:ss. tmptrnd_bs.sc:mc. tmptrnd_bs.sc:ms. tmptrnd_bs.sc:sp. tmptrnd_bs.sc:c. tmptrnd_bs.sc:ns. t-1:_. ts1:_. tmptrnd_bs.sc:np. tmptrnd_bs.sc:v. tmptrnd_bs.sc:d. h_.:REALM2T h_.:REALM2M t_.:-1 t_.:1: t_.:_.:REALM2T
+    ## temptrend_abs.sc                                 -0.705                                                                                                                                                                                                                                                                                                                                                                         
+    ## REALMMarine                                      -0.938  0.659                                                                                                                                                                                                                                                                                                                                                                  
+    ## REALMTerrestrial                                 -0.850  0.593  0.791                                                                                                                                                                                                                                                                                                                                                           
+    ## tsign1                                           -0.035  0.047 -0.003  0.014                                                                                                                                                                                                                                                                                                                                                    
+    ## tempave_metab.sc                                  0.092 -0.050 -0.063 -0.113 -0.052                                                                                                                                                                                                                                                                                                                                             
+    ## seas.sc                                          -0.084  0.064  0.117 -0.026 -0.085  0.067                                                                                                                                                                                                                                                                                                                                      
+    ## microclim.sc                                     -0.042  0.057  0.045  0.000 -0.009 -0.130  0.093                                                                                                                                                                                                                                                                                                                               
+    ## mass.sc                                           0.065 -0.024 -0.035 -0.042  0.016  0.139  0.031  0.004                                                                                                                                                                                                                                                                                                                        
+    ## speed.sc                                          0.066 -0.062 -0.020 -0.031 -0.066  0.037  0.038  0.057 -0.408                                                                                                                                                                                                                                                                                                                 
+    ## consumerfrac.sc                                  -0.006  0.018  0.007  0.055  0.048 -0.091 -0.052  0.016 -0.034 -0.027                                                                                                                                                                                                                                                                                                          
+    ## nspp.sc                                          -0.024 -0.008 -0.008 -0.019  0.049 -0.159  0.029 -0.027 -0.121  0.149  0.090                                                                                                                                                                                                                                                                                                   
+    ## npp.sc                                            0.048 -0.019 -0.057  0.030 -0.007 -0.021 -0.307 -0.285 -0.035  0.074 -0.018 -0.182                                                                                                                                                                                                                                                                                            
+    ## veg.sc                                           -0.335  0.248  0.347  0.014 -0.017 -0.001  0.116  0.043  0.012 -0.007 -0.005  0.020 -0.178                                                                                                                                                                                                                                                                                     
+    ## duration.sc                                       0.008  0.007  0.014  0.024 -0.176  0.022 -0.073 -0.007 -0.004  0.013 -0.018 -0.310  0.052 -0.007                                                                                                                                                                                                                                                                              
+    ## temptrend_abs.sc:REALMMarine                      0.686 -0.951 -0.723 -0.574 -0.011  0.054 -0.105 -0.061  0.005  0.026 -0.011  0.033  0.040 -0.271 -0.025                                                                                                                                                                                                                                                                       
+    ## temptrend_abs.sc:REALMTerrestrial                 0.577 -0.715 -0.538 -0.709 -0.021  0.098  0.098  0.013 -0.008  0.060 -0.042  0.091 -0.086  0.024 -0.039  0.684                                                                                                                                                                                                                                                                
+    ## temptrend_abs.sc:tsign1                           0.017 -0.125 -0.001 -0.004 -0.536  0.018 -0.004 -0.020  0.010  0.034 -0.031 -0.017 -0.010  0.021  0.096  0.046      0.016                                                                                                                                                                                                                                                     
+    ## temptrend_abs.sc:tempave_metab.sc                -0.039  0.042  0.025  0.063 -0.027 -0.526 -0.079  0.074 -0.171  0.132  0.107  0.074 -0.002 -0.001  0.011 -0.033     -0.182      0.033                                                                                                                                                                                                                                          
+    ## temptrend_abs.sc:seas.sc                          0.037 -0.069 -0.046  0.057  0.048 -0.009 -0.539 -0.095 -0.023 -0.005  0.024 -0.017  0.157 -0.102 -0.007  0.099     -0.324      0.010  0.091                                                                                                                                                                                                                                   
+    ## temptrend_abs.sc:microclim.sc                     0.027 -0.080 -0.025 -0.003 -0.016  0.097 -0.069 -0.554 -0.005 -0.029 -0.017  0.012  0.113 -0.020 -0.040  0.076     -0.053      0.060 -0.067   0.177                                                                                                                                                                                                                           
+    ## temptrend_abs.sc:mass.sc                         -0.009 -0.020  0.001 -0.010  0.003 -0.101 -0.031  0.006 -0.575  0.308  0.071  0.052  0.001 -0.014  0.056  0.037      0.092     -0.058  0.394   0.014            -0.034                                                                                                                                                                                                         
+    ## temptrend_abs.sc:speed.sc                        -0.022  0.071  0.012  0.036  0.052  0.071  0.008 -0.039  0.323 -0.544 -0.027 -0.122 -0.015 -0.005 -0.018 -0.063     -0.155     -0.054 -0.515   0.003             0.061            -0.655                                                                                                                                                                                       
+    ## temptrend_abs.sc:consumerfrac.sc                 -0.001 -0.015 -0.005 -0.009 -0.029  0.071  0.032 -0.011  0.052 -0.027 -0.610 -0.071 -0.008  0.008  0.021  0.019      0.035      0.074 -0.214  -0.049             0.003            -0.153             0.082                                                                                                                                                                     
+    ## temptrend_abs.sc:nspp.sc                         -0.006  0.098  0.008  0.045 -0.004  0.040 -0.021  0.015  0.019 -0.112 -0.062 -0.526  0.101 -0.031  0.107 -0.094     -0.257     -0.026  0.021   0.001             0.027             0.029             0.240             0.151                                                                                                                                                   
+    ## tsign-1:thermal_bias.sc                           0.040 -0.024 -0.032 -0.039 -0.071  0.347 -0.126 -0.058  0.009 -0.012 -0.014 -0.069 -0.022  0.003  0.048  0.028      0.027     -0.022 -0.125   0.115             0.036             0.007             0.014             0.005            0.041                                                                                                                                  
+    ## tsign1:thermal_bias.sc                            0.071 -0.073 -0.064 -0.065  0.032  0.502 -0.204 -0.186  0.057 -0.032 -0.021 -0.069 -0.051 -0.014  0.049  0.061      0.046      0.079 -0.193   0.160             0.087            -0.007             0.023             0.017            0.016             0.415                                                                                                                
+    ## temptrend_abs.sc:npp.sc                           0.000 -0.022  0.000 -0.042  0.010  0.003  0.114  0.105  0.001 -0.016 -0.014  0.078 -0.533  0.105 -0.017 -0.006      0.204     -0.032  0.043  -0.216            -0.183             0.056            -0.034             0.057           -0.088             0.003  0.022                                                                                                         
+    ## temptrend_abs.sc:veg.sc                           0.168 -0.418 -0.174  0.012  0.001 -0.006 -0.130 -0.014 -0.009 -0.004  0.014 -0.036  0.198 -0.530 -0.005  0.457     -0.114      0.042  0.004   0.264             0.005            -0.002             0.029            -0.034            0.048             0.009  0.016 -0.366                                                                                                  
+    ## temptrend_abs.sc:duration.sc                     -0.015  0.156 -0.010 -0.016 -0.009  0.112 -0.052 -0.007  0.044 -0.032  0.039  0.127  0.011  0.006 -0.344  0.009      0.041     -0.040 -0.049   0.034             0.022            -0.104            -0.014             0.006           -0.121             0.004 -0.043 -0.029             0.010                                                                                
+    ## human_bowler.sc:REALM2TerrFresh                  -0.067  0.064  0.067 -0.003  0.011  0.020  0.037  0.061  0.007 -0.008 -0.015  0.001 -0.082  0.135 -0.014 -0.068      0.015     -0.009 -0.015  -0.067             0.011             0.001             0.011             0.010            0.020             0.020  0.043  0.031            -0.116           -0.001                                                               
+    ## human_bowler.sc:REALM2Marine                      0.026 -0.036 -0.028 -0.010 -0.005  0.075 -0.196 -0.073 -0.016  0.017 -0.016 -0.030 -0.145  0.009 -0.011  0.045      0.023      0.020 -0.067   0.181             0.031             0.039            -0.044             0.074            0.012             0.133  0.148  0.132            -0.013            0.041            0.001                                              
+    ## temptrend_abs.sc:tsign-1:thermal_bias.sc         -0.013  0.008  0.011  0.016 -0.050 -0.124  0.118  0.012 -0.003  0.031  0.003  0.039 -0.006  0.002 -0.044 -0.026     -0.026      0.246  0.095  -0.225            -0.040             0.003            -0.103             0.004           -0.056            -0.570 -0.281  0.012            -0.037            0.044           -0.001      -0.139                                  
+    ## temptrend_abs.sc:tsign1:thermal_bias.sc          -0.037  0.076  0.032  0.031  0.073 -0.187  0.141  0.072 -0.012  0.026  0.016  0.024  0.015  0.023 -0.074 -0.058     -0.073     -0.229  0.169  -0.212            -0.110             0.007            -0.086            -0.034            0.023            -0.273 -0.605  0.011            -0.029            0.050           -0.035      -0.159       0.443                      
+    ## temptrend_abs.sc:human_bowler.sc:REALM2TerrFresh  0.056 -0.193 -0.057  0.020 -0.001 -0.020 -0.108 -0.052  0.003  0.010  0.013  0.000  0.112 -0.171  0.010  0.210     -0.118      0.041  0.036   0.271             0.054            -0.029            -0.015            -0.025           -0.028            -0.032 -0.026 -0.195             0.499           -0.004           -0.560       0.004       0.055  0.047               
+    ## temptrend_abs.sc:human_bowler.sc:REALM2Marine    -0.019  0.056  0.021  0.009  0.014 -0.052  0.118  0.041  0.013 -0.029  0.074  0.001  0.113 -0.001  0.007 -0.063     -0.039     -0.012  0.116  -0.282            -0.057            -0.052             0.071            -0.217            0.003            -0.098 -0.107 -0.271             0.044           -0.033            0.010      -0.610       0.207  0.229 -0.006        
+    ## 
+    ## Standardized Within-Group Residuals:
+    ##        Min         Q1        Med         Q3        Max 
+    ## -3.6501993 -0.4314522 -0.2058641  0.2597143  4.5374871 
+    ## 
+    ## Number of Observations: 35240
+    ## Number of Groups: 
+    ##               STUDY_ID rarefyID %in% STUDY_ID 
+    ##                    200                  35240
+
+``` r
+summary(modTfullHornmm)
+```
+
+    ## Linear mixed-effects model fit by REML
+    ##  Data: trends[i, ] 
+    ##        AIC      BIC    logLik
+    ##   108865.1 109220.8 -54390.57
+    ## 
+    ## Random effects:
+    ##  Formula: ~temptrend_abs.sc | STUDY_ID
+    ##  Structure: General positive-definite, Log-Cholesky parametrization
+    ##                  StdDev    Corr  
+    ## (Intercept)      0.9597873 (Intr)
+    ## temptrend_abs.sc 0.1570534 -0.944
+    ## 
+    ##  Formula: ~1 | rarefyID %in% STUDY_ID
+    ##         (Intercept) Residual
+    ## StdDev:    1.072115 7.872225
+    ## 
+    ## Variance function:
+    ##  Structure: Power of variance covariate
+    ##  Formula: ~nyrBT 
+    ##  Parameter estimates:
+    ##    power 
+    ## -2.28603 
+    ## Fixed effects: log(Hornmm + 1) ~ temptrend_abs.sc * REALM + temptrend_abs.sc *      tsign + temptrend_abs.sc * tempave_metab.sc + temptrend_abs.sc *      seas.sc + temptrend_abs.sc * microclim.sc + temptrend_abs.sc *      mass.sc + temptrend_abs.sc * speed.sc + temptrend_abs.sc *      consumerfrac.sc + temptrend_abs.sc * nspp.sc + temptrend_abs.sc *      thermal_bias.sc:tsign + temptrend_abs.sc * npp.sc + temptrend_abs.sc *      veg.sc + temptrend_abs.sc * duration.sc + temptrend_abs.sc *      human_bowler.sc:REALM2 
+    ##                                                       Value Std.Error    DF    t-value p-value
+    ## (Intercept)                                       1.4576662 0.3441282 34968   4.235823  0.0000
+    ## temptrend_abs.sc                                 -0.0571576 0.1364275 34968  -0.418960  0.6752
+    ## REALMMarine                                      -0.5266352 0.3661929   197  -1.438136  0.1520
+    ## REALMTerrestrial                                  1.3439205 0.3493411   197   3.847015  0.0002
+    ## tsign1                                           -0.0234427 0.0194376 34968  -1.206047  0.2278
+    ## tempave_metab.sc                                 -0.6770119 0.0347094 34968 -19.505154  0.0000
+    ## seas.sc                                          -0.2176248 0.0214253 34968 -10.157361  0.0000
+    ## microclim.sc                                     -0.0716429 0.0107327 34968  -6.675172  0.0000
+    ## mass.sc                                          -0.0096868 0.0167216 34968  -0.579302  0.5624
+    ## speed.sc                                          0.1475132 0.0219699 34968   6.714346  0.0000
+    ## consumerfrac.sc                                  -0.0500810 0.0130479 34968  -3.838257  0.0001
+    ## nspp.sc                                          -0.2111534 0.0167064 34968 -12.639077  0.0000
+    ## npp.sc                                           -0.0460649 0.0150305 34968  -3.064767  0.0022
+    ## veg.sc                                           -0.0118539 0.0418442 34968  -0.283286  0.7770
+    ## duration.sc                                       0.1681249 0.0126872 34968  13.251578  0.0000
+    ## temptrend_abs.sc:REALMMarine                     -0.0014287 0.1390716 34968  -0.010273  0.9918
+    ## temptrend_abs.sc:REALMTerrestrial                -0.0607428 0.1465676 34968  -0.414436  0.6786
+    ## temptrend_abs.sc:tsign1                          -0.0043388 0.0222418 34968  -0.195074  0.8453
+    ## temptrend_abs.sc:tempave_metab.sc                 0.1128786 0.0248222 34968   4.547477  0.0000
+    ## temptrend_abs.sc:seas.sc                          0.0013520 0.0179414 34968   0.075357  0.9399
+    ## temptrend_abs.sc:microclim.sc                     0.0216506 0.0121711 34968   1.778849  0.0753
+    ## temptrend_abs.sc:mass.sc                         -0.0050591 0.0160260 34968  -0.315683  0.7522
+    ## temptrend_abs.sc:speed.sc                        -0.0142206 0.0209217 34968  -0.679707  0.4967
+    ## temptrend_abs.sc:consumerfrac.sc                  0.0115986 0.0132202 34968   0.877338  0.3803
+    ## temptrend_abs.sc:nspp.sc                          0.0604122 0.0159258 34968   3.793363  0.0001
+    ## tsign-1:thermal_bias.sc                          -0.0513982 0.0189484 34968  -2.712537  0.0067
+    ## tsign1:thermal_bias.sc                           -0.0304688 0.0157390 34968  -1.935878  0.0529
+    ## temptrend_abs.sc:npp.sc                           0.0355402 0.0172430 34968   2.061137  0.0393
+    ## temptrend_abs.sc:veg.sc                          -0.0636304 0.0241454 34968  -2.635300  0.0084
+    ## temptrend_abs.sc:duration.sc                     -0.0253954 0.0159880 34968  -1.588408  0.1122
+    ## human_bowler.sc:REALM2TerrFresh                   0.2070115 0.0356043 34968   5.814224  0.0000
+    ## human_bowler.sc:REALM2Marine                     -0.0095233 0.0129679 34968  -0.734376  0.4627
+    ## temptrend_abs.sc:tsign-1:thermal_bias.sc         -0.0022829 0.0152864 34968  -0.149339  0.8813
+    ## temptrend_abs.sc:tsign1:thermal_bias.sc           0.0075029 0.0141993 34968   0.528398  0.5972
+    ## temptrend_abs.sc:human_bowler.sc:REALM2TerrFresh -0.0736339 0.0154575 34968  -4.763646  0.0000
+    ## temptrend_abs.sc:human_bowler.sc:REALM2Marine    -0.0098880 0.0171110 34968  -0.577871  0.5634
+    ##  Correlation: 
+    ##                                                  (Intr) tmpt_. REALMM REALMT tsign1 tmpv_. ses.sc mcrcl. mss.sc spd.sc cnsmr. nspp.s npp.sc veg.sc drtn.s t_.:REALMM t_.:REALMT tm_.:1 tm_.:_. tmptrnd_bs.sc:ss. tmptrnd_bs.sc:mc. tmptrnd_bs.sc:ms. tmptrnd_bs.sc:sp. tmptrnd_bs.sc:c. tmptrnd_bs.sc:ns. t-1:_. ts1:_. tmptrnd_bs.sc:np. tmptrnd_bs.sc:v. tmptrnd_bs.sc:d. h_.:REALM2T h_.:REALM2M t_.:-1 t_.:1: t_.:_.:REALM2T
+    ## temptrend_abs.sc                                 -0.541                                                                                                                                                                                                                                                                                                                                                                         
+    ## REALMMarine                                      -0.946  0.511                                                                                                                                                                                                                                                                                                                                                                  
+    ## REALMTerrestrial                                 -0.827  0.422  0.772                                                                                                                                                                                                                                                                                                                                                           
+    ## tsign1                                           -0.039  0.054 -0.004  0.016                                                                                                                                                                                                                                                                                                                                                    
+    ## tempave_metab.sc                                  0.093 -0.036 -0.065 -0.130 -0.049                                                                                                                                                                                                                                                                                                                                             
+    ## seas.sc                                          -0.085  0.046  0.124 -0.045 -0.082  0.074                                                                                                                                                                                                                                                                                                                                      
+    ## microclim.sc                                     -0.048  0.063  0.054  0.000 -0.010 -0.126  0.087                                                                                                                                                                                                                                                                                                                               
+    ## mass.sc                                           0.060 -0.002 -0.031 -0.034  0.016  0.140  0.035  0.003                                                                                                                                                                                                                                                                                                                        
+    ## speed.sc                                          0.069 -0.059 -0.023 -0.038 -0.061 -0.005  0.030  0.063 -0.419                                                                                                                                                                                                                                                                                                                 
+    ## consumerfrac.sc                                  -0.010  0.024  0.007  0.064  0.050 -0.100 -0.060  0.016 -0.038 -0.037                                                                                                                                                                                                                                                                                                          
+    ## nspp.sc                                          -0.015 -0.035 -0.017 -0.035  0.047 -0.149  0.028 -0.027 -0.108  0.158  0.088                                                                                                                                                                                                                                                                                                   
+    ## npp.sc                                            0.048 -0.007 -0.060  0.041 -0.008 -0.025 -0.308 -0.287 -0.035  0.073 -0.016 -0.179                                                                                                                                                                                                                                                                                            
+    ## veg.sc                                           -0.394  0.284  0.409  0.013 -0.015  0.001  0.115  0.040  0.010 -0.005 -0.003  0.019 -0.174                                                                                                                                                                                                                                                                                     
+    ## duration.sc                                       0.007  0.017  0.016  0.032 -0.176  0.020 -0.074 -0.011 -0.015  0.014 -0.015 -0.293  0.052 -0.007                                                                                                                                                                                                                                                                              
+    ## temptrend_abs.sc:REALMMarine                      0.535 -0.957 -0.557 -0.411 -0.016  0.048 -0.088 -0.068 -0.011  0.031 -0.015  0.055  0.030 -0.313 -0.030                                                                                                                                                                                                                                                                       
+    ## temptrend_abs.sc:REALMTerrestrial                 0.389 -0.644 -0.361 -0.525 -0.018  0.106  0.148  0.011 -0.037  0.078 -0.041  0.126 -0.102  0.034 -0.053  0.614                                                                                                                                                                                                                                                                
+    ## temptrend_abs.sc:tsign1                           0.019 -0.143  0.002 -0.005 -0.537  0.016 -0.004 -0.020  0.009  0.034 -0.029 -0.011 -0.009  0.020  0.096  0.054      0.017                                                                                                                                                                                                                                                     
+    ## temptrend_abs.sc:tempave_metab.sc                -0.027  0.042  0.017  0.066 -0.041 -0.422 -0.083  0.063 -0.160  0.169  0.099  0.047 -0.017  0.000  0.015 -0.033     -0.251      0.041                                                                                                                                                                                                                                          
+    ## temptrend_abs.sc:seas.sc                          0.037 -0.071 -0.052  0.072  0.040 -0.021 -0.521 -0.083 -0.019 -0.007  0.027 -0.013  0.144 -0.101 -0.010  0.111     -0.387      0.012  0.113                                                                                                                                                                                                                                   
+    ## temptrend_abs.sc:microclim.sc                     0.029 -0.080 -0.032 -0.003 -0.012  0.095 -0.060 -0.552 -0.004 -0.030 -0.019  0.014  0.117 -0.015 -0.030  0.080     -0.059      0.056 -0.052   0.157                                                                                                                                                                                                                           
+    ## temptrend_abs.sc:mass.sc                         -0.001 -0.034 -0.002 -0.019  0.004 -0.101 -0.028  0.005 -0.558  0.313  0.075  0.042  0.004 -0.013  0.062  0.052      0.113     -0.047  0.349   0.010            -0.033                                                                                                                                                                                                         
+    ## temptrend_abs.sc:speed.sc                        -0.018  0.082  0.013  0.042  0.045  0.099  0.010 -0.040  0.329 -0.523 -0.015 -0.129 -0.015 -0.008 -0.011 -0.073     -0.180     -0.054 -0.499   0.014             0.058            -0.631                                                                                                                                                                                       
+    ## temptrend_abs.sc:consumerfrac.sc                 -0.002 -0.022  0.001 -0.010 -0.026  0.069  0.038 -0.012  0.060 -0.021 -0.591 -0.064 -0.007  0.008  0.013  0.024      0.047      0.055 -0.187  -0.048             0.009            -0.158             0.040                                                                                                                                                                     
+    ## temptrend_abs.sc:nspp.sc                         -0.013  0.123  0.014  0.057 -0.001  0.026 -0.020  0.018  0.011 -0.119 -0.053 -0.505  0.089 -0.029  0.093 -0.119     -0.293     -0.037  0.029   0.004             0.018             0.020             0.242             0.119                                                                                                                                                   
+    ## tsign-1:thermal_bias.sc                           0.039 -0.017 -0.032 -0.044 -0.071  0.334 -0.124 -0.049  0.007 -0.030 -0.015 -0.067 -0.026  0.003  0.048  0.023      0.022     -0.023 -0.074   0.114             0.026             0.003             0.027             0.004            0.041                                                                                                                                  
+    ## tsign1:thermal_bias.sc                            0.070 -0.062 -0.065 -0.071  0.035  0.486 -0.192 -0.179  0.054 -0.058 -0.023 -0.062 -0.055 -0.011  0.047  0.051      0.038      0.075 -0.129   0.145             0.086            -0.010             0.044             0.014            0.016             0.407                                                                                                                
+    ## temptrend_abs.sc:npp.sc                           0.001 -0.026  0.000 -0.046  0.008  0.001  0.106  0.109  0.001 -0.014 -0.008  0.072 -0.527  0.100 -0.018 -0.006      0.205     -0.025  0.086  -0.197            -0.207             0.050            -0.036             0.034           -0.074             0.007  0.020                                                                                                         
+    ## temptrend_abs.sc:veg.sc                           0.198 -0.478 -0.206  0.013 -0.005 -0.009 -0.126 -0.006 -0.007 -0.004  0.012 -0.033  0.191 -0.532 -0.010  0.529     -0.131      0.046 -0.003   0.270            -0.015             0.004             0.032            -0.030            0.042             0.012  0.010 -0.348                                                                                                  
+    ## temptrend_abs.sc:duration.sc                     -0.016  0.166 -0.009 -0.020 -0.009  0.110 -0.049 -0.002  0.050 -0.030  0.036  0.120  0.007  0.006 -0.341  0.015      0.054     -0.035 -0.041   0.032             0.010            -0.103            -0.019             0.012           -0.125             0.000 -0.048 -0.017             0.012                                                                                
+    ## human_bowler.sc:REALM2TerrFresh                  -0.069  0.044  0.071 -0.012  0.007  0.022  0.040  0.060  0.009 -0.007 -0.016  0.000 -0.083  0.136 -0.015 -0.049      0.031     -0.004 -0.011  -0.057            -0.002             0.002             0.010             0.009            0.017             0.025  0.041  0.037            -0.105            0.005                                                               
+    ## human_bowler.sc:REALM2Marine                      0.027 -0.039 -0.030 -0.012 -0.007  0.073 -0.198 -0.070 -0.021  0.015 -0.020 -0.031 -0.146  0.008 -0.012  0.049      0.027      0.023 -0.068   0.176             0.025             0.043            -0.047             0.070            0.014             0.133  0.148  0.129            -0.010            0.038            0.004                                              
+    ## temptrend_abs.sc:tsign-1:thermal_bias.sc         -0.009  0.006  0.009  0.016 -0.051 -0.097  0.117  0.005 -0.009  0.052  0.003  0.037 -0.001  0.002 -0.043 -0.025     -0.025      0.245  0.098  -0.225            -0.031             0.027            -0.127             0.004           -0.061            -0.554 -0.268  0.013            -0.041            0.047           -0.005      -0.136                                  
+    ## temptrend_abs.sc:tsign1:thermal_bias.sc          -0.034  0.069  0.030  0.031  0.064 -0.156  0.135  0.065 -0.017  0.052  0.013  0.021  0.017  0.022 -0.070 -0.048     -0.074     -0.204  0.169  -0.199            -0.105             0.028            -0.123            -0.023           -0.004            -0.259 -0.589  0.015            -0.020            0.055           -0.028      -0.155       0.458                      
+    ## temptrend_abs.sc:human_bowler.sc:REALM2TerrFresh  0.061 -0.215 -0.065  0.027 -0.006 -0.025 -0.109 -0.043  0.001  0.010  0.011  0.002  0.107 -0.174  0.005  0.238     -0.146      0.044  0.044   0.281             0.035            -0.022            -0.018            -0.019           -0.027            -0.031 -0.032 -0.180             0.505           -0.003           -0.553       0.005       0.057  0.057               
+    ## temptrend_abs.sc:human_bowler.sc:REALM2Marine    -0.021  0.067  0.022  0.013  0.019 -0.051  0.117  0.037  0.018 -0.032  0.076  0.001  0.110  0.000  0.007 -0.075     -0.050     -0.018  0.122  -0.266            -0.051            -0.060             0.079            -0.194           -0.001            -0.097 -0.103 -0.248             0.034           -0.026            0.004      -0.610       0.192  0.210 -0.012        
+    ## 
+    ## Standardized Within-Group Residuals:
+    ##         Min          Q1         Med          Q3         Max 
+    ## -0.98055390 -0.11715029 -0.02237458  0.04219116  2.66049529 
+    ## 
+    ## Number of Observations: 35201
+    ## Number of Groups: 
+    ##               STUDY_ID rarefyID %in% STUDY_ID 
+    ##                    200                  35201
+
+``` r
+rsquared(modTfullJtumm)
+```
+
+    ##   Response   family     link method  Marginal Conditional
+    ## 1    Jtumm gaussian identity   none 0.0768167   0.9448081
+
+``` r
+rsquared(modTfullJbetamm)
+```
+
+    ##   Response   family     link method   Marginal Conditional
+    ## 1  Jbetamm gaussian identity   none 0.06571932   0.6163737
+
+``` r
+rsquared(modTfullHornmm)
+```
+
+    ##   Response   family     link method    Marginal Conditional
+    ## 1   Hornmm gaussian identity   none 0.003396396  0.03596406
 
 ### Plots from the full models
 
