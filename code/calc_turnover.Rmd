@@ -527,30 +527,32 @@ trends <- merge(trends, sim_summary[metric == 'Morisita-Horn', .(Horn_exp = expe
 ```
 
 Set a threshold and only standardize those timeseries with SD > 0.001
-Write out trendstemp2.rds
+Write out/load trendstemp2.rds
 ```{r standardize}
-# standardize, only where sd >0
-trends[, Jtutrendz := NA_real_]
-trends[, Jbetatrendz := NA_real_]
-trends[, Horntrendz := NA_real_]
-
-trends[Jtu_sd > 0.001, Jtutrendz := (Jtutrendrem0 - Jtu_exp)/Jtu_sd]
-trends[Jbeta_sd > 0.001, Jbetatrendz := (Jbetatrendrem0 - Jbeta_exp)/Jbeta_sd]
-trends[Horn_sd > 0.001, Horntrendz := (Horntrendrem0 - Horn_exp)/Horn_sd]
-
-
 if(file.exists('temp/trendstemp2.rds')){
     print('File already exists. Will not write out')
+  trends <- readRDS('temp/trendstemp2.rds')
+  trends <- merge(trends, rich, all.x = TRUE) # species richness
 } else {
-    print('writing out')
-    saveRDS(trends[, .(rarefyID, REALM, Biome, taxa_mod, STUDY_ID, rarefyID_x, rarefyID_y,
-                       Jtutrendrem0, Jtutrendrem0_se, Jbetatrendrem0, Jbetatrendrem0_se,
-                       Horntrendrem0, Horntrendrem0_se, 
-                       Jtutrendz, Jbetatrendz, Horntrendz,
-                       Jtulast, Jbetalast, Hornlast,
-                       Jtuexp, Jbetaexp, Hornexp,
-                       Jtumm, Jbetamm, Hornmm,
-                       nyrBT, minyrBT, maxyrBT, medianyrBT, meanyrBT)], file = 'temp/trendstemp2.rds')
+# standardize, only where sd >0
+  trends[, Jtutrendz := NA_real_]
+  trends[, Jbetatrendz := NA_real_]
+  trends[, Horntrendz := NA_real_]
+  
+  trends[Jtu_sd > 0.001, Jtutrendz := (Jtutrendrem0 - Jtu_exp)/Jtu_sd]
+  trends[Jbeta_sd > 0.001, Jbetatrendz := (Jbetatrendrem0 - Jbeta_exp)/Jbeta_sd]
+  trends[Horn_sd > 0.001, Horntrendz := (Horntrendrem0 - Horn_exp)/Horn_sd]
+  
+  
+  print('writing out')
+  saveRDS(trends[, .(rarefyID, REALM, Biome, taxa_mod, STUDY_ID, rarefyID_x, rarefyID_y,
+                     Jtutrendrem0, Jtutrendrem0_se, Jbetatrendrem0, Jbetatrendrem0_se,
+                     Horntrendrem0, Horntrendrem0_se, 
+                     Jtutrendz, Jbetatrendz, Horntrendz,
+                     Jtulast, Jbetalast, Hornlast,
+                     Jtuexp, Jbetaexp, Hornexp,
+                     Jtumm, Jbetamm, Hornmm,
+                     nyrBT, minyrBT, maxyrBT, medianyrBT, meanyrBT)], file = 'temp/trendstemp2.rds')
 }
 nrow(trends)
 ```
@@ -673,11 +675,39 @@ trends[, plot(nyrBT, Jbetamm, log = 'xy', col = '#00000033')]; abline(h = 0)
 trends[, plot(nyrBT, Hornmm, log = 'xy', col = '#00000033')]; abline(h = 0)
 ```
 
+## Duration
+```{r change vs. duration}
+trends[, duration := maxyrBT - minyrBT + 1]
+trends[, summary(duration)]
+x <- trends[, hist(duration)]
+
+par(mfrow=c(1,3))
+trends[, plot(duration, Jtutrendrem0, log = 'x', col = '#00000033')]; abline(h = 0)
+trends[, plot(duration, Jbetatrendrem0, log = 'x', col = '#00000033')]; abline(h = 0)
+trends[, plot(duration, Horntrendrem0, log = 'x', col = '#00000033')]; abline(h = 0)
+
+trends[, plot(duration, Jtutrendz, log = 'x', col = '#00000033')]; abline(h = 0)
+trends[, plot(duration, Jbetatrendz, log = 'x', col = '#00000033')]; abline(h = 0)
+trends[, plot(duration, Horntrendz, log = 'x', col = '#00000033')]; abline(h = 0)
+
+trends[, plot(duration, Jtulast, log = 'x', col = '#00000033')]; abline(h = 0)
+trends[, plot(duration, Jbetalast, log = 'x', col = '#00000033')]; abline(h = 0)
+trends[, plot(duration, Hornlast, log = 'x', col = '#00000033')]; abline(h = 0)
+
+trends[, plot(duration, Jtuexp, log = 'xy', col = '#00000033')]; abline(h = 0)
+trends[, plot(duration, Jbetaexp, log = 'xy', col = '#00000033')]; abline(h = 0)
+trends[, plot(duration, Hornexp, log = 'xy', col = '#00000033')]; abline(h = 0)
+
+trends[, plot(duration, Jtumm+1, log = 'xy', col = '#00000033')]; abline(h = 0)
+trends[, plot(duration, Jbetamm+1, log = 'xy', col = '#00000033')]; abline(h = 0)
+trends[, plot(duration, Hornmm+1, log = 'xy', col = '#00000033')]; abline(h = 0)
+```
+
 ## Number of species
-```{r change vs. number of species}
-# number of species
-trends[, summary(Nspp)]
-x <- trends[, hist(Nspp)]
+```{r change vs. num spp}
+trends[, summary(nyrBT)]
+x <- trends[, hist(nyrBT)]
+
 par(mfrow=c(1,3))
 trends[, plot(Nspp, Jtutrendrem0, log = 'x', col = '#00000033')]; abline(h=0)
 trends[, plot(Nspp, Jbetatrendrem0, log = 'x', col = '#00000033')]; abline(h=0)
@@ -701,7 +731,7 @@ trends[, plot(Nspp, Hornmm, log = 'xy', col = '#00000033')]
 ```
 
 
-## Average change compared to #years, #species
+## Average change compared to #years
 ```{r ave change vs. num years, message = FALSE}
 # number of years
 ggplot(trends, aes(nyrBT, Jtutrendrem0, color = 'Jtu trend')) +
@@ -745,7 +775,57 @@ ggplot(trends, aes(nyrBT, Jtumm, color = 'Jtu mm')) +
     scale_y_log10() +
     labs(y = 'Half-saturation year') +
     geom_abline(intercept = 0, slope = 0)
+```
 
+## Average change compared to duration
+```{r ave change vs. duration, message = FALSE}
+trends[, duration := maxyrBT - minyrBT + 1]
+
+ggplot(trends, aes(duration, Jtutrendrem0, color = 'Jtu trend')) +
+    geom_smooth() +
+    geom_smooth(aes(y = Jbetatrendrem0, color = 'Jbeta trend')) +
+    geom_smooth(aes(y = Horntrendrem0, color = 'Horn trend')) +
+    scale_x_log10() +
+    labs(y = 'Slope') +
+    geom_abline(intercept = 0, slope = 0)
+
+ggplot(trends, aes(duration, Jtutrendz, color = 'Jtu z')) +
+    geom_smooth() +
+    geom_smooth(aes(y = Jbetatrendz, color = 'Jbeta z')) +
+    geom_smooth(aes(y = Horntrendz, color = 'Horn z')) +
+    scale_x_log10() +
+    labs(y = 'Standardize slope') +
+    geom_abline(intercept = 0, slope = 0)
+
+ggplot(trends, aes(duration, Jtulast, color = 'Jtu last')) +
+    geom_smooth() +
+    geom_smooth(aes(y = Jbetalast, color = 'Jbeta last')) +
+    geom_smooth(aes(y = Hornlast, color = 'Horn last')) +
+    scale_x_log10() +
+    labs(y = 'Dissimilarity') +
+    geom_abline(intercept = 0, slope = 0)
+
+ggplot(trends, aes(duration, Jtuexp, color = 'Jtu exp')) +
+    geom_smooth() +
+    geom_smooth(aes(y = Jbetaexp, color = 'Jbeta exp')) +
+    geom_smooth(aes(y = Hornexp, color = 'Horn exp')) +
+    scale_x_log10() +
+    scale_y_log10() +
+    labs(y = 'Half-saturation year') +
+    geom_abline(intercept = 0, slope = 0)
+
+ggplot(trends, aes(duration, Jtumm, color = 'Jtu mm')) +
+    geom_smooth() +
+    geom_smooth(aes(y = Jbetamm, color = 'Jbeta mm')) +
+    geom_smooth(aes(y = Hornmm, color = 'Horn mm')) +
+    scale_x_log10() +
+    scale_y_log10() +
+    labs(y = 'Half-saturation year') +
+    geom_abline(intercept = 0, slope = 0)
+```
+
+## Average change compared to #species
+```{r ave change vs. num spp, message = FALSE}
 # number of species
 ggplot(trends, aes(Nspp, Jtutrendrem0, color = 'Jtu trend')) +
     geom_smooth() +

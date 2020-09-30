@@ -1,6 +1,8 @@
 Calculate biodiversity urnover
 ================
 
+# Set up
+
 # Load data
 
 ``` r
@@ -594,31 +596,33 @@ trends <- merge(trends, sim_summary[metric == 'Morisita-Horn', .(Horn_exp = expe
 ```
 
 Set a threshold and only standardize those timeseries with SD \> 0.001
-Write out trendstemp2.rds
+Write out/load trendstemp2.rds
 
 ``` r
-# standardize, only where sd >0
-trends[, Jtutrendz := NA_real_]
-trends[, Jbetatrendz := NA_real_]
-trends[, Horntrendz := NA_real_]
-
-trends[Jtu_sd > 0.001, Jtutrendz := (Jtutrendrem0 - Jtu_exp)/Jtu_sd]
-trends[Jbeta_sd > 0.001, Jbetatrendz := (Jbetatrendrem0 - Jbeta_exp)/Jbeta_sd]
-trends[Horn_sd > 0.001, Horntrendz := (Horntrendrem0 - Horn_exp)/Horn_sd]
-
-
 if(file.exists('temp/trendstemp2.rds')){
     print('File already exists. Will not write out')
+  trends <- readRDS('temp/trendstemp2.rds')
+  trends <- merge(trends, rich, all.x = TRUE) # species richness
 } else {
-    print('writing out')
-    saveRDS(trends[, .(rarefyID, REALM, Biome, taxa_mod, STUDY_ID, rarefyID_x, rarefyID_y,
-                       Jtutrendrem0, Jtutrendrem0_se, Jbetatrendrem0, Jbetatrendrem0_se,
-                       Horntrendrem0, Horntrendrem0_se, 
-                       Jtutrendz, Jbetatrendz, Horntrendz,
-                       Jtulast, Jtulast_se, Jbetalast,
-                       Jtuexp, Jbetaexp, Hornexp,
-                       Jtumm, Jbetamm, Hornmm,
-                       nyrBT, minyrBT, maxyrBT, medianyrBT, meanyrBT)], file = 'temp/trendstemp2.rds')
+# standardize, only where sd >0
+  trends[, Jtutrendz := NA_real_]
+  trends[, Jbetatrendz := NA_real_]
+  trends[, Horntrendz := NA_real_]
+  
+  trends[Jtu_sd > 0.001, Jtutrendz := (Jtutrendrem0 - Jtu_exp)/Jtu_sd]
+  trends[Jbeta_sd > 0.001, Jbetatrendz := (Jbetatrendrem0 - Jbeta_exp)/Jbeta_sd]
+  trends[Horn_sd > 0.001, Horntrendz := (Horntrendrem0 - Horn_exp)/Horn_sd]
+  
+  
+  print('writing out')
+  saveRDS(trends[, .(rarefyID, REALM, Biome, taxa_mod, STUDY_ID, rarefyID_x, rarefyID_y,
+                     Jtutrendrem0, Jtutrendrem0_se, Jbetatrendrem0, Jbetatrendrem0_se,
+                     Horntrendrem0, Horntrendrem0_se, 
+                     Jtutrendz, Jbetatrendz, Horntrendz,
+                     Jtulast, Jbetalast, Hornlast,
+                     Jtuexp, Jbetaexp, Hornexp,
+                     Jtumm, Jbetamm, Hornmm,
+                     nyrBT, minyrBT, maxyrBT, medianyrBT, meanyrBT)], file = 'temp/trendstemp2.rds')
 }
 ```
 
@@ -692,66 +696,42 @@ trends
     ## 51576:             NA                NA            NA               NA
     ## 51577:             NA                NA            NA               NA
     ## 51578:             NA                NA            NA               NA
-    ##          Jtulast Jtulast_se Jbetalast Jbetalast_se  Hornlast Hornlast_se
-    ##     1: 0.4324324         NA 0.5000000           NA 0.3642417          NA
-    ##     2: 0.0000000         NA 0.5000000           NA 0.1541960          NA
-    ##     3: 1.0000000         NA 1.0000000           NA 1.0000000          NA
-    ##     4: 0.8000000         NA 0.8571429           NA 0.9177154          NA
-    ##     5: 0.5000000         NA 0.7142857           NA 0.7026207          NA
-    ##    ---                                                                  
-    ## 51574: 0.0000000         NA 0.9285714           NA 0.9456966          NA
-    ## 51575: 1.0000000         NA 1.0000000           NA 1.0000000          NA
-    ## 51576: 0.6666667         NA 0.7500000           NA 0.3265231          NA
-    ## 51577: 0.4000000         NA 0.8571429           NA 0.9516536          NA
-    ## 51578: 0.0000000         NA 0.8750000           NA 0.8025743          NA
-    ##            Jtuexp  Jbetaexp Hornexp nyrBT minyrBT maxyrBT medianyrBT
-    ##     1: 0.02709627 0.2524249 1.22328    31    1981    2011     1996.0
-    ##     2: 1.38629436 0.2599677      NA    31    1981    2011     1996.0
-    ##     3:         NA        NA      NA     2    1985    1999     1992.0
-    ##     4:         NA        NA      NA     2    1985    1993     1989.0
-    ##     5:         NA        NA      NA     2    1985    1993     1989.0
-    ##    ---                                                              
-    ## 51574:         NA        NA      NA     3    1934    1952     1950.0
-    ## 51575:         NA        NA      NA     2    1934    1955     1944.5
-    ## 51576:         NA        NA      NA     2    1973    1975     1974.0
-    ## 51577:         NA        NA      NA     2    1973    1975     1974.0
-    ## 51578:         NA        NA      NA     2    1971    1973     1972.0
-    ##        meanyrBT      Jtumm   Jbetamm   Hornmm Nspp     Jbeta_exp
-    ##     1: 1996.000  0.1253377 0.1942427 1.043563   83  4.991765e-05
-    ##     2: 1996.000 15.5000000 0.1336071 0.000000   15 -5.224876e-05
-    ##     3: 1992.000         NA        NA       NA    4           NaN
-    ##     4: 1989.000         NA        NA       NA    7           NaN
-    ##     5: 1989.000         NA        NA       NA    7           NaN
-    ##    ---                                                          
-    ## 51574: 1945.333  0.0000000 0.0000000 0.000000   42            NA
-    ## 51575: 1944.500         NA        NA       NA   37            NA
-    ## 51576: 1974.000         NA        NA       NA    9            NA
-    ## 51577: 1974.000         NA        NA       NA   23            NA
-    ## 51578: 1972.000         NA        NA       NA   17            NA
-    ##            Jbeta_sd       Jtu_exp       Jtu_sd      Horn_exp      Horn_sd
-    ##     1: 0.0008978943 -2.209763e-05 0.0006692022  3.092595e-05 0.0006016976
-    ##     2: 0.0014642102 -1.270871e-05 0.0012548416 -3.276256e-05 0.0008557850
-    ##     3:           NA           NaN           NA           NaN           NA
-    ##     4:           NA           NaN           NA           NaN           NA
-    ##     5:           NA           NaN           NA           NaN           NA
-    ##    ---                                                                   
-    ## 51574:           NA            NA           NA            NA           NA
-    ## 51575:           NA            NA           NA            NA           NA
-    ## 51576:           NA            NA           NA            NA           NA
-    ## 51577:           NA            NA           NA            NA           NA
-    ## 51578:           NA            NA           NA            NA           NA
-    ##         Jtutrendz Jbetatrendz Horntrendz
-    ##     1:         NA          NA         NA
-    ##     2: 0.01012774    1.543874         NA
-    ##     3:         NA          NA         NA
-    ##     4:         NA          NA         NA
-    ##     5:         NA          NA         NA
-    ##    ---                                  
-    ## 51574:         NA          NA         NA
-    ## 51575:         NA          NA         NA
-    ## 51576:         NA          NA         NA
-    ## 51577:         NA          NA         NA
-    ## 51578:         NA          NA         NA
+    ##         Jtutrendz Jbetatrendz Horntrendz   Jtulast Jbetalast  Hornlast
+    ##     1:         NA          NA         NA 0.4324324 0.5000000 0.3642417
+    ##     2: 0.01012774    1.543874         NA 0.0000000 0.5000000 0.1541960
+    ##     3:         NA          NA         NA 1.0000000 1.0000000 1.0000000
+    ##     4:         NA          NA         NA 0.8000000 0.8571429 0.9177154
+    ##     5:         NA          NA         NA 0.5000000 0.7142857 0.7026207
+    ##    ---                                                                
+    ## 51574:         NA          NA         NA 0.0000000 0.9285714 0.9456966
+    ## 51575:         NA          NA         NA 1.0000000 1.0000000 1.0000000
+    ## 51576:         NA          NA         NA 0.6666667 0.7500000 0.3265231
+    ## 51577:         NA          NA         NA 0.4000000 0.8571429 0.9516536
+    ## 51578:         NA          NA         NA 0.0000000 0.8750000 0.8025743
+    ##            Jtuexp  Jbetaexp Hornexp      Jtumm   Jbetamm   Hornmm nyrBT
+    ##     1: 0.02709627 0.2524249 1.22328  0.1253377 0.1942427 1.043563    31
+    ##     2: 1.38629436 0.2599677      NA 15.5000000 0.1336071 0.000000    31
+    ##     3:         NA        NA      NA         NA        NA       NA     2
+    ##     4:         NA        NA      NA         NA        NA       NA     2
+    ##     5:         NA        NA      NA         NA        NA       NA     2
+    ##    ---                                                                 
+    ## 51574:         NA        NA      NA  0.0000000 0.0000000 0.000000     3
+    ## 51575:         NA        NA      NA         NA        NA       NA     2
+    ## 51576:         NA        NA      NA         NA        NA       NA     2
+    ## 51577:         NA        NA      NA         NA        NA       NA     2
+    ## 51578:         NA        NA      NA         NA        NA       NA     2
+    ##        minyrBT maxyrBT medianyrBT meanyrBT Nspp
+    ##     1:    1981    2011     1996.0 1996.000   83
+    ##     2:    1981    2011     1996.0 1996.000   15
+    ##     3:    1985    1999     1992.0 1992.000    4
+    ##     4:    1985    1993     1989.0 1989.000    7
+    ##     5:    1985    1993     1989.0 1989.000    7
+    ##    ---                                         
+    ## 51574:    1934    1952     1950.0 1945.333   42
+    ## 51575:    1934    1955     1944.5 1944.500   37
+    ## 51576:    1973    1975     1974.0 1974.000    9
+    ## 51577:    1973    1975     1974.0 1974.000   23
+    ## 51578:    1971    1973     1972.0 1972.000   17
 
 ``` r
 summary(trends$Jtutrendrem0)
@@ -1101,21 +1081,137 @@ trends[, plot(nyrBT, Hornmm, log = 'xy', col = '#00000033')]; abline(h = 0)
 
 ![](calc_turnover_files/figure-gfm/change%20vs.%20num%20years-6.png)<!-- -->
 
-## Number of species
+## Duration
 
 ``` r
-# number of species
-trends[, summary(Nspp)]
+trends[, duration := maxyrBT - minyrBT + 1]
+trends[, summary(duration)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##     2.0     6.0    11.0    19.1    24.0  1427.0
+    ##    3.00    6.00   11.00   13.52   17.00   98.00
 
 ``` r
-x <- trends[, hist(Nspp)]
+x <- trends[, hist(duration)]
 ```
 
-![](calc_turnover_files/figure-gfm/change%20vs.%20number%20of%20species-1.png)<!-- -->
+![](calc_turnover_files/figure-gfm/change%20vs.%20duration-1.png)<!-- -->
+
+``` r
+par(mfrow=c(1,3))
+trends[, plot(duration, Jtutrendrem0, log = 'x', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+``` r
+trends[, plot(duration, Jbetatrendrem0, log = 'x', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+``` r
+trends[, plot(duration, Horntrendrem0, log = 'x', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+![](calc_turnover_files/figure-gfm/change%20vs.%20duration-2.png)<!-- -->
+
+``` r
+trends[, plot(duration, Jtutrendz, log = 'x', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+``` r
+trends[, plot(duration, Jbetatrendz, log = 'x', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+``` r
+trends[, plot(duration, Horntrendz, log = 'x', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+![](calc_turnover_files/figure-gfm/change%20vs.%20duration-3.png)<!-- -->
+
+``` r
+trends[, plot(duration, Jtulast, log = 'x', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+``` r
+trends[, plot(duration, Jbetalast, log = 'x', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+``` r
+trends[, plot(duration, Hornlast, log = 'x', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+![](calc_turnover_files/figure-gfm/change%20vs.%20duration-4.png)<!-- -->
+
+``` r
+trends[, plot(duration, Jtuexp, log = 'xy', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+``` r
+trends[, plot(duration, Jbetaexp, log = 'xy', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+``` r
+trends[, plot(duration, Hornexp, log = 'xy', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+![](calc_turnover_files/figure-gfm/change%20vs.%20duration-5.png)<!-- -->
+
+``` r
+trends[, plot(duration, Jtumm+1, log = 'xy', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+``` r
+trends[, plot(duration, Jbetamm+1, log = 'xy', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+``` r
+trends[, plot(duration, Hornmm+1, log = 'xy', col = '#00000033')]; abline(h = 0)
+```
+
+    ## NULL
+
+![](calc_turnover_files/figure-gfm/change%20vs.%20duration-6.png)<!-- -->
+
+## Number of species
+
+``` r
+trends[, summary(nyrBT)]
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##   2.000   2.000   4.000   5.538   7.000  97.000
+
+``` r
+x <- trends[, hist(nyrBT)]
+```
+
+![](calc_turnover_files/figure-gfm/change%20vs.%20num%20spp-1.png)<!-- -->
 
 ``` r
 par(mfrow=c(1,3))
@@ -1136,7 +1232,7 @@ trends[, plot(Nspp, Horntrendrem0, log = 'x', col = '#00000033')]; abline(h=0)
 
     ## NULL
 
-![](calc_turnover_files/figure-gfm/change%20vs.%20number%20of%20species-2.png)<!-- -->
+![](calc_turnover_files/figure-gfm/change%20vs.%20num%20spp-2.png)<!-- -->
 
 ``` r
 trends[, plot(Nspp, Jtutrendz, log = 'x', col = '#00000033')]; abline(h=0)
@@ -1156,7 +1252,7 @@ trends[, plot(Nspp, Horntrendz, log = 'x', col = '#00000033')]; abline(h=0)
 
     ## NULL
 
-![](calc_turnover_files/figure-gfm/change%20vs.%20number%20of%20species-3.png)<!-- -->
+![](calc_turnover_files/figure-gfm/change%20vs.%20num%20spp-3.png)<!-- -->
 
 ``` r
 trends[, plot(Nspp, Jtulast, log = 'x', col = '#00000033')]
@@ -1174,7 +1270,7 @@ trends[, plot(Nspp, Jbetalast, log = 'x', col = '#00000033')]
 trends[, plot(Nspp, Hornlast, log = 'x', col = '#00000033')]
 ```
 
-![](calc_turnover_files/figure-gfm/change%20vs.%20number%20of%20species-4.png)<!-- -->
+![](calc_turnover_files/figure-gfm/change%20vs.%20num%20spp-4.png)<!-- -->
 
     ## NULL
 
@@ -1194,7 +1290,7 @@ trends[, plot(Nspp, Jbetaexp, log = 'xy', col = '#00000033')]
 trends[, plot(Nspp, Hornexp, log = 'xy', col = '#00000033')]
 ```
 
-![](calc_turnover_files/figure-gfm/change%20vs.%20number%20of%20species-5.png)<!-- -->
+![](calc_turnover_files/figure-gfm/change%20vs.%20num%20spp-5.png)<!-- -->
 
     ## NULL
 
@@ -1214,11 +1310,11 @@ trends[, plot(Nspp, Jbetamm, log = 'xy', col = '#00000033')]
 trends[, plot(Nspp, Hornmm, log = 'xy', col = '#00000033')]
 ```
 
-![](calc_turnover_files/figure-gfm/change%20vs.%20number%20of%20species-6.png)<!-- -->
+![](calc_turnover_files/figure-gfm/change%20vs.%20num%20spp-6.png)<!-- -->
 
     ## NULL
 
-## Average change compared to \#years, \#species
+## Average change compared to \#years
 
 ``` r
 # number of years
@@ -1283,6 +1379,74 @@ ggplot(trends, aes(nyrBT, Jtumm, color = 'Jtu mm')) +
 
 ![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-5.png)<!-- -->
 
+## Average change compared to duration
+
+``` r
+trends[, duration := maxyrBT - minyrBT + 1]
+
+ggplot(trends, aes(duration, Jtutrendrem0, color = 'Jtu trend')) +
+    geom_smooth() +
+    geom_smooth(aes(y = Jbetatrendrem0, color = 'Jbeta trend')) +
+    geom_smooth(aes(y = Horntrendrem0, color = 'Horn trend')) +
+    scale_x_log10() +
+    labs(y = 'Slope') +
+    geom_abline(intercept = 0, slope = 0)
+```
+
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20duration-1.png)<!-- -->
+
+``` r
+ggplot(trends, aes(duration, Jtutrendz, color = 'Jtu z')) +
+    geom_smooth() +
+    geom_smooth(aes(y = Jbetatrendz, color = 'Jbeta z')) +
+    geom_smooth(aes(y = Horntrendz, color = 'Horn z')) +
+    scale_x_log10() +
+    labs(y = 'Standardize slope') +
+    geom_abline(intercept = 0, slope = 0)
+```
+
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20duration-2.png)<!-- -->
+
+``` r
+ggplot(trends, aes(duration, Jtulast, color = 'Jtu last')) +
+    geom_smooth() +
+    geom_smooth(aes(y = Jbetalast, color = 'Jbeta last')) +
+    geom_smooth(aes(y = Hornlast, color = 'Horn last')) +
+    scale_x_log10() +
+    labs(y = 'Dissimilarity') +
+    geom_abline(intercept = 0, slope = 0)
+```
+
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20duration-3.png)<!-- -->
+
+``` r
+ggplot(trends, aes(duration, Jtuexp, color = 'Jtu exp')) +
+    geom_smooth() +
+    geom_smooth(aes(y = Jbetaexp, color = 'Jbeta exp')) +
+    geom_smooth(aes(y = Hornexp, color = 'Horn exp')) +
+    scale_x_log10() +
+    scale_y_log10() +
+    labs(y = 'Half-saturation year') +
+    geom_abline(intercept = 0, slope = 0)
+```
+
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20duration-4.png)<!-- -->
+
+``` r
+ggplot(trends, aes(duration, Jtumm, color = 'Jtu mm')) +
+    geom_smooth() +
+    geom_smooth(aes(y = Jbetamm, color = 'Jbeta mm')) +
+    geom_smooth(aes(y = Hornmm, color = 'Horn mm')) +
+    scale_x_log10() +
+    scale_y_log10() +
+    labs(y = 'Half-saturation year') +
+    geom_abline(intercept = 0, slope = 0)
+```
+
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20duration-5.png)<!-- -->
+
+## Average change compared to \#species
+
 ``` r
 # number of species
 ggplot(trends, aes(Nspp, Jtutrendrem0, color = 'Jtu trend')) +
@@ -1294,7 +1458,7 @@ ggplot(trends, aes(Nspp, Jtutrendrem0, color = 'Jtu trend')) +
     geom_abline(intercept = 0, slope = 0)
 ```
 
-![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-6.png)<!-- -->
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20spp-1.png)<!-- -->
 
 ``` r
 ggplot(trends, aes(Nspp, Jtutrendz, color = 'Jtu z')) +
@@ -1306,7 +1470,7 @@ ggplot(trends, aes(Nspp, Jtutrendz, color = 'Jtu z')) +
     geom_abline(intercept = 0, slope = 0)
 ```
 
-![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-7.png)<!-- -->
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20spp-2.png)<!-- -->
 
 ``` r
 ggplot(trends, aes(Nspp, Jtulast, color = 'Jtu last')) +
@@ -1318,7 +1482,7 @@ ggplot(trends, aes(Nspp, Jtulast, color = 'Jtu last')) +
     geom_abline(intercept = 0, slope = 0)
 ```
 
-![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-8.png)<!-- -->
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20spp-3.png)<!-- -->
 
 ``` r
 ggplot(trends, aes(Nspp, Jtuexp, color = 'Jtu exp')) +
@@ -1331,7 +1495,7 @@ ggplot(trends, aes(Nspp, Jtuexp, color = 'Jtu exp')) +
     geom_abline(intercept = 0, slope = 0)
 ```
 
-![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-9.png)<!-- -->
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20spp-4.png)<!-- -->
 
 ``` r
 ggplot(trends, aes(Nspp, Jtumm, color = 'Jtu mm')) +
@@ -1344,4 +1508,4 @@ ggplot(trends, aes(Nspp, Jtumm, color = 'Jtu mm')) +
     geom_abline(intercept = 0, slope = 0)
 ```
 
-![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20years-10.png)<!-- -->
+![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20spp-5.png)<!-- -->
