@@ -243,7 +243,7 @@ trendsum4
 
 ### Plots of turnover rates binned by warming rates
 ```{r turnover vs. temperature violin plot, message = FALSE, warning = FALSE, fig.height= 12, fig.width = 6}
-p1 <- ggplot(trends[!is.na(text), ], aes(temptrendtext1, Horntrendrem0)) +
+p1 <- ggplot(trends[!is.na(temptrendtext1), ], aes(temptrendtext1, Horntrendrem0)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
   labs(x = '', y = 'Slope (Horn)', tag = 'A', title = 'Rate of temperature change') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -337,17 +337,34 @@ grid.arrange(p1, p2, p3, p4, p5, p6, p7, ncol = 2,
 ```
 
 ### Plots of turnover rates binned by warming rates and duration
-```{r turnover vs. temperature violin plot, message = FALSE, warning = FALSE, fig.height= 12, fig.width = 6}
-p1 <- ggplot(trends[!is.na(text), ], aes(temptrendtext1, Horntrendrem0)) +
-  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
-  labs(x = '', y = 'Slope (Horn)', tag = 'A', title = 'Rate of temperature change') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=10)) +
-  geom_abline(intercept = 0, slope = 0)
+```{r turnover vs. temperature trend vs. duration} #, message = FALSE, warning = FALSE}
+ggplot(trends[abs(temptrend) <= 0.05, ], aes(x=duration, y=Jtutrendrem0)) +
+  geom_smooth(method = 'gam', aes(color = '<=0.05')) +
+  geom_smooth(data = trends[abs(temptrend) <= 0.1 & abs(temptrend) > 0.05,], method = 'loess', aes(color = '0.05-0.1')) +
+  geom_smooth(data = trends[abs(temptrend) <= 0.5 & abs(temptrend) > 0.1,], method = 'loess', aes(color = '0.1-0.5')) +
+  geom_smooth(data = trends[abs(temptrend) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Jaccard turnover slope')
+
+ggplot(trends[abs(temptrend) <= 0.05, ], aes(x=duration, y=Jbetatrendrem0)) +
+  geom_smooth(method = 'gam', aes(color = '<=0.05')) +
+  geom_smooth(data = trends[abs(temptrend) <= 0.1 & abs(temptrend) > 0.05,], method = 'loess', aes(color = '0.05-0.1')) +
+  geom_smooth(data = trends[abs(temptrend) <= 0.5 & abs(temptrend) > 0.1,], method = 'loess', aes(color = '0.1-0.5')) +
+  geom_smooth(data = trends[abs(temptrend) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Jaccard total slope')
+
+ggplot(trends[abs(temptrend) <= 0.05, ], aes(x=duration, y=Horntrendrem0)) +
+  geom_smooth(method = 'gam', aes(color = '<=0.05')) +
+  geom_smooth(data = trends[abs(temptrend) <= 0.1 & abs(temptrend) > 0.05,], method = 'loess', aes(color = '0.05-0.1')) +
+  geom_smooth(data = trends[abs(temptrend) <= 0.5 & abs(temptrend) > 0.1,], method = 'loess', aes(color = '0.1-0.5')) +
+  geom_smooth(data = trends[abs(temptrend) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Horn slope')
+
 ```
+
+
 
 ## Temperature-only models
 ### Fit the models

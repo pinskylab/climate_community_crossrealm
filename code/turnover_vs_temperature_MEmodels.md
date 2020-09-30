@@ -353,27 +353,6 @@ with potential testing on the boundary issues here yet.
 
 # Results
 
-## Where do we have data?
-
-``` r
-world <- map_data('world')
-ggplot(world, aes(x = long, y = lat, group = group)) +
-    geom_polygon(fill = 'lightgray', color = 'white') +
-    geom_point(data = trends, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.5, alpha = 0.4)  +
-    scale_color_brewer(palette="Set1", name = 'Realm') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=16),
-        axis.title=element_text(size=20)) +
-  labs(x = 'Longitude (°)', y = 'Latitude (°)')
-```
-
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/map-1.png)<!-- -->
-
-Mostly northern hemisphere, but spread all over. Not so much in Africa
-or much of Asia.
-
 ## Average rates of turnover
 
 ``` r
@@ -433,10 +412,10 @@ trendsum4
     ## 107:            Stable <=0.05       Hornmm 10.247314407 0.4161829010 24994
     ## 108:           Warming >= 0.5       Hornmm  1.102813567 0.2865771292   118
 
-### Plots of turnover rates
+### Plots of turnover rates binned by warming rates
 
 ``` r
-p1 <- ggplot(trends[!is.na(text), ], aes(temptrendtext1, Horntrendrem0)) +
+p1 <- ggplot(trends[!is.na(temptrendtext1), ], aes(temptrendtext1, Horntrendrem0)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
   labs(x = '', y = 'Slope (Horn)', tag = 'A', title = 'Rate of temperature change') +
   theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -530,6 +509,44 @@ grid.arrange(p1, p2, p3, p4, p5, p6, p7, ncol = 2,
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-1.png)<!-- -->
+
+### Plots of turnover rates binned by warming rates and duration
+
+``` r
+ggplot(trends[abs(temptrend) <= 0.05, ], aes(x=duration, y=Jtutrendrem0)) +
+  geom_smooth(method = 'gam', aes(color = '<=0.05')) +
+  geom_smooth(data = trends[abs(temptrend) <= 0.1 & abs(temptrend) > 0.05,], method = 'loess', aes(color = '0.05-0.1')) +
+  geom_smooth(data = trends[abs(temptrend) <= 0.5 & abs(temptrend) > 0.1,], method = 'loess', aes(color = '0.1-0.5')) +
+  geom_smooth(data = trends[abs(temptrend) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Jaccard turnover slope')
+```
+
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/turnover%20vs.%20temperature%20trend%20vs.%20duration%7D%20#-1.png)<!-- -->
+
+``` r
+ggplot(trends[abs(temptrend) <= 0.05, ], aes(x=duration, y=Jbetatrendrem0)) +
+  geom_smooth(method = 'gam', aes(color = '<=0.05')) +
+  geom_smooth(data = trends[abs(temptrend) <= 0.1 & abs(temptrend) > 0.05,], method = 'loess', aes(color = '0.05-0.1')) +
+  geom_smooth(data = trends[abs(temptrend) <= 0.5 & abs(temptrend) > 0.1,], method = 'loess', aes(color = '0.1-0.5')) +
+  geom_smooth(data = trends[abs(temptrend) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Jaccard total slope')
+```
+
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/turnover%20vs.%20temperature%20trend%20vs.%20duration%7D%20#-2.png)<!-- -->
+
+``` r
+ggplot(trends[abs(temptrend) <= 0.05, ], aes(x=duration, y=Horntrendrem0)) +
+  geom_smooth(method = 'gam', aes(color = '<=0.05')) +
+  geom_smooth(data = trends[abs(temptrend) <= 0.1 & abs(temptrend) > 0.05,], method = 'loess', aes(color = '0.05-0.1')) +
+  geom_smooth(data = trends[abs(temptrend) <= 0.5 & abs(temptrend) > 0.1,], method = 'loess', aes(color = '0.1-0.5')) +
+  geom_smooth(data = trends[abs(temptrend) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Horn slope')
+```
+
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/turnover%20vs.%20temperature%20trend%20vs.%20duration%7D%20#-3.png)<!-- -->
 
 ## Temperature-only models
 
