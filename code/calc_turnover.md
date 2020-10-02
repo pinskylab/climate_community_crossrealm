@@ -21,7 +21,10 @@ load('data/biotime_blowes/z_scores_SAD.Rdata') # loads sim_summary
 rich <- fread('output/richness_by_rarefyID.csv.gz') # number of species
 ```
 
-Remove studies with only 1 species and trim to count data
+## Remove studies that don’t meet quality thresholds
+
+Keep observations with: - \>6 individuals Keep studies with: - \>2
+species - count data - \>2 years of samples
 
 ``` r
 length(unique(bt$rarefyID))
@@ -30,11 +33,22 @@ length(unique(bt$rarefyID))
     ## [1] 53467
 
 ``` r
-bt <- bt[rarefyID %in% rich[Nspp > 1, rarefyID] & BROAD_TYPE == 'count', ]
+# samples with >6 indivs
+bt <- bt[N > 6, ]
+
+# number of years per study (in remaining samples)
+nyrs <- bt[, .(nyrBT = length(YEAR)), by = rarefyID]
+
+# >2 species, count data, >2 yrs
+bt <- bt[rarefyID %in% rich[Nspp > 2, rarefyID] & 
+           BROAD_TYPE == 'count' & 
+           rarefyID %in% nyrs[nyrBT > 2, rarefyID], ]
+
+
 length(unique(bt$rarefyID))
 ```
 
-    ## [1] 51578
+    ## [1] 32581
 
 # Plot turnover example
 
@@ -432,9 +446,9 @@ if(file.exists('temp/trendstemp.rds')){
 nrow(trends)
 ```
 
-    ## [1] 51578
+    ## [1] 32581
 
-Add species richness
+## Add species richness to trends
 
 ``` r
 trends <- merge(trends, rich, all.x = TRUE) # species richness
@@ -494,7 +508,7 @@ dev.off()
 
 ## Standardize slope values against null model simulations
 
-Set up null model sims
+### Set up null model sims
 
 ``` r
 # remove some duplicates
@@ -586,7 +600,7 @@ abline(h = 0.01+0.001, col = 'grey')
 
 ![](calc_turnover_files/figure-gfm/plot%20sds-8.png)<!-- -->
 
-Merge null model
+### Merge null model
 
 ``` r
 # merge
@@ -595,7 +609,8 @@ trends <- merge(trends, sim_summary[metric == 'Nestedness', .(Jtu_exp = expected
 trends <- merge(trends, sim_summary[metric == 'Morisita-Horn', .(Horn_exp = expected, Horn_sd = sd, rarefyID)], by = 'rarefyID', all.x = TRUE)
 ```
 
-Set a threshold and only standardize those timeseries with SD \> 0.001
+### Set a threshold and only standardize those timeseries with SD \> 0.001
+
 Write out/load trendstemp2.rds
 
 ``` r
@@ -632,7 +647,7 @@ if(file.exists('temp/trendstemp2.rds')){
 nrow(trends)
 ```
 
-    ## [1] 51578
+    ## [1] 32581
 
 # Examine the turnover calculations
 
@@ -647,11 +662,11 @@ apply(trends[, .(Jtutrendrem0, Jbetatrendrem0, Horntrendrem0,
 ```
 
     ##   Jtutrendrem0 Jbetatrendrem0  Horntrendrem0      Jtutrendz    Jbetatrendz 
-    ##          38188          38188          38188          33381          34684 
+    ##          32581          32581          32581          29030          29132 
     ##     Horntrendz        Jtulast      Jbetalast       Hornlast         Jtuexp 
-    ##          34584          51578          51578          51578          26550 
+    ##          29032          32581          32581          32581          22524 
     ##       Jbetaexp        Hornexp          Jtumm        Jbetamm         Hornmm 
-    ##          25924          24769          38063          38096          38053
+    ##          22026          20894          32483          32506          32460
 
 ## Do some basic checks of the turnover calculations
 
@@ -663,180 +678,180 @@ trends
     ##           rarefyID  REALM                      Biome      taxa_mod
     ##     1:  100_606491 Marine     Northern_European_Seas          Fish
     ##     2:  101_606491 Marine     Northern_European_Seas Invertebrates
-    ##     3: 108_3933165 Marine Continental_High_Antarctic         Birds
-    ##     4: 108_3941181 Marine Continental_High_Antarctic         Birds
-    ##     5: 108_3941182 Marine Continental_High_Antarctic         Birds
+    ##     3: 108_3948499 Marine Continental_High_Antarctic         Birds
+    ##     4: 108_3949201 Marine Continental_High_Antarctic         Birds
+    ##     5: 108_3949203 Marine Continental_High_Antarctic         Birds
     ##    ---                                                            
-    ## 51574:  97_2204414 Marine     Northern_European_Seas Invertebrates
-    ## 51575:  97_2273557 Marine                     Arctic Invertebrates
-    ## 51576:    98_88435 Marine                     Arctic       Benthos
-    ## 51577:    98_93555 Marine                     Arctic       Benthos
-    ## 51578:    98_97933 Marine                     Arctic       Benthos
-    ##        STUDY_ID rarefyID_x rarefyID_y Jtutrendrem0 Jtutrendrem0_se
-    ##     1:      100   -3.08000   51.14000   0.00297623     0.001309059
-    ##     2:      101   -3.08000   51.14000   0.00000000     0.000000000
-    ##     3:      108   57.96500  -65.28500           NA              NA
-    ##     4:      108   59.92750  -66.29250           NA              NA
-    ##     5:      108   59.97000  -66.19500           NA              NA
-    ##    ---                                                            
-    ## 51574:       97   33.50280   69.51390  -0.50000000             NaN
-    ## 51575:       97   82.69667   71.84167           NA              NA
-    ## 51576:       98 -137.25567   68.99443           NA              NA
-    ## 51577:       98 -133.90000   69.65420           NA              NA
-    ## 51578:       98 -132.98750   69.40090           NA              NA
+    ## 32577:  91_1620531 Marine     Northern_European_Seas         Birds
+    ## 32578:  91_1620532 Marine     Northern_European_Seas         Birds
+    ## 32579:  91_1621261 Marine     Northern_European_Seas         Birds
+    ## 32580:  91_1624191 Marine     Northern_European_Seas         Birds
+    ## 32581:  91_1627107 Marine     Northern_European_Seas         Birds
+    ##        STUDY_ID rarefyID_x rarefyID_y  Jtutrendrem0 Jtutrendrem0_se
+    ##     1:      100   -3.08000   51.14000  2.976230e-03     0.001309059
+    ##     2:      101   -3.08000   51.14000  0.000000e+00     0.000000000
+    ##     3:      108   61.95750  -64.10500 -2.380952e-02             NaN
+    ##     4:      108   61.97167  -66.84500 -4.000000e-01             NaN
+    ##     5:      108   61.98500  -66.65667 -1.666667e-01             NaN
+    ##    ---                                                             
+    ## 32577:       91   20.94600   55.98300 -5.583900e-02     0.050492580
+    ## 32578:       91   20.89200   56.03600  3.925231e-17             NaN
+    ## 32579:       91   21.01500   56.04000  3.140185e-16             NaN
+    ## 32580:       91   20.14625   57.30000 -6.666667e-01             NaN
+    ## 32581:       91   20.76667   57.37167  5.000000e-01             NaN
     ##        Jbetatrendrem0 Jbetatrendrem0_se Horntrendrem0 Horntrendrem0_se
-    ##     1:    0.002587992      0.0009975709  0.0023147105     0.0016045472
-    ##     2:    0.002208307      0.0009103225  0.0001735803     0.0009087936
-    ##     3:             NA                NA            NA               NA
-    ##     4:             NA                NA            NA               NA
-    ##     5:             NA                NA            NA               NA
+    ##     1:   2.587992e-03      0.0009975709  0.0023147105     0.0016045472
+    ##     2:   2.208307e-03      0.0009103225  0.0001735803     0.0009087936
+    ##     3:  -1.515152e-02               NaN -0.0002810624              NaN
+    ##     4:  -1.111111e-01               NaN -0.9619098672              NaN
+    ##     5:  -2.380952e-02               NaN -0.0540243109              NaN
     ##    ---                                                                
-    ## 51574:   -0.035714286               NaN -0.0271517119              NaN
-    ## 51575:             NA                NA            NA               NA
-    ## 51576:             NA                NA            NA               NA
-    ## 51577:             NA                NA            NA               NA
-    ## 51578:             NA                NA            NA               NA
-    ##         Jtutrendz Jbetatrendz Horntrendz   Jtulast Jbetalast  Hornlast
-    ##     1:         NA          NA         NA 0.4324324 0.5000000 0.3642417
-    ##     2: 0.01012774    1.543874         NA 0.0000000 0.5000000 0.1541960
-    ##     3:         NA          NA         NA 1.0000000 1.0000000 1.0000000
-    ##     4:         NA          NA         NA 0.8000000 0.8571429 0.9177154
-    ##     5:         NA          NA         NA 0.5000000 0.7142857 0.7026207
-    ##    ---                                                                
-    ## 51574:         NA          NA         NA 0.0000000 0.9285714 0.9456966
-    ## 51575:         NA          NA         NA 1.0000000 1.0000000 1.0000000
-    ## 51576:         NA          NA         NA 0.6666667 0.7500000 0.3265231
-    ## 51577:         NA          NA         NA 0.4000000 0.8571429 0.9516536
-    ## 51578:         NA          NA         NA 0.0000000 0.8750000 0.8025743
-    ##            Jtuexp  Jbetaexp Hornexp      Jtumm   Jbetamm   Hornmm nyrBT
-    ##     1: 0.02709627 0.2524249 1.22328  0.1253377 0.1942427 1.043563    31
-    ##     2: 1.38629436 0.2599677      NA 15.5000000 0.1336071 0.000000    31
-    ##     3:         NA        NA      NA         NA        NA       NA     2
-    ##     4:         NA        NA      NA         NA        NA       NA     2
-    ##     5:         NA        NA      NA         NA        NA       NA     2
-    ##    ---                                                                 
-    ## 51574:         NA        NA      NA  0.0000000 0.0000000 0.000000     3
-    ## 51575:         NA        NA      NA         NA        NA       NA     2
-    ## 51576:         NA        NA      NA         NA        NA       NA     2
-    ## 51577:         NA        NA      NA         NA        NA       NA     2
-    ## 51578:         NA        NA      NA         NA        NA       NA     2
-    ##        minyrBT maxyrBT medianyrBT meanyrBT Nspp
-    ##     1:    1981    2011     1996.0 1996.000   83
-    ##     2:    1981    2011     1996.0 1996.000   15
-    ##     3:    1985    1999     1992.0 1992.000    4
-    ##     4:    1985    1993     1989.0 1989.000    7
-    ##     5:    1985    1993     1989.0 1989.000    7
-    ##    ---                                         
-    ## 51574:    1934    1952     1950.0 1945.333   42
-    ## 51575:    1934    1955     1944.5 1944.500   37
-    ## 51576:    1973    1975     1974.0 1974.000    9
-    ## 51577:    1973    1975     1974.0 1974.000   23
-    ## 51578:    1971    1973     1972.0 1972.000   17
+    ## 32577:  -2.419604e-02      0.0267409270 -0.0226161165     0.0337895033
+    ## 32578:   1.587302e-02               NaN  0.0556650638              NaN
+    ## 32579:   3.140185e-16               NaN -0.0799274013              NaN
+    ## 32580:  -2.857143e-01               NaN  0.5887908368              NaN
+    ## 32581:   3.500000e-01               NaN -0.0785534094              NaN
+    ##          Jtutrendz Jbetatrendz   Horntrendz   Jtulast Jbetalast   Hornlast
+    ##     1:          NA          NA           NA 0.4324324 0.5000000 0.36424173
+    ##     2:  0.01012774  1.54387383           NA 0.0000000 0.5000000 0.15419602
+    ##     3: -0.16171471 -0.09097099  0.002943179 0.8571429 0.9090909 0.99831363
+    ##     4: -2.77813454 -0.63547169 -8.326522938 0.0000000 0.5555556 0.03120719
+    ##     5: -1.90394821 -0.30780072 -0.800247051 0.0000000 0.8571429 0.67585413
+    ##    ---                                                                    
+    ## 32577:          NA          NA           NA 0.4444444 0.5454545 0.89295821
+    ## 32578:          NA          NA           NA 0.5000000 0.7777778 0.98641246
+    ## 32579:          NA          NA           NA 0.8333333 0.8333333 0.90547285
+    ## 32580:          NA          NA           NA 0.0000000 0.4285714 0.73493976
+    ## 32581:          NA          NA           NA 0.5000000 0.7500000 0.79578150
+    ##            Jtuexp  Jbetaexp    Hornexp      Jtumm   Jbetamm    Hornmm
+    ##     1: 0.02709627 0.2524249 1.22327984  0.1253377 0.1942427 1.0435632
+    ##     2: 1.38629436 0.2599677         NA 15.5000000 0.1336071 0.0000000
+    ##     3:         NA        NA         NA  0.0000000 0.0000000 0.0000000
+    ##     4: 0.02943714        NA 0.03175053  0.0000000 0.0000000 0.0000000
+    ##     5:         NA        NA         NA  0.0000000 0.0000000 0.0000000
+    ##    ---                                                               
+    ## 32577:         NA        NA         NA  0.0000000 0.0000000 0.0000000
+    ## 32578: 0.06280353 0.5546708 0.95977976  0.0000000 0.2790698 0.5206255
+    ## 32579:         NA        NA         NA  0.0000000 0.0000000 0.0000000
+    ## 32580: 0.03140673        NA 1.60747190  0.0000000 0.0000000 1.7519826
+    ## 32581: 3.00000002 1.1476482         NA  3.7699967 1.0557483 0.0000000
+    ##        nyrBT minyrBT maxyrBT medianyrBT meanyrBT Nspp
+    ##     1:    31    1981    2011       1996 1996.000   83
+    ##     2:    31    1981    2011       1996 1996.000   15
+    ##     3:     3    1981    1989       1983 1984.333   11
+    ##     4:     3    1983    1985       1984 1984.000   11
+    ##     5:     3    1986    1995       1989 1990.000    9
+    ##    ---                                               
+    ## 32577:     7    1992    1999       1995 1995.429   17
+    ## 32578:     3    1993    1999       1995 1995.667    9
+    ## 32579:     3    1993    1995       1994 1994.000   13
+    ## 32580:     3    1992    1994       1993 1993.000    8
+    ## 32581:     3    1992    1994       1993 1993.000    9
 
 ``` r
 summary(trends$Jtutrendrem0)
 ```
 
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##  -1.000  -0.005   0.000   0.007   0.020   1.000   13390
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+    ## -1.000000 -0.005726  0.001484  0.007008  0.020226  1.000000
 
 ``` r
 summary(trends$Jbetatrendrem0)
 ```
 
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##  -1.000  -0.004   0.003   0.007   0.017   1.000   13390
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+    ## -1.000000 -0.004611  0.003798  0.006793  0.017766  1.000000
 
 ``` r
 summary(trends$Horntrendrem0)
 ```
 
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##  -1.000  -0.008   0.002   0.009   0.023   1.000   13390
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+    ## -1.000000 -0.009260  0.003069  0.009457  0.024740  1.000000
 
 ``` r
 summary(trends$Jtutrendz)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ## -44.240  -0.281   0.039   0.323   0.884  53.387   18197
+    ## -58.283  -0.311   0.063   0.358   0.983  61.472    3551
 
 ``` r
 summary(trends$Jbetatrendz)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ## -31.591  -0.146   0.077   0.264   0.552  84.690   16894
+    ## -31.591  -0.177   0.137   0.303   0.655  84.690    3449
 
 ``` r
 summary(trends$Horntrendz)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ## -74.446  -0.310   0.051   0.516   1.073 104.775   16994
+    ## -74.446  -0.439   0.134   0.604   1.343 104.775    3549
 
 ``` r
 summary(trends$Jtulast)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.0000  0.2000  0.5000  0.4958  0.8000  1.0000
+    ##  0.0000  0.2222  0.4706  0.4479  0.6667  1.0000
 
 ``` r
 summary(trends$Jbetalast)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.0000  0.5000  0.6667  0.6757  0.8571  1.0000
+    ##  0.0000  0.5000  0.6400  0.6329  0.7778  1.0000
 
 ``` r
 summary(trends$Hornlast)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.0000  0.2039  0.6378  0.5791  0.9816  1.0000
+    ##  0.0000  0.1854  0.5362  0.5326  0.9020  1.0000
 
 ``` r
 summary(trends$Jtuexp)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##   0.002   0.394   1.386   5.011   3.889 648.434   25028
+    ##    -Inf   0.528   1.386    -Inf   4.326 648.434   10057
 
 ``` r
 summary(trends$Jbetaexp)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##   0.002   0.269   0.674   1.989   1.935 363.489   25654
+    ##   0.002   0.330   0.768   2.174   2.070 363.489   10555
 
 ``` r
 summary(trends$Hornexp)
 ```
 
     ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
-    ##    0.002    0.355    1.346    6.712    4.626 1683.947    26809
+    ##    0.002    0.520    1.645    7.530    5.499 1683.947    11687
 
 ``` r
 summary(trends$Jtumm)
 ```
 
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##   0.000   0.000   0.323   5.195   4.000 924.180   13515
+    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
+    ##   0.0000   0.0000   0.4911   5.7149   4.5000 924.1801       98
 
 ``` r
 summary(trends$Jbetamm)
 ```
 
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##   0.000   0.000   0.113   1.547   0.996 511.455   13482
+    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
+    ##   0.0000   0.0000   0.1852   1.7254   1.1333 511.4554       75
 
 ``` r
 summary(trends$Hornmm)
 ```
 
-    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
-    ##    0.000    0.000    0.106    9.960    2.839 1000.000    13525
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max.      NA's 
+    ##    0.0000    0.0000    0.2619   10.8118    3.4915 1000.0000       121
 
 ## Histograms of temporal change
 
@@ -972,7 +987,7 @@ trends[, summary(nyrBT)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##   2.000   2.000   4.000   5.538   7.000  97.000
+    ##   3.000   4.000   5.000   6.913   9.000  97.000
 
 ``` r
 x <- trends[, hist(nyrBT)]
@@ -1089,7 +1104,7 @@ trends[, summary(duration)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##    3.00    6.00   11.00   13.52   17.00   98.00
+    ##    3.00    8.00   13.00   15.88   21.00   98.00
 
 ``` r
 x <- trends[, hist(duration)]
@@ -1205,7 +1220,7 @@ trends[, summary(nyrBT)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##   2.000   2.000   4.000   5.538   7.000  97.000
+    ##   3.000   4.000   5.000   6.913   9.000  97.000
 
 ``` r
 x <- trends[, hist(nyrBT)]

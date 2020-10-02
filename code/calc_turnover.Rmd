@@ -32,10 +32,29 @@ load('data/biotime_blowes/z_scores_SAD.Rdata') # loads sim_summary
 rich <- fread('output/richness_by_rarefyID.csv.gz') # number of species
 ```
 
-Remove studies with only 1 species and trim to count data
-```{r remove 1-spp studies}
+## Remove studies that don't meet quality thresholds
+Keep observations with:
+- >6 individuals
+Keep studies with:
+- >2 species
+- count data
+- >2 years of samples
+
+```{r QAQC}
 length(unique(bt$rarefyID))
-bt <- bt[rarefyID %in% rich[Nspp > 1, rarefyID] & BROAD_TYPE == 'count', ]
+
+# samples with >6 indivs
+bt <- bt[N > 6, ]
+
+# number of years per study (in remaining samples)
+nyrs <- bt[, .(nyrBT = length(YEAR)), by = rarefyID]
+
+# >2 species, count data, >2 yrs
+bt <- bt[rarefyID %in% rich[Nspp > 2, rarefyID] & 
+           BROAD_TYPE == 'count' & 
+           rarefyID %in% nyrs[nyrBT > 2, rarefyID], ]
+
+
 length(unique(bt$rarefyID))
 ```
 
@@ -184,6 +203,7 @@ calcexp <- function(y, YEAR, nm = 'y', pred = FALSE){
                   # calc half-saturations
                   cexp <- coef(modexp)
                   hsexp <- with(as.data.frame(t(cexp)), log(1/2)/a)
+                  if(is.infinite(hsexp)) hsexp <- NA_real_
                   
                   out <- list(y = hsexp) # half-saturation
                   names(out) <- nm
@@ -424,7 +444,7 @@ if(file.exists('temp/trendstemp.rds')){
 nrow(trends)
 ```
 
-Add species richness
+## Add species richness to trends
 ```{r add richness}
 trends <- merge(trends, rich, all.x = TRUE) # species richness
 ```
@@ -482,7 +502,7 @@ dev.off()
 
 
 ## Standardize slope values against null model simulations
-Set up null model sims
+### Set up null model sims
 ```{r plot sds}
 # remove some duplicates
 sim_summary <- as.data.table(sim_summary)
@@ -517,7 +537,7 @@ abline(h = 0.001+0.001, col = 'green')
 abline(h = 0.01+0.001, col = 'grey')
 ```
 
-Merge null model
+### Merge null model
 ```{r merge nul model}
 # merge
 trends <- merge(trends, sim_summary[metric == 'Jaccard (total)', .(Jbeta_exp = expected, Jbeta_sd = sd, rarefyID)], by = 'rarefyID', all.x = TRUE)
@@ -526,7 +546,7 @@ trends <- merge(trends, sim_summary[metric == 'Morisita-Horn', .(Horn_exp = expe
 
 ```
 
-Set a threshold and only standardize those timeseries with SD > 0.001
+### Set a threshold and only standardize those timeseries with SD > 0.001
 Write out/load trendstemp2.rds
 ```{r standardize}
 if(file.exists('temp/trendstemp2.rds')){

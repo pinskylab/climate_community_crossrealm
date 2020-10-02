@@ -97,7 +97,7 @@ write.csv(trends, gzfile('output/turnover_w_covariates.csv.gz'), row.names = FAL
 i <- trends[, !duplicated(rarefyID)]; sum(i)
 ```
 
-    ## [1] 51578
+    ## [1] 32581
 
 ``` r
 par(mfrow=c(5,3))
@@ -138,6 +138,10 @@ also has birds (fast).
 
 # Plot turnover vs. temperature trend
 
+    ## Warning in self$trans$transform(x): NaNs produced
+    
+    ## Warning in self$trans$transform(x): NaNs produced
+
     ## Warning: Transformation introduced infinite values in continuous y-axis
     
     ## Warning: Transformation introduced infinite values in continuous y-axis
@@ -163,9 +167,9 @@ ggplot(trends, aes(temptrend, nyrBT)) +
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Removed 2778 rows containing non-finite values (stat_smooth).
+    ## Warning: Removed 1274 rows containing non-finite values (stat_smooth).
 
-    ## Warning: Removed 2778 rows containing missing values (geom_point).
+    ## Warning: Removed 1274 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/ts%20length%20and%20temp%20trend-1.png)<!-- -->
 
