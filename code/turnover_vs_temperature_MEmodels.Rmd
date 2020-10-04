@@ -5,50 +5,7 @@ output:
     github_document: default
 
 ---
-
-Collaborators: Shane Blowes, Jon Chase, Helmut Hillebrand, Michael Burrows, Amanda Bates, Uli Brose, Benoit Gauzens, Laura Antao, Ruben Remelgado, Carsten Meyer, Myriam Hirt, maybe others
-Assistance: Katherine Lew, Josef Hauser
-
-# Introduction
-- Climate change is driving a widespread reorganization of ecological communities around the world (Parmsesan & Yohe 2003, Poloczanska et al. 2013),
-- but the impacts of climate change vary substantially from one location to another and among taxa (Molinos et al. 2016 NCC, Antao et al. 2020 NEE).
-- Community reorganization is substantially more common than an aggregate loss or gain of species (Dornelas et al. 2014 Science, Blowes et al. 2019 Science, Hillebrand et al. 2017 J Appl Ecol)
-- There are many hypotheses for why some communities are more sensitive to warming than others, including differences in
-  - metabolic rates (Dillon et al. 2010 Nature), 
-  - thermal physiology (Deutsch et al. 2008 PNAS, Pinsky et al. 2019 Nature), 
-  - microclimate availability (Burrows et al. 2019 NCC, Suggitt et al. 2018 NCC),
-  - species mobility (Poloczanska et al. 2013 NCC, Burrows et al. 2011 Science, Sunday et al. 2012 NCC)
-  - or generation time (Beaugrand et al. 2009 DSR II, Poloczanska et al. 2013 NCC),
-  - consumers vs. producers (Petchey et al. 1999 Nature)
-  - community composition (Stuart-Smith et al. 2015 Nature, Beaugrand et a. 2015 NCC, Trisos et al. 2020 Nature), 
-  - ecosystem productivity (Thomas et al. 2017 GCB, Brett 1971 Am Zoo),
-  - exposure to human impacts (White & Kerr 2006 Ecography)
-  - and among realms (Antao et al. 2020 NEE).
-- Scaling up from organismal effects to whole ecological communities is complex, and yet these scales are critical for ecosystem functioning and human well-being. 
-- There is a need for a comprehensive test to understand where warming is driving and is likely to drive the most dramatic community turnover
-
-# Methods
-- BioTime dataset, gridded to 96 km2 hexagons, summarized as temporal turnover (Blowes)
-  - Temporal slope of Jaccard turnover compared to the first year (NOT including the first year compared to itself)
-  - Same for Jaccard total
-  - and Morisita-Horn turnover
-- Explanatory variables considered for differences in rate of turnover:
-  - Temperature trend over the time-frame of each time-series (CRU TS 4.03 on land and in freshwater, ERSST v5 in the ocean)
-  - Seasonality as a metric of thermal sensitivity (Deutsch et al. 2008 PNAS). Standard deviation of monthly temperatures.
-  - Microclimates calculated from WorldClim and BioOracle (Laura Antao)
-  - Body mass, collated from databases and literature searches
-  - Metabolic temperature, from average temperature if ectotherms (Dillon et al. 2010 Nature, Antao et al. 2020 Nat E&E)
-  - Mobility calculated from body mass and taxonomic group classifications of mobility mode (fly, run, swim, crawl, sessile). Fly/run/swim followed the allometric relationship in Hirt et al. 2017 Nat E&E. Crawl set at 0.1 km/hr, sessile set to 0 km/hr. Then calculated averaged within each assemblage.
-  - Generation time calculated from body mass and endotherm vs. ectotherm classifications, following McCoy & Gillooly 2008 ELE. Averaged across species within each assemblage. 
-  - Consumer vs. producer classification by species
-  - Endotherm vs. ectotherm classification by species
-  - Species richness, calculated as the number of species in the assemblage
-  - Net primary productivity (NPP) from the merged land/ocean product produced by the [Ocean Productivity](http://www.science.oregonstate.edu/ocean.productivity/) group at Oregon State using methods from Zhao et al. 2005 and Behrenfeld & Falkowski 1997. 
-  - Human impact calculated from Bowler et al. 2020 (also try data from Venter et al. 2016 and Halpern et al. 2008)
-  - Thermal bias calculated from Species Temperature Indices (Mike Burrows)
-  - Vegetation cover index, calculated from %tree cover and %non-tree veg cover (latter counted as 1/2), from vegetation continuous fields (Ruben Remelgado)
-- Differences in temporal turnover (response variable) modeled with a linear mixed effects model (nlme package, lme() function). See below for details.
-
+# Prep
 ```{r setup}
 library(data.table) # for handling large datasets
 library(ggplot2) # for some plotting
@@ -59,8 +16,14 @@ library(grid) # to combine ggplots together
 library(RColorBrewer)
 library(MASS) # for stepAIC
 library(piecewiseSEM) # for rsquared() for nlme models
+library(scales) # for defining custom scales in ggplot
 
 options(width=500) # turn off most text wrapping
+
+signedsqrt = function(x) sign(x)*sqrt(abs(x))
+signedsq = function(x) sign(x) * x^2
+signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, inverse = signedsq)
+
 
 # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
@@ -92,7 +55,7 @@ trends <- trends[nyrBT >= 3, ]
 ```
 
 
-### Log-transform some variables, then center and scale. 
+## Log-transform some variables, then center and scale. 
 ``` {r center and scale}
 trends[, tempave.sc := scale(tempave)]
 trends[, tempave_metab.sc := scale(tempave_metab)]
@@ -115,8 +78,9 @@ trends[REALM2 == 'TerrFresh', human_footprint.sc := scale(log(human_venter+1))]
 trends[REALM2 == 'Marine', human_footprint.sc := scale(log(human_halpern))]
 ```
 
-### Examine how many data points are available
-Just turnover
+# Summary plots and stats
+## Examine how many data points are available
+### Just turnover
 ```{r sample size all}
 cat('Overall # time-series: ', nrow(trends), '\n')
 cat('# studies: ', trends[, length(unique(STUDY_ID))], '\n')
@@ -126,7 +90,7 @@ trends[, table(taxa_mod)]
 trends[, table(taxa_mod, REALM)]
 ```
 
-With all covariates (Bowler for human)
+### With all covariates (Bowler for human)
 ```{r sample size for Jaccard turnover}
 # the cases we can compare
 apply(trends[, .(Jtutrendrem0, REALM, tempave.sc, tempave_metab.sc, seas.sc, microclim.sc, temptrend.sc, mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
@@ -139,63 +103,6 @@ trends[i, table(taxa_mod)]
 trends[i, table(taxa_mod, REALM)]
 ```
 
-### Choose the variance structure for mixed effects models
-Try combinations of
-
-- variance scaled to a power of the number of years in the community time-series
-- variance scaled to a power of the abs temperature trend
-- random intercept for taxa_mod
-- random intercept for STUDY_ID
-- random slope (abs temperature trend) for taxa_mod
-- random slope (abs temperature trend) for STUDY_ID
-- random intercept for rarefyID (for overdispersion)
-
-And choose the one with lowest AIC (not run: takes a long time)
-```{r choose variance structure for Jacard turnover, eval = FALSE}
-# fit models for variance structure
-fixed <- formula(Jtutrendrem0 ~ temptrend_abs.sc*REALM +
-                     temptrend_abs.sc*tsign + 
-                     temptrend_abs.sc*tempave_metab.sc + 
-                     temptrend_abs.sc*seas.sc + 
-                     temptrend_abs.sc*microclim.sc + 
-                     temptrend_abs.sc*mass.sc + 
-                     temptrend_abs.sc*speed.sc + 
-                     temptrend_abs.sc*consumerfrac.sc +
-                     temptrend_abs.sc*nspp.sc +
-                     temptrend_abs.sc*thermal_bias.sc:tsign +
-                     temptrend_abs.sc*npp.sc +
-                     temptrend_abs.sc*veg.sc +
-                     temptrend_abs.sc*duration.sc +
-                     temptrend_abs.sc*human_bowler.sc:REALM2)
-i <- trends[, complete.cases(Jtutrendrem0, temptrend_abs.sc, REALM, tsign, tempave_metab.sc, seas.sc, 
-                             microclim.sc, mass.sc, speed.sc, consumerfrac.sc, nspp.sc,
-                             thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
-mods <- vector('list', 0)
-mods[[1]] <- gls(fixed, data = trends[i,])
-mods[[2]] <- gls(fixed, data = trends[i,], weights = varPower(-0.5, ~nyrBT))
-mods[[3]] <- gls(fixed, data = trends[i,], weights = varPower(0.5, ~temptrend_abs.sc))
-
-mods[[4]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2, control = lmeControl(opt = "optim"))
-mods[[5]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, control = lmeControl(opt = "optim"))
-mods[[6]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2/STUDY_ID, control = lmeControl(opt = "optim"))
-mods[[7]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID, control = lmeControl(opt = "optim"))
-mods[[8]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2/STUDY_ID/rarefyID, control = lmeControl(opt = "optim"))
-
-mods[[9]] <- lme(fixed, data = trends[i,], random = ~temptrend_abs.sc | taxa_mod)
-mods[[10]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)) # includes overdispersion. new formula so that random slope is only for study level (not enough data to extend to rarefyID).
-
-mods[[11]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1), weights = varPower(-0.5, ~nyrBT))
-mods[[12]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ temptrend_abs.sc, STUDY_ID = ~ 1, rarefyID = ~1), weights = varPower(-0.5, ~nyrBT))
-
-aics <- sapply(mods, AIC)
-minaics <- aics - min(aics)
-minaics
-which.min(aics)
-```
-Chooses the random slopes (temptrend_abs) & intercepts for STUDY_ID, overdispersion, and variance scaled to number of years.
-We haven't dealt with potential testing on the boundary issues here yet.
-
-# Results
 ## Average rates of turnover
 ```{r rates of turnover rem0}
 trends[abs(temptrend) >= 0.5, temptrendtext1 := 'Changing >=0.5']
@@ -241,7 +148,7 @@ write.csv(trendsum4, file = 'output/trendsummary.csv', row.names = FALSE)
 trendsum4
 ```
 
-### Plots of turnover rates binned by warming rates
+## Plots of turnover rates binned by warming rates
 ```{r turnover vs. temperature violin plot, message = FALSE, warning = FALSE, fig.height= 12, fig.width = 6}
 p1 <- ggplot(trends[!is.na(temptrendtext1), ], aes(temptrendtext1, Horntrendrem0)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
@@ -336,7 +243,7 @@ grid.arrange(p1, p2, p3, p4, p5, p6, p7, ncol = 2,
                        unit(0.18, "npc"), unit(0.18, "npc")))
 ```
 
-### Plots of turnover rates binned by warming rates and duration
+## Plots of turnover rates binned by warming rates and duration
 ```{r turnover vs. temperature trend vs. duration} #, message = FALSE, warning = FALSE}
 ggplot(trends[abs(temptrend) <= 0.05, ], aes(x=duration, y=Jtutrendrem0)) +
   geom_smooth(method = 'gam', aes(color = '<=0.05')) +
@@ -344,7 +251,7 @@ ggplot(trends[abs(temptrend) <= 0.05, ], aes(x=duration, y=Jtutrendrem0)) +
   geom_smooth(data = trends[abs(temptrend) <= 0.5 & abs(temptrend) > 0.1,], method = 'loess', aes(color = '0.1-0.5')) +
   geom_smooth(data = trends[abs(temptrend) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
   scale_x_log10() + 
-  labs(y = 'Jaccard turnover slope')
+  labs(y = 'Jaccard turnover slope', color = '°C/year')
 
 ggplot(trends[abs(temptrend) <= 0.05, ], aes(x=duration, y=Jbetatrendrem0)) +
   geom_smooth(method = 'gam', aes(color = '<=0.05')) +
@@ -352,7 +259,7 @@ ggplot(trends[abs(temptrend) <= 0.05, ], aes(x=duration, y=Jbetatrendrem0)) +
   geom_smooth(data = trends[abs(temptrend) <= 0.5 & abs(temptrend) > 0.1,], method = 'loess', aes(color = '0.1-0.5')) +
   geom_smooth(data = trends[abs(temptrend) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
   scale_x_log10() + 
-  labs(y = 'Jaccard total slope')
+  labs(y = 'Jaccard total slope', color = '°C/year')
 
 ggplot(trends[abs(temptrend) <= 0.05, ], aes(x=duration, y=Horntrendrem0)) +
   geom_smooth(method = 'gam', aes(color = '<=0.05')) +
@@ -360,10 +267,68 @@ ggplot(trends[abs(temptrend) <= 0.05, ], aes(x=duration, y=Horntrendrem0)) +
   geom_smooth(data = trends[abs(temptrend) <= 0.5 & abs(temptrend) > 0.1,], method = 'loess', aes(color = '0.1-0.5')) +
   geom_smooth(data = trends[abs(temptrend) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
   scale_x_log10() + 
-  labs(y = 'Horn slope')
+  labs(y = 'Horn slope', color = '°C/year')
 
 ```
 
+
+# Models
+
+## Choose the variance structure for mixed effects models
+Try combinations of
+
+- variance scaled to a power of the number of years in the community time-series
+- variance scaled to a power of the abs temperature trend
+- random intercept for taxa_mod
+- random intercept for STUDY_ID
+- random slope (abs temperature trend) for taxa_mod
+- random slope (abs temperature trend) for STUDY_ID
+- random intercept for rarefyID (for overdispersion)
+
+And choose the one with lowest AIC (not run: takes a long time)
+```{r choose variance structure for Jacard turnover, eval = FALSE}
+# fit models for variance structure
+fixed <- formula(Jtutrendrem0 ~ temptrend_abs.sc*REALM +
+                     temptrend_abs.sc*tsign + 
+                     temptrend_abs.sc*tempave_metab.sc + 
+                     temptrend_abs.sc*seas.sc + 
+                     temptrend_abs.sc*microclim.sc + 
+                     temptrend_abs.sc*mass.sc + 
+                     temptrend_abs.sc*speed.sc + 
+                     temptrend_abs.sc*consumerfrac.sc +
+                     temptrend_abs.sc*nspp.sc +
+                     temptrend_abs.sc*thermal_bias.sc:tsign +
+                     temptrend_abs.sc*npp.sc +
+                     temptrend_abs.sc*veg.sc +
+                     temptrend_abs.sc*duration.sc +
+                     temptrend_abs.sc*human_bowler.sc:REALM2)
+i <- trends[, complete.cases(Jtutrendrem0, temptrend_abs.sc, REALM, tsign, tempave_metab.sc, seas.sc, 
+                             microclim.sc, mass.sc, speed.sc, consumerfrac.sc, nspp.sc,
+                             thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
+mods <- vector('list', 0)
+mods[[1]] <- gls(fixed, data = trends[i,])
+mods[[2]] <- gls(fixed, data = trends[i,], weights = varPower(-0.5, ~nyrBT))
+mods[[3]] <- gls(fixed, data = trends[i,], weights = varPower(0.5, ~temptrend_abs.sc))
+
+mods[[4]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2, control = lmeControl(opt = "optim"))
+mods[[5]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, control = lmeControl(opt = "optim"))
+mods[[6]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2/STUDY_ID, control = lmeControl(opt = "optim"))
+mods[[7]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID, control = lmeControl(opt = "optim"))
+mods[[8]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2/STUDY_ID/rarefyID, control = lmeControl(opt = "optim"))
+
+mods[[9]] <- lme(fixed, data = trends[i,], random = ~temptrend_abs.sc | taxa_mod)
+mods[[10]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)) # includes overdispersion. new formula so that random slope is only for study level (not enough data to extend to rarefyID).
+
+mods[[11]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1), weights = varPower(-0.5, ~nyrBT))
+mods[[12]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ temptrend_abs.sc, STUDY_ID = ~ 1, rarefyID = ~1), weights = varPower(-0.5, ~nyrBT))
+
+aics <- sapply(mods, AIC)
+minaics <- aics - min(aics)
+minaics
+which.min(aics)
+```
+Chooses the random slopes (temptrend_abs) & intercepts for STUDY_ID, overdispersion, and variance scaled to number of years.
+We haven't dealt with potential testing on the boundary issues here yet.
 
 
 ## Temperature-only models
@@ -403,16 +368,15 @@ if(file.exists('temp/modonlyTtrendHornrem0.rds')){
 }
 
 # *trendz
-# doesn't converge
-# if(file.exists('temp/modonlyTtrendJtuz.rds')){
-#   modonlyTtrendJtuz <- readRDS('temp/modonlyTtrendJtuz.rds')
-# } else {
-#   i <- trends[, complete.cases(Jtutrendz, REALM, temptrend)]
-#   modonlyTtrendJtuz <- lme(Jtutrendz ~ abs(temptrend)*REALM,
-#                    random = randef, weights = varef, data = trends[i,], method = 'REML', 
-#                    control=lmeControl(msMaxIter = 100, maxIter = 100))
-#   saveRDS(modonlyTtrendJtuz, file = 'temp/modonlyTtrendJtuz.rds')
-# }
+if(file.exists('temp/modonlyTtrendJtuz.rds')){
+  modonlyTtrendJtuz <- readRDS('temp/modonlyTtrendJtuz.rds')
+} else {
+  i <- trends[, complete.cases(Jtutrendz, REALM, temptrend)]
+  modonlyTtrendJtuz <- lme(Jtutrendz ~ abs(temptrend)*REALM,
+                   random = randef, weights = varef, data = trends[i,], method = 'REML',
+                   control=lmeControl(msMaxIter = 100, maxIter = 100))
+  saveRDS(modonlyTtrendJtuz, file = 'temp/modonlyTtrendJtuz.rds')
+}
 
 if(file.exists('temp/modonlyTtrendJbetaz.rds')){
   modonlyTtrendJbetaz <- readRDS('temp/modonlyTtrendJbetaz.rds')
@@ -585,8 +549,7 @@ Try static covariates plus interactions of abs temperature trend with each covar
 
 Except for thermal bias: interact with temperature trend (not abs)
 
-### Fit/load full models
-#### Bowler vs Venter/Halpern human impact
+### Bowler vs Venter/Halpern human impact
 Bowler has lower AIC.
 ```{r LME Jacard turnover temperature full rem0}
 # using Bowler for human impact
@@ -647,34 +610,39 @@ AIC(modTfullbowlerrem0, modTfullfootprintrem0)
 
 ```
 
-#### Fit/load full models
+### Fit/load full models
 ```{r full models, fig.width=10, fig.height=8}
 randef <- list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)
 varef <- varPower(-0.5, ~nyrBT)
+
+terms <- c('temptrend_abs.sc*REALM', 
+           'temptrend_abs.sc*tsign',
+           'temptrend_abs.sc*tempave_metab.sc',
+           'temptrend_abs.sc*seas.sc',
+           'temptrend_abs.sc*microclim.sc',
+           'temptrend_abs.sc*mass.sc',
+           'temptrend_abs.sc*speed.sc', 
+           'temptrend_abs.sc*consumerfrac.sc',
+           'temptrend_abs.sc*nspp.sc',
+           'temptrend_abs.sc*thermal_bias.sc:tsign',
+           'temptrend_abs.sc*npp.sc',
+           'temptrend_abs.sc*veg.sc',
+           'temptrend_abs.sc*duration.sc',
+           'temptrend_abs.sc*human_bowler.sc:REALM2')
+
+completerows <- trends[, complete.cases(REALM, tempave_metab.sc, 
+                                seas.sc, microclim.sc, 
+                                temptrend_abs.sc, mass.sc, speed.sc, 
+                                consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
+                                veg.sc, duration.sc, human_bowler.sc)]
+
 
 # rem0
 if(file.exists('temp/modTfullJturem0.rds')){
   modTfullJturem0 <- readRDS('temp/modTfullJturem0.rds')
 } else {
-  i <- trends[, complete.cases(Jtutrendrem0, REALM, tempave_metab.sc, 
-                                seas.sc, microclim.sc, 
-                                temptrend_abs.sc, mass.sc, speed.sc, 
-                                consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                                veg.sc, duration.sc, human_bowler.sc)]
-  modTfullJturem0 <- lme(Jtutrendrem0 ~ temptrend_abs.sc*REALM + 
-                           temptrend_abs.sc*tsign +
-                           temptrend_abs.sc*tempave_metab.sc + 
-                           temptrend_abs.sc*seas.sc + 
-                           temptrend_abs.sc*microclim.sc + 
-                           temptrend_abs.sc*mass.sc + 
-                           temptrend_abs.sc*speed.sc + 
-                           temptrend_abs.sc*consumerfrac.sc +
-                           temptrend_abs.sc*nspp.sc +
-                           temptrend_abs.sc*thermal_bias.sc:tsign +
-                           temptrend_abs.sc*npp.sc +
-                           temptrend_abs.sc*veg.sc +
-                           temptrend_abs.sc*duration.sc +
-                           temptrend_abs.sc*human_bowler.sc:REALM2,
+  i <- trends[, complete.cases(Jtutrendrem0)] & completerows
+  modTfullJturem0 <- lme(formula(paste0('Jtutrendrem0 ~ ', paste(terms, collapse = ' + '))),
                          random = randef, weights = varef, data = trends[i,], 
                          method = 'REML')
   saveRDS(modTfullJturem0, file = 'temp/modTfullJturem0.rds')
@@ -683,25 +651,8 @@ if(file.exists('temp/modTfullJturem0.rds')){
 if(file.exists('temp/modTfullJbetarem0.rds')){
   modTfullJbetarem0 <- readRDS('temp/modTfullJbetarem0.rds')
 } else {
-  i <- trends[, complete.cases(Jbetatrendrem0, REALM, tempave_metab.sc, 
-                                seas.sc, microclim.sc, 
-                                temptrend_abs.sc, mass.sc, speed.sc, 
-                                consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                                veg.sc, duration.sc, human_bowler.sc)]
-  modTfullJbetarem0 <- lme(Jbetatrendrem0 ~ temptrend_abs.sc*REALM + 
-                             temptrend_abs.sc*tsign +
-                             temptrend_abs.sc*tempave_metab.sc + 
-                             temptrend_abs.sc*seas.sc + 
-                             temptrend_abs.sc*microclim.sc + 
-                             temptrend_abs.sc*mass.sc + 
-                             temptrend_abs.sc*speed.sc + 
-                             temptrend_abs.sc*consumerfrac.sc +
-                             temptrend_abs.sc*nspp.sc +
-                             temptrend_abs.sc*thermal_bias.sc:tsign +
-                             temptrend_abs.sc*npp.sc +
-                             temptrend_abs.sc*veg.sc +
-                             temptrend_abs.sc*duration.sc +
-                             temptrend_abs.sc*human_bowler.sc:REALM2,
+  i <- trends[, complete.cases(Jbetatrendrem0)] & completerows
+  modTfullJbetarem0 <- lme(formula(paste0('Jbetatrendrem0 ~ ', paste(terms, collapse = ' + '))),
                            random = randef, weights = varef, data = trends[i,], 
                            method = 'REML')
   saveRDS(modTfullJbetarem0, file = 'temp/modTfullJbetarem0.rds')
@@ -710,81 +661,63 @@ if(file.exists('temp/modTfullJbetarem0.rds')){
 if(file.exists('temp/modTfullHornrem0.rds')){
   modTfullHornrem0 <- readRDS('temp/modTfullHornrem0.rds')
 } else {
-  i <- trends[, complete.cases(Horntrendrem0, REALM, tempave_metab.sc, 
-                                seas.sc, microclim.sc, 
-                                temptrend_abs.sc, mass.sc, speed.sc, 
-                                consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                                veg.sc, duration.sc, human_bowler.sc)]
-  modTfullHornrem0 <- lme(Horntrendrem0 ~ temptrend_abs.sc*REALM + 
-                        temptrend_abs.sc*tsign +
-                        temptrend_abs.sc*tempave_metab.sc + 
-                        temptrend_abs.sc*seas.sc + 
-                        temptrend_abs.sc*microclim.sc + 
-                        temptrend_abs.sc*mass.sc + 
-                        temptrend_abs.sc*speed.sc + 
-                        temptrend_abs.sc*consumerfrac.sc +
-                        temptrend_abs.sc*nspp.sc +
-                        temptrend_abs.sc*thermal_bias.sc:tsign +
-                        temptrend_abs.sc*npp.sc +
-                        temptrend_abs.sc*veg.sc +
-                        temptrend_abs.sc*duration.sc +
-                        temptrend_abs.sc*human_bowler.sc:REALM2,
+  i <- trends[, complete.cases(Horntrendrem0)] & completerows
+  modTfullHornrem0 <- lme(formula(paste0('Horntrendrem0 ~ ', paste(terms, collapse = ' + '))),
                       random = randef, weights = varef, data = trends[i,], 
                       method = 'REML')
   saveRDS(modTfullHornrem0, file = 'temp/modTfullHornrem0.rds')
+}
+
+# trendz
+if(file.exists('temp/modTfullJtuz.rds')){
+  modTfullJtuz <- readRDS('temp/modTfullJtuz.rds')
+} else {
+  i <- trends[, complete.cases(Jtutrendz)] & completerows
+  modTfullJtuz <- lme(formula(paste0('Jtutrendz ~ ', paste(terms, collapse = ' + '))),
+                         random = randef, weights = varef, data = trends[i,], 
+                         method = 'REML',
+                   control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
+  saveRDS(modTfullJtuz, file = 'temp/modTfullJtuz.rds')
+}
+
+if(file.exists('temp/modTfullJbetaz.rds')){
+  modTfullJbetaz <- readRDS('temp/modTfullJbetaz.rds')
+} else {
+  i <- trends[, complete.cases(Jbetatrendz)] & completerows
+  modTfullJbetaz <- lme(formula(paste0('Jbetatrendz ~ ', paste(terms, collapse = ' + '))),
+                           random = randef, weights = varef, data = trends[i,], 
+                           method = 'REML')
+  saveRDS(modTfullJbetaz, file = 'temp/modTfullJbetaz.rds')
+}
+
+if(file.exists('temp/modTfullHornz.rds')){
+  modTfullHornz <- readRDS('temp/modTfullHornz.rds')
+} else {
+  i <- trends[, complete.cases(Horntrendz)] & completerows
+  modTfullHornz <- lme(formula(paste0('Horntrendz ~ ', paste(terms, collapse = ' + '))),
+                         random = randef, weights = varef, data = trends[i,], 
+                         method = 'REML',
+                         control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
+  saveRDS(modTfullHornz, file = 'temp/modTfullHornz.rds')
 }
 
 # exp
 if(file.exists('temp/modTfullJtuexp.rds')){
   modTfullJtuexp <- readRDS('temp/modTfullJtuexp.rds')
 } else {
-  i <- trends[, complete.cases(Jtuexp, REALM, tempave_metab.sc, 
-                                seas.sc, microclim.sc, 
-                                temptrend_abs.sc, mass.sc, speed.sc, 
-                                consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                                veg.sc, duration.sc, human_bowler.sc)]
-  modTfullJtuexp <- lme(log(Jtuexp) ~ temptrend_abs.sc*REALM + 
-                           temptrend_abs.sc*tsign +
-                           temptrend_abs.sc*tempave_metab.sc + 
-                           temptrend_abs.sc*seas.sc + 
-                           temptrend_abs.sc*microclim.sc + 
-                           temptrend_abs.sc*mass.sc + 
-                           temptrend_abs.sc*speed.sc + 
-                           temptrend_abs.sc*consumerfrac.sc +
-                           temptrend_abs.sc*nspp.sc +
-                           temptrend_abs.sc*thermal_bias.sc:tsign +
-                           temptrend_abs.sc*npp.sc +
-                           temptrend_abs.sc*veg.sc +
-                           temptrend_abs.sc*duration.sc +
-                           temptrend_abs.sc*human_bowler.sc:REALM2,
+  i <- trends[, complete.cases(Jtuexp)] & completerows
+  modTfullJtuexp <- lme(formula(paste0('log(Jtuexp) ~ ', paste(terms, collapse = ' + '))),
                          random = randef, weights = varef, data = trends[i,], 
                          method = 'REML',
-                   control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500, opt = 'optim'))
+                   control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
   saveRDS(modTfullJtuexp, file = 'temp/modTfullJtuexp.rds')
 }
 
 if(file.exists('temp/modTfullJbetaexp.rds')){
   modTfullJbetaexp <- readRDS('temp/modTfullJbetaexp.rds')
 } else {
-  i <- trends[, complete.cases(Jbetaexp, REALM, tempave_metab.sc, 
-                                seas.sc, microclim.sc, 
-                                temptrend_abs.sc, mass.sc, speed.sc, 
-                                consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                                veg.sc, duration.sc, human_bowler.sc)]
-  modTfullJbetaexp <- lme(log(Jbetaexp) ~ temptrend_abs.sc*REALM + 
-                             temptrend_abs.sc*tsign +
-                             temptrend_abs.sc*tempave_metab.sc + 
-                             temptrend_abs.sc*seas.sc + 
-                             temptrend_abs.sc*microclim.sc + 
-                             temptrend_abs.sc*mass.sc + 
-                             temptrend_abs.sc*speed.sc + 
-                             temptrend_abs.sc*consumerfrac.sc +
-                             temptrend_abs.sc*nspp.sc +
-                             temptrend_abs.sc*thermal_bias.sc:tsign +
-                             temptrend_abs.sc*npp.sc +
-                             temptrend_abs.sc*veg.sc +
-                             temptrend_abs.sc*duration.sc +
-                             temptrend_abs.sc*human_bowler.sc:REALM2,
+  i <- trends[, complete.cases(Jbetaexp)] & completerows
+  modTfullJbetaexp <- lme(formula(paste0('log(Jbetaexp) ~ ', paste(terms, collapse = ' + '))),
                            random = randef, weights = varef, data = trends[i,], 
                            method = 'REML')
   saveRDS(modTfullJbetaexp, file = 'temp/modTfullJbetaexp.rds')
@@ -793,25 +726,8 @@ if(file.exists('temp/modTfullJbetaexp.rds')){
 if(file.exists('temp/modTfullHornexp.rds')){
   modTfullHornexp <- readRDS('temp/modTfullHornexp.rds')
 } else {
-  i <- trends[, complete.cases(Hornexp, REALM, tempave_metab.sc, 
-                               seas.sc, microclim.sc, 
-                               temptrend_abs.sc, mass.sc, speed.sc, 
-                               consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                               veg.sc, duration.sc, human_bowler.sc)]
-  modTfullHornexp <- lme(log(Hornexp) ~ temptrend_abs.sc*REALM + 
-                           temptrend_abs.sc*tsign +
-                           temptrend_abs.sc*tempave_metab.sc + 
-                           temptrend_abs.sc*seas.sc + 
-                           temptrend_abs.sc*microclim.sc + 
-                           temptrend_abs.sc*mass.sc + 
-                           temptrend_abs.sc*speed.sc + 
-                           temptrend_abs.sc*consumerfrac.sc +
-                           temptrend_abs.sc*nspp.sc +
-                           temptrend_abs.sc*thermal_bias.sc:tsign +
-                           temptrend_abs.sc*npp.sc +
-                           temptrend_abs.sc*veg.sc +
-                           temptrend_abs.sc*duration.sc +
-                           temptrend_abs.sc*human_bowler.sc:REALM2,
+  i <- trends[, complete.cases(Hornexp)] & completerows
+  modTfullHornexp <- lme(formula(paste0('log(Hornexp) ~ ', paste(terms, collapse = ' + '))),
                          random = randef, weights = varef, data = trends[i,], 
                          method = 'REML',
                          control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
@@ -822,25 +738,8 @@ if(file.exists('temp/modTfullHornexp.rds')){
 if(file.exists('temp/modTfullJtumm.rds')){
   modTfullJtumm <- readRDS('temp/modTfullJtumm.rds')
 } else {
-  i <- trends[, complete.cases(Jtumm, REALM, tempave_metab.sc, 
-                               seas.sc, microclim.sc, 
-                               temptrend_abs.sc, mass.sc, speed.sc, 
-                               consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                               veg.sc, duration.sc, human_bowler.sc)]
-  modTfullJtumm <- lme(log(Jtumm+1) ~ temptrend_abs.sc*REALM + 
-                         temptrend_abs.sc*tsign +
-                         temptrend_abs.sc*tempave_metab.sc + 
-                         temptrend_abs.sc*seas.sc + 
-                         temptrend_abs.sc*microclim.sc + 
-                         temptrend_abs.sc*mass.sc + 
-                         temptrend_abs.sc*speed.sc + 
-                         temptrend_abs.sc*consumerfrac.sc +
-                         temptrend_abs.sc*nspp.sc +
-                         temptrend_abs.sc*thermal_bias.sc:tsign +
-                         temptrend_abs.sc*npp.sc +
-                         temptrend_abs.sc*veg.sc +
-                         temptrend_abs.sc*duration.sc +
-                         temptrend_abs.sc*human_bowler.sc:REALM2,
+  i <- trends[, complete.cases(Jtumm)] & completerows
+  modTfullJtumm <- lme(formula(paste0('log(Jtumm+1) ~ ', paste(terms, collapse = ' + '))),
                        random = randef, weights = varef, data = trends[i,], 
                        method = 'REML',
                        control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
@@ -850,53 +749,19 @@ if(file.exists('temp/modTfullJtumm.rds')){
 if(file.exists('temp/modTfullJbetamm.rds')){
   modTfullJbetamm <- readRDS('temp/modTfullJbetamm.rds')
 } else {
-  i <- trends[, complete.cases(Jbetamm, REALM, tempave_metab.sc, 
-                                seas.sc, microclim.sc, 
-                               temptrend_abs.sc, mass.sc, speed.sc, 
-                               consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                               veg.sc, duration.sc, human_bowler.sc)]
-  modTfullJbetamm <- lme(log(Jbetamm+1) ~ temptrend_abs.sc*REALM + 
-                           temptrend_abs.sc*tsign +
-                           temptrend_abs.sc*tempave_metab.sc + 
-                           temptrend_abs.sc*seas.sc + 
-                           temptrend_abs.sc*microclim.sc + 
-                           temptrend_abs.sc*mass.sc + 
-                           temptrend_abs.sc*speed.sc + 
-                           temptrend_abs.sc*consumerfrac.sc +
-                           temptrend_abs.sc*nspp.sc +
-                           temptrend_abs.sc*thermal_bias.sc:tsign +
-                           temptrend_abs.sc*npp.sc +
-                           temptrend_abs.sc*veg.sc +
-                           temptrend_abs.sc*duration.sc +
-                           temptrend_abs.sc*human_bowler.sc:REALM2,
+  i <- trends[, complete.cases(Jbetamm)] & completerows
+  modTfullJbetamm <- lme(formula(paste0('log(Jbetamm+1) ~ ', paste(terms, collapse = ' + '))),
                          random = randef, weights = varef, data = trends[i,], 
                          method = 'REML',
-                         control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
+                         control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500, opt = 'optim'))
   saveRDS(modTfullJbetamm, file = 'temp/modTfullJbetamm.rds')
 }
 
 if(file.exists('temp/modTfullHornmm.rds')){
   modTfullHornmm <- readRDS('temp/modTfullHornmm.rds')
 } else {
-  i <- trends[, complete.cases(Hornmm, REALM, tempave_metab.sc, 
-                                seas.sc, microclim.sc, 
-                                temptrend_abs.sc, mass.sc, speed.sc, 
-                                consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                                veg.sc, duration.sc, human_bowler.sc)]
-  modTfullHornmm <- lme(log(Hornmm+1) ~ temptrend_abs.sc*REALM + 
-                        temptrend_abs.sc*tsign +
-                        temptrend_abs.sc*tempave_metab.sc + 
-                        temptrend_abs.sc*seas.sc + 
-                        temptrend_abs.sc*microclim.sc + 
-                        temptrend_abs.sc*mass.sc + 
-                        temptrend_abs.sc*speed.sc + 
-                        temptrend_abs.sc*consumerfrac.sc +
-                        temptrend_abs.sc*nspp.sc +
-                        temptrend_abs.sc*thermal_bias.sc:tsign +
-                        temptrend_abs.sc*npp.sc +
-                        temptrend_abs.sc*veg.sc +
-                        temptrend_abs.sc*duration.sc +
-                        temptrend_abs.sc*human_bowler.sc:REALM2,
+  i <- trends[, complete.cases(Hornmm)] & completerows
+  modTfullHornmm <- lme(formula(paste0('log(Hornmm+1) ~ ', paste(terms, collapse = ' + '))),
                         random = randef, weights = varef, data = trends[i,], 
                         method = 'REML',
                         control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
@@ -916,6 +781,17 @@ rsquared(modTfullHornrem0)
 
 ```
 
+#### Summary trendz
+```{r summary trendz full}
+summary(modTfullJtuz)
+summary(modTfullJbetaz)
+summary(modTfullHornz)
+
+rsquared(modTfullJtuz)
+rsquared(modTfullJbetaz)
+rsquared(modTfullHornz)
+
+```
 
 #### Summary exp
 ```{r summary exp full}
@@ -1418,31 +1294,29 @@ AICnas <- function(x){
   }
 }
 
+# set up the response variables to run
+torun = data.frame(var = c('Jtutrendrem0', 'Jbetatrendrem0', 'Horntrendrem0', 
+                           'Jtutrendz', 'Jbetatrendz', 'Horntrendz',
+                           'Jtuexp', 'Jbetaexp', 'Hornexp',
+                           'Jtumm', 'Jbetamm', 'Hornmm'), 
+                   modvar = c('Jtutrendrem0', 'Jbetatrendrem0', 'Horntrendrem0', 
+                           'Jtutrendz', 'Jbetatrendz', 'Horntrendz',
+                           'log(Jtuexp)', 'log(Jbetaexp)', 'log(Hornexp)',
+                           'log(Jtumm+1)', 'log(Jbetamm+1)', 'log(Hornmm+1)'),
+                   run = TRUE, aics = NA)
+
+# check if any already exist. If so, don't re-run that model.
 if(file.exists('output/aics_from_full.csv')){
   aicsfromfull <- read.csv('output/aics_from_full.csv')
   
-  if('dAIC_Jtu' %in% colnames(aicsfromfull)){
-    runJtu <- FALSE
-  } else {
-    runJtu <- TRUE
+  for(i in 1:nrow(torun)){
+    nm <- paste0('dAIC_', torun$var[i])
+    if(nm %in% colnames(aicsfromfull)){ # check for column name
+      if(!is.na(aicsfromfull[[nm]][1])){ # check that full model is not NA
+        torun$run[i] <- FALSE
+      }
+    }
   }
-  
-  if('dAIC_Jbeta' %in% colnames(aicsfromfull)){
-    runJbeta <- FALSE
-  } else {
-    runJbeta <- TRUE
-  }
-  
-  if('dAIC_Horn' %in% colnames(aicsfromfull)){
-    runHorn <- FALSE
-  } else {
-    runHorn <- TRUE
-  }
-  
-} else {
-  runJtu <- TRUE
-  runJbeta <- TRUE
-  runHorn <- TRUE
 }
 
 randef <- list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)
@@ -1463,163 +1337,78 @@ terms <- c('temptrend_abs.sc*REALM',
            'temptrend_abs.sc*duration.sc',
            'temptrend_abs.sc*human_bowler.sc:REALM2')
 
-
-if(runJtu){
-  i <- trends[, complete.cases(Jtutrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
-                               temptrend_abs.sc, mass.sc, speed.sc, 
-                               consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                               veg.sc, duration.sc, human_bowler.sc)]
-  
-  modTdrops <- vector('list', length(terms)+2)
-  names(modTdrops) <- c('full', '-temptrend_abs.sc', paste0('-', terms))
-  
-  # fit full model with ML for model comparison
-  modTdrops[[1]] <- lme(formula(paste0('Jtutrendrem0 ~ ', paste(terms, collapse = ' + '))),
-                        random = randef, weights = varef, data = trends[i,], method = 'ML')
-  
-  # w/out temptrend
-  modTdrops[[2]] <- lme(formula(paste0('Jtutrendrem0 ~ ', paste(gsub('temptrend_abs.sc\\*', '', terms), collapse = ' + '))),
-                        random = list(STUDY_ID = ~ 1, rarefyID = ~1), weights = varef, data = trends[i,], method = 'ML')
-  
-  for(j in 1:length(terms)){
-    print(j)
-    tryCatch({
-      modTdrops[[j+2]] <- lme(formula(paste0('Jtutrendrem0 ~ ', paste(terms[-j], collapse = ' + '))),
-                              random = randef, weights = varef, data = trends[i,], method = 'ML')
-      
-    }, error = function(e){
-      print('going to optim (Jtu)')
-      tryCatch({
-        modTdrops[[j+2]] <- lme(formula(paste0('Jtutrendrem0 ~ ', paste(terms[-j], collapse = ' + '))),
-                                random = randef, weights = varef, data = trends[i,], method = 'ML',
-                                control = lmeControl(opt = 'optim'))
-        
-      }, error = function(e){
-        print('going to more iters (Jtu)') 
-        tryCatch({
-          modTdrops[[j+2]] <- lme(formula(paste0('Jtutrendrem0 ~ ', paste(terms[-j], collapse = ' + '))),
-                                  random = randef, weights = varef, data = trends[i,], method = 'ML',
-                                  control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
-          
-        }, error= function(e){
-          print('giving up on this one')
-          modTdrops[[j+2]] <- NA
-        })
-      })
-    })
-  }
-  
-  aicsJtu <- sapply(modTdrops, AICnas)
-}
-
-
-if(runJbeta){
-  i <- trends[, complete.cases(Jbetatrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
-                               temptrend_abs.sc, mass.sc, speed.sc, 
-                               consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                               veg.sc, duration.sc, human_bowler.sc)]
-  
-  modTJbetadrops <- vector('list', length(terms)+2)
-  names(modTJbetadrops) <- c('full', '-temptrend_abs.sc', paste0('-', terms))
-  
-  # fit full model with ML for model comparison
-  modTJbetadrops[[1]] <- lme(formula(paste0('Jbetatrendrem0 ~ ', paste(terms, collapse = ' + '))),
-                             random = randef, weights = varef, data = trends[i,], method = 'ML')
-  
-  # w/out temptrend
-  modTJbetadrops[[2]] <- lme(formula(paste0('Jbetatrendrem0 ~ ', paste(gsub('temptrend_abs.sc\\*', '', terms), collapse = ' + '))),
-                             random = list(STUDY_ID = ~ 1, rarefyID = ~1), weights = varef, data = trends[i,], method = 'ML')
-  
-  for(j in 1:length(terms)){
-    print(j)
-    tryCatch({
-      modTJbetadrops[[j+2]] <- lme(formula(paste0('Jbetatrendrem0 ~ ', paste(terms[-j], collapse = ' + '))),
-                                   random = randef, weights = varef, data = trends[i,], method = 'ML')
-    }, error = function(e){
-      print('going to optim (Jbeta)')
-      tryCatch({
-        modTJbetadrops[[j+2]] <- lme(formula(paste0('Jbetatrendrem0 ~ ', paste(terms[-j], collapse = ' + '))),
-                                     random = randef, weights = varef, data = trends[i,], method = 'ML',
-                                     control = lmeControl(opt = 'optim'))
-        
-      }, error = function(e){
-        print('going to more iters (Jbeta)') 
-        tryCatch({
-          modTJbetadrops[[j+2]] <- lme(formula(paste0('Jbetatrendrem0 ~ ', paste(terms[-j], collapse = ' + '))),
-                                       random = randef, weights = varef, data = trends[i,], method = 'ML',
-                                       control = lmeControl(maxIter = 100, msMaxIter = 100, 
-                                                            niterEM = 50, msMaxEval = 500))
-        }, error= function(e){
-          print('giving up on this one (Jbeta)')
-          modTJbetadrops[[j+2]] <- NA
-        })
-      }
-      )
-    }
-    )
-  }
-  aicsJbeta <- sapply(modTJbetadrops, AICnas)
-}
-
-if(runHorn){
-  i2 <- trends[, complete.cases(Horntrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
+completerows <- trends[, complete.cases(REALM, tempave_metab.sc, 
+                                seas.sc, microclim.sc, 
                                 temptrend_abs.sc, mass.sc, speed.sc, 
                                 consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
                                 veg.sc, duration.sc, human_bowler.sc)]
-  
-  modTHorndrops <- vector('list', length(terms)+2)
-  names(modTHorndrops) <- c('full', '-temptrend_abs.sc', paste0('-', terms))
-  modTHorndrops[[1]] <- lme(formula(paste0('Horntrendrem0 ~ ', paste(terms, collapse = ' + '))),
-                            random = randef, weights = varef, data = trends[i2,], method = 'ML')
-  modTHorndrops[[2]] <- lme(formula(paste0('Horntrendrem0 ~ ', paste(gsub('temptrend_abs.sc\\*', '', terms), collapse = ' + '))),
-                            random = list(STUDY_ID = ~ 1, rarefyID = ~1), weights = varef, data = trends[i2,], method = 'ML')
-  
-  for(j in 1:length(terms)){
-    print(j)
-    tryCatch({
-      modTHorndrops[[j+2]] <- lme(formula(paste0('Horntrendrem0 ~ ', paste(terms[-j], collapse = ' + '))),
-                                  random = randef, weights = varef, data = trends[i2,], method = 'ML')
-    }, error = function(e){
-      print('going to optim (Horn)')
+
+if(any(torun$run)){
+  for(k in which(torun$run)){
+
+    i <- !is.na(trends[[as.character(torun$var[k])]]) & completerows
+    
+    modTdrops <- vector('list', length(terms)+2)
+    names(modTdrops) <- c('full', '-temptrend_abs.sc', paste0('-', terms))
+    
+    # fit full model with ML for model comparison
+    modTdrops[[1]] <- lme(formula(paste0(torun$modvar[k], ' ~ ', paste(terms, collapse = ' + '))),
+                          random = randef, weights = varef, data = trends[i,], method = 'ML',
+                          control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500, opt = 'optim'))
+    
+    # w/out temptrend
+    modTdrops[[2]] <- lme(formula(paste0(torun$modvar[k], ' ~ ', paste(gsub('temptrend_abs.sc\\*', '', terms), 
+                                                                       collapse = ' + '))),
+                          random = list(STUDY_ID = ~ 1, rarefyID = ~1), weights = varef, data = trends[i,], method = 'ML',
+                          control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500, opt = 'optim'))
+    
+    for(j in 1:length(terms)){
+      print(j)
       tryCatch({
-        modTHorndrops[[j+2]] <- lme(formula(paste0('Horntrendrem0 ~ ', paste(terms[-j], collapse = ' + '))),
-                                    random = randef, weights = varef, data = trends[i2,], method = 'ML',
-                                    control = lmeControl(opt = 'optim'))
+        modTdrops[[j+2]] <- lme(formula(paste0(torun$modvar[k], ' ~ ', paste(terms[-j], collapse = ' + '))),
+                                random = randef, weights = varef, data = trends[i,], method = 'ML')
         
       }, error = function(e){
-        print('going to more iters (Horn)') 
+        print('going to optim (Jtu)')
         tryCatch({
-          modTHorndrops[[j+2]] <- lme(formula(paste0('Horntrendrem0 ~ ', paste(terms[-j], collapse = ' + '))),
-                                      random = randef, weights = varef, data = trends[i2,], method = 'ML',
-                                      control = lmeControl(maxIter = 100, msMaxIter = 100, 
-                                                           niterEM = 50, msMaxEval = 500))
+          modTdrops[[j+2]] <- lme(formula(paste0(torun$modvar[k], ' ~ ', paste(terms[-j], collapse = ' + '))),
+                                  random = randef, weights = varef, data = trends[i,], method = 'ML',
+                                  control = lmeControl(opt = 'optim'))
           
-        }, error= function(e){
-          print('giving up on this one (Horn)')
-          modTHorndrops[[j+2]] <- NA
+        }, error = function(e){
+          print('going to more iters (Jtu)') 
+          tryCatch({
+            modTdrops[[j+2]] <- lme(formula(paste0(torun$modvar[k], ' ~ ', paste(terms[-j], collapse = ' + '))),
+                                    random = randef, weights = varef, data = trends[i,], method = 'ML',
+                                    control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
+            
+          }, error= function(e){
+            print('giving up on this one')
+            modTdrops[[j+2]] <- NA
+          })
         })
       })
-    })
+    }
+    
+    torun$aics[k] <- list(sapply(modTdrops, AICnas))
   }
-  aicsHorn <- sapply(modTHorndrops, AICnas)
 }
 
+
+
 # if there was anything new
-if(runJtu | runJbeta | runHorn){
+if(any(torun$run)){
   if(!exists('aicsfromfull')){
-    aicsfromfull <- data.frame(mod = names(aicsJtu))
+    aicsfromfull <- data.frame(mod = names(torun$aics[which(torun$run)[1]][[1]]))
   }
   
   # subtract full from each model AIC. Negative means term removal is supported. Positive means full is the better model.
-  if(runJtu){
-    aicsfromfull$dAIC_Jtu <- aicsJtu - aicsJtu[1]
+  for(j in which(torun$run)){
+    nm <- paste0('dAIC_', torun$var[j])
+    aics <- torun$aics[j][[1]]
+    aicsfromfull[[nm]] <- aics - aics[1]
   }
-  if(runJbeta){
-    aicsfromfull$dAIC_Jbeta <- aicsJbeta - aicsJbeta[1]
-  }
-  if(runHorn){
-    aicsfromfull$dAIC_Horn <- aicsHorn - aicsHorn[1]
-  }
+
   
   # write out
   write.csv(aicsfromfull, file = 'output/aics_from_full.csv', row.names = FALSE)
@@ -1628,30 +1417,29 @@ if(runJtu | runJbeta | runHorn){
 aicsfromfull
 ```
 
-#### Plot deltaAICs for all 3 models
-```{r plot dAICs}
+#### Plot deltaAICs for all models
+```{r plot dAICs, message = FALSE, warning = FALSE}
 # transform for a plot
 aicsfromfulllong <- reshape(aicsfromfull, direction = 'long',
-                            varying = c('dAIC_Jtu', 'dAIC_Jbeta', 'dAIC_Horn'),
+                            varying = c('dAIC_Jtutrendrem0', 'dAIC_Jbetatrendrem0', 'dAIC_Horntrendrem0',
+                                        'dAIC_Jtutrendz', 'dAIC_Jbetatrendz', 'dAIC_Horntrendz',
+                                        'dAIC_Jtuexp', 'dAIC_Jbetaexp', 'dAIC_Hornexp',
+                                        'dAIC_Jtumm', 'dAIC_Jbetamm', 'dAIC_Hornmm'),
                             v.names = 'dAIC',
                             idvar = 'mod',
                             timevar = 'type',
-                            times = c('Jtu', 'Jbeta', 'Horn'))
-
-trans = function(x) sign(x)*sqrt(abs(x))
-aicsfromfulllong$dAIC_tr <- trans(aicsfromfulllong$dAIC)
+                            times = c('Jtutrendrem0', 'Jbetatrendrem0', 'Horntrendrem0',
+                                      'Jtutrendz', 'Jbetatrendz', 'Horntrendz',
+                                      'Jtuexp', 'Jbetaexp', 'Hornexp',
+                                      'Jtumm', 'Jbetamm', 'Hornmm'))
+aicsfromfulllong$response <- gsub('trendrem0|trendz|exp|mm', '', aicsfromfulllong$type)
+aicsfromfulllong$fit <- gsub('Jtu|Jbeta|Horn', '', aicsfromfulllong$type)
 
 # plot
-xlims <- range(aicsfromfulllong$dAIC_tr, na.rm = TRUE)
-xticks <- c(-10, 0, 10, 100, 1000, 10000)
-par(mai = c(0.5, 3, 0.1, 0.1))
-with(aicsfromfulllong[aicsfromfulllong$type == 'Jtu',], plot(dAIC_tr, nrow(aicsfromfull):1, 
-                                                           col = 'light grey', xlim = xlims, yaxt = 'n', ylab = '', xaxt = 'n'))
-with(aicsfromfulllong[aicsfromfulllong$type == 'Jbeta',], points(dAIC_tr, nrow(aicsfromfull):1 - 0.1, col = 'dark grey'))
-with(aicsfromfulllong[aicsfromfulllong$type == 'Horn',], points(dAIC_tr, nrow(aicsfromfull):1 - 0.2, col = 'black'))
-axis(2, at = nrow(aicsfromfull):1, labels = aicsfromfull$mod, las = 1, cex.axis = 0.7)
-axis(1, at = trans(xticks), labels = xticks, cex.axis = 0.5)
-abline(v = 0, lty =2, col = 'grey')
+ggplot(aicsfromfulllong, aes(y=dAIC, x = mod, shape = response, color = fit, group = fit)) +
+  geom_point(position = position_dodge(width = 0.5)) +
+  scale_y_continuous(trans = signedsqrttrans) +
+  coord_flip()
 ```
 
 Light grey is for Jaccard turnover, dark grey is for Jaccard total, black is for Morisita-Horn.
@@ -1662,42 +1450,26 @@ Clear that removing temperature trend makes the model quite a bit worse and has 
 ## Simplify the full models
 This takes a couple days on a laptop to run if temp/ files not available.
 ```{r simplify the full models}
-i1 <- trends[, complete.cases(Jtutrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
-                             temptrend_abs.sc, mass.sc, speed.sc, 
-                             consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                             veg.sc, duration.sc, human_bowler.sc)]
-i2 <- trends[, complete.cases(Jbetatrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
-                             temptrend_abs.sc, mass.sc, speed.sc, 
-                             consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                             veg.sc, duration.sc, human_bowler.sc)]
-i3 <- trends[, complete.cases(Horntrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
-                             temptrend_abs.sc, mass.sc, speed.sc, 
-                             consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                             veg.sc, duration.sc, human_bowler.sc)]
-
 randef <- list(STUDY_ID = ~ temptrend_abs.sc, rarefyID = ~1)
 varef <- varPower(-0.5, ~nyrBT)
 
-# simplify the full models
+terms <- ' ~ temptrend_abs.sc*REALM + temptrend_abs.sc*tsign + temptrend_abs.sc*tempave_metab.sc + temptrend_abs.sc*seas.sc + temptrend_abs.sc*microclim.sc + temptrend_abs.sc*mass.sc + temptrend_abs.sc*speed.sc + temptrend_abs.sc*consumerfrac.sc + temptrend_abs.sc*nspp.sc + temptrend_abs.sc*thermal_bias.sc:tsign + temptrend_abs.sc*npp.sc + temptrend_abs.sc*veg.sc + temptrend_abs.sc*duration.sc + temptrend_abs.sc*human_bowler.sc:REALM2'
+
+completerows <- trends[, complete.cases(REALM, tempave_metab.sc, 
+                                        seas.sc, microclim.sc, 
+                                        temptrend_abs.sc, mass.sc, speed.sc, 
+                                        consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
+                                        veg.sc, duration.sc, human_bowler.sc)]
+
+# rem0
 if(file.exists('temp/modTsimpJturem0.rds')){
   modTsimpJturem0 <- readRDS('temp/modTsimpJturem0.rds')
 } else {
-  modTfullJturem0ML <- lme(Jtutrendrem0 ~ temptrend_abs.sc*REALM + 
-                         temptrend_abs.sc*tsign +
-                         temptrend_abs.sc*tempave_metab.sc + 
-                         temptrend_abs.sc*seas.sc + 
-                         temptrend_abs.sc*microclim.sc + 
-                         temptrend_abs.sc*mass.sc + 
-                         temptrend_abs.sc*speed.sc + 
-                         temptrend_abs.sc*consumerfrac.sc +
-                         temptrend_abs.sc*nspp.sc +
-                         temptrend_abs.sc*thermal_bias.sc:tsign +
-                         temptrend_abs.sc*npp.sc +
-                         temptrend_abs.sc*veg.sc +
-                         temptrend_abs.sc*duration.sc +
-                         temptrend_abs.sc*human_bowler.sc:REALM2,
-                       random = randef, weights = varef, data = trends[i1,], method = 'ML',
-                       control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
+  i <- !is.na(trends$Jtutrendrem0) & completerows
+  
+  modTfullJturem0ML <- lme(formula(paste0('Jtutrendrem0', terms)),
+                           random = randef, weights = varef, data = trends[i,], method = 'ML',
+                           control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500, opt = 'optim'))
   modTsimpJturem0 <- stepAIC(modTfullJturem0ML, direction = 'backward')
   saveRDS(modTsimpJturem0, file = 'temp/modTsimpJturem0.rds')
 }
@@ -1705,21 +1477,10 @@ if(file.exists('temp/modTsimpJturem0.rds')){
 if(file.exists('temp/modTsimpJbetarem0.rds')){
   modTsimpJbetarem0 <- readRDS('temp/modTsimpJbetarem0.rds')
 } else {
-  modTfullJbetarem0ML <- lme(Jbetatrendrem0 ~ temptrend_abs.sc*REALM + 
-                         temptrend_abs.sc*tsign +
-                         temptrend_abs.sc*tempave_metab.sc + 
-                         temptrend_abs.sc*seas.sc + 
-                         temptrend_abs.sc*microclim.sc + 
-                         temptrend_abs.sc*mass.sc + 
-                         temptrend_abs.sc*speed.sc + 
-                         temptrend_abs.sc*consumerfrac.sc +
-                         temptrend_abs.sc*nspp.sc +
-                         temptrend_abs.sc*thermal_bias.sc:tsign +
-                         temptrend_abs.sc*npp.sc +
-                         temptrend_abs.sc*veg.sc +
-                         temptrend_abs.sc*duration.sc +
-                         temptrend_abs.sc*human_bowler.sc:REALM2,
-                       random = randef, weights = varef, data = trends[i2,], method = 'ML')
+  i <- !is.na(trends$Jbetatrendrem0) & completerows
+  modTfullJbetarem0ML <- lme(formula(paste0('Jbetatrendrem0', terms)),
+                       random = randef, weights = varef, data = trends[i,], method = 'ML',
+                       control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500, opt = 'optim'))
   modTsimpJbetarem0 <- stepAIC(modTfullJbetarem0ML, direction = 'backward')
   saveRDS(modTsimpJbetarem0, file = 'temp/modTsimpJbetarem0.rds')
 }
@@ -1727,23 +1488,47 @@ if(file.exists('temp/modTsimpJbetarem0.rds')){
 if(file.exists('temp/modTsimpHornrem0.rds')){
   modTsimpHornrem0 <- readRDS('temp/modTsimpHornrem0.rds')
 } else {
-  modTfullHornrem0ML <- lme(Horntrendrem0 ~ temptrend_abs.sc*REALM + 
-                        temptrend_abs.sc*tsign +
-                        temptrend_abs.sc*tempave_metab.sc + 
-                        temptrend_abs.sc*seas.sc + 
-                        temptrend_abs.sc*microclim.sc + 
-                        temptrend_abs.sc*mass.sc + 
-                        temptrend_abs.sc*speed.sc + 
-                        temptrend_abs.sc*consumerfrac.sc +
-                        temptrend_abs.sc*nspp.sc +
-                        temptrend_abs.sc*thermal_bias.sc:tsign +
-                        temptrend_abs.sc*npp.sc +
-                        temptrend_abs.sc*veg.sc +
-                        temptrend_abs.sc*duration.sc +
-                        temptrend_abs.sc*human_bowler.sc:REALM2,
-                      random = randef, weights = varef, data = trends[i3,], method = 'ML')
+  i <- !is.na(trends$Horntrendrem0) & completerows
+  modTfullHornrem0ML <- lme(formula(paste0('Horntrendrem0', terms)),
+                            random = randef, weights = varef, data = trends[i,], method = 'ML',
+                            control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500, opt = 'optim'))
   modTsimpHornrem0 <- stepAIC(modTfullHornrem0ML, direction = 'backward')
   saveRDS(modTsimpHornrem0, file = 'temp/modTsimpHornrem0.rds')
+}
+
+# z
+if(file.exists('temp/modTsimpJtuz.rds')){
+  modTsimpJtuz <- readRDS('temp/modTsimpJtuz.rds')
+} else {
+  i <- !is.na(trends$Jtutrendz) & completerows
+  
+  modTfullJtuzML <- lme(formula(paste0('Jtutrendz', terms)),
+                           random = randef, weights = varef, data = trends[i,], method = 'ML',
+                           control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500, opt = 'optim'))
+  modTsimpJtuz <- stepAIC(modTfullJtuzML, direction = 'backward')
+  saveRDS(modTsimpJtuz, file = 'temp/modTsimpJtuz.rds')
+}
+
+if(file.exists('temp/modTsimpJbetaz.rds')){
+  modTsimpJbetaz <- readRDS('temp/modTsimpJbetaz.rds')
+} else {
+  i <- !is.na(trends$Jbetatrendz) & completerows
+  modTfullJbetazML <- lme(formula(paste0('Jbetatrendz', terms)),
+                       random = randef, weights = varef, data = trends[i,], method = 'ML',
+                       control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
+  modTsimpJbetaz <- stepAIC(modTfullJbetazML, direction = 'backward')
+  saveRDS(modTsimpJbetaz, file = 'temp/modTsimpJbetaz.rds')
+}
+
+if(file.exists('temp/modTsimpHornz.rds')){
+  modTsimpHornz <- readRDS('temp/modTsimpHornz.rds')
+} else {
+  i <- !is.na(trends$Horntrendz) & completerows
+  modTfullHornzML <- lme(formula(paste0('Horntrendz', terms)),
+                            random = randef, weights = varef, data = trends[i,], method = 'ML',
+                            control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500, opt = 'optim'))
+  modTsimpHornz <- stepAIC(modTfullHornzML, direction = 'backward')
+  saveRDS(modTsimpHornz, file = 'temp/modTsimpHornz.rds')
 }
 
 summary(modTsimpJturem0)
