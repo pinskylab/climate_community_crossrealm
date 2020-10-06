@@ -32,7 +32,6 @@ signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, invers
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
 ```
 
-</details>
 
 ```{r load data}
 # Turnover and covariates assembled by turnover_vs_temperature_prep.Rmd
@@ -82,6 +81,8 @@ trends[, human_bowler.sc := scale(log(human_bowler+1)), by = REALM2] # separate 
 trends[REALM2 == 'TerrFresh', human_footprint.sc := scale(log(human_venter+1))]
 trends[REALM2 == 'Marine', human_footprint.sc := scale(log(human_halpern))]
 ```
+
+</details>
 
 # Summary plots and stats
 ## Examine how many data points are available
@@ -1147,7 +1148,7 @@ legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Hor
 
 
 #### Plot the main effects
-```{r main effect plots, fig.width=12, fig.height=12, out.width=24, out.height=24, fig.retina=2}
+```{r main effect plots, fig.width=12, fig.height=12, out.width=12, out.height=12}
 
 # set up the variables to plot
 # if variable is logged before scaling (see 'center and scale' above), then need to mark it here and express the limits on a log10 scale (even though log transforming is log)

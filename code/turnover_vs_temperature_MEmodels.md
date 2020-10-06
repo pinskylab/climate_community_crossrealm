@@ -47,8 +47,6 @@ signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, invers
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
 ```
 
-</details>
-
 ``` r
 # Turnover and covariates assembled by turnover_vs_temperature_prep.Rmd
 trends <- fread('output/turnover_w_covariates.csv.gz')
@@ -97,6 +95,8 @@ trends[, human_bowler.sc := scale(log(human_bowler+1)), by = REALM2] # separate 
 trends[REALM2 == 'TerrFresh', human_footprint.sc := scale(log(human_venter+1))]
 trends[REALM2 == 'Marine', human_footprint.sc := scale(log(human_halpern))]
 ```
+
+</details>
 
 # Summary plots and stats
 
@@ -4115,7 +4115,7 @@ for(j in 1:length(varplots)){
 grid.arrange(grobs = varplots, ncol = 3)
 ```
 
-<img src="turnover_vs_temperature_MEmodels_files/figure-gfm/main effect plots-1.png" width="24" height="24" />
+<img src="turnover_vs_temperature_MEmodels_files/figure-gfm/main effect plots-1.png" width="12" height="12" />
 
 ``` r
 # write out the interactions
