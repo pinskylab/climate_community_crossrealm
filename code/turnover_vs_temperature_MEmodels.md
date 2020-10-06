@@ -4115,7 +4115,7 @@ for(j in 1:length(varplots)){
 grid.arrange(grobs = varplots, ncol = 3)
 ```
 
-<img src="turnover_vs_temperature_MEmodels_files/figure-gfm/main effect plots-1.png" width="12" height="12" />
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/main%20effect%20plots-1.png)<!-- -->
 
 ``` r
 # write out the interactions
