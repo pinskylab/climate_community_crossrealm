@@ -1148,7 +1148,7 @@ legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Hor
 
 
 #### Plot the main effects
-```{r main effect plots, fig.width=12, fig.height=12, out.width=12, out.height=12}
+```{r main effect plots, fig.width=12, fig.height=12}
 
 # set up the variables to plot
 # if variable is logged before scaling (see 'center and scale' above), then need to mark it here and express the limits on a log10 scale (even though log transforming is log)
