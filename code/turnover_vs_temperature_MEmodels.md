@@ -537,7 +537,7 @@ with potential testing on the boundary issues here yet.
 
 ## Temperature-only models
 
-### Fit the models
+### Fit/load the models
 
 ``` r
 randef <- list(STUDY_ID = ~ abs(temptrend), rarefyID = ~1)
@@ -1346,7 +1346,7 @@ ggplot(subset(allcoefs, fit == 'z'), aes(x = realm, y = Value, color = response,
 
 ## Temperature\&duration models
 
-### Fit the models
+### Fit/load the models
 
 ``` r
 randef <- list(STUDY_ID = ~ abs(temptrend), rarefyID = ~1)
@@ -3923,25 +3923,61 @@ legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Hor
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20fullTmods-1.png)<!-- -->
+\#\#\#\# Set up function to plot the main effects
 
-#### Plot the main effects
+<details>
+
+<summary>Click to unfold</summary>
 
 ``` r
-# set up the variables to plot
-# if variable is logged before scaling (see 'center and scale' above), then need to mark it here and express the limits on a log10 scale (even though log transforming is log)
-vars <- data.frame(vars = c('temptrend_abs', 'tempave_metab', 'seas', 'microclim', 'mass', 'speed', 
-                            'consumerfrac', 'nspp', 'thermal_bias', 'npp', 'veg', 'duration', 
-                            'human_bowler', 'human_bowler'),
-           min =      c(0,  0,   0.1, -2,  0,   0,   0,   0.3, -10, 1.9, 0,   0.5, 0,   0), 
-           max =      c(0.2,  30,  16,  0.8, 8,   2,   1,   2.6, 10,  3.7, 0.3, 2,   1,   1),
-           log =      c(F,  F,   F,   T,   T,   T,   F,   T,   F,   T,   T,   T,   T,   T),
-           len =      c(100,  100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
-           discrete = c(F,  F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F),
-           plus =     c(0,  0,   0,   0,   0,   1,   0,   0,   0,   0,   1,   0,   1,   1), # what to add before log-scaling
-           REALM = c(rep('Terrestrial', 13), 'Marine'),
-           REALM2 = c(rep('TerrFresh', 13), 'Marine'),
-           stringsAsFactors = FALSE)
-baseall <- trends[, .(type = 'all', 
+# mods should be a list of 3 full models
+# returns a list with 2 components: the plots and the dataframe
+plotmaineffects <- function(mods){
+  # set up the variables to plot
+  # if variable is logged before scaling (see 'center and scale' above), then need to mark it here and express the limits on a log10 scale (even though log transforming is log)
+  vars <- data.frame(vars = c('temptrend_abs', 'tempave_metab', 'seas', 'microclim', 'mass', 'speed', 
+                              'consumerfrac', 'nspp', 'thermal_bias', 'npp', 'veg', 'duration', 
+                              'human_bowler', 'human_bowler'),
+                     min =      c(0,  0,   0.1, -2,  0,   0,   0,   0.3, -10, 1.9, 0,   0.5, 0,   0), 
+                     max =      c(0.2,  30,  16,  0.8, 8,   2,   1,   2.6, 10,  3.7, 0.3, 2,   1,   1),
+                     log =      c(F,  F,   F,   T,   T,   T,   F,   T,   F,   T,   T,   T,   T,   T),
+                     len =      c(100,  100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
+                     discrete = c(F,  F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F),
+                     plus =     c(0,  0,   0,   0,   0,   1,   0,   0,   0,   0,   1,   0,   1,   1), # what to add before log-scaling
+                     REALM = c(rep('Terrestrial', 13), 'Marine'),
+                     REALM2 = c(rep('TerrFresh', 13), 'Marine'),
+                     stringsAsFactors = FALSE)
+  baseall <- trends[, .(type = 'all', 
+                        temptrend = -0.0001,
+                        temptrend_abs.sc = 0.0001,
+                        tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                        seas.sc = mean(seas.sc, na.rm=TRUE), 
+                        microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                        speed.sc = mean(speed.sc, na.rm=TRUE), 
+                        mass.sc = mean(mass.sc, na.rm=TRUE), 
+                        nspp.sc = 0, 
+                        thermal_bias.sc = mean(thermal_bias.sc, na.rm=TRUE), 
+                        npp.sc = mean(npp.sc, na.rm=TRUE), 
+                        human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
+                        veg.sc = mean(veg.sc, na.rm=TRUE), 
+                        consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
+  baseterr <- trends[REALM == 'Terrestrial', 
+                     .(type = 'Terrestrial', 
+                       temptrend = -0.0001,
+                       temptrend_abs.sc = 0.0001,
+                       tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                       seas.sc = mean(seas.sc, na.rm=TRUE), 
+                       microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                       speed.sc = mean(speed.sc, na.rm=TRUE), 
+                       mass.sc = mean(mass.sc, na.rm=TRUE), 
+                       nspp.sc = 0, 
+                       thermal_bias.sc = 0, 
+                       npp.sc = mean(npp.sc, na.rm=TRUE), 
+                       human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
+                       veg.sc = mean(veg.sc, na.rm=TRUE), 
+                       consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
+  basemar <- trends[REALM == 'Marine', 
+                    .(type = 'Marine',
                       temptrend = -0.0001,
                       temptrend_abs.sc = 0.0001,
                       tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
@@ -3950,364 +3986,424 @@ baseall <- trends[, .(type = 'all',
                       speed.sc = mean(speed.sc, na.rm=TRUE), 
                       mass.sc = mean(mass.sc, na.rm=TRUE), 
                       nspp.sc = 0, 
-                      thermal_bias.sc = mean(thermal_bias.sc, na.rm=TRUE), 
+                      thermal_bias.sc = 0, 
                       npp.sc = mean(npp.sc, na.rm=TRUE), 
                       human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
                       veg.sc = mean(veg.sc, na.rm=TRUE), 
                       consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
-baseterr <- trends[REALM == 'Terrestrial', 
-                   .(type = 'Terrestrial', 
-                     temptrend = -0.0001,
-                     temptrend_abs.sc = 0.0001,
-                     tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
-                     seas.sc = mean(seas.sc, na.rm=TRUE), 
-                     microclim.sc = mean(microclim.sc, na.rm=TRUE), 
-                     speed.sc = mean(speed.sc, na.rm=TRUE), 
-                     mass.sc = mean(mass.sc, na.rm=TRUE), 
-                     nspp.sc = 0, 
-                     thermal_bias.sc = 0, 
-                     npp.sc = mean(npp.sc, na.rm=TRUE), 
-                     human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
-                     veg.sc = mean(veg.sc, na.rm=TRUE), 
-                     consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
-basemar <- trends[REALM == 'Marine', 
-                  .(type = 'Marine',
-                    temptrend = -0.0001,
-                    temptrend_abs.sc = 0.0001,
-                    tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
-                    seas.sc = mean(seas.sc, na.rm=TRUE), 
-                    microclim.sc = mean(microclim.sc, na.rm=TRUE), 
-                    speed.sc = mean(speed.sc, na.rm=TRUE), 
-                    mass.sc = mean(mass.sc, na.rm=TRUE), 
-                    nspp.sc = 0, 
-                    thermal_bias.sc = 0, 
-                    npp.sc = mean(npp.sc, na.rm=TRUE), 
-                    human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
-                    veg.sc = mean(veg.sc, na.rm=TRUE), 
-                    consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
-basetab <- rbind(baseall, baseterr, basemar)
-basetab[, ':='(duration.sc = 0, nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_514668')]
-
-# make the data frames for each interaction to plot                
-for(j in 1:nrow(vars)){
-  # set up the main effects
-  if(vars$log[j]){
-    thisdat <- data.frame(new = 10^seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
-                          var = vars$vars[j], stringsAsFactors = FALSE)
-  } 
-  if(!vars$log[j]){
-    thisdat <- data.frame(new = seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
-                          var = vars$vars[j], stringsAsFactors = FALSE)
-  }
-  names(thisdat) <- c(vars$vars[j], 'var')
-
-  # scale the variable
-  cent <- attr(trends[[paste0(vars$vars[j], '.sc')]], 'scaled:center')
-  scl <- attr(trends[[paste0(vars$vars[j], '.sc')]], 'scaled:scale')
-  if(is.null(cent)) cent <- 0
-  if(!is.null(cent) & !is.null(scl)){
-    if(vars$log[j]) thisdat[[paste0(vars$var[j], '.sc')]] <- (log(thisdat[[vars$vars[j]]] + vars$plus[j]) - cent)/scl
-    if(!vars$log[j]) thisdat[[paste0(vars$var[j], '.sc')]] <- (thisdat[[vars$var[j]]] - cent)/scl
-  }
-
-  # merge with the rest of the columns
-  # use realm-specific averages for human impacts
-  if(vars$vars[j] != 'tsign') colnamestouse <- setdiff(colnames(basetab), paste0(vars$vars[j], '.sc'))
-  if(vars$vars[j] == 'tsign') colnamestouse <- setdiff(colnames(basetab), vars$var[j])
-  if(vars$vars[j] != 'human_bowler'){
-    thisdat <- cbind(thisdat, basetab[type == 'all', ..colnamestouse])
-  }
-  if(vars$vars[j] == 'human_bowler' & vars$REALM[j] == 'Terrestrial'){
-    thisdat <- cbind(thisdat, basetab[type == 'Terrestrial', ..colnamestouse])
-  }
-  if(vars$vars[j] == 'human_bowler' & vars$REALM[j] == 'Marine'){
-    thisdat <- cbind(thisdat, basetab[type == 'Marine', ..colnamestouse])
-  }
+  basetab <- rbind(baseall, baseterr, basemar)
+  basetab[, ':='(duration.sc = 0, nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_514668')]
   
-  # add realm
-  thisdat$REALM <- vars$REALM[j]
-  thisdat$REALM2 <- vars$REALM2[j]
-  
-  # merge with the previous iterations
-  if(j == 1) newdat <- thisdat
-  if(j > 1){
-    colstoadd <- setdiff(colnames(thisdat), colnames(newdat))
-    for(toadd in colstoadd){
-      newdat[[toadd]] <- NA
+  # make the data frames for each interaction to plot                
+  for(j in 1:nrow(vars)){
+    # set up the main effects
+    if(vars$log[j]){
+      thisdat <- data.frame(new = 10^seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
+                            var = vars$vars[j], stringsAsFactors = FALSE)
+    } 
+    if(!vars$log[j]){
+      thisdat <- data.frame(new = seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
+                            var = vars$vars[j], stringsAsFactors = FALSE)
+    }
+    names(thisdat) <- c(vars$vars[j], 'var')
+    
+    # scale the variable
+    cent <- attr(trends[[paste0(vars$vars[j], '.sc')]], 'scaled:center')
+    scl <- attr(trends[[paste0(vars$vars[j], '.sc')]], 'scaled:scale')
+    if(is.null(cent)) cent <- 0
+    if(!is.null(cent) & !is.null(scl)){
+      if(vars$log[j]) thisdat[[paste0(vars$var[j], '.sc')]] <- (log(thisdat[[vars$vars[j]]] + vars$plus[j]) - cent)/scl
+      if(!vars$log[j]) thisdat[[paste0(vars$var[j], '.sc')]] <- (thisdat[[vars$var[j]]] - cent)/scl
     }
     
-    colstoadd2 <- setdiff(colnames(newdat), colnames(thisdat))
-    for(toadd in colstoadd2){
-      thisdat[[toadd]] <- NA
+    # merge with the rest of the columns
+    # use realm-specific averages for human impacts
+    if(vars$vars[j] != 'tsign') colnamestouse <- setdiff(colnames(basetab), paste0(vars$vars[j], '.sc'))
+    if(vars$vars[j] == 'tsign') colnamestouse <- setdiff(colnames(basetab), vars$var[j])
+    if(vars$vars[j] != 'human_bowler'){
+      thisdat <- cbind(thisdat, basetab[type == 'all', ..colnamestouse])
+    }
+    if(vars$vars[j] == 'human_bowler' & vars$REALM[j] == 'Terrestrial'){
+      thisdat <- cbind(thisdat, basetab[type == 'Terrestrial', ..colnamestouse])
+    }
+    if(vars$vars[j] == 'human_bowler' & vars$REALM[j] == 'Marine'){
+      thisdat <- cbind(thisdat, basetab[type == 'Marine', ..colnamestouse])
     }
     
-    newdat <- rbind(newdat, thisdat)
-  } 
-}
-
-# character so that new levels can be added
-newdat$REALM <- as.character(newdat$REALM)
-newdat$REALM2 <- as.character(newdat$REALM2)
-
-# add extra rows so that all factor levels are represented (for predict.lme to work)
-newdat <- rbind(newdat[1:6, ], newdat)
-newdat$REALM[1:6] <- c('Marine', 'Marine', 'Freshwater', 'Freshwater', 'Terrestrial', 'Terrestrial')
-newdat$REALM2[1:6] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh', 'TerrFresh', 'TerrFresh')
-newdat$temptrend_abs.sc[1:6] <- rep(0.0001, 6)
-newdat$temptrend[1:6] <- rep(c(0.0001, -0.0001), 3)
-newdat$var[1:6] <- 'test'
-
-# trim to at least some temperature change (so that tsign is -1 or 1)
-newdat <- newdat[newdat$temptrend_abs.sc != 0,]
-
-# set up tsign
-newdat$tsign <- factor(sign(newdat$temptrend))
-
-
-# make predictions
-newdat$predsJtu <- predict(object = modTfullJturem0, newdata = newdat, level = 0)
-newdat$predsJbeta <- predict(object = modTfullJbetarem0, newdata = newdat, level = 0)
-newdat$predsHorn <- predict(object = modTfullHornrem0, newdata = newdat, level = 0)
-
-#compute standard error for predictions
-# from https://stackoverflow.com/questions/14358811/extract-prediction-band-from-lme-fit
-DesignmatJtu <- model.matrix(eval(eval(modTfullJturem0$call$fixed)[-2]), newdat)
-DesignmatJbeta <- model.matrix(eval(eval(modTfullJbetarem0$call$fixed)[-2]), newdat)
-DesignmatHorn <- model.matrix(eval(eval(modTfullHornrem0$call$fixed)[-2]), newdat)
-
-predvarJtu <- diag(DesignmatJtu %*% modTfullJturem0$varFix %*% t(DesignmatJtu))
-predvarJbeta <- diag(DesignmatJbeta %*% modTfullJbetarem0$varFix %*% t(DesignmatJbeta))
-predvarHorn <- diag(DesignmatHorn %*% modTfullHornrem0$varFix %*% t(DesignmatHorn))
-
-newdat$SE_Jtu <- sqrt(predvarJtu) 
-newdat$SE_Jbeta <- sqrt(predvarJbeta) 
-newdat$SE_Horn <- sqrt(predvarHorn) 
-
-# prep the plots
-varplots <- vector('list', nrow(vars))
-for(j in 1:length(varplots)){
-  subs <- newdat$var == vars$vars[j] # which rows of newdat
-  xvar <- vars$vars[j]
-  title <- vars$vars[j]
-  if(vars$vars[j] %in% c('human_bowler')){
-    subs <- newdat$var == vars$vars[j] & newdat$REALM2 == vars$REALM2[j]
-    title <- paste0('human:', vars$REALM2[j])
-  } 
-
-  se <- 1
-  thisplot <- ggplot(newdat[subs, ], 
-                     aes_string(x = xvar, y = 'predsJtu')) +
-    geom_line() +
-    geom_ribbon(aes(ymin = predsJtu - se*SE_Jtu, ymax = predsJtu + se*SE_Jtu), alpha = 0.5, fill = "grey") +
-    geom_line(aes(y = predsJbeta), color = 'red') +
-    geom_ribbon(aes(ymin = predsJbeta - se*SE_Jbeta, ymax = predsJbeta + se*SE_Jbeta), alpha = 0.5, fill = "red") +
-    geom_line(aes(y = predsHorn), color = 'blue') +
-    geom_ribbon(aes(ymin = predsHorn - se*SE_Horn, ymax = predsHorn + se*SE_Horn), alpha = 0.5, fill = "blue") +
-    #coord_cartesian(ylim = c(0, 0.4)) +
-    theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm')) +
-    labs(title = title) 
-  varplots[[j]] <- thisplot
-  if(vars$log[j] & !vars$discrete[j]){
-    varplots[[j]] <- thisplot + scale_x_log10()
+    # add realm
+    thisdat$REALM <- vars$REALM[j]
+    thisdat$REALM2 <- vars$REALM2[j]
+    
+    # merge with the previous iterations
+    if(j == 1) newdat <- thisdat
+    if(j > 1){
+      colstoadd <- setdiff(colnames(thisdat), colnames(newdat))
+      for(toadd in colstoadd){
+        newdat[[toadd]] <- NA
+      }
+      
+      colstoadd2 <- setdiff(colnames(newdat), colnames(thisdat))
+      for(toadd in colstoadd2){
+        thisdat[[toadd]] <- NA
+      }
+      
+      newdat <- rbind(newdat, thisdat)
+    } 
   }
+  
+  # character so that new levels can be added
+  newdat$REALM <- as.character(newdat$REALM)
+  newdat$REALM2 <- as.character(newdat$REALM2)
+  
+  # add extra rows so that all factor levels are represented (for predict.lme to work)
+  newdat <- rbind(newdat[1:6, ], newdat)
+  newdat$REALM[1:6] <- c('Marine', 'Marine', 'Freshwater', 'Freshwater', 'Terrestrial', 'Terrestrial')
+  newdat$REALM2[1:6] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh', 'TerrFresh', 'TerrFresh')
+  newdat$temptrend_abs.sc[1:6] <- rep(0.0001, 6)
+  newdat$temptrend[1:6] <- rep(c(0.0001, -0.0001), 3)
+  newdat$var[1:6] <- 'test'
+  
+  # trim to at least some temperature change (so that tsign is -1 or 1)
+  newdat <- newdat[newdat$temptrend_abs.sc != 0,]
+  
+  # set up tsign
+  newdat$tsign <- factor(sign(newdat$temptrend))
+  
+  
+  # make predictions
+  newdat$predsJtu <- predict(object = mods[[1]], newdata = newdat, level = 0)
+  newdat$predsJbeta <- predict(object = mods[[2]], newdata = newdat, level = 0)
+  newdat$predsHorn <- predict(object = mods[[3]], newdata = newdat, level = 0)
+  
+  #compute standard error for predictions
+  # from https://stackoverflow.com/questions/14358811/extract-prediction-band-from-lme-fit
+  DesignmatJtu <- model.matrix(eval(eval(modTfullJturem0$call$fixed)[-2]), newdat)
+  DesignmatJbeta <- model.matrix(eval(eval(modTfullJbetarem0$call$fixed)[-2]), newdat)
+  DesignmatHorn <- model.matrix(eval(eval(modTfullHornrem0$call$fixed)[-2]), newdat)
+  
+  predvarJtu <- diag(DesignmatJtu %*% modTfullJturem0$varFix %*% t(DesignmatJtu))
+  predvarJbeta <- diag(DesignmatJbeta %*% modTfullJbetarem0$varFix %*% t(DesignmatJbeta))
+  predvarHorn <- diag(DesignmatHorn %*% modTfullHornrem0$varFix %*% t(DesignmatHorn))
+  
+  newdat$SE_Jtu <- sqrt(predvarJtu) 
+  newdat$SE_Jbeta <- sqrt(predvarJbeta) 
+  newdat$SE_Horn <- sqrt(predvarHorn) 
+  
+  # prep the plots
+  varplots <- vector('list', nrow(vars))
+  for(j in 1:length(varplots)){
+    subs <- newdat$var == vars$vars[j] # which rows of newdat
+    xvar <- vars$vars[j]
+    title <- vars$vars[j]
+    if(vars$vars[j] %in% c('human_bowler')){
+      subs <- newdat$var == vars$vars[j] & newdat$REALM2 == vars$REALM2[j]
+      title <- paste0('human:', vars$REALM2[j])
+    } 
+    
+    se <- 1
+    thisplot <- ggplot(newdat[subs, ], 
+                       aes_string(x = xvar, y = 'predsJtu')) +
+      geom_line() +
+      geom_ribbon(aes(ymin = predsJtu - se*SE_Jtu, ymax = predsJtu + se*SE_Jtu), alpha = 0.5, fill = "grey") +
+      geom_line(aes(y = predsJbeta), color = 'red') +
+      geom_ribbon(aes(ymin = predsJbeta - se*SE_Jbeta, ymax = predsJbeta + se*SE_Jbeta), alpha = 0.5, fill = "red") +
+      geom_line(aes(y = predsHorn), color = 'blue') +
+      geom_ribbon(aes(ymin = predsHorn - se*SE_Horn, ymax = predsHorn + se*SE_Horn), alpha = 0.5, fill = "blue") +
+      #coord_cartesian(ylim = c(0, 0.4)) +
+      theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm')) +
+      labs(title = title) 
+    varplots[[j]] <- thisplot
+    if(vars$log[j] & !vars$discrete[j]){
+      varplots[[j]] <- thisplot + scale_x_log10()
+    }
+  }
+  out <- list(varplots = varplots, newdat = newdat)
 }
-
-grid.arrange(grobs = varplots, ncol = 3)
 ```
 
-![](turnover_vs_temperature_MEmodels_files/figure-gfm/main%20effect%20plots-1.png)<!-- -->
+</details>
+
+#### Plot the main effects (rem0)
+
+``` r
+#uses function from previous section
+out <- plotmaineffects(mods = list(modTfullJturem0, modTfullJbetarem0, modTfullHornrem0))
+
+grid.arrange(grobs = out$varplots, ncol = 3)
+```
+
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/main%20effect%20plots%20rem0-1.png)<!-- -->
 
 ``` r
 # write out the interactions
-write.csv(newdat, file = 'output/maineffects.csv')
+write.csv(out$newdat, file = 'output/maineffectsrem0.csv')
 ```
 
-Grey: Jaccard turnover Red: Jaccard total Blue: Horn
+Grey: Jaccard turnover Red: Jaccard total Blue: Horn Plots are for
+Terrestrial, except the marine plot.
 
-#### Plot interactions (Jaccard turnover)
+#### Plot the main effects (z)
 
 ``` r
-# set up the interactions to plot
-# if variable is logged before scaling (see 'center and scale' above), then need to mark it here and express the limits on a log10 scale (even though log transforming is log)
-ints <- data.frame(vars = c('tsign', 'tempave_metab', 'seas', 'microclim', 'mass', 'speed', 
-                            'consumerfrac', 'nspp', 'thermal_bias', 'npp', 'veg', 'duration', 
-                            'human_bowler', 'human_bowler'),
-           min =      c(1,  0,   0.1, -2,  0,   0,   0,   0.3, -10, 1.9, 0,   0.5, 0,   0), 
-           max =      c(2,  30,  16,  0.8, 8,   2,   1,   2.6, 10,  3.7, 0.3, 2,   1,   1),
-           log =      c(F,  F,   F,   T,   T,   T,   F,   T,   F,   T,   T,   T,   T,   T),
-           len =      c(2,  100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
-           discrete = c(T,  F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F),
-           plus =     c(0,  0,   0,   0,   0,   1,   0,   0,   0,   0,   1,   0,   1,   1), # what to add before log-scaling
-           REALM = c(rep('Terrestrial', 12), 'Terrestrial', 'Marine'),
-           REALM2 = c(rep('TerrFresh', 13), 'Marine'),
-           stringsAsFactors = FALSE)
-baseall <- trends[, .(type = 'all', tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+#uses function from previous section
+out <- plotmaineffects(mods = list(modTfullJtuz, modTfullJbetaz, modTfullHornz))
+
+grid.arrange(grobs = out$varplots, ncol = 3)
+```
+
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/main%20effect%20plots%20z-1.png)<!-- -->
+
+``` r
+# write out the interactions
+write.csv(out$newdat, file = 'output/maineffectsz.csv')
+```
+
+Grey: Jaccard turnover Red: Jaccard total Blue: Horn Plots are for
+Terrestrial, except the marine plot.
+
+#### Set up function to plot the interactions
+
+<details>
+
+<summary>Click to unfold</summary>
+
+``` r
+# mod should be a full model
+# returns a list with 2 components: the plots and the dataframe
+plotinteractions <- function(mod, ylims = c(-0.05, 0.1)){
+  # set up the interactions to plot
+  # if variable is logged before scaling (see 'center and scale' above), then need to mark it here and express the limits on a log10 scale (even though log transforming is log)
+  ints <- data.frame(vars = c('tsign', 'tempave_metab', 'seas', 'microclim', 'mass', 'speed', 
+                              'consumerfrac', 'nspp', 'thermal_bias', 'npp', 'veg', 'duration', 
+                              'human_bowler', 'human_bowler'),
+                     min =      c(1,  0,   0.1, -2,  0,   0,   0,   0.3, -10, 1.9, 0,   0.5, 0,   0), 
+                     max =      c(2,  30,  16,  0.8, 8,   2,   1,   2.6, 10,  3.7, 0.3, 2,   1,   1),
+                     log =      c(F,  F,   F,   T,   T,   T,   F,   T,   F,   T,   T,   T,   T,   T),
+                     len =      c(2,  100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
+                     discrete = c(T,  F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F),
+                     plus =     c(0,  0,   0,   0,   0,   1,   0,   0,   0,   0,   1,   0,   1,   1), # what to add before log-scaling
+                     REALM = c(rep('Terrestrial', 12), 'Terrestrial', 'Marine'),
+                     REALM2 = c(rep('TerrFresh', 13), 'Marine'),
+                     stringsAsFactors = FALSE)
+  baseall <- trends[, .(type = 'all', tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                        seas.sc = mean(seas.sc, na.rm=TRUE), 
+                        microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                        speed.sc = mean(speed.sc, na.rm=TRUE), 
+                        mass.sc = mean(mass.sc, na.rm=TRUE), 
+                        nspp.sc = 0, 
+                        thermal_bias.sc = mean(thermal_bias.sc, na.rm=TRUE), 
+                        npp.sc = mean(npp.sc, na.rm=TRUE), 
+                        human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
+                        veg.sc = mean(veg.sc, na.rm=TRUE), 
+                        consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
+  baseterr <- trends[REALM == 'Terrestrial', 
+                     .(type = 'Terrestrial', 
+                       tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                       seas.sc = mean(seas.sc, na.rm=TRUE), 
+                       microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                       speed.sc = mean(speed.sc, na.rm=TRUE), 
+                       mass.sc = mean(mass.sc, na.rm=TRUE), 
+                       nspp.sc = 0, 
+                       thermal_bias.sc = 0, 
+                       npp.sc = mean(npp.sc, na.rm=TRUE), 
+                       human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
+                       veg.sc = mean(veg.sc, na.rm=TRUE), 
+                       consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
+  basemar <- trends[REALM == 'Marine', 
+                    .(type = 'Marine',
+                      tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
                       seas.sc = mean(seas.sc, na.rm=TRUE), 
                       microclim.sc = mean(microclim.sc, na.rm=TRUE), 
                       speed.sc = mean(speed.sc, na.rm=TRUE), 
                       mass.sc = mean(mass.sc, na.rm=TRUE), 
                       nspp.sc = 0, 
-                      thermal_bias.sc = mean(thermal_bias.sc, na.rm=TRUE), 
+                      thermal_bias.sc = 0, 
                       npp.sc = mean(npp.sc, na.rm=TRUE), 
                       human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
                       veg.sc = mean(veg.sc, na.rm=TRUE), 
                       consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
-baseterr <- trends[REALM == 'Terrestrial', 
-                   .(type = 'Terrestrial', 
-                     tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
-                     seas.sc = mean(seas.sc, na.rm=TRUE), 
-                     microclim.sc = mean(microclim.sc, na.rm=TRUE), 
-                     speed.sc = mean(speed.sc, na.rm=TRUE), 
-                     mass.sc = mean(mass.sc, na.rm=TRUE), 
-                     nspp.sc = 0, 
-                     thermal_bias.sc = 0, 
-                     npp.sc = mean(npp.sc, na.rm=TRUE), 
-                     human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
-                     veg.sc = mean(veg.sc, na.rm=TRUE), 
-                     consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
-basemar <- trends[REALM == 'Marine', 
-                  .(type = 'Marine',
-                    tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
-                    seas.sc = mean(seas.sc, na.rm=TRUE), 
-                    microclim.sc = mean(microclim.sc, na.rm=TRUE), 
-                    speed.sc = mean(speed.sc, na.rm=TRUE), 
-                    mass.sc = mean(mass.sc, na.rm=TRUE), 
-                    nspp.sc = 0, 
-                    thermal_bias.sc = 0, 
-                    npp.sc = mean(npp.sc, na.rm=TRUE), 
-                    human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE), 
-                    veg.sc = mean(veg.sc, na.rm=TRUE), 
-                    consumerfrac.sc = mean(consumerfrac.sc, na.rm=TRUE))]
-basetab <- rbind(baseall, baseterr, basemar)
-basetab[, ':='(duration.sc = 0, nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_514668')]
-
-# make the data frames for each interaction to plot                
-for(j in 1:nrow(ints)){
-  # set up a grid of temperature trends and the interacting variable
-  if(ints$log[j]) intvars <- list(temptrend = seq(-0.2, 0.2, length.out = 100), 
-                                  new = 10^seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
-                                   var = ints$vars[j])
-  if(!ints$log[j]) intvars <- list(temptrend = seq(-0.2, 0.2, length.out = 100), 
-                                   new = seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
-                                   var = ints$vars[j])
-  names(intvars) <- c('temptrend', ints$vars[j], 'var')
-  thisdat <- expand.grid(intvars)
+  basetab <- rbind(baseall, baseterr, basemar)
+  basetab[, ':='(duration.sc = 0, nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_514668')]
   
-  # scale the interacting variable
-  cent <- attr(trends[[paste0(ints$var[j], '.sc')]], 'scaled:center')
-  scl <- attr(trends[[paste0(ints$var[j], '.sc')]], 'scaled:scale')
-  if(!is.null(cent) & !is.null(scl)){
-    if(ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (log(thisdat[[ints$vars[j]]] + ints$plus[j]) - cent)/scl
-    if(!ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (thisdat[[ints$var[j]]] - cent)/scl
-  }
-
-  # merge with the rest of the columns
-  # use realm-specific averages for human impacts
-  if(ints$vars[j] != 'tsign') colnamestouse <- setdiff(colnames(basetab), paste0(ints$var[j], '.sc'))
-  if(ints$vars[j] == 'tsign') colnamestouse <- setdiff(colnames(basetab), ints$var[j])
-  if(ints$vars[j] != 'human_bowler'){
-    thisdat <- cbind(thisdat, basetab[type == 'all', ..colnamestouse])
-  }
-  if(ints$vars[j] == 'human_bowler' & ints$REALM[j] == 'Terrestrial'){
-    thisdat <- cbind(thisdat, basetab[type == 'Terrestrial', ..colnamestouse])
-  }
-  if(ints$vars[j] == 'human_bowler' & ints$REALM[j] == 'Marine'){
-    thisdat <- cbind(thisdat, basetab[type == 'Marine', ..colnamestouse])
-  }
-  
-  # add realm
-  thisdat$REALM <- ints$REALM[j]
-  thisdat$REALM2 <- ints$REALM2[j]
-  
-  # merge with the previous iterations
-  if(j == 1) newdat <- thisdat
-  if(j > 1){
-    colstoadd <- setdiff(colnames(thisdat), colnames(newdat))
-    for(toadd in colstoadd){
-      newdat[[toadd]] <- NA
+  # make the data frames for each interaction to plot                
+  for(j in 1:nrow(ints)){
+    # set up a grid of temperature trends and the interacting variable
+    if(ints$log[j]) intvars <- list(temptrend = seq(-0.2, 0.2, length.out = 100), 
+                                    new = 10^seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
+                                    var = ints$vars[j])
+    if(!ints$log[j]) intvars <- list(temptrend = seq(-0.2, 0.2, length.out = 100), 
+                                     new = seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
+                                     var = ints$vars[j])
+    names(intvars) <- c('temptrend', ints$vars[j], 'var')
+    thisdat <- expand.grid(intvars)
+    
+    # scale the interacting variable
+    cent <- attr(trends[[paste0(ints$var[j], '.sc')]], 'scaled:center')
+    scl <- attr(trends[[paste0(ints$var[j], '.sc')]], 'scaled:scale')
+    if(!is.null(cent) & !is.null(scl)){
+      if(ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (log(thisdat[[ints$vars[j]]] + ints$plus[j]) - cent)/scl
+      if(!ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (thisdat[[ints$var[j]]] - cent)/scl
     }
     
-    colstoadd2 <- setdiff(colnames(newdat), colnames(thisdat))
-    for(toadd in colstoadd2){
-      thisdat[[toadd]] <- NA
+    # merge with the rest of the columns
+    # use realm-specific averages for human impacts
+    if(ints$vars[j] != 'tsign') colnamestouse <- setdiff(colnames(basetab), paste0(ints$var[j], '.sc'))
+    if(ints$vars[j] == 'tsign') colnamestouse <- setdiff(colnames(basetab), ints$var[j])
+    if(ints$vars[j] != 'human_bowler'){
+      thisdat <- cbind(thisdat, basetab[type == 'all', ..colnamestouse])
+    }
+    if(ints$vars[j] == 'human_bowler' & ints$REALM[j] == 'Terrestrial'){
+      thisdat <- cbind(thisdat, basetab[type == 'Terrestrial', ..colnamestouse])
+    }
+    if(ints$vars[j] == 'human_bowler' & ints$REALM[j] == 'Marine'){
+      thisdat <- cbind(thisdat, basetab[type == 'Marine', ..colnamestouse])
     }
     
-    newdat <- rbind(newdat, thisdat)
-  } 
+    # add realm
+    thisdat$REALM <- ints$REALM[j]
+    thisdat$REALM2 <- ints$REALM2[j]
+    
+    # merge with the previous iterations
+    if(j == 1) newdat <- thisdat
+    if(j > 1){
+      colstoadd <- setdiff(colnames(thisdat), colnames(newdat))
+      for(toadd in colstoadd){
+        newdat[[toadd]] <- NA
+      }
+      
+      colstoadd2 <- setdiff(colnames(newdat), colnames(thisdat))
+      for(toadd in colstoadd2){
+        thisdat[[toadd]] <- NA
+      }
+      
+      newdat <- rbind(newdat, thisdat)
+    } 
+  }
+  
+  # character so that new levels can be added
+  newdat$REALM <- as.character(newdat$REALM)
+  newdat$REALM2 <- as.character(newdat$REALM2)
+  
+  # add extra rows so that all factor levels are represented (for predict.lme to work)
+  newdat <- rbind(newdat[1:6, ], newdat)
+  newdat$REALM[1:6] <- c('Marine', 'Marine', 'Freshwater', 'Freshwater', 'Terrestrial', 'Terrestrial')
+  newdat$REALM2[1:6] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh', 'TerrFresh', 'TerrFresh')
+  newdat$temptrend[1:6] <- c(-0.2, 0.2, -0.2, 0.2, -0.2, 0.2)
+  
+  # trim to at least some temperature change (so that tsign is -1 or 1)
+  newdat <- newdat[newdat$temptrend != 0,]
+  
+  # scale the temperature vars
+  newdat$temptrend.sc <- newdat$temptrend/attr(trends$temptrend.sc, 'scaled:scale') 
+  newdat$temptrend_abs <- abs(newdat$temptrend)
+  newdat$temptrend_abs.sc <- (newdat$temptrend_abs)/attr(trends$temptrend_abs.sc, 'scaled:scale')
+  newdat$tsign <- factor(sign(newdat$temptrend))
+  
+  # make predictions
+  newdat$preds <- predict(object = mod, newdata = newdat, level = 0)
+  
+  #remove the extra rows
+  newdat <- newdat[5:nrow(newdat), ]
+  
+  # prep the plots
+  intplots <- vector('list', nrow(ints))
+  for(j in 1:length(intplots)){
+    subs <- newdat$var == ints$vars[j] & newdat$temptrend > 0 # select warming side
+    xvar <- 'temptrend_abs'
+    title <- ints$vars[j]
+    if(ints$vars[j] %in% c('tsign')){
+      subs <- newdat$var == ints$vars[j]
+    } 
+    if(ints$vars[j] %in% c('thermal_bias')){
+      subs <- newdat$var == ints$vars[j]
+      xvar <- 'temptrend'
+    } 
+    if(ints$vars[j] %in% c('human_bowler')){
+      subs <- newdat$var == ints$vars[j] & newdat$temptrend > 0 & newdat$REALM2 == ints$REALM2[j]
+      title <- paste0('human:', ints$REALM2[j])
+    } 
+    
+    thisplot <- ggplot(newdat[subs, ], 
+                       aes_string(x = xvar, y = 'preds', 
+                                  group = ints$vars[j], 
+                                  color = ints$vars[j])) +
+      geom_line() +
+      coord_cartesian(ylim = ylims) +
+      #theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm')) +
+      labs(title = title)
+    if(ints$log[j] & !ints$discrete[j]){
+      intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'log')
+    }
+    if(!ints$log[j] & !ints$discrete[j]){
+      intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'identity')
+    }
+    if(ints$discrete[j]){
+      intplots[[j]] <- thisplot + scale_color_brewer(palette = "Dark2")
+    }
+  }
+  out <- list(intplots = intplots, newdat = newdat)
+  return(out)
 }
+```
 
-# character so that new levels can be added
-newdat$REALM <- as.character(newdat$REALM)
-newdat$REALM2 <- as.character(newdat$REALM2)
+#### Plot interactions (Jaccard turnover rem0)
 
-# add extra rows so that all factor levels are represented (for predict.lme to work)
-newdat <- rbind(newdat[1:6, ], newdat)
-newdat$REALM[1:6] <- c('Marine', 'Marine', 'Freshwater', 'Freshwater', 'Terrestrial', 'Terrestrial')
-newdat$REALM2[1:6] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh', 'TerrFresh', 'TerrFresh')
-newdat$temptrend[1:6] <- c(-1, 1, -1, 1, -1, 1)
+``` r
+out <- plotinteractions(modTfullJturem0, ylims = c(-0.03, 0.03))
 
-# trim to at least some temperature change (so that tsign is -1 or 1)
-newdat <- newdat[newdat$temptrend != 0,]
-
-# scale the temperature vars
-newdat$temptrend.sc <- newdat$temptrend/attr(trends$temptrend.sc, 'scaled:scale') 
-newdat$temptrend_abs <- abs(newdat$temptrend)
-newdat$temptrend_abs.sc <- (newdat$temptrend_abs)/attr(trends$temptrend_abs.sc, 'scaled:scale')
-newdat$tsign <- factor(sign(newdat$temptrend))
-
-# make predictions
-newdat$preds <- predict(object = modTfullJturem0, newdata = newdat, level = 0)
-
-#remove the extra rows
-newdat <- newdat[5:nrow(newdat), ]
-
-# prep the plots
-intplots <- vector('list', nrow(ints))
-for(j in 1:length(intplots)){
-  subs <- newdat$var == ints$vars[j] & newdat$temptrend > 0 # select warming side
-  xvar <- 'temptrend_abs'
-  title <- ints$vars[j]
-  if(ints$vars[j] %in% c('tsign')){
-    subs <- newdat$var == ints$vars[j]
-  } 
-  if(ints$vars[j] %in% c('thermal_bias')){
-    subs <- newdat$var == ints$vars[j]
-    xvar <- 'temptrend'
-  } 
-  if(ints$vars[j] %in% c('human_bowler')){
-    subs <- newdat$var == ints$vars[j] & newdat$temptrend > 0 & newdat$REALM2 == ints$REALM2[j]
-    title <- paste0('human:', ints$REALM2[j])
-  } 
-
-  thisplot <- ggplot(newdat[subs, ], 
-                     aes_string(x = xvar, y = 'preds', 
-                                group = ints$vars[j], 
-                                color = ints$vars[j])) +
-    geom_line() +
-    coord_cartesian(ylim = c(-0.2, 0.4)) +
-    theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm')) +
-    labs(title = title)
-  if(ints$log[j] & !ints$discrete[j]){
-    intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'log')
-  }
-  if(!ints$log[j] & !ints$discrete[j]){
-    intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'identity')
-  }
-  if(ints$discrete[j]){
-    intplots[[j]] <- thisplot + scale_color_brewer(palette = "Dark2")
-  }
-}
-
-#grid.arrange(grobs = intplots, '+', theme(plot.margin = unit(c(0,0,0,0), 'cm'))), ncol=2)
-#do.call('grid.arrange', c(intplots, ncol = 2))
-grid.arrange(grobs = intplots, ncol = 3)
+grid.arrange(grobs = out$intplots, ncol = 3)
 ```
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/interaction%20plots%20modTfullJturem0-1.png)<!-- -->
 
 ``` r
 # write out the interactions
-write.csv(newdat, file = 'temp/interactions.csv')
+write.csv(out$newdat, file = 'temp/interactionsJturem0.csv')
+```
+
+#### Plot interactions (Horn rem0)
+
+``` r
+out <- plotinteractions(modTfullHornrem0, ylims = c(-0.02, 0.07))
+
+grid.arrange(grobs = out$intplots, ncol = 3)
+```
+
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/interaction%20plots%20modTfullHornrem0-1.png)<!-- -->
+
+``` r
+# write out the interactions
+write.csv(out$newdat, file = 'temp/interactionsHornrem0.csv')
+```
+
+#### Plot interactions (Jtu z)
+
+``` r
+out <- plotinteractions(modTfullJtuz, ylims = c(0, 7))
+
+grid.arrange(grobs = out$intplots, ncol = 3)
+```
+
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/interaction%20plots%20modTfullJtuz-1.png)<!-- -->
+
+``` r
+# write out the interactions
+write.csv(out$newdat, file = 'temp/interactionsJtuz.csv')
+```
+
+#### Plot interactions (Horn z)
+
+``` r
+out <- plotinteractions(modTfullHornz, ylims = c(0, 7))
+
+grid.arrange(grobs = out$intplots, ncol = 3)
+```
+
+![](turnover_vs_temperature_MEmodels_files/figure-gfm/interaction%20plots%20modTfullHornz-1.png)<!-- -->
+
+``` r
+# write out the interactions
+write.csv(out$newdat, file = 'temp/interactionsHornz.csv')
 ```
 
 #### Plot residuals against each predictor (Jaccard turnover)
@@ -4519,9 +4615,7 @@ ggplot(aicsfromfulllong, aes(y=dAIC, x = mod, shape = response, color = fit, gro
 
 ![](turnover_vs_temperature_MEmodels_files/figure-gfm/plot%20dAICs-1.png)<!-- -->
 
-Light grey is for Jaccard turnover, dark grey is for Jaccard total,
-black is for Morisita-Horn. Clear that removing temperature trend makes
-the model quite a bit worse and has the biggest effect.
+Clear that removing temperature trend makes the model quite a bit worse.
 
 ## Simplify the full models
 
