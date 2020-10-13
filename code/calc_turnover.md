@@ -200,6 +200,7 @@ calcexp <- function(y, YEAR, nm = 'y', pred = FALSE){
                   # calc half-saturations
                   cexp <- coef(modexp)
                   hsexp <- with(as.data.frame(t(cexp)), log(1/2)/a)
+                  if(is.infinite(hsexp)) hsexp <- NA_real_
                   
                   out <- list(y = hsexp) # half-saturation
                   names(out) <- nm
@@ -508,7 +509,9 @@ dev.off()
 
 ## Standardize slope values against null model simulations
 
-### Set up null model sims
+### Plot null model sims
+
+#### Histograms
 
 ``` r
 # remove some duplicates
@@ -519,19 +522,21 @@ sim_summary <- sim_summary[!duplicated(sim_summary), ]
 hist(sim_summary[metric == 'Jaccard (total)', sd], breaks = 200, col = 'grey')
 ```
 
-![](calc_turnover_files/figure-gfm/plot%20sds-1.png)<!-- -->
+![](calc_turnover_files/figure-gfm/plot%20sds%20hist-1.png)<!-- -->
 
 ``` r
 hist(sim_summary[metric == 'Nestedness', sd], breaks = 200, col = 'grey')
 ```
 
-![](calc_turnover_files/figure-gfm/plot%20sds-2.png)<!-- -->
+![](calc_turnover_files/figure-gfm/plot%20sds%20hist-2.png)<!-- -->
 
 ``` r
 hist(sim_summary[metric == 'Morisita-Horn', sd], breaks = 200, col = 'grey')
 ```
 
-![](calc_turnover_files/figure-gfm/plot%20sds-3.png)<!-- -->
+![](calc_turnover_files/figure-gfm/plot%20sds%20hist-3.png)<!-- -->
+
+#### SD vs. expected
 
 ``` r
 # plot
@@ -544,7 +549,7 @@ sim_summary[metric == 'Jaccard (total)', plot(expected, log10(sd+1))]
 abline(h = 0, col = 'red')
 ```
 
-![](calc_turnover_files/figure-gfm/plot%20sds-4.png)<!-- -->
+![](calc_turnover_files/figure-gfm/plot%20sds%20vs.%20exp-1.png)<!-- -->
 
 ``` r
 sim_summary[metric == 'Nestedness', plot(expected, log10(sd+1))]
@@ -556,7 +561,7 @@ sim_summary[metric == 'Nestedness', plot(expected, log10(sd+1))]
 abline(h = 0, col = 'red')
 ```
 
-![](calc_turnover_files/figure-gfm/plot%20sds-5.png)<!-- -->
+![](calc_turnover_files/figure-gfm/plot%20sds%20vs.%20exp-2.png)<!-- -->
 
 ``` r
 sim_summary[metric == 'Morisita-Horn', plot(expected, log10(sd+1))]
@@ -568,11 +573,13 @@ sim_summary[metric == 'Morisita-Horn', plot(expected, log10(sd+1))]
 abline(h = 0, col = 'red')
 ```
 
-![](calc_turnover_files/figure-gfm/plot%20sds-6.png)<!-- -->
+![](calc_turnover_files/figure-gfm/plot%20sds%20vs.%20exp-3.png)<!-- -->
+
+#### SD vs Nyrs
 
 ``` r
 # vs #yrs
-sim_summary[metric == 'Jaccard (total)', plot(Nyrs, sd+0.001, log = 'y', main = 'Null SD declines with #yrs')]
+sim_summary[metric == 'Nestedness', plot(Nyrs, sd+0.001, log = 'y', main = 'Null SD declines with #yrs (J tu)')]
 ```
 
     ## NULL
@@ -583,10 +590,100 @@ abline(h = 0.001+0.001, col = 'green')
 abline(h = 0.01+0.001, col = 'grey')
 ```
 
-![](calc_turnover_files/figure-gfm/plot%20sds-7.png)<!-- -->
+![](calc_turnover_files/figure-gfm/plot%20sds%20nyrs-1.png)<!-- -->
+
+``` r
+sim_summary[metric == 'Jaccard (total)', plot(Nyrs, sd+0.001, log = 'y', main = 'Null SD declines with #yrs (J total)')]
+```
+
+    ## NULL
+
+``` r
+abline(h = 0.001, col = 'red')
+abline(h = 0.001+0.001, col = 'green')
+abline(h = 0.01+0.001, col = 'grey')
+```
+
+![](calc_turnover_files/figure-gfm/plot%20sds%20nyrs-2.png)<!-- -->
+
+``` r
+sim_summary[metric == 'Morisita-Horn', plot(Nyrs, sd+0.001, log = 'y', main = 'Null SD declines with #yrs (Horn)')]
+```
+
+    ## NULL
+
+``` r
+abline(h = 0.001, col = 'red')
+abline(h = 0.001+0.001, col = 'green')
+abline(h = 0.01+0.001, col = 'grey')
+```
+
+![](calc_turnover_files/figure-gfm/plot%20sds%20nyrs-3.png)<!-- -->
+
+#### SD vs duration
+
+``` r
+sim_summary <- merge(sim_summary, trends[, .(rarefyID, duration = maxyrBT - minyrBT)], all.x = TRUE, by = 'rarefyID')
+# vs #yrs
+sim_summary[metric == 'Nestedness', plot(duration, sd+0.001, log = 'y', main = 'Null SD declines with duration (J tu)')]
+```
+
+    ## NULL
+
+``` r
+abline(h = 0.001, col = 'red')
+abline(h = 0.001+0.001, col = 'green')
+abline(h = 0.01+0.001, col = 'grey')
+```
+
+![](calc_turnover_files/figure-gfm/plot%20sds%20duration-1.png)<!-- -->
+
+``` r
+sim_summary[metric == 'Jaccard (total)', plot(duration, sd+0.001, log = 'y', main = 'Null SD declines with duration (J total)')]
+```
+
+    ## NULL
+
+``` r
+abline(h = 0.001, col = 'red')
+abline(h = 0.001+0.001, col = 'green')
+abline(h = 0.01+0.001, col = 'grey')
+```
+
+![](calc_turnover_files/figure-gfm/plot%20sds%20duration-2.png)<!-- -->
+
+``` r
+sim_summary[metric == 'Morisita-Horn', plot(duration, sd+0.001, log = 'y', main = 'Null SD declines with duration (Horn)')]
+```
+
+    ## NULL
+
+``` r
+abline(h = 0.001, col = 'red')
+abline(h = 0.001+0.001, col = 'green')
+abline(h = 0.01+0.001, col = 'grey')
+```
+
+![](calc_turnover_files/figure-gfm/plot%20sds%20duration-3.png)<!-- -->
+
+#### SD vs Nspp
 
 ``` r
 # vs #spp
+sim_summary[metric == 'Nestedness', plot(Nspp, sd+0.001, log = 'y')]
+```
+
+    ## NULL
+
+``` r
+abline(h = 0.001, col = 'red')
+abline(h = 0.001+0.001, col = 'green')
+abline(h = 0.01+0.001, col = 'grey')
+```
+
+![](calc_turnover_files/figure-gfm/plot%20sds%20nspp-1.png)<!-- -->
+
+``` r
 sim_summary[metric == 'Jaccard (total)', plot(Nspp, sd+0.001, log = 'y')]
 ```
 
@@ -598,11 +695,29 @@ abline(h = 0.001+0.001, col = 'green')
 abline(h = 0.01+0.001, col = 'grey')
 ```
 
-![](calc_turnover_files/figure-gfm/plot%20sds-8.png)<!-- -->
+![](calc_turnover_files/figure-gfm/plot%20sds%20nspp-2.png)<!-- -->
+
+``` r
+sim_summary[metric == 'Morisita-Horn', plot(Nspp, sd+0.001, log = 'y')]
+```
+
+    ## NULL
+
+``` r
+abline(h = 0.001, col = 'red')
+abline(h = 0.001+0.001, col = 'green')
+abline(h = 0.01+0.001, col = 'grey')
+```
+
+![](calc_turnover_files/figure-gfm/plot%20sds%20nspp-3.png)<!-- -->
 
 ### Merge null model
 
 ``` r
+# remove some duplicates
+sim_summary <- as.data.table(sim_summary)
+sim_summary <- sim_summary[!duplicated(sim_summary), ]
+
 # merge
 trends <- merge(trends, sim_summary[metric == 'Jaccard (total)', .(Jbeta_exp = expected, Jbeta_sd = sd, rarefyID)], by = 'rarefyID', all.x = TRUE)
 trends <- merge(trends, sim_summary[metric == 'Nestedness', .(Jtu_exp = expected, Jtu_sd = sd, rarefyID)], by = 'rarefyID', all.x = TRUE)
@@ -664,7 +779,7 @@ apply(trends[, .(Jtutrendrem0, Jbetatrendrem0, Horntrendrem0,
     ##   Jtutrendrem0 Jbetatrendrem0  Horntrendrem0      Jtutrendz    Jbetatrendz 
     ##          32581          32581          32581          29030          29132 
     ##     Horntrendz        Jtulast      Jbetalast       Hornlast         Jtuexp 
-    ##          29032          32581          32581          32581          22524 
+    ##          29032          32581          32581          32581          22523 
     ##       Jbetaexp        Hornexp          Jtumm        Jbetamm         Hornmm 
     ##          22026          20894          32483          32506          32460
 
@@ -816,7 +931,7 @@ summary(trends$Jtuexp)
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##    -Inf   0.528   1.386    -Inf   4.326 648.434   10057
+    ##   0.002   0.528   1.386   5.522   4.326 648.434   10058
 
 ``` r
 summary(trends$Jbetaexp)
@@ -1397,7 +1512,7 @@ ggplot(trends, aes(nyrBT, Jtumm, color = 'Jtu mm')) +
 ## Average change compared to duration
 
 ``` r
-trends[, duration := maxyrBT - minyrBT + 1]
+trends[, duration := maxyrBT - minyrBT]
 
 ggplot(trends, aes(duration, Jtutrendrem0, color = 'Jtu trend')) +
     geom_smooth() +

@@ -502,8 +502,9 @@ dev.off()
 
 
 ## Standardize slope values against null model simulations
-### Set up null model sims
-```{r plot sds}
+### Plot null model sims
+#### Histograms
+```{r plot sds hist}
 # remove some duplicates
 sim_summary <- as.data.table(sim_summary)
 sim_summary <- sim_summary[!duplicated(sim_summary), ]
@@ -512,7 +513,10 @@ sim_summary <- sim_summary[!duplicated(sim_summary), ]
 hist(sim_summary[metric == 'Jaccard (total)', sd], breaks = 200, col = 'grey')
 hist(sim_summary[metric == 'Nestedness', sd], breaks = 200, col = 'grey')
 hist(sim_summary[metric == 'Morisita-Horn', sd], breaks = 200, col = 'grey')
+```
 
+#### SD vs. expected
+```{r plot sds vs. exp}
 # plot
 sim_summary[metric == 'Jaccard (total)', plot(expected, log10(sd+1))]
 abline(h = 0, col = 'red')
@@ -522,16 +526,61 @@ abline(h = 0, col = 'red')
 
 sim_summary[metric == 'Morisita-Horn', plot(expected, log10(sd+1))]
 abline(h = 0, col = 'red')
+```
 
+#### SD vs Nyrs
+```{r plot sds nyrs}
 # vs #yrs
-sim_summary[metric == 'Jaccard (total)', plot(Nyrs, sd+0.001, log = 'y', main = 'Null SD declines with #yrs')]
+sim_summary[metric == 'Nestedness', plot(Nyrs, sd+0.001, log = 'y', main = 'Null SD declines with #yrs (J tu)')]
 abline(h = 0.001, col = 'red')
 abline(h = 0.001+0.001, col = 'green')
 abline(h = 0.01+0.001, col = 'grey')
 
+sim_summary[metric == 'Jaccard (total)', plot(Nyrs, sd+0.001, log = 'y', main = 'Null SD declines with #yrs (J total)')]
+abline(h = 0.001, col = 'red')
+abline(h = 0.001+0.001, col = 'green')
+abline(h = 0.01+0.001, col = 'grey')
 
+sim_summary[metric == 'Morisita-Horn', plot(Nyrs, sd+0.001, log = 'y', main = 'Null SD declines with #yrs (Horn)')]
+abline(h = 0.001, col = 'red')
+abline(h = 0.001+0.001, col = 'green')
+abline(h = 0.01+0.001, col = 'grey')
+```
+
+#### SD vs duration
+```{r plot sds duration}
+sim_summary <- merge(sim_summary, trends[, .(rarefyID, duration = maxyrBT - minyrBT)], all.x = TRUE, by = 'rarefyID')
+# vs #yrs
+sim_summary[metric == 'Nestedness', plot(duration, sd+0.001, log = 'y', main = 'Null SD declines with duration (J tu)')]
+abline(h = 0.001, col = 'red')
+abline(h = 0.001+0.001, col = 'green')
+abline(h = 0.01+0.001, col = 'grey')
+
+sim_summary[metric == 'Jaccard (total)', plot(duration, sd+0.001, log = 'y', main = 'Null SD declines with duration (J total)')]
+abline(h = 0.001, col = 'red')
+abline(h = 0.001+0.001, col = 'green')
+abline(h = 0.01+0.001, col = 'grey')
+
+sim_summary[metric == 'Morisita-Horn', plot(duration, sd+0.001, log = 'y', main = 'Null SD declines with duration (Horn)')]
+abline(h = 0.001, col = 'red')
+abline(h = 0.001+0.001, col = 'green')
+abline(h = 0.01+0.001, col = 'grey')
+```
+
+#### SD vs Nspp
+```{r plot sds nspp}
 # vs #spp
+sim_summary[metric == 'Nestedness', plot(Nspp, sd+0.001, log = 'y')]
+abline(h = 0.001, col = 'red')
+abline(h = 0.001+0.001, col = 'green')
+abline(h = 0.01+0.001, col = 'grey')
+
 sim_summary[metric == 'Jaccard (total)', plot(Nspp, sd+0.001, log = 'y')]
+abline(h = 0.001, col = 'red')
+abline(h = 0.001+0.001, col = 'green')
+abline(h = 0.01+0.001, col = 'grey')
+
+sim_summary[metric == 'Morisita-Horn', plot(Nspp, sd+0.001, log = 'y')]
 abline(h = 0.001, col = 'red')
 abline(h = 0.001+0.001, col = 'green')
 abline(h = 0.01+0.001, col = 'grey')
@@ -539,6 +588,10 @@ abline(h = 0.01+0.001, col = 'grey')
 
 ### Merge null model
 ```{r merge nul model}
+# remove some duplicates
+sim_summary <- as.data.table(sim_summary)
+sim_summary <- sim_summary[!duplicated(sim_summary), ]
+
 # merge
 trends <- merge(trends, sim_summary[metric == 'Jaccard (total)', .(Jbeta_exp = expected, Jbeta_sd = sd, rarefyID)], by = 'rarefyID', all.x = TRUE)
 trends <- merge(trends, sim_summary[metric == 'Nestedness', .(Jtu_exp = expected, Jtu_sd = sd, rarefyID)], by = 'rarefyID', all.x = TRUE)
@@ -799,7 +852,7 @@ ggplot(trends, aes(nyrBT, Jtumm, color = 'Jtu mm')) +
 
 ## Average change compared to duration
 ```{r ave change vs. duration, message = FALSE}
-trends[, duration := maxyrBT - minyrBT + 1]
+trends[, duration := maxyrBT - minyrBT]
 
 ggplot(trends, aes(duration, Jtutrendrem0, color = 'Jtu trend')) +
     geom_smooth() +
