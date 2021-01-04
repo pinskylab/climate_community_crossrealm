@@ -1,5 +1,5 @@
 ---
-title: "Calculate biodiversity urnover"
+title: "Calculate biodiversity turnover as slope of dissimilarity vs. time"
 output:
   github_document: default
 ---
