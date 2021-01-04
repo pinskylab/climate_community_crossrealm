@@ -1,0 +1,12 @@
+Hi Malin
+
+Please find attached a data frame with all pairs for the different metrics we have been using so far.
+
+There are some slight name changes:
+        - the ‘_base' suffix has been dropped from all metric names
+        - the year column is now two (year1, year2), which you can use to calculate the temporal distanse
+
+Let me know if anything remains unclear.
+
+Cheers,
+Shane
