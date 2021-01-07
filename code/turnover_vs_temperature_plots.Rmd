@@ -1,0 +1,191 @@
+---
+title: 'Turnover vs. temperature plots'
+output: 
+    github_document: default
+
+---
+# Prep
+<details>
+<summary>Click to expand code</summary>
+
+```{r setup}
+library(data.table) # for handling large datasets
+library(ggplot2) # for some plotting
+library(nlme) # for ME models
+library(maps) # for map
+library(gridExtra) # to combine ggplots together
+library(grid) # to combine ggplots together
+library(RColorBrewer)
+library(MASS) # for stepAIC
+library(piecewiseSEM) # for rsquared() for nlme models
+library(scales) # for defining custom scales in ggplot
+
+options(width=500) # turn off most text wrapping
+
+signedsqrt = function(x) sign(x)*sqrt(abs(x))
+signedsq = function(x) sign(x) * x^2
+signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, inverse = signedsq)
+
+
+# tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
+```
+
+
+```{r load data}
+# Turnover and covariates assembled by turnover_vs_temperature_prep.Rmd
+trends <- fread('output/turnover_w_covariates.csv.gz')
+
+# set realm order
+trends[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
+
+# set up sign of temperature change
+trends[, tsign := factor(sign(tempchange))]
+
+# realm that combined Terrestrial and Freshwater, for interacting with human impact
+trends[, REALM2 := REALM]
+levels(trends$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
+
+# group Marine invertebrates/plants in with All
+trends[, taxa_mod2 := taxa_mod]
+trends[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
+
+# calculate duration
+trends[, duration := year2 - year1]
+```
+
+
+</details>
+
+# Summary plots and stats
+## Average community dissimilarity
+```{r rates of turnover rem0}
+trends[abs(tempchange) >= 0.5, tempchangetext1 := 'Change >=0.5']
+trends[abs(tempchange) <= 0.05, tempchangetext1 := 'Stable <=0.05']
+trends[tempchange <= -0.5, tempchangetext2 := 'Cool <= -0.5']
+trends[tempchange >= 0.5, tempchangetext2 := 'Warm >= 0.5']
+
+# reshape to long format
+measurenms <- c('Jbeta', 'Jtu', 'Jne', 'Horn')
+idnms <- setdiff(names(trends), measurenms)
+trends2 <- melt(trends, id.vars = idnms, measure.vars = measurenms)
+
+# changing vs. stable
+trendsum1 <- trends2[!is.na(tempchangetext1), 
+                    .(ave = mean(value, na.rm=TRUE), 
+                      se = sd(value, na.rm=TRUE)/sqrt(sum(!is.na(value))),
+                      n = sum(!is.na(value))),
+                    by = .(text = tempchangetext1, type = variable)] # turnover per year for locations changing temperature
+trendsum1[, duration := NA_integer_]
+
+
+# warming vs. cooling
+trendsum2 <- trends2[!is.na(tempchangetext2), 
+                    .(ave = mean(value, na.rm=TRUE), 
+                      se = sd(value, na.rm=TRUE)/sqrt(sum(!is.na(value))),
+                      n = sum(!is.na(value))),
+                    by = .(text = tempchangetext2, type = variable)] # inc. direction
+trendsum2[, duration := NA_integer_]
+
+# 1, 10, or 20 year intervals
+trendsum3 <- trends2[!is.na(tempchangetext1) & duration %in% c(1, 10, 20), 
+                    .(ave = mean(value, na.rm=TRUE), 
+                      se = sd(value, na.rm=TRUE)/sqrt(sum(!is.na(value))),
+                      n = sum(!is.na(value))),
+                    by = .(text = tempchangetext1, type = variable, duration)] # inc. time interval
+setorder(trendsum3, type, duration, text)
+
+# combine
+trendsum4 <- rbind(trendsum1, trendsum2, trendsum3)
+setorder(trendsum4, type, text, duration)
+
+write.csv(trendsum4, file = 'output/trendsummary.csv', row.names = FALSE)
+
+trendsum4
+```
+
+## Plots of turnover rates binned by warming rates
+```{r turnover vs. temperature violin plot, message = FALSE, warning = FALSE}
+p1 <- ggplot(trends[!is.na(tempchangetext1), ], aes(tempchangetext1, Horn)) +
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
+  labs(x = '', y = 'Horn dissimilarity', tag = 'A', title = 'Rate of temperature change') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10)) +
+  geom_abline(intercept = 0, slope = 0)
+
+p2 <- ggplot(trends[!is.na(tempchangetext2), ], aes(tempchangetext2, Horn)) +
+  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
+  labs(x = '', y = 'Horn dissimilarity', tag = 'B', title = 'Rate of temperature change') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10)) +
+  geom_abline(intercept = 0, slope = 0)
+
+p3 <- ggplot(trendsum4[type %in% c('Jtu', 'Jbeta', 'Horn') & is.na(duration)], 
+             aes(text, ave, group = type, color = type)) +
+  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
+  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width= 0.1, position = position_dodge(width = 0.25)) +
+  labs(x = '', y = 'Dissimilarity', title = 'All time intervals') +
+  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10),
+        axis.text.x = element_text(angle = 45, vjust = 0.7))
+
+p4 <- ggplot(trendsum4[type %in% c('Jtu', 'Jbeta', 'Horn') & duration==1, ], 
+             aes(text, ave, group = type, color = type)) +
+  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
+  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width= 0.1, position = position_dodge(width = 0.25)) +
+  labs(x = '', y = 'Dissimilarity', title = '1-year interval') +
+  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10),
+        axis.text.x = element_text(angle = 45, vjust = 0.7))
+
+p5 <- ggplot(trendsum4[type %in% c('Jtu', 'Jbeta', 'Horn') & duration==10, ], 
+             aes(text, ave, group = type, color = type)) +
+  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
+  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width= 0.1, position = position_dodge(width = 0.25)) +
+  labs(x = '', y = 'Dissimilarity', title = '10-year interval') +
+  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=10),
+        axis.text.x = element_text(angle = 45, vjust = 0.7))
+
+p1
+p2
+p3
+p4
+p5
+```
+
+## Plots of turnover rates binned by warming rates and duration
+### Jaccard turnover dissimilarity
+Very slow to render (10 min?)
+```{r slope vs. temperature trend vs. duration, message = FALSE, warning = FALSE, fig.width=10, fig.height = 3}
+ggplot(trends[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
+  geom_smooth(method = 'gam', aes(color = '<=0.05')) +
+  geom_smooth(data = trends[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], method = 'loess', aes(color = '0.05-0.1')) +
+  geom_smooth(data = trends[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], method = 'loess', aes(color = '0.1-0.5')) +
+  geom_smooth(data = trends[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Jaccard dissimilarity', color = '°C change')
+
+
+```
+
+
+
