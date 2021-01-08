@@ -181,9 +181,9 @@ endofrac <- endo[, .(mammfrac = sum(metab == 'mamm')/.N, birdfrac = sum(metab ==
 
 # check
 endofrac[, all(rowSums(cbind(mammfrac, birdfrac, ectofrac)) == 1)] # TRUE, good
-endofrac[mammfrac != 0, hist(mammfrac)]
-endofrac[birdfrac != 0, hist(birdfrac)]
-endofrac[ectofrac != 0, hist(ectofrac)]
+invisible(endofrac[mammfrac != 0, hist(mammfrac)])
+invisible(endofrac[birdfrac != 0, hist(birdfrac)])
+invisible(endofrac[ectofrac != 0, hist(ectofrac)])
 
 ```
 
@@ -262,14 +262,20 @@ Use CRUTS in general, except ERSST in marine realm
 # average temperature and metabolically corrected ave temp
 btsum[, ':='(tempave = ave_cruts, tempave_metab = ave_metab_cruts)]
 btsum[REALM == 'Marine', ':='(tempave = ave_ersst, tempave_metab = ave_metab_ersst)]
+btsum[REALM == 'Marine' & is.na(ave_ersst), ':='(tempave = ave_cruts, tempave_metab = ave_metab_cruts)] # fill missing marine with CRU TS
+btsum[REALM != 'Marine' & is.na(ave_cruts), ':='(tempave = ave_ersst, tempave_metab = ave_metab_ersst)] # fill missing non-marine with ERSST
 
 # temperature change
 btsum[ , tempchange := dcruts] # CRU TS for land and freshwater
-btsum[REALM == 'Marine', trendchange := dersst] # ERSST for marine
+btsum[REALM == 'Marine', tempchange := dersst] # ERSST for marine
+btsum[REALM == 'Marine' & is.na(dersst), ':='(tempchange = dcruts)]
+btsum[REALM != 'Marine' & is.na(dcruts), ':='(tempchange = dersst)]
 
 # seasonality
 btsum[, seas := seas_cruts]
 btsum[REALM == 'Marine', seas := seas_ersst]
+btsum[REALM == 'Marine' & is.na(seas_ersst), ':='(seas = seas_cruts)]
+btsum[REALM != 'Marine' & is.na(seas_cruts), ':='(seas = seas_ersst)]
 
 # set column order and remove columns
 out <- btsum[, .(rarefyID, year1, year2, tempave, tempave_metab, tempchange, seas)]
@@ -280,6 +286,14 @@ dim(out)
 out
 ```
 
+# Checking missing
+```{r check missing}
+out[!duplicated(rarefyID) & is.na(tempave), .N]
+out[!duplicated(rarefyID) & is.na(tempave_metab), .N]
+out[!duplicated(rarefyID) & is.na(tempchange), .N]
+out[!duplicated(rarefyID) & is.na(seas), .N]
+
+```
 
 # Write out 
 ```{r write}
