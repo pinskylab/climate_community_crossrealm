@@ -167,21 +167,14 @@ mods[[9]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2/STUDY_ID/rarefy
 mods[[10]] <- lme(fixed, data = trends[i,], random = ~tempchange_abs.sc | taxa_mod2)
 mods[[11]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ tempchange_abs.sc, STUDY_ID = ~ tempchange_abs.sc))
 mods[[12]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ tempchange_abs.sc, STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~tempchange_abs.sc))
-mods[[13]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ tempchange_abs.sc, STUDY_ID = ~ tempchange_abs.sc, 
-                                                          rarefyID = ~tempchange_abs.sc, compID = ~1))
-mods[[14]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~tempchange_abs.sc))
-mods[[15]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~tempchange_abs.sc, compID = ~1)) # includes overdispersion. new formula so that random slope is only for study level (not enough data to extend to compID).
+mods[[13]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~tempchange_abs.sc))
 
-mods[[16]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~tempchange_abs.sc, rarefyID = ~tempchange_abs.sc), 
+mods[[14]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~tempchange_abs.sc, rarefyID = ~tempchange_abs.sc), 
                   weights = varPower(-0.5, ~tempchange_abs.sc))
-mods[[17]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ tempchange_abs.sc, STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~tempchange_abs.sc), 
+mods[[15]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ tempchange_abs.sc, STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~tempchange_abs.sc), 
                   weights = varPower(-0.5, ~tempchange_abs.sc))
-mods[[18]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ tempchange_abs.sc, STUDY_ID = ~ tempchange_abs.sc, 
-                                                          rarefyID = ~tempchange_abs.sc, compID = ~1), 
-                  weights = varPower(-0.5, ~tempchange_abs.sc))
-mods[[19]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ tempchange_abs.sc, 
-                                                          rarefyID = ~tempchange_abs.sc, compID = ~1), 
-                  weights = varPower(-0.5, ~tempchange_abs.sc))
+
+save(mods, file = 'temp/modsRF.RData')
 
 aics <- sapply(mods, AIC)
 minaics <- aics - min(aics)
