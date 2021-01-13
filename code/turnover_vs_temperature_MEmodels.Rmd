@@ -171,7 +171,9 @@ mods[[13]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ tempchang
 
 mods[[14]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~tempchange_abs.sc, rarefyID = ~tempchange_abs.sc), 
                   weights = varPower(-0.5, ~tempchange_abs.sc))
-mods[[15]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ tempchange_abs.sc, STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~tempchange_abs.sc), 
+mods[[15]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ tempchange_abs.sc, 
+                                                          STUDY_ID = ~ tempchange_abs.sc, 
+                                                          rarefyID = ~tempchange_abs.sc), 
                   weights = varPower(-0.5, ~tempchange_abs.sc))
 
 save(mods, file = 'temp/modsRF.RData')
@@ -181,7 +183,7 @@ minaics <- aics - min(aics)
 minaics
 which.min(aics)
 ```
-Chooses the random slopes (tempchange_abs) & intercepts for STUDY_ID, overdispersion, and variance scaled to number of years.
+Chooses the random slopes (tempchange_abs.sc) & intercepts for taxa_mod2, STUDY_ID, rarefyID, and variance scaled to tempchange_abs.sc.
 We haven't dealt with potential testing on the boundary issues here yet.
 
 
@@ -189,165 +191,263 @@ We haven't dealt with potential testing on the boundary issues here yet.
 ### Fit/load the models
 ```{r LME temperature only}
 
-randef <- list(STUDY_ID = ~ abs(tempchange), rarefyID = ~1)
-varef <- varPower(-0.5, ~nyrBT)
+randef <- list(taxa_mod2 = ~ abs(tempchange), STUDY_ID = ~ abs(tempchange), rarefyID = ~abs(tempchange))
+varef <- varPower(-0.5, ~abs(tempchange))
 
-# *trendrem0
-if(file.exists('temp/modonlyTtrendrem0.rds')){
-  modonlyTtrendrem0 <- readRDS('temp/modonlyTtrendrem0.rds')
+if(file.exists('temp/modonlyTchangeJtu.rds')){
+  modonlyTchangeJtu <- readRDS('temp/modonlyTchangeJtu.rds')
 } else {
-  i <- trends[, complete.cases(Jtutrendrem0, REALM, tempchange)]
-  modonlyTtrendrem0 <- lme(Jtutrendrem0 ~ abs(tempchange)*REALM,
+  i <- trends[, complete.cases(Jtu, tempchange)]
+  modonlyTchangeJtu <- lme(Jtu ~ abs(tempchange),
                    random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modonlyTtrendrem0, file = 'temp/modonlyTtrendrem0.rds')
+  saveRDS(modonlyTchangeJtu, file = 'temp/modonlyTchangeJtu.rds')
 }
 
-if(file.exists('temp/modonlyTtrendJbetarem0.rds')){
-  modonlyTtrendJbetarem0 <- readRDS('temp/modonlyTtrendJbetarem0.rds')
+if(file.exists('temp/modonlyTchangeJbeta.rds')){
+  modonlyTchangeJbeta <- readRDS('temp/modonlyTchangeJbeta.rds')
 } else {
-  i <- trends[, complete.cases(Jbetatrendrem0, REALM, tempchange)]
-  modonlyTtrendJbetarem0 <- lme(Jbetatrendrem0 ~ abs(tempchange)*REALM,
+  i <- trends[, complete.cases(Jbeta, tempchange)]
+  modonlyTchangeJbeta <- lme(Jbeta ~ abs(tempchange),
                    random = randef, weights = varef, data = trends[i,], method = 'REML', 
                    control=lmeControl(msMaxIter = 100, maxIter = 100))
-  saveRDS(modonlyTtrendJbetarem0, file = 'temp/modonlyTtrendJbetarem0.rds')
+  saveRDS(modonlyTchangeJbeta, file = 'temp/modonlyTchangeJbeta.rds')
 }
 
-if(file.exists('temp/modonlyTtrendHornrem0.rds')){
-  modonlyTtrendHornrem0 <- readRDS('temp/modonlyTtrendHornrem0.rds')
+if(file.exists('temp/modonlyTchangeHorn.rds')){
+  modonlyTchangeHorn <- readRDS('temp/modonlyTchangeHorn.rds')
 } else {
-  i <- trends[, complete.cases(Horntrendrem0, REALM, tempchange)]
-  modonlyTtrendHornrem0 <- lme(Horntrendrem0 ~ abs(tempchange)*REALM,
+  i <- trends[, complete.cases(Horn, tempchange)]
+  modonlyTchangeHorn <- lme(Horn ~ abs(tempchange),
                    random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modonlyTtrendHornrem0, file = 'temp/modonlyTtrendHornrem0.rds')
+  saveRDS(modonlyTchangeHorn, file = 'temp/modonlyTchangeHorn.rds')
 }
 
 ```
 
 ### Summary: Slope of dissimilarity
-```{r summary of rem0 mods}
-summary(modonlyTtrendrem0)
-summary(modonlyTtrendJbetarem0)
-summary(modonlyTtrendHornrem0)
+```{r summary of Tchangeonly mods}
+summary(modonlyTchangeJtu)
+summary(modonlyTchangeJbeta)
+summary(modonlyTchangeHorn)
 ```
 
 ### Plot the temp-only coefficients
 ```{r modonlyT coefs}
 # make table of coefficients
-coefs1 <- as.data.frame(summary(modonlyTtrendrem0)$tTable)
-coefs2 <- as.data.frame(summary(modonlyTtrendJbetarem0)$tTable)
-coefs3 <- as.data.frame(summary(modonlyTtrendHornrem0)$tTable)
+coefs1 <- as.data.frame(summary(modonlyTchangeJtu)$tTable)
+coefs2 <- as.data.frame(summary(modonlyTchangeJbeta)$tTable)
+coefs3 <- as.data.frame(summary(modonlyTchangeHorn)$tTable)
 coefs1$response <- 'Jtu'
 coefs2$response <- 'Jbeta'
 coefs3$response <- 'Horn'
-coefs1$fit <- 'rem0'
-coefs2$fit <- 'rem0'
-coefs3$fit <- 'rem0'
 rows1 <- which(grepl('tempchange', rownames(coefs1))) # extract temperature effect
-cols <- c('Value', 'Std.Error', 'response', 'fit')
+cols <- c('Value', 'Std.Error', 'response')
 allcoefs <- rbind(coefs1[rows1, cols], coefs2[rows1, cols], coefs3[rows1, cols])
-allcoefs$Value[grepl('REALMMarine', rownames(allcoefs))] <- 
-  allcoefs$Value[grepl('REALMMarine', rownames(allcoefs))] + 
-  allcoefs$Value[!grepl('REALM', rownames(allcoefs))] # add intercept to marine effects
-allcoefs$Value[grepl('REALMTerrestrial', rownames(allcoefs))] <- 
-  allcoefs$Value[grepl('REALMTerrestrial', rownames(allcoefs))] + 
-  allcoefs$Value[!grepl('REALM', rownames(allcoefs))] # add intercept to terrestrial effects
 
-allcoefs$lCI <- allcoefs$Value - allcoefs$Std.Error # lower confidence interval
-allcoefs$uCI <- allcoefs$Value + allcoefs$Std.Error
-allcoefs$y <- c(3, 2, 1) + rep(c(0, -0.1, -0.2), c(3, 3, 3)) # y-values
-allcoefs$realm <- rep(c('Freshwater', 'Marine', 'Terrestrial'), 6)
-allcoefs$group <- paste0(allcoefs$response, allcoefs$fit)
+allcoefs$lCI <- allcoefs$Value - 1.96 * allcoefs$Std.Error # lower confidence interval
+allcoefs$uCI <- allcoefs$Value + 1.96 * allcoefs$Std.Error
+allcoefs$y <- c(3, 2, 1) # y-values
 
-pd <- position_dodge(width = 0.5)
-ggplot(subset(allcoefs, fit == 'rem0'), aes(x = realm, y = Value, color = response, shape = fit, group = group)) +
-  geom_point(position = pd) + 
-  geom_errorbar(aes(ymin=lCI, ymax=uCI), width=.1, position=pd) +
-  coord_flip() +
-  labs(y = 'Turnover per |°C/yr|')
+ggplot(subset(allcoefs), aes(x = response, y = Value)) +
+  geom_point() + 
+  geom_errorbar(aes(ymin=lCI, ymax=uCI), width=.1) +
+  labs(y = 'Dissimilarity per |°C change|') + 
+  coord_cartesian(ylim = c(-0.01, 0.05))
 
 
 ```
+CIs are 1.96*SE
 
 ## Temperature&duration models
 ### Fit/load the models
 ```{r LME temperature and duration}
 
-randef <- list(STUDY_ID = ~ abs(tempchange), rarefyID = ~1)
-varef <- varPower(-0.5, ~nyrBT)
+randef <- list(taxa_mod2 = ~ abs(tempchange), STUDY_ID = ~ abs(tempchange), rarefyID = ~abs(tempchange))
+varef <- varPower(-0.5, ~abs(tempchange))
 
-# *trendrem0
-if(file.exists('temp/modTDtrendJturem0.rds')){
-  modTDtrendJturem0 <- readRDS('temp/modTDtrendJturem0.rds')
+if(file.exists('temp/modTDJtu.rds')){
+  modTDJtu <- readRDS('temp/modTDJtu.rds')
 } else {
-  i <- trends[, complete.cases(Jtutrendrem0, REALM, tempchange)]
-  modTDtrendJturem0 <- lme(Jtutrendrem0 ~ abs(tempchange)*REALM + duration,
+  i <- trends[, complete.cases(Jtu, REALM, tempchange)]
+  modTDJtu <- lme(Jtu ~ abs(tempchange) * duration,
                    random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modTDtrendJturem0, file = 'temp/modTDtrendJturem0.rds')
+  saveRDS(modTDJtu, file = 'temp/modTDJtu.rds')
 }
 
-if(file.exists('temp/modTDtrendJbetarem0.rds')){
-  modTDtrendJbetarem0 <- readRDS('temp/modTDtrendJbetarem0.rds')
+if(file.exists('temp/modTDJbeta.rds')){
+  modTDJbeta <- readRDS('temp/modTDJbeta.rds')
 } else {
-  i <- trends[, complete.cases(Jbetatrendrem0, REALM, tempchange)]
-  modTDtrendJbetarem0 <- lme(Jbetatrendrem0 ~ abs(tempchange)*REALM + duration,
+  i <- trends[, complete.cases(Jbeta, REALM, tempchange)]
+  modTDJbeta <- lme(Jbeta ~ abs(tempchange)*duration,
                    random = randef, weights = varef, data = trends[i,], method = 'REML', 
                    control=lmeControl(msMaxIter = 100, maxIter = 100))
-  saveRDS(modTDtrendJbetarem0, file = 'temp/modTDtrendJbetarem0.rds')
+  saveRDS(modTDJbeta, file = 'temp/modTDJbeta.rds')
 }
 
-if(file.exists('temp/modTDtrendHornrem0.rds')){
-  modTDtrendHornrem0 <- readRDS('temp/modTDtrendHornrem0.rds')
+if(file.exists('temp/modTDHorn.rds')){
+  modTDHorn <- readRDS('temp/modTDHorn.rds')
 } else {
-  i <- trends[, complete.cases(Horntrendrem0, REALM, tempchange)]
-  modTDtrendHornrem0 <- lme(Horntrendrem0 ~ abs(tempchange)*REALM + duration,
+  i <- trends[, complete.cases(Horn, REALM, tempchange)]
+  modTDHorn <- lme(Horn ~ abs(tempchange)*duration,
                    random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modTDtrendHornrem0, file = 'temp/modTDtrendHornrem0.rds')
+  saveRDS(modTDHorn, file = 'temp/modTDHorn.rds')
 }
 
 
 ```
 
 ### Summary: Slope of dissimilarity
-```{r summary of rem0 TD mods}
-summary(modTDtrendJturem0)
-summary(modTDtrendJbetarem0)
-summary(modTDtrendHornrem0)
+```{r summary of TD mods}
+summary(modTDJtu)
+summary(modTDJbeta)
+summary(modTDHorn)
 ```
 
 
 ### Plot the temp coefficients from TD models
 ```{r modTD coefs}
-# make table of coefficients
-coefs1 <- as.data.frame(summary(modTDtrendJturem0)$tTable)
-coefs2 <- as.data.frame(summary(modTDtrendJbetarem0)$tTable)
-coefs3 <- as.data.frame(summary(modTDtrendHornrem0)$tTable)
-coefs1$response <- 'Jtu'
-coefs2$response <- 'Jbeta'
-coefs3$response <- 'Horn'
-coefs1$fit <- 'rem0'
-coefs2$fit <- 'rem0'
-coefs3$fit <- 'rem0'
-rows1 <- which(grepl('tempchange', rownames(coefs1))) # extract temperature effect
-cols <- c('Value', 'Std.Error', 'response', 'fit')
-allcoefs <- rbind(coefs1[rows1, cols], coefs2[rows1, cols], coefs3[rows1, cols])
-allcoefs$Value[grepl('REALMMarine', rownames(allcoefs))] <- 
-  allcoefs$Value[grepl('REALMMarine', rownames(allcoefs))] + 
-  allcoefs$Value[!grepl('REALM', rownames(allcoefs))] # add intercept to marine effects
-allcoefs$Value[grepl('REALMTerrestrial', rownames(allcoefs))] <- 
-  allcoefs$Value[grepl('REALMTerrestrial', rownames(allcoefs))] + 
-  allcoefs$Value[!grepl('REALM', rownames(allcoefs))] # add intercept to terrestrial effects
 
-allcoefs$lCI <- allcoefs$Value - allcoefs$Std.Error # lower confidence interval
-allcoefs$uCI <- allcoefs$Value + allcoefs$Std.Error
-allcoefs$realm <- rep(c('Freshwater', 'Marine', 'Terrestrial'), 6)
-allcoefs$group <- paste0(allcoefs$response, allcoefs$fit)
+coefs1 <- summary(modTDJtu)$tTable
+coefs2 <- summary(modTDJbeta)$tTable
+coefs3 <- summary(modTDHorn)$tTable
 
-pd <- position_dodge(width = 0.5)
-ggplot(subset(allcoefs, fit == 'rem0'), aes(x = realm, y = Value, color = response, shape = fit, group = group)) +
-  geom_point(position = pd) + 
-  geom_errorbar(aes(ymin=lCI, ymax=uCI), width=.1, position=pd) +
-  coord_flip() +
-  labs(y = 'Turnover per |°C/yr|')
+varstoplot <- unique(c(rownames(coefs1), rownames(coefs2), rownames(coefs3)))
+varstoplot <- varstoplot[which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot))] # vars to plot
+
+rows1_1 <- which(rownames(coefs1) %in% varstoplot) # rows in coefs
+rows1_2 <- which(rownames(coefs2) %in% varstoplot)
+rows1_3 <- which(rownames(coefs3) %in% varstoplot)
+xlims <- range(c(coefs1[rows1_1,1] - 1.96*coefs1[rows1_1,2], coefs1[rows1_1,1] + 1.96*coefs1[rows1_1,2], 
+                  coefs2[rows1_2,1] - 1.96*coefs2[rows1_2,2], coefs2[rows1_2,1] + 1.96*coefs2[rows1_2,2], 
+                  coefs3[rows1_3,1] - 1.96*coefs3[rows1_3,2], coefs3[rows1_3,1] + 1.96*coefs3[rows1_3,2]))
+
+cols <- brewer.pal(3, 'Dark2') # for Jtu, Jbeta and Horn models
+pchs <- c(16, 16, 16)
+offs <- c(0.1, 0, -0.1) # offset vertically for each model
+
+par(las = 1, mai = c(0.5, 4, 0.1, 0.1))
+
+plot(0,0, col = 'white', xlim = xlims, ylim = c(0.9,length(varstoplot)+0.1), yaxt='n', xlab = '', ylab ='')
+axis(2, at = length(varstoplot):1, labels = varstoplot, cex.axis = 0.7)
+abline(v = 0, col = 'grey', lty = 2)
+abline(h = 1:length(varstoplot), col = 'grey', lty = 3)
+for(i in 1:length(varstoplot)){
+  if(varstoplot[i] %in% rownames(coefs1)){
+    x = coefs1[rownames(coefs1) == varstoplot[i], 1]
+    se = coefs1[rownames(coefs1) == varstoplot[i], 2]
+    points(x, length(varstoplot) + 1 - i + offs[1], pch = pchs[1], col = cols[1])
+    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[1], length(varstoplot) + 1 - i + offs[1]), col = cols[1])
+  }
+  if(varstoplot[i] %in% rownames(coefs2)){
+    x = coefs2[rownames(coefs2) == varstoplot[i], 1]
+    se = coefs2[rownames(coefs2) == varstoplot[i], 2]
+    points(x, length(varstoplot) + 1 - i + offs[2], pch = pchs[2], col = cols[2])
+    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[2], length(varstoplot) + 1 - i + offs[2]), col = cols[2])
+  }
+  if(varstoplot[i] %in% rownames(coefs3)){
+    x = coefs3[rownames(coefs3) == varstoplot[i], 1]
+    se = coefs3[rownames(coefs3) == varstoplot[i], 2]
+    points(x, length(varstoplot) + 1 - i + offs[3], pch = pchs[3], col = cols[3])
+    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[3], length(varstoplot) + 1 - i + offs[3]), col = cols[3])
+  }
+}
+legend('bottomright', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Horn'), cex = 0.5)
+```
+
+## Temperature and duration models separated by REALM
+### Fit/load the models
+```{r LME temperature duration realm}
+
+randef <- list(taxa_mod2 = ~ abs(tempchange), STUDY_ID = ~ abs(tempchange), rarefyID = ~abs(tempchange))
+varef <- varPower(-0.5, ~abs(tempchange))
+
+if(file.exists('temp/modTDrealmJtu.rds')){
+  modTDrealmJtu <- readRDS('temp/modTDrealmJtu.rds')
+} else {
+  i <- trends[, complete.cases(Jtu, REALM, tempchange)]
+  modTDrealmJtu <- lme(Jtu ~ abs(tempchange) * duration + abs(tempchange) * REALM,
+                   random = randef, weights = varef, data = trends[i,], method = 'REML')
+  saveRDS(modTDrealmJtu, file = 'temp/modTDrealmJtu.rds')
+}
+
+if(file.exists('temp/modTDrealmJbeta.rds')){
+  modTDrealmJbeta <- readRDS('temp/modTDrealmJbeta.rds')
+} else {
+  i <- trends[, complete.cases(Jbeta, REALM, tempchange)]
+  modTDrealmJbeta <- lme(Jbeta ~ abs(tempchange)*duration + abs(tempchange) * REALM,
+                   random = randef, weights = varef, data = trends[i,], method = 'REML', 
+                   control=lmeControl(msMaxIter = 100, maxIter = 100))
+  saveRDS(modTDrealmJbeta, file = 'temp/modTDrealmJbeta.rds')
+}
+
+if(file.exists('temp/modTDrealmHorn.rds')){
+  modTDrealmHorn <- readRDS('temp/modTDrealmHorn.rds')
+} else {
+  i <- trends[, complete.cases(Horn, REALM, tempchange)]
+  modTDrealmHorn <- lme(Horn ~ abs(tempchange)*duration + abs(tempchange) * REALM,
+                   random = randef, weights = varef, data = trends[i,], method = 'REML')
+  saveRDS(modTDrealmHorn, file = 'temp/modTDrealmHorn.rds')
+}
+
+
+```
+
+### Summary
+```{r summary of TD mods}
+summary(modTDrealmJtu)
+summary(modTDrealmJbeta)
+summary(modTDrealmHorn)
+```
+
+
+### Plot the temp coefficients from TD realm models
+```{r modTD coefs}
+
+coefs1 <- summary(modTDrealmJtu)$tTable
+coefs2 <- summary(modTDrealmJbeta)$tTable
+coefs3 <- summary(modTDrealmHorn)$tTable
+
+varstoplot <- unique(c(rownames(coefs1), rownames(coefs2), rownames(coefs3)))
+varstoplot <- varstoplot[which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot))] # vars to plot
+
+rows1_1 <- which(rownames(coefs1) %in% varstoplot) # rows in coefs
+rows1_2 <- which(rownames(coefs2) %in% varstoplot)
+rows1_3 <- which(rownames(coefs3) %in% varstoplot)
+xlims <- range(c(coefs1[rows1_1,1] - 1.96*coefs1[rows1_1,2], coefs1[rows1_1,1] + 1.96*coefs1[rows1_1,2], 
+                  coefs2[rows1_2,1] - 1.96*coefs2[rows1_2,2], coefs2[rows1_2,1] + 1.96*coefs2[rows1_2,2], 
+                  coefs3[rows1_3,1] - 1.96*coefs3[rows1_3,2], coefs3[rows1_3,1] + 1.96*coefs3[rows1_3,2]))
+
+cols <- brewer.pal(3, 'Dark2') # for Jtu, Jbeta and Horn models
+pchs <- c(16, 16, 16)
+offs <- c(0.1, 0, -0.1) # offset vertically for each model
+
+par(las = 1, mai = c(0.5, 4, 0.1, 0.1))
+
+plot(0,0, col = 'white', xlim = xlims, ylim = c(1,length(varstoplot)), yaxt='n', xlab = '', ylab ='')
+axis(2, at = length(varstoplot):1, labels = varstoplot, cex.axis = 0.7)
+abline(v = 0, col = 'grey', lty = 2)
+abline(h = 1:length(varstoplot), col = 'grey', lty = 3)
+for(i in 1:length(varstoplot)){
+  if(varstoplot[i] %in% rownames(coefs1)){
+    x = coefs1[rownames(coefs1) == varstoplot[i], 1]
+    se = coefs1[rownames(coefs1) == varstoplot[i], 2]
+    points(x, length(varstoplot) + 1 - i + offs[1], pch = pchs[1], col = cols[1])
+    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[1], length(varstoplot) + 1 - i + offs[1]), col = cols[1])
+  }
+  if(varstoplot[i] %in% rownames(coefs2)){
+    x = coefs2[rownames(coefs2) == varstoplot[i], 1]
+    se = coefs2[rownames(coefs2) == varstoplot[i], 2]
+    points(x, length(varstoplot) + 1 - i + offs[2], pch = pchs[2], col = cols[2])
+    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[2], length(varstoplot) + 1 - i + offs[2]), col = cols[2])
+  }
+  if(varstoplot[i] %in% rownames(coefs3)){
+    x = coefs3[rownames(coefs3) == varstoplot[i], 1]
+    se = coefs3[rownames(coefs3) == varstoplot[i], 2]
+    points(x, length(varstoplot) + 1 - i + offs[3], pch = pchs[3], col = cols[3])
+    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[3], length(varstoplot) + 1 - i + offs[3]), col = cols[3])
+  }
+}
+legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Horn'), cex = 0.5)
 ```
 
 
@@ -494,8 +594,8 @@ if(file.exists('temp/modTfullHornrem0.rds')){
 
 ```
 
-#### Summary rem0
-```{r summary rem0 full}
+#### Summary
+```{r summary  full}
 summary(modTfullJturem0)
 summary(modTfullJbetarem0)
 summary(modTfullHornrem0)
@@ -507,7 +607,7 @@ rsquared(modTfullHornrem0)
 ```
 
 ### Plots from the full models
-#### Plot the coefficients from rem0
+#### Plot the coefficients
 ```{r plot fullTmods, fig.height=8, fig.width=8}
 
 coefs1 <- summary(modTfullJturem0)$tTable
