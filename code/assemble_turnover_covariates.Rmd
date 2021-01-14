@@ -97,8 +97,12 @@ bt[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 
 
 ## Write out
+Only if file doesn't yet exist
 ```{r write out}
-write.csv(bt, gzfile('output/turnover_w_covariates.csv.gz'), row.names = FALSE)
+if(!file.exists('output/turnover_w_covariates.csv.gz')){
+  write.csv(bt, gzfile('output/turnover_w_covariates.csv.gz'), row.names = FALSE)
+}
+
 ```
 
 
@@ -124,9 +128,37 @@ btave[, REALM2 := REALM]
 levels(btave$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
 ```
 
+## Try a logit-transform of the response variables
+```{r logit transform}
+logit = function(x) return(log(x/(1-x)))
 
-## Log-transform some variables, then center and scale. 
-``` {r center and scale}
+# have to adjust variables away from 0 and 1
+jtumin = bt[Jtu > 0, min(Jtu)]
+jtumax = bt[Jtu < 1, max(Jtu)]
+bt[Jtu > 0 & Jtu < 1, Jtulogit := logit(Jtu)]
+bt[Jtu == 0, Jtulogit := logit(jtumin)]
+bt[Jtu == 1, Jtulogit := logit(jtumax)]
+
+jbetamin = bt[Jbeta > 0, min(Jbeta)]
+jbetamax = bt[Jbeta < 1, max(Jbeta)]
+bt[Jbeta > 0 & Jbeta < 1, Jbetalogit := logit(Jbeta)]
+bt[Jbeta == 0, Jbetalogit := logit(jbetamin)]
+bt[Jbeta == 1, Jbetalogit := logit(jbetamax)]
+
+hornmin = bt[Horn > 0, min(Horn)]
+hornmax = bt[Horn < 1, max(Horn)]
+bt[Horn > 0 & Horn < 1, Hornlogit := logit(Horn)]
+bt[Horn == 0, Hornlogit := logit(hornmin)]
+bt[Horn == 1, Hornlogit := logit(hornmax)]
+
+bt[, summary(Jtulogit)]
+bt[, summary(Jbetalogit)]
+bt[, summary(Hornlogit)]
+
+```
+
+## Log-transform some explanantory variables, then center and scale. 
+```{r center and scale}
 btave[, tempave.sc := scale(tempave)]
 btave[, tempave_metab.sc := scale(tempave_metab)]
 btave[, seas.sc := scale(seas)]
@@ -157,10 +189,23 @@ bt[, summary(Jbeta)]
 bt[, summary(Jtu)]
 bt[, summary(Horn)]
 
+# fraction 0 or 1
+bt[, sum(Jbeta == 0)/.N]
+bt[, sum(Jtu == 0)/.N]
+bt[!is.na(Horn), sum(Horn == 0)/.N]
 
-invisible(bt[, hist(Jbeta, main = 'Jaccard total')])
-invisible(bt[, hist(Jtu, main = 'Jaccard turnover')])
-invisible(bt[, hist(Horn, main = 'Morisita-Horn')])
+bt[, sum(Jbeta == 1)/.N]
+bt[, sum(Jtu == 1)/.N]
+bt[!is.na(Horn), sum(Horn == 1)/.N]
+
+# histograms
+invisible(bt[, hist(Jbeta, main = 'Jaccard total', breaks = 80)])
+invisible(bt[, hist(Jtu, main = 'Jaccard turnover', breaks = 80)])
+invisible(bt[, hist(Horn, main = 'Morisita-Horn', breaks = 80)])
+
+invisible(bt[, hist(Jbetalogit, main = 'logit(Jaccard total)', breaks = 80)])
+invisible(bt[, hist(Jtulogit, main = 'logit(Jaccard turnover)', breaks = 80)])
+invisible(bt[, hist(Hornlogit, main = 'logit(Morisita-Horn)', breaks = 80)])
 
 
 ```
