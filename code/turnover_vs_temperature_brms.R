@@ -4,52 +4,76 @@
 ## note the models can take several days to run
 
 ## The biodiversity data used originates from pre-processing steps from Blowes et al (https://github.com/sChange-workshop/BioGeo-BioDiv-Change)
-## Code below follows from script in https://github.com/pinskylab/climate_community_crossrealm/blob/master/code/turnover_vs_temperature.Rmd
 
 ##======================================================================
 
-library(tidyverse)
-library(brms)  ##v 2.6.0
-# library(ggpubr)
-# library(ggthemes)
-# library(viridis)
-# library(ggExtra)
-# library(cowplot)
+library(brms)  ##v 2.12.0
+library(data.table)
 
 ###############
 # Load the data
 ###############
 
-trends <- read.csv(gzfile('output/turnover_w_covariates.csv.gz'))
+trends <- fread('output/turnover_w_covariates.csv.gz')
+
+#################
+# Prep the data
+#################
+# trim to only data with some temperature change
+# important since sign of temperature change is a variable
+trends[tempchange == 0, .N] # number to remove
+trends <- trends[tempchange != 0, ] # also removes any NA values
+
+# set realm order
+trends[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
+
+# set up sign of temperature change
+trends[, tsign := factor(sign(tempchange))]
+
+# realm that combines Terrestrial and Freshwater, for interacting with human impact
+trends[, REALM2 := REALM]
+levels(trends$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
+
+# group Marine invertebrates/plants in with All
+trends[, taxa_mod2 := taxa_mod]
+trends[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
+
+# calculate duration
+trends[, duration := year2 - year1]
+
+#add a comparison id
+trends[, compID := paste0(rarefyID, '_', year1, '_', year2)]
+
+## Log-transform some variables, then center and scale. 
+trends[, tempave.sc := scale(tempave)]
+trends[, tempave_metab.sc := scale(tempave_metab)]
+trends[, seas.sc := scale(seas)]
+trends[, microclim.sc := scale(log(microclim))]
+trends[, tempchange.sc := scale(tempchange, center = FALSE)] # do not center
+trends[, tempchange_abs.sc := scale(abs(tempchange), center = FALSE)] # do not center, so that 0 is still 0 temperature change
+trends[, mass.sc := scale(log(mass_mean_weight))]
+trends[, speed.sc := scale(log(speed_mean_weight+1))]
+trends[, lifespan.sc := scale(log(lifespan_mean_weight))]
+trends[, consumerfrac.sc := scale(consfrac)]
+trends[, endothermfrac.sc := scale(endofrac)]
+trends[, nspp.sc := scale(log(Nspp))]
+trends[, thermal_bias.sc := scale(thermal_bias)]
+trends[, npp.sc := scale(log(npp))]
+trends[, veg.sc := scale(log(veg+1))]
+trends[, duration.sc := scale(log(duration))]
+trends[, human_bowler.sc := scale(log(human_bowler+1)), by = REALM2] # separate scaling by realm
+trends[REALM2 == 'TerrFresh', human_footprint.sc := scale(log(human_venter+1))]
+trends[REALM2 == 'Marine', human_footprint.sc := scale(log(human_halpern))]
 
 
 #################
 ## Set up models
 #################
-
-##overall model structure examples to account for the data structure
-##              Jtutrend ~ temptrend_comb_allyr_abs.sc * REALM + (1 | STUDY_ID)
-##              Jtutrend ~ temptrend_comb_allyr_abs.sc * REALM + (1 | Taxa/STUDY_ID)   ##because we have multiple per taxa group?
-##              Jtutrend ~ temptrend_comb_allyr_abs.sc * REALM + (temptrend_comb_allyr_abs.sc | Taxa/STUDY_ID)  ##varying responses per taxa?
-
-##once decide on random effects, models with different co-variates numbered ~ above
-##              [1] Jtutrend ~ temptrend_comb_allyr_abs.sc * REALM + (1 | STUDY_ID)
-##              [2] Jtutrend ~ temptrend_comb_allyr_abs.sc * seas_comb.sc + (1|STUDY_ID)
-##              [3] Jtutrend ~ temptrend_comb_allyr_abs.sc * tempave_comb.sc + (1|STUDY_ID)
-##              [4] Jtutrend ~ temptrend_comb_allyr_abs.sc * npp.sc + (1|STUDY_ID)
-##              [5] Jtutrend ~ temptrend_comb_allyr_abs.sc * mass_geomean.sc + (1|STUDY_ID)
-
-
-
 ###create formula for brms models
-##the syntax using se() allows to specify standard errors of the observations, thus allowing to perform meta-analysis
-##https://rdrr.io/cran/brms/man/brmsformula.html
-##https://vuorre.netlify.app/post/2016/09/29/meta-analysis-is-a-special-case-of-bayesian-multilevel-modeling/
-
-formula1 <- bf(Jtutrend | se(Jtutrend_se, sigma = TRUE) ~ temptrend_comb_allyr_abs.sc + (1 | STUDY_ID))
-formula2 <- bf(Jtutrend | se(Jtutrend_se, sigma = TRUE) ~ temptrend_comb_allyr_abs.sc * REALM + (1 | STUDY_ID))
-formula3 <- bf(Jtutrend | se(Jtutrend_se, sigma = TRUE) ~ temptrend_comb_allyr_abs.sc * tempave_comb.sc + (1 | STUDY_ID))
-formula4 <- bf(Jtutrend | se(Jtutrend_se, sigma = TRUE) ~ temptrend_comb_allyr_abs.sc * seas_comb.sc + (1 | STUDY_ID))
+rf0 <- bf(Jbeta ~ tempchange_abs.sc)
+rf1 <- bf(Jbeta ~ tempchange_abs.sc + (1 | taxa_mod2), family = zero_one_inflated_beta())
+rf2 <- bf(Jbeta ~ tempchange_abs.sc + (1 | taxa_mod2) + (1 | STUDY_ID))
+rf3 <- bf(Jbeta ~ tempchange_abs.sc + (1 | taxa_mod2) + (1 | STUDY_ID) + (1 | rarefyID))
 
 #...
 
@@ -60,11 +84,14 @@ formula4 <- bf(Jtutrend | se(Jtutrend_se, sigma = TRUE) ~ temptrend_comb_allyr_a
 ##the code below is for the simplest model [1]
 
 ##run model
-##control is used to improve sampler behaviour
+##control is used to improve sampler behavior
 ##the remaining arguments were used as default; model as such uses non-informative flat priors
 ##default for chains=4; iter= 2000; warmup= iter/2
-mod1 <- brm(formula= formula1,
-                     data= trends,  ##na.omit(trends)
+modrf0 <- brm(formula= rf0, data= trends[1:10000,])
+modrf1 <- brm(formula= rf1, data= trends)
+
+modrf1 <- brm(formula= rf1,
+                     data= trends,
                      control = list(adapt_delta = 0.99),
                      iter = 4000)
 
