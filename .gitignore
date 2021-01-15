@@ -33,3 +33,5 @@ dataDL/
 # temp
 temp/
 .Rproj.user
+# log files
+/logs

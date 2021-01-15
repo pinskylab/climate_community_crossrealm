@@ -146,7 +146,7 @@ Try combinations of
 And choose the one with lowest AIC (not run: takes a long time)
 ```{r choose variance structure, eval = FALSE}
 # fit models for variance structure
-fixed <- 'Jtu.sc ~ tempchange_abs.sc*REALM + tempchange_abs.sc*tsign + tempchange_abs.sc*tempave_metab.sc + tempchange_abs.sc*seas.sc + tempchange_abs.sc*microclim.sc + tempchange_abs.sc*mass.sc + tempchange_abs.sc*speed.sc + tempchange_abs.sc*consumerfrac.sc + tempchange_abs.sc*nspp.sc + tempchange_abs.sc*thermal_bias.sc:tsign + tempchange_abs.sc*npp.sc + tempchange_abs.sc*veg.sc + tempchange_abs.sc*duration.sc + tempchange_abs.sc*human_bowler.sc:REALM2'
+fixed <- 'Jtu.sc ~ tempchange_abs.sc*REALM + tempchange_abs.sc*tempave_metab.sc + tempchange_abs.sc*duration.sc'
 i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tsign, tempave_metab.sc, seas.sc, 
                              microclim.sc, mass.sc, speed.sc, consumerfrac.sc, nspp.sc,
                              thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
