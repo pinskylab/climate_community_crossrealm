@@ -146,56 +146,23 @@ Try combinations of
 And choose the one with lowest AIC (not run: takes a long time)
 ```{r choose variance structure, eval = FALSE}
 # fit models for variance structure
-fixed <- formula(Jtu.sc ~ tempchange_abs.sc*REALM +
-                     tempchange_abs.sc*tsign + 
-                     tempchange_abs.sc*tempave_metab.sc + 
-                     tempchange_abs.sc*seas.sc + 
-                     tempchange_abs.sc*microclim.sc + 
-                     tempchange_abs.sc*mass.sc + 
-                     tempchange_abs.sc*speed.sc + 
-                     tempchange_abs.sc*consumerfrac.sc +
-                     tempchange_abs.sc*nspp.sc +
-                     tempchange_abs.sc*thermal_bias.sc:tsign +
-                     tempchange_abs.sc*npp.sc +
-                     tempchange_abs.sc*veg.sc +
-                     tempchange_abs.sc*duration.sc +
-                     tempchange_abs.sc*human_bowler.sc:REALM2)
+fixed <- 'Jtu.sc ~ tempchange_abs.sc*REALM + tempchange_abs.sc*tsign + tempchange_abs.sc*tempave_metab.sc + tempchange_abs.sc*seas.sc + tempchange_abs.sc*microclim.sc + tempchange_abs.sc*mass.sc + tempchange_abs.sc*speed.sc + tempchange_abs.sc*consumerfrac.sc + tempchange_abs.sc*nspp.sc + tempchange_abs.sc*thermal_bias.sc:tsign + tempchange_abs.sc*npp.sc + tempchange_abs.sc*veg.sc + tempchange_abs.sc*duration.sc + tempchange_abs.sc*human_bowler.sc:REALM2'
 i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tsign, tempave_metab.sc, seas.sc, 
                              microclim.sc, mass.sc, speed.sc, consumerfrac.sc, nspp.sc,
                              thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
 mods <- vector('list', 0)
-mods[[1]] <- glmmTMB(fixed, data = trends[i,], family = gaussian(), control = glmmTMBControl(profile=TRUE))
-mods[[2]] <- glmmTMB(fixed, data = trends[i,], family = beta_family(link = 'logit')) # add beta errors
-mods[[3]] <- glmmTMB(paste(fixed, '+(1|rarefyID)'), data = trends[i,], family = list(family = 'beta', link = 'logit')) # add random effects
+mods[[1]] <- glmmTMB(formula(fixed), data = trends[i,], family = gaussian(), control = glmmTMBControl(profile=TRUE))
+mods[[2]] <- glmmTMB(formula(fixed), data = trends[i,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add beta errors
+mods[[3]] <- glmmTMB(formula(paste(fixed, '+(1|rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add random effects
+mods[[4]] <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add nested random effects
+mods[[5]] <- glmmTMB(formula(paste(fixed, '+(tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add random slopes
+mods[[6]] <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), dispformula = ~nspp.sc, control = glmmTMBControl(profile=TRUE)) # add dispersion related to Nspp
 
-mods[[2]] <- gls(fixed, data = trends[i,], weights = varPower(0.5, ~tempchange_abs.sc))
 
-mods[[3]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2, control = lmeControl(opt = "optim"))
-mods[[4]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, control = lmeControl(opt = "optim"))
-mods[[5]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2/STUDY_ID, control = lmeControl(opt = "optim"))
-mods[[6]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID, control = lmeControl(opt = "optim"))
-mods[[7]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2/STUDY_ID/rarefyID, control = lmeControl(opt = "optim"))
-mods[[8]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID/compID, control = lmeControl(opt = "optim"))
-mods[[9]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2/STUDY_ID/rarefyID/compID, control = lmeControl(opt = "optim"))
-
-mods[[10]] <- lme(fixed, data = trends[i,], random = ~tempchange_abs.sc | taxa_mod2)
-mods[[11]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ tempchange_abs.sc, STUDY_ID = ~ tempchange_abs.sc))
-mods[[12]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ tempchange_abs.sc, STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~tempchange_abs.sc))
-mods[[13]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~tempchange_abs.sc))
-
-mods[[14]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~tempchange_abs.sc, rarefyID = ~tempchange_abs.sc), 
-                  weights = varPower(-0.5, ~tempchange_abs.sc))
-mods[[15]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ tempchange_abs.sc, 
-                                                          STUDY_ID = ~ tempchange_abs.sc, 
-                                                          rarefyID = ~tempchange_abs.sc), 
-                  weights = varPower(-0.5, ~tempchange_abs.sc))
 
 save(mods, file = 'temp/modsRF.RData')
 
-aics <- sapply(mods, AIC)
-minaics <- aics - min(aics)
-minaics
-which.min(aics)
+AICtab(mods[[2]], mods[[3]])
 ```
 Chooses the random slopes (tempchange_abs.sc) & intercepts for taxa_mod2, STUDY_ID, rarefyID, and variance scaled to tempchange_abs.sc.
 We haven't dealt with potential testing on the boundary issues here yet.
