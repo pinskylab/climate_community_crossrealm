@@ -157,6 +157,7 @@ mods[[3]] <- glmmTMB(formula(paste(fixed, '+(1|rarefyID)')), data = trends[i,], 
 mods[[4]] <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add nested random effects
 mods[[5]] <- glmmTMB(formula(paste(fixed, '+(tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add random slopes
 mods[[6]] <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), dispformula = ~nspp.sc, control = glmmTMBControl(profile=TRUE)) # add dispersion related to Nspp
+mods[[7]] <- glmmTMB(formula(paste(fixed, '+(tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), dispformula = ~nspp.sc, control = glmmTMBControl(profile=TRUE)) # add random slopes and dispersion formula
 
 
 
