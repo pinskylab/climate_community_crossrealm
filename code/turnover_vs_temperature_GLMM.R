@@ -105,117 +105,149 @@ i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc,
 
 if(fitmod == 1){
     modRFgauss <- glmmTMB(formula(fixed), data = trends[i,], family = gaussian(), control = glmmTMBControl(profile=TRUE))
+    summary(modRFgauss)
     saveRDS(modRFgauss, file = 'temp/modRFgauss.rds')
+    print('saved modRFgauss.rds')
 }
 
 if(fitmod == 2){
     modRFbeta <- glmmTMB(formula(fixed), data = trends[i,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add beta errors
+    summary(modRFbeta)
     saveRDS(modRFbeta, file = 'temp/modRFbeta.rds')
+    print('saved modRFbeta.rds')
 }
 if(fitmod == 3){
     modRFrID <- glmmTMB(formula(paste(fixed, '+(1|rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
                    control = glmmTMBControl(profile=TRUE)) # add random effects
+    summary(modRFrID)
     saveRDS(modRFrID, file = 'temp/modRFrID.rds')
+    print('saved modRDrID.rds')
 }
 if(fitmod == 4){
     modRFnestedRE <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
                    control = glmmTMBControl(profile=TRUE)) # add nested random effects
+    summary(modRFnestedRE)
     saveRDS(modRFnestedRE, file = 'temp/modRFnestedRE.rds')
+    print('saved modRFnestedRE.rds')
 }
 
 if(fitmod == 5){
     modRFslopeRE <- glmmTMB(formula(paste(fixed, '+(tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
                    control = glmmTMBControl(profile=TRUE)) # add random slopes
+    summary(modRFslopeRE)
     saveRDS(modRFslopeRE, file = 'temp/modRFslopeRE.rds')
+    print('saved modRFslopeRE.rds')
 }
+
+# skipped 6!
 
 if(fitmod == 7){
     modRFdisp <- glmmTMB(formula(paste(fixed, '+(tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modRFdisp)
     saveRDS(modRFdisp, file = 'temp/modRFdisp.rds')
+    print('saved modRFdisp.rds')
 }
 
 ## temperature-only models
 if(fitmod == 8){
-    i <- trends[, complete.cases(Jtu, tempchange)]
-    modonlyTchangeJtu <- lme(Jtu ~ abs(tempchange) + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
+    i <- trends[, complete.cases(Jtu.sc, tempchange)]
+    modonlyTchangeJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
                              data = trends[i,], 
                              family = beta_family(link = 'logit'), 
                              dispformula = ~nspp.sc)
+    summary(modonlyTchangeJtu)
     saveRDS(modonlyTchangeJtu, file = 'temp/modonlyTchangeJtu.rds')
+    print('saved modonlyTchangeJtu.rds')
 }
 
 if(fitmod == 9){
-    i <- trends[, complete.cases(Jbeta, tempchange)]
-    modonlyTchangeJbeta <- lme(Jbeta ~ abs(tempchange) + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
+    i <- trends[, complete.cases(Jbeta.sc, tempchange)]
+    modonlyTchangeJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange) + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
                                data = trends[i,], 
                                family = beta_family(link = 'logit'), 
                                dispformula = ~nspp.sc)
+    summary(modonlyTchangeJbeta)
     saveRDS(modonlyTchangeJbeta, file = 'temp/modonlyTchangeJbeta.rds')
+    print('saved modonlyTchangeJbeta.rds')
 }
 
 if(fitmod == 10){
-    i <- trends[, complete.cases(Horn, tempchange)]
-    modonlyTchangeHorn <- lme(Horn ~ abs(tempchange) + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
+    i <- trends[, complete.cases(Horn.sc, tempchange)]
+    modonlyTchangeHorn <- glmmTMB(Horn.sc ~ abs(tempchange) + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
                               data = trends[i,], 
                               family = beta_family(link = 'logit'), 
                               dispformula = ~nspp.sc)
+    summary(modonlyTchangeHorn)
     saveRDS(modonlyTchangeHorn, file = 'temp/modonlyTchangeHorn.rds')
+    print('saved modonlyTchangeHorn.rds')
 }
 
 ## temperature-duration models
 if(fitmod == 11){
-    i <- trends[, complete.cases(Jtu, REALM, tempchange)]
-    modTDJtu <- lme(Jtu ~ abs(tempchange) * duration + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
+    i <- trends[, complete.cases(Jtu.sc, REALM, tempchange)]
+    modTDJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) * duration + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
                     data = trends[i,], 
                     family = beta_family(link = 'logit'), 
                     dispformula = ~nspp.sc)
+    summary(mmodTDJtu)
     saveRDS(modTDJtu, file = 'temp/modTDJtu.rds')
+    print('saved modTDJtu.rds')
 }
 
 if(fitmod == 12){
-    i <- trends[, complete.cases(Jbeta, REALM, tempchange)]
-    modTDJbeta <- lme(Jbeta ~ abs(tempchange)*duration + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
+    i <- trends[, complete.cases(Jbeta.sc, REALM, tempchange)]
+    modTDJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange)*duration + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
                       data = trends[i,], 
                       family = beta_family(link = 'logit'), 
                       dispformula = ~nspp.sc)
+    summary(modTDJbeta)
     saveRDS(modTDJbeta, file = 'temp/modTDJbeta.rds')
+    print('saved modTDJbeta.rds')
 }
 
 if(fitmod == 13){
-    i <- trends[, complete.cases(Horn, REALM, tempchange)]
-    modTDHorn <- lme(Horn ~ abs(tempchange)*duration + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
+    i <- trends[, complete.cases(Horn.sc, REALM, tempchange)]
+    modTDHorn <- glmmTMB(Horn.sc ~ abs(tempchange)*duration + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
                      data = trends[i,], 
                      family = beta_family(link = 'logit'), 
                      dispformula = ~nspp.sc)
+    summary(modTDHorn)
     saveRDS(modTDHorn, file = 'temp/modTDHorn.rds')
+    print('saved modTDHorn.rds')
 }
 
 ## temperature-duration models by REALM
 if(fitmod == 14){
-    i <- trends[, complete.cases(Jtu, REALM, tempchange)]
-    modTDrealmJtu <- lme(Jtu ~ abs(tempchange) * duration + abs(tempchange) * REALM + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
+    i <- trends[, complete.cases(Jtu.sc, REALM, tempchange)]
+    modTDrealmJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) * duration + abs(tempchange) * REALM + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
                          data = trends[i,], 
                          family = beta_family(link = 'logit'), 
                          dispformula = ~nspp.sc)
+    summary(modTDrealmJtu)
     saveRDS(modTDrealmJtu, file = 'temp/modTDrealmJtu.rds')
+    print('saved modTDrealmJtu.rds')
 }
 
 if(fitmod == 15){
-    i <- trends[, complete.cases(Jbeta, REALM, tempchange)]
-    modTDrealmJbeta <- lme(Jbeta ~ abs(tempchange)*duration + abs(tempchange) * REALM + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
+    i <- trends[, complete.cases(Jbeta.sc, REALM, tempchange)]
+    modTDrealmJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange)*duration + abs(tempchange) * REALM + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
                            data = trends[i,], 
                            family = beta_family(link = 'logit'), 
                            dispformula = ~nspp.sc)
+    summary(modTDrealmJbeta)
     saveRDS(modTDrealmJbeta, file = 'temp/modTDrealmJbeta.rds')
+    print('saved modTDrealmJbeta.rds')
 }
 
 if(fitmod == 16){
-    i <- trends[, complete.cases(Horn, REALM, tempchange)]
-    modTDrealmHorn <- lme(Horn ~ abs(tempchange)*duration + abs(tempchange) * REALM + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
+    i <- trends[, complete.cases(Horn.sc, REALM, tempchange)]
+    modTDrealmHorn <- glmmTMB(Horn.sc ~ abs(tempchange)*duration + abs(tempchange) * REALM + (tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID),
                           data = trends[i,], 
                           family = beta_family(link = 'logit'), 
                           dispformula = ~nspp.sc)
+    summary(modTDrealmHorn)
     saveRDS(modTDrealmHorn, file = 'temp/modTDrealmHorn.rds')
+    print('saved modTDrealmHorn.rds')
 }

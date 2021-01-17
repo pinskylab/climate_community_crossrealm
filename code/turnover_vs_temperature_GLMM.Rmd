@@ -31,19 +31,15 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 ```
 
 
-```{r load data}
+```{r load, trim, set up data}
 # Turnover and covariates assembled by turnover_vs_temperature_prep.Rmd
 trends <- fread('output/turnover_w_covariates.csv.gz')
-```
 
-```{r trim data}
 # trim to only data with some temperature change
 # important since sign of temperature change is a variable
 trends[tempchange == 0, .N] # number to remove
 trends <- trends[tempchange != 0, ] # also removes any NA values
-```
 
-```{r set up use vars}
 # set realm order
 trends[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
 
@@ -64,13 +60,6 @@ trends[, duration := year2 - year1]
 #add a comparison id
 trends[, compID := paste0(rarefyID, '_', year1, '_', year2)]
 
-```
-
-
-## Transformations
-### Adjust response away from 0-1
-Following Douma & Weedon 2019 MEE
-```{r adjust response}
 # transformation for 2 categories. Eq. 1 in Douma & Weedon 2019
 transform01 <- function(x) (x * (length(x) - 1) + 0.5) / (length(x))
 
@@ -78,10 +67,7 @@ trends[, Jtu.sc := transform01(Jtu)]
 trends[, Jbeta.sc := transform01(Jbeta)]
 trends[, Horn.sc := transform01(Horn)]
 
-```
-
-### Log-transform some variables, then center and scale. 
-``` {r center and scale}
+# Log-transform some variables, then center and scale. 
 trends[, tempave.sc := scale(tempave)]
 trends[, tempave_metab.sc := scale(tempave_metab)]
 trends[, seas.sc := scale(seas)]
@@ -132,40 +118,30 @@ trends[i & !duplicated(rarefyID), table(taxa_mod, REALM)]
 ```
 
 # Models
+All fit by turnover_vs_temperature_GLMM.R on the command line
 ## Choose the variance structure for mixed effects models
 Try combinations of
 
-- variance scaled to a power of the abs temperature trend
-- random intercept for taxa_mod2
-- random intercept for STUDY_ID
-- random intercept for rarefyID
-- random slope (abs temperature trend) for taxa_mod
-- random slope (abs temperature trend) for STUDY_ID
-- random intercept for compID (for overdispersion)
+- beta errors
+- variance scaled to Nspp
+- random intercept for taxa_mod2, STUDY_ID, rarefyID
+- random slopes (abs temperature trend)
+- random intercept for compID (for overdispersion)?
 
-And choose the one with lowest AIC (not run: takes a long time)
-```{r choose variance structure, eval = FALSE}
-# fit models for variance structure
-fixed <- 'Jtu.sc ~ tempchange_abs.sc*REALM + tempchange_abs.sc*tempave_metab.sc + tempchange_abs.sc*duration.sc'
-i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tsign, tempave_metab.sc, seas.sc, 
-                             microclim.sc, mass.sc, speed.sc, consumerfrac.sc, nspp.sc,
-                             thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
-mods <- vector('list', 0)
-mods[[1]] <- glmmTMB(formula(fixed), data = trends[i,], family = gaussian(), control = glmmTMBControl(profile=TRUE))
-mods[[2]] <- glmmTMB(formula(fixed), data = trends[i,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add beta errors
-mods[[3]] <- glmmTMB(formula(paste(fixed, '+(1|rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add random effects
-mods[[4]] <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add nested random effects
-mods[[5]] <- glmmTMB(formula(paste(fixed, '+(tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add random slopes
-mods[[6]] <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), dispformula = ~nspp.sc, control = glmmTMBControl(profile=TRUE)) # add dispersion related to Nspp
-mods[[7]] <- glmmTMB(formula(paste(fixed, '+(tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), dispformula = ~nspp.sc, control = glmmTMBControl(profile=TRUE)) # add random slopes and dispersion formula
+And choose the one with lowest AIC
+```{r choose variance structure}
+
+if(file.exists('temp/modRFgauss.rds')) modRFgauss <- readRDS('temp/modRFgauss.rds')
+if(file.exists('temp/modRFbeta.rds')) modRFbeta <- readRDS('temp/modRFbeta.rds')
+if(file.exists('temp/modRFrID.rds')) modRFrID <- readRDS('temp/modRFrID.rds')
+if(file.exists('temp/modRFnestedRE.rds')) modRFnestedRE <- readRDS('temp/modRFnestedRE.rds')
+if(file.exists('temp/modRFslopeRE.rds')) modRFslopeRE <- readRDS('temp/modRFslopeRE.rds')
+if(file.exists('temp/modRFdisp.rds')) modRFdisp <- readRDS('temp/modRFdisp.rds')
 
 
-
-save(mods, file = 'temp/modsRF.RData')
-
-AICtab(mods[[2]], mods[[3]])
+AICtab(modRFgauss, modRFbeta, modRFnestedRE)
 ```
-Chooses the random slopes (tempchange_abs.sc) & intercepts for taxa_mod2, STUDY_ID, rarefyID, and variance scaled to tempchange_abs.sc.
+Chooses beta errors, random slopes (tempchange_abs.sc) & intercepts for taxa_mod2, STUDY_ID, rarefyID, and variance scaled to nspp.
 We haven't dealt with potential testing on the boundary issues here yet.
 
 
@@ -173,36 +149,10 @@ We haven't dealt with potential testing on the boundary issues here yet.
 ### Fit/load the models
 ```{r LME temperature only}
 
-randef <- list(taxa_mod2 = ~ abs(tempchange), STUDY_ID = ~ abs(tempchange), rarefyID = ~abs(tempchange))
-varef <- varPower(-0.5, ~abs(tempchange))
+if(file.exists('temp/modonlyTchangeJtu.rds')) modonlyTchangeJtu <- readRDS('temp/modonlyTchangeJtu.rds')
+if(file.exists('temp/modonlyTchangeJbeta.rds')) modonlyTchangeJbeta <- readRDS('temp/modonlyTchangeJbeta.rds')
+if(file.exists('temp/modonlyTchangeHorn.rds')) modonlyTchangeHorn <- readRDS('temp/modonlyTchangeHorn.rds')
 
-if(file.exists('temp/modonlyTchangeJtu.rds')){
-  modonlyTchangeJtu <- readRDS('temp/modonlyTchangeJtu.rds')
-} else {
-  i <- trends[, complete.cases(Jtu, tempchange)]
-  modonlyTchangeJtu <- lme(Jtu ~ abs(tempchange),
-                   random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modonlyTchangeJtu, file = 'temp/modonlyTchangeJtu.rds')
-}
-
-if(file.exists('temp/modonlyTchangeJbeta.rds')){
-  modonlyTchangeJbeta <- readRDS('temp/modonlyTchangeJbeta.rds')
-} else {
-  i <- trends[, complete.cases(Jbeta, tempchange)]
-  modonlyTchangeJbeta <- lme(Jbeta ~ abs(tempchange),
-                   random = randef, weights = varef, data = trends[i,], method = 'REML', 
-                   control=lmeControl(msMaxIter = 100, maxIter = 100))
-  saveRDS(modonlyTchangeJbeta, file = 'temp/modonlyTchangeJbeta.rds')
-}
-
-if(file.exists('temp/modonlyTchangeHorn.rds')){
-  modonlyTchangeHorn <- readRDS('temp/modonlyTchangeHorn.rds')
-} else {
-  i <- trends[, complete.cases(Horn, tempchange)]
-  modonlyTchangeHorn <- lme(Horn ~ abs(tempchange),
-                   random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modonlyTchangeHorn, file = 'temp/modonlyTchangeHorn.rds')
-}
 
 ```
 
@@ -244,36 +194,10 @@ CIs are 1.96*SE
 ### Fit/load the models
 ```{r LME temperature and duration}
 
-randef <- list(taxa_mod2 = ~ abs(tempchange), STUDY_ID = ~ abs(tempchange), rarefyID = ~abs(tempchange))
-varef <- varPower(-0.5, ~abs(tempchange))
+if(file.exists('temp/modTDJtu.rds')) modTDJtu <- readRDS('temp/modTDJtu.rds')
+if(file.exists('temp/modTDJbeta.rds')) modTDJbeta <- readRDS('temp/modTDJbeta.rds')
+if(file.exists('temp/modTDHorn.rds')) modTDHorn <- readRDS('temp/modTDHorn.rds')
 
-if(file.exists('temp/modTDJtu.rds')){
-  modTDJtu <- readRDS('temp/modTDJtu.rds')
-} else {
-  i <- trends[, complete.cases(Jtu, REALM, tempchange)]
-  modTDJtu <- lme(Jtu ~ abs(tempchange) * duration,
-                   random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modTDJtu, file = 'temp/modTDJtu.rds')
-}
-
-if(file.exists('temp/modTDJbeta.rds')){
-  modTDJbeta <- readRDS('temp/modTDJbeta.rds')
-} else {
-  i <- trends[, complete.cases(Jbeta, REALM, tempchange)]
-  modTDJbeta <- lme(Jbeta ~ abs(tempchange)*duration,
-                   random = randef, weights = varef, data = trends[i,], method = 'REML', 
-                   control=lmeControl(msMaxIter = 100, maxIter = 100))
-  saveRDS(modTDJbeta, file = 'temp/modTDJbeta.rds')
-}
-
-if(file.exists('temp/modTDHorn.rds')){
-  modTDHorn <- readRDS('temp/modTDHorn.rds')
-} else {
-  i <- trends[, complete.cases(Horn, REALM, tempchange)]
-  modTDHorn <- lme(Horn ~ abs(tempchange)*duration,
-                   random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modTDHorn, file = 'temp/modTDHorn.rds')
-}
 
 
 ```
@@ -340,37 +264,9 @@ legend('bottomright', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 
 ### Fit/load the models
 ```{r LME temperature duration realm}
 
-randef <- list(taxa_mod2 = ~ abs(tempchange), STUDY_ID = ~ abs(tempchange), rarefyID = ~abs(tempchange))
-varef <- varPower(-0.5, ~abs(tempchange))
-
-if(file.exists('temp/modTDrealmJtu.rds')){
-  modTDrealmJtu <- readRDS('temp/modTDrealmJtu.rds')
-} else {
-  i <- trends[, complete.cases(Jtu, REALM, tempchange)]
-  modTDrealmJtu <- lme(Jtu ~ abs(tempchange) * duration + abs(tempchange) * REALM,
-                   random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modTDrealmJtu, file = 'temp/modTDrealmJtu.rds')
-}
-
-if(file.exists('temp/modTDrealmJbeta.rds')){
-  modTDrealmJbeta <- readRDS('temp/modTDrealmJbeta.rds')
-} else {
-  i <- trends[, complete.cases(Jbeta, REALM, tempchange)]
-  modTDrealmJbeta <- lme(Jbeta ~ abs(tempchange)*duration + abs(tempchange) * REALM,
-                   random = randef, weights = varef, data = trends[i,], method = 'REML', 
-                   control=lmeControl(msMaxIter = 100, maxIter = 100))
-  saveRDS(modTDrealmJbeta, file = 'temp/modTDrealmJbeta.rds')
-}
-
-if(file.exists('temp/modTDrealmHorn.rds')){
-  modTDrealmHorn <- readRDS('temp/modTDrealmHorn.rds')
-} else {
-  i <- trends[, complete.cases(Horn, REALM, tempchange)]
-  modTDrealmHorn <- lme(Horn ~ abs(tempchange)*duration + abs(tempchange) * REALM,
-                   random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modTDrealmHorn, file = 'temp/modTDrealmHorn.rds')
-}
-
+if(file.exists('temp/modTDrealmJtu.rds')) modTDJrealmtu <- readRDS('temp/modTDrealmJtu.rds')
+if(file.exists('temp/modTDrealmJbeta.rds')) modTDrealmJbeta <- readRDS('temp/modTDrealmJbeta.rds')
+if(file.exists('temp/modTDrealmHorn.rds')) modTDrealmHorn <- readRDS('temp/modTDrealmHorn.rds')
 
 ```
 
