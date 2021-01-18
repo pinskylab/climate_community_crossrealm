@@ -6,6 +6,7 @@ output:
 
 ---
 # Prep
+First run turnover_vs_temperature_GLMM.R to fit the models.
 <details>
 <summary>Click to expand code</summary>
 
@@ -118,7 +119,6 @@ trends[i & !duplicated(rarefyID), table(taxa_mod, REALM)]
 ```
 
 # Models
-All fit by turnover_vs_temperature_GLMM.R on the command line
 ## Choose the variance structure for mixed effects models
 Try combinations of
 
@@ -139,7 +139,8 @@ if(file.exists('temp/modRFslopeRE.rds')) modRFslopeRE <- readRDS('temp/modRFslop
 if(file.exists('temp/modRFdisp.rds')) modRFdisp <- readRDS('temp/modRFdisp.rds')
 
 
-AICtab(modRFgauss, modRFbeta, modRFnestedRE)
+AICtab(modRFgauss, modRFbeta, modRFrID, modRFnestedRE, modRFslopeRE, modRFdisp)
+summary(modRFdisp)
 ```
 Chooses beta errors, random slopes (tempchange_abs.sc) & intercepts for taxa_mod2, STUDY_ID, rarefyID, and variance scaled to nspp.
 We haven't dealt with potential testing on the boundary issues here yet.
@@ -166,25 +167,25 @@ summary(modonlyTchangeHorn)
 ### Plot the temp-only coefficients
 ```{r modonlyT coefs}
 # make table of coefficients
-coefs1 <- as.data.frame(summary(modonlyTchangeJtu)$tTable)
-coefs2 <- as.data.frame(summary(modonlyTchangeJbeta)$tTable)
-coefs3 <- as.data.frame(summary(modonlyTchangeHorn)$tTable)
+coefs1 <- as.data.frame(summary(modonlyTchangeJtu)$coefficients$cond)
+coefs2 <- as.data.frame(summary(modonlyTchangeJbeta)$coefficients$cond)
+coefs3 <- as.data.frame(summary(modonlyTchangeHorn)$coefficients$cond)
 coefs1$response <- 'Jtu'
 coefs2$response <- 'Jbeta'
 coefs3$response <- 'Horn'
 rows1 <- which(grepl('tempchange', rownames(coefs1))) # extract temperature effect
-cols <- c('Value', 'Std.Error', 'response')
+cols <- c('Estimate', 'Std. Error', 'response')
 allcoefs <- rbind(coefs1[rows1, cols], coefs2[rows1, cols], coefs3[rows1, cols])
 
-allcoefs$lCI <- allcoefs$Value - 1.96 * allcoefs$Std.Error # lower confidence interval
-allcoefs$uCI <- allcoefs$Value + 1.96 * allcoefs$Std.Error
+allcoefs$lCI <- allcoefs$Estimate - 1.96 * allcoefs$`Std. Error` # lower confidence interval
+allcoefs$uCI <- allcoefs$Estimate + 1.96 * allcoefs$`Std. Error`
 allcoefs$y <- c(3, 2, 1) # y-values
 
-ggplot(subset(allcoefs), aes(x = response, y = Value)) +
+ggplot(subset(allcoefs), aes(x = response, y = Estimate)) +
   geom_point() + 
   geom_errorbar(aes(ymin=lCI, ymax=uCI), width=.1) +
-  labs(y = 'Dissimilarity per |°C change|') + 
-  coord_cartesian(ylim = c(-0.01, 0.05))
+  labs(y = 'Dissimilarity per |°C change|') #+ 
+  #coord_cartesian(ylim = c(-0.01, 0.05))
 
 
 ```
