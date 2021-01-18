@@ -15,8 +15,15 @@ print(args)
 
 if (length(args)<1) stop("Have to specify a model to fit", call.=FALSE)
 if (length(args)>1) stop("Have to specify only 1 model to fit", call.=FALSE)
-fitmod == args[1]
+fitmod <- args[1]
 MATCHMOD <- FALSE # indicator to check if the argument matched a model name
+
+###################################
+# print basic info about the job
+
+print('This is process #')
+print(Sys.getpid())
+print(Sys.time())
 
 
 
@@ -429,3 +436,5 @@ if(fitmod == 'modTrealm10yrHorn'){
 ####################################
 # final check that something ran
 if(MATCHMOD == FALSE) stop("Model name did not match anything", call.=FALSE)
+
+print(paste('Ended', Sys.time(), sep =''))
