@@ -119,7 +119,7 @@ trends[i & !duplicated(rarefyID), table(taxa_mod, REALM)]
 ```
 
 # Models
-## Choose the variance structure for mixed effects models
+## Choose the variance structure
 Try combinations of
 
 - beta errors
@@ -147,63 +147,92 @@ We haven't dealt with potential testing on the boundary issues here yet.
 
 
 ## Temperature-only models
-### Fit/load the models
+### Load the models
 ```{r LME temperature only}
+# all years
+modonlyTchangeJtu <- readRDS('temp/modonlyTchangeJtu.rds')
+modonlyTchangeJbeta <- readRDS('temp/modonlyTchangeJbeta.rds')
+modonlyTchangeHorn <- readRDS('temp/modonlyTchangeHorn.rds')
 
-if(file.exists('temp/modonlyTchangeJtu.rds')) modonlyTchangeJtu <- readRDS('temp/modonlyTchangeJtu.rds')
-if(file.exists('temp/modonlyTchangeJbeta.rds')) modonlyTchangeJbeta <- readRDS('temp/modonlyTchangeJbeta.rds')
-if(file.exists('temp/modonlyTchangeHorn.rds')) modonlyTchangeHorn <- readRDS('temp/modonlyTchangeHorn.rds')
+# 1 year
+modonlyTchange1yrJtu <- readRDS('temp/modonlyTchange1yrJtu.rds')
+modonlyTchange1yrJbeta <- readRDS('temp/modonlyTchange1yrJbeta.rds')
+modonlyTchange1yrHorn <- readRDS('temp/modonlyTchange1yrHorn.rds')
 
+# 10 year
+modonlyTchange10yrJtu <- readRDS('temp/modonlyTchange10yrJtu.rds')
+modonlyTchange10yrJbeta <- readRDS('temp/modonlyTchange10yrJbeta.rds')
+modonlyTchange10yrHorn <- readRDS('temp/modonlyTchange10yrHorn.rds')
 
 ```
 
-### Summary: Slope of dissimilarity
-```{r summary of Tchangeonly mods}
+### Summary (all years)
+```{r summary onlyTchange}
 summary(modonlyTchangeJtu)
 summary(modonlyTchangeJbeta)
 summary(modonlyTchangeHorn)
 ```
 
+### Summary (1 year)
+```{r summary onlyTchange1yr}
+summary(modonlyTchange1yrJtu)
+summary(modonlyTchange1yrJbeta)
+summary(modonlyTchange1yrHorn)
+```
+### Summary (10 year)
+```{r summary onlyTchange10yr}
+summary(modonlyTchange10yrJtu)
+summary(modonlyTchange10yrJbeta)
+summary(modonlyTchange10yrHorn)
+```
 ### Plot the temp-only coefficients
 ```{r modonlyT coefs}
 # make table of coefficients
 coefs1 <- as.data.frame(summary(modonlyTchangeJtu)$coefficients$cond)
 coefs2 <- as.data.frame(summary(modonlyTchangeJbeta)$coefficients$cond)
 coefs3 <- as.data.frame(summary(modonlyTchangeHorn)$coefficients$cond)
-coefs1$response <- 'Jtu'
-coefs2$response <- 'Jbeta'
-coefs3$response <- 'Horn'
+coefs4 <- as.data.frame(summary(modonlyTchange1yrJtu)$coefficients$cond)
+coefs5 <- as.data.frame(summary(modonlyTchange1yrJbeta)$coefficients$cond)
+coefs6 <- as.data.frame(summary(modonlyTchange1yrHorn)$coefficients$cond)
+coefs7 <- as.data.frame(summary(modonlyTchange10yrJtu)$coefficients$cond)
+coefs8 <- as.data.frame(summary(modonlyTchange10yrJbeta)$coefficients$cond)
+coefs9 <- as.data.frame(summary(modonlyTchange10yrHorn)$coefficients$cond)
+coefs1$response <- coefs4$response <- coefs7$response <- 'Jtu'
+coefs2$response <- coefs5$response <- coefs8$response <- 'Jbeta'
+coefs3$response <- coefs6$response <- coefs9$response <- 'Horn'
+coefs1$fit <- coefs2$fit <- coefs3$fit <- 'all'
+coefs4$fit <- coefs5$fit <- coefs6$fit <- '1yr'
+coefs7$fit <- coefs8$fit <- coefs9$fit <- '10yr'
 rows1 <- which(grepl('tempchange', rownames(coefs1))) # extract temperature effect
-cols <- c('Estimate', 'Std. Error', 'response')
-allcoefs <- rbind(coefs1[rows1, cols], coefs2[rows1, cols], coefs3[rows1, cols])
+cols <- c('Estimate', 'Std. Error', 'response', 'fit')
+allcoefs <- rbind(coefs1[rows1, cols], coefs2[rows1, cols], coefs3[rows1, cols],
+                  coefs4[rows1, cols], coefs5[rows1, cols], coefs6[rows1, cols],
+                  coefs7[rows1, cols], coefs8[rows1, cols], coefs9[rows1, cols])
 
 allcoefs$lCI <- allcoefs$Estimate - 1.96 * allcoefs$`Std. Error` # lower confidence interval
 allcoefs$uCI <- allcoefs$Estimate + 1.96 * allcoefs$`Std. Error`
-allcoefs$y <- c(3, 2, 1) # y-values
+allcoefs$y <- c(3, 2, 1) + rep(c(0, -0.1, -0.2), c(3, 3, 3)) # y-values
+allcoefs$group <- paste0(allcoefs$response, allcoefs$fit)
 
-ggplot(subset(allcoefs), aes(x = response, y = Estimate)) +
-  geom_point() + 
-  geom_errorbar(aes(ymin=lCI, ymax=uCI), width=.1) +
+pd <- position_dodge(width = 0.5)
+ggplot(allcoefs, aes(x = response, y = Estimate, color = fit, group = group)) +
+  geom_point(position = pd) + 
+  geom_errorbar(aes(ymin=lCI, ymax=uCI), width=.1, position = pd) +
   labs(y = 'Dissimilarity per |°C change|') #+ 
   #coord_cartesian(ylim = c(-0.01, 0.05))
-
-
 ```
 CIs are 1.96*SE
 
 ## Temperature&duration models
-### Fit/load the models
-```{r LME temperature and duration}
-
-if(file.exists('temp/modTDJtu.rds')) modTDJtu <- readRDS('temp/modTDJtu.rds')
-if(file.exists('temp/modTDJbeta.rds')) modTDJbeta <- readRDS('temp/modTDJbeta.rds')
-if(file.exists('temp/modTDHorn.rds')) modTDHorn <- readRDS('temp/modTDHorn.rds')
-
-
-
+### Load the models
+```{r temperature and duration}
+# all years
+modTDJtu <- readRDS('temp/modTDJtu.rds')
+modTDJbeta <- readRDS('temp/modTDJbeta.rds')
+modTDHorn <- readRDS('temp/modTDHorn.rds')
 ```
 
-### Summary: Slope of dissimilarity
+### Summary
 ```{r summary of TD mods}
 summary(modTDJtu)
 summary(modTDJbeta)
@@ -211,12 +240,13 @@ summary(modTDHorn)
 ```
 
 
-### Plot the temp coefficients from TD models
+
+### Plot the coefficients
 ```{r modTD coefs}
 
-coefs1 <- summary(modTDJtu)$tTable
-coefs2 <- summary(modTDJbeta)$tTable
-coefs3 <- summary(modTDHorn)$tTable
+coefs1 <- summary(modTDJtu)$coefficients$cond
+coefs2 <- summary(modTDJbeta)$coefficients$cond
+coefs3 <- summary(modTDHorn)$coefficients$cond
 
 varstoplot <- unique(c(rownames(coefs1), rownames(coefs2), rownames(coefs3)))
 varstoplot <- varstoplot[which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot))] # vars to plot
@@ -240,8 +270,8 @@ abline(v = 0, col = 'grey', lty = 2)
 abline(h = 1:length(varstoplot), col = 'grey', lty = 3)
 for(i in 1:length(varstoplot)){
   if(varstoplot[i] %in% rownames(coefs1)){
-    x = coefs1[rownames(coefs1) == varstoplot[i], 1]
-    se = coefs1[rownames(coefs1) == varstoplot[i], 2]
+    x = coefs1[rownames(coefs1) == varstoplot[i], 1] # the coef in col 1
+    se = coefs1[rownames(coefs1) == varstoplot[i], 2] # the SE in col 2
     points(x, length(varstoplot) + 1 - i + offs[1], pch = pchs[1], col = cols[1])
     lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[1], length(varstoplot) + 1 - i + offs[1]), col = cols[1])
   }
@@ -260,9 +290,24 @@ for(i in 1:length(varstoplot)){
 }
 legend('bottomright', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Horn'), cex = 0.5)
 ```
+abs(tempchange) is in degC
+duration is in years
 
-## Temperature and duration models separated by REALM
-### Fit/load the models
+### Plot the response
+```{r plot TD response}
+newdat <- expand.grid(duration = c(1, 10), tempchange = seq(0.01, 3, length.out = 2), 
+                      taxa_mod2 = NA, STUDY_ID = NA, rarefyID = NA,
+                      Nspp = 60) # no REs, ave number of species
+scl <- attr(trends$tempchange_abs.sc, 'scaled:scale') # scaling factor for tempchange
+newdat$tempchange_abs.sc <- abs(newdat$tempchange)/scl
+cent <- attr(trends$nspp.sc, 'scaled:center') 
+scl <- attr(trends$nspp.sc, 'scaled:scale') 
+newdat$nspp.sc <- (log(newdat$Nspp) - cent)/scl
+newdat$Jtu <- predict(modTDJtu, newdata = newdat, se.fit = FALSE, re.form = NA, type = 'response')
+```
+
+## Temperature and duration by REALM
+### Load the models
 ```{r LME temperature duration realm}
 
 if(file.exists('temp/modTDrealmJtu.rds')) modTDJrealmtu <- readRDS('temp/modTDrealmJtu.rds')
