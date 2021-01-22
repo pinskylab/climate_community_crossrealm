@@ -1,6 +1,6 @@
 ---
 title: 'Temperature change and the community response to temperature change across realms'
-subtitle: '(using mixed effects models)'
+subtitle: '(using beta models)'
 output: 
     github_document: default
 
@@ -295,20 +295,24 @@ duration is in years
 
 ### Plot the response
 ```{r plot TD response}
-newdat <- expand.grid(duration = c(1, 50), tempchange = seq(0.01, 5, length.out = 5), 
+if(!file.exists('temp/modTDJtu_preds.rds')) {
+  newdat <- expand.grid(duration = c(1, 50), tempchange = seq(0.01, 5, length.out = 5), 
                       taxa_mod2 = NA, STUDY_ID = NA, rarefyID = NA,
                       Nspp = 60) # no REs, ave number of species
-scl <- attr(trends$tempchange_abs.sc, 'scaled:scale') # scaling factor for tempchange
-newdat$tempchange_abs.sc <- abs(newdat$tempchange)/scl
-cent <- attr(trends$nspp.sc, 'scaled:center') 
-scl <- attr(trends$nspp.sc, 'scaled:scale') 
-newdat$nspp.sc <- (log(newdat$Nspp) - cent)/scl
-Jtu <- predict(modTDJtu, newdata = newdat, se.fit = TRUE, re.form = NA, type = 'response')
-newdat$durationfac <- as.factor(newdat$duration)
-newdat$Jtu <- Jtu$fit
-newdat$Jtu.se <- Jtu$se.fit
-
-saveRDS(newdat, file = 'temp/modTDJtu_preds.rds')
+  scl <- attr(trends$tempchange_abs.sc, 'scaled:scale') # scaling factor for tempchange
+  newdat$tempchange_abs.sc <- abs(newdat$tempchange)/scl
+  cent <- attr(trends$nspp.sc, 'scaled:center') 
+  scl <- attr(trends$nspp.sc, 'scaled:scale') 
+  newdat$nspp.sc <- (log(newdat$Nspp) - cent)/scl
+  Jtu <- predict(modTDJtu, newdata = newdat, se.fit = TRUE, re.form = NA, type = 'response')
+  newdat$durationfac <- as.factor(newdat$duration)
+  newdat$Jtu <- Jtu$fit
+  newdat$Jtu.se <- Jtu$se.fit
+  
+  saveRDS(newdat, file = 'temp/modTDJtu_preds.rds')
+} else {
+  newdat <- readRDS('temp/modTDJtu_preds.rds')
+}
 
 ggplot(newdat, aes(tempchange, Jtu, color = durationfac, group = durationfac)) +
   geom_line() +
@@ -319,14 +323,14 @@ ggplot(newdat, aes(tempchange, Jtu, color = durationfac, group = durationfac)) +
 ### Load the models
 ```{r LME temperature duration realm}
 
-if(file.exists('temp/modTDrealmJtu.rds')) modTDJrealmtu <- readRDS('temp/modTDrealmJtu.rds')
+if(file.exists('temp/modTDrealmJtu.rds')) modTDrealmJtu <- readRDS('temp/modTDrealmJtu.rds')
 if(file.exists('temp/modTDrealmJbeta.rds')) modTDrealmJbeta <- readRDS('temp/modTDrealmJbeta.rds')
 if(file.exists('temp/modTDrealmHorn.rds')) modTDrealmHorn <- readRDS('temp/modTDrealmHorn.rds')
 
 ```
 
 ### Summary
-```{r summary of TD mods}
+```{r summary of TDrealm mods}
 summary(modTDrealmJtu)
 summary(modTDrealmJbeta)
 summary(modTDrealmHorn)
@@ -334,11 +338,11 @@ summary(modTDrealmHorn)
 
 
 ### Plot the temp coefficients from TD realm models
-```{r modTD coefs}
+```{r modTD realm coefs}
 
-coefs1 <- summary(modTDrealmJtu)$tTable
-coefs2 <- summary(modTDrealmJbeta)$tTable
-coefs3 <- summary(modTDrealmHorn)$tTable
+coefs1 <- summary(modTDrealmJtu)$coefficients$cond
+coefs2 <- summary(modTDrealmJbeta)$coefficients$cond
+coefs3 <- summary(modTDrealmHorn)$coefficients$cond
 
 varstoplot <- unique(c(rownames(coefs1), rownames(coefs2), rownames(coefs3)))
 varstoplot <- varstoplot[which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot))] # vars to plot
