@@ -11,9 +11,10 @@ library(beanplot) # for beanplots
 library(gridExtra) # to combine ggplots together
 library(grid) # to combine ggplots together
 require(scales) # for custom axis scales
+require(here)
 
 
-knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
+#knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
 
 signedsqrt_trans <- function() trans_new('signedsqrt', 
                                          transform = function(x) sign(x)*sqrt(abs(x)), 
@@ -23,12 +24,12 @@ signedsqrt_trans <- function() trans_new('signedsqrt',
 # Load data
 ```{r load data}
 # biotime taxa category and other info
-load('data/biotime_blowes/bt_malin.Rdata') # load bt_malin
+load(here::here('data', 'biotime_blowes', 'bt_malin.Rdata')) # load bt_malin
 btinfo <- data.table(bt_malin); rm(bt_malin)
 btinfo <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Biome, taxa_mod, REALM, STUDY_ID)]
 
 # biotime community dissimilarity data
-load('data/biotime_blowes/all_pairs_beta.RData') # load rarefied_beta_medians
+load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians
 bt <- data.table(rarefied_beta_medians); rm(rarefied_beta_medians)
 bt[, year1 := as.numeric(year1)] # not sure why it gets read in as character
 bt[, year2 := as.numeric(year2)]
@@ -37,42 +38,42 @@ bt[, Hornsim := NULL]
 bt <- merge(bt, btinfo[, .(rarefyID, rarefyID_x, rarefyID_y, REALM, STUDY_ID, Biome, taxa_mod)]) # add lat/lon and realm
 
 # Temperature average, changes, and seasonality
-temperature <- fread('output/temperature_byrarefyID.csv.gz')
+temperature <- fread(here('output', 'temperature_byrarefyID.csv.gz'))
 
 # microclimates
-microclim <- fread('output/microclimates.csv.gz', drop = 1)
+microclim <- fread(here('output', 'microclimates.csv.gz'), drop = 1)
 
 # NPP
-npp <- fread('output/npplandocean.csv.gz')
+npp <- fread(here('output', 'npplandocean.csv.gz'))
 
 # Body size
-bs <- fread('output/mass_byrarefyid.csv.gz', drop = 1)
+bs <- fread(here('output', 'mass_byrarefyID.csv.gz'), drop = 1)
 bs[, ':='(STUDY_ID = NULL, REALM = NULL, taxa_mod = NULL)] # remove unnecessary columns 
 
 # Mobility
-speed <- fread('output/speed_byrarefyID.csv.gz', drop = 1)
+speed <- fread(here('output', 'speed_byrarefyID.csv.gz'), drop = 1)
 speed[, ':='(STUDY_ID = NULL, REALM = NULL, taxa_mod = NULL)] # remove unnecessary columns 
 
 # Lifespan
-lsp <- fread('output/lifespan_byrarefyID.csv.gz')
+lsp <- fread(here('output', 'lifespan_byrarefyID.csv.gz'))
 
 # CTI
-cti <- fread('output/cti_byrarefyID.csv.gz')
+cti <- fread(here('output', 'cti_byrarefyID.csv.gz'))
     
 # consumer vs. producer
-consfrac <- fread('output/consfrac_byrarefyID.csv.gz')
+consfrac <- fread(here('output', 'consfrac_byrarefyID.csv.gz'))
 
 # richness
-rich <- fread('output/richness_by_rarefyID.csv.gz') # number of species
+rich <- fread(here('output', 'richness_by_rarefyID.csv.gz')) # number of species
 
 # endotherm vs. ectotherm
-endofrac <- fread('output/endofrac_byrarefyID.csv.gz') # endotherm vs. ectotherm classifications
+endofrac <- fread(here('output', 'endofrac_byrarefyID.csv.gz')) # endotherm vs. ectotherm classifications
 
 # human impact
-human <- fread('output/humanimpact_by_rarefyID.csv.gz')
+human <- fread(here('output', 'humanimpact_by_rarefyID.csv.gz'))
 
 # %veg
-veg <- as.data.table(readRDS('output/vct_by_rarefyID.rds'))
+veg <- as.data.table(readRDS(here('output', 'vct_by_rarefyID.rds')))
 veg[, veg := (`tree cover % (mean)` + 0.5 * `non-tree veg. % (mean)`)/100] # veg index from 0 (all non-veg) to 1 (all tree). Non-tree veg counts as 0.5.
 ```
 
@@ -99,8 +100,8 @@ bt[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 ## Write out
 Only if file doesn't yet exist
 ```{r write out}
-if(!file.exists('output/turnover_w_covariates.csv.gz')){
-  write.csv(bt, gzfile('output/turnover_w_covariates.csv.gz'), row.names = FALSE)
+if(!file.exists(here('output', 'turnover_w_covariates.csv.gz'))){
+  write.csv(bt, gzfile(here('output', 'turnover_w_covariates.csv.gz')), row.names = FALSE)
 }
 
 ```
@@ -343,111 +344,6 @@ p3 <- ggplot(bt, aes(year2 - year1, Horn, color = REALM)) +
 grid.arrange(p1, p2, p3, ncol = 3)
 ```
 
-# Plot dissimilarity vs. temperature change
-## All temporal scales
-```{r plot diss vs temp change, echo=FALSE, fig.height = 3, fig.width = 11}
-p1 <- ggplot(bt, aes(tempchange, Jtu, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature change (°C)', y = 'Jaccard turnover')
-
-p2 <- ggplot(bt, aes(tempchange, Jbeta, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature change (°C)', y = 'Jaccard total')
-
-p3 <- ggplot(bt, aes(tempchange, Horn, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature change (°C)', y = 'Morisita-Horn')
-
-
-
-grid.arrange(p1, p2, p3, ncol = 3)
-```
-
-## Only 1 year differences
-```{r plot diss vs temp change 1 yr, echo=FALSE, fig.height = 3, fig.width = 11}
-bt[, dur := year2 - year1]
-p1 <- ggplot(bt[dur == 1, ], aes(tempchange, Jtu, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature change (°C)', y = 'Jaccard turnover')
-
-p2 <- ggplot(bt[dur == 1, ], aes(tempchange, Jbeta, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature change (°C)', y = 'Jaccard total')
-
-p3 <- ggplot(bt[dur == 1, ], aes(tempchange, Horn, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature change (°C)', y = 'Morisita-Horn')
-
-grid.arrange(p1, p2, p3, ncol = 3)
-```
-
-## Only 10 year differences
-```{r plot diss vs temp change 10 yr, echo=FALSE, fig.height = 3, fig.width = 11}
-bt[, dur := year2 - year1]
-p1 <- ggplot(bt[dur == 10, ], aes(tempchange, Jtu, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature change (°C)', y = 'Jaccard turnover')
-
-p2 <- ggplot(bt[dur == 10, ], aes(tempchange, Jbeta, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature change (°C)', y = 'Jaccard total')
-
-p3 <- ggplot(bt[dur == 10, ], aes(tempchange, Horn, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature change (°C)', y = 'Morisita-Horn')
-
-grid.arrange(p1, p2, p3, ncol = 3)
-```
-
-## Only 20 year differences
-```{r plot diss vs temp change 20 yr, echo=FALSE, fig.height = 3, fig.width = 11}
-bt[, dur := year2 - year1]
-p1 <- ggplot(bt[dur == 20, ], aes(tempchange, Jtu, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature change (°C)', y = 'Jaccard turnover')
-
-p2 <- ggplot(bt[dur == 20, ], aes(tempchange, Jbeta, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature change (°C)', y = 'Jaccard total')
-
-p3 <- ggplot(bt[dur == 20, ], aes(tempchange, Horn, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature change (°C)', y = 'Morisita-Horn')
-
-grid.arrange(p1, p2, p3, ncol = 3)
-```
-
-
-# Temperature trend and time-series length
-```{r ts length and temp trend}
-ggplot(bt, aes(year2 - year1, tempchange)) +
-  geom_point(alpha = 0.2) +
-  geom_smooth()
-```
 # Plot dissimilarity vs. explanatory variables
 Lines are ggplot smoother fits
 Just Jtu for now, averaged within rarefyID

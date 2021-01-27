@@ -155,6 +155,16 @@ if(fitmod == 'modRFslopeRE'){
     MATCHMOD <- TRUE
 }
 
+if(fitmod == 'modRFdisp2lev'){
+    modRFdisp2lev <- glmmTMB(formula(paste(fixed, '+(tempchange_abs.sc|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
+                         dispformula = ~nspp.sc, 
+                         control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modRFdisp2lev)
+    saveRDS(modRFdisp2lev, file = 'temp/modRFdisp2lev.rds')
+    print('saved modRFdisp2lev.rds')
+    MATCHMOD <- TRUE
+}
+
 if(fitmod == 'modRFdisp'){
     modRFdisp <- glmmTMB(formula(paste(fixed, '+(tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc, 
@@ -433,8 +443,50 @@ if(fitmod == 'modTrealm10yrHorn'){
     MATCHMOD <- TRUE
 }
 
+###################################
+# full models
+
+
+if(fitmod == 'modFullmass'){
+    i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc)]
+
+    modFullmass <- glmmTMB(Jtu.sc ~ tempchange_abs.sc*REALM + 
+                            tempchange_abs.sc*tempave_metab.sc + 
+                            tempchange_abs.sc*duration.sc +
+                            tempchange_abs.sc*mass.sc +
+                            (tempchange_abs.sc|STUDY_ID/rarefyID), 
+                        data = trends[i,], 
+                        family = beta_family(link = 'logit'), 
+                        dispformula = ~nspp.sc, 
+                        control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modFullmass)
+    saveRDS(modFullmass, file = 'temp/modFullmass.rds')
+    print('saved modFullmass.rds')
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modFullendo'){
+    i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, endothermfrac.sc)]
+    
+    modFullendo <- glmmTMB(Jtu.sc ~ tempchange_abs.sc*REALM + 
+                               tempchange_abs.sc*tempave_metab.sc + 
+                               tempchange_abs.sc*duration.sc +
+                               tempchange_abs.sc*endothermfrac.sc +
+                               (tempchange_abs.sc|STUDY_ID/rarefyID), 
+                           data = trends[i,], 
+                           family = beta_family(link = 'logit'), 
+                           dispformula = ~nspp.sc, 
+                           control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modFullendo)
+    saveRDS(modFullendo, file = 'temp/modFullendo.rds')
+    print('saved modFullendo.rds')
+    MATCHMOD <- TRUE
+}
+
 ####################################
 # final check that something ran
 if(MATCHMOD == FALSE) stop("Model name did not match anything", call.=FALSE)
+
+warnings()
 
 print(paste('Ended', Sys.time(), sep =''))

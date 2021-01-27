@@ -10,29 +10,9 @@ Turnover vs. temperature plots
 ``` r
 library(data.table) # for handling large datasets
 library(ggplot2) # for some plotting
-library(nlme) # for ME models
-library(maps) # for map
 library(gridExtra) # to combine ggplots together
 library(grid) # to combine ggplots together
 library(RColorBrewer)
-library(MASS) # for stepAIC
-library(piecewiseSEM) # for rsquared() for nlme models
-```
-
-    ## Registered S3 methods overwritten by 'lme4':
-    ##   method                          from
-    ##   cooks.distance.influence.merMod car 
-    ##   influence.merMod                car 
-    ##   dfbeta.influence.merMod         car 
-    ##   dfbetas.influence.merMod        car
-
-    ## 
-    ##   This is piecewiseSEM version 2.1.0.
-    ## 
-    ## 
-    ##   Questions or bugs can be addressed to <LefcheckJ@si.edu>.
-
-``` r
 library(scales) # for defining custom scales in ggplot
 
 options(width=500) # turn off most text wrapping
@@ -69,6 +49,54 @@ trends[, duration := year2 - year1]
 ```
 
 </details>
+
+# Plot dissimilarity vs. temperature change
+
+## All temporal scales
+
+![](turnover_vs_temperature_plots_files/figure-gfm/plot%20diss%20vs%20temp%20change-1.png)<!-- -->
+
+## Only 1 year differences
+
+![](turnover_vs_temperature_plots_files/figure-gfm/plot%20diss%20vs%20temp%20change%201%20yr-1.png)<!-- -->
+
+## Only 10 year differences
+
+![](turnover_vs_temperature_plots_files/figure-gfm/plot%20diss%20vs%20temp%20change%2010%20yr-1.png)<!-- -->
+
+## Only 20 year differences
+
+![](turnover_vs_temperature_plots_files/figure-gfm/plot%20diss%20vs%20temp%20change%2020%20yr-1.png)<!-- -->
+
+# Focus on marine
+
+## All temporal scales
+
+![](turnover_vs_temperature_plots_files/figure-gfm/plot%20diss%20vs%20temp%20change%20marine-1.png)<!-- -->
+
+## Only 1 year differences
+
+![](turnover_vs_temperature_plots_files/figure-gfm/plot%20diss%20vs%20temp%20change%201%20yr%20marine-1.png)<!-- -->
+
+## Only 10 year differences
+
+![](turnover_vs_temperature_plots_files/figure-gfm/plot%20diss%20vs%20temp%20change%2010%20yr%20marine-1.png)<!-- -->
+
+# Temperature trend and time-series length
+
+``` r
+ggplot(trends, aes(year2 - year1, tempchange, color = REALM, group = REALM)) +
+  geom_point(alpha = 0.2) +
+  geom_smooth()
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+    ## Warning: Removed 15988 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 15988 rows containing missing values (geom_point).
+
+![](turnover_vs_temperature_plots_files/figure-gfm/ts%20length%20and%20temp%20trend-1.png)<!-- -->
 
 # Summary plots and stats
 
@@ -119,48 +147,48 @@ write.csv(trendsum4, file = 'output/trendsummary.csv', row.names = FALSE)
 trendsum4
 ```
 
-    ##              text  type        ave           se      n duration
-    ##  1:  Change >=0.5 Jbeta 0.52130794 0.0004472551 339366       NA
-    ##  2:  Change >=0.5 Jbeta 0.46748252 0.0017228371  23728        1
-    ##  3:  Change >=0.5 Jbeta 0.50503948 0.0023030548  13346       10
-    ##  4:  Change >=0.5 Jbeta 0.52894590 0.0030939929   6219       20
-    ##  5:  Cool <= -0.5 Jbeta 0.51878078 0.0007747764 112999       NA
-    ##  6: Stable <=0.05 Jbeta 0.53683708 0.0016887871  28142       NA
-    ##  7: Stable <=0.05 Jbeta 0.52019540 0.0049632196   3523        1
-    ##  8: Stable <=0.05 Jbeta 0.51097127 0.0088768415   1014       10
-    ##  9: Stable <=0.05 Jbeta 0.54462493 0.0161558529    362       20
-    ## 10:   Warm >= 0.5 Jbeta 0.52256946 0.0005477171 226367       NA
-    ## 11:  Change >=0.5   Jtu 0.39697280 0.0004853488 339366       NA
-    ## 12:  Change >=0.5   Jtu 0.34374062 0.0018412668  23728        1
-    ## 13:  Change >=0.5   Jtu 0.38357734 0.0025106579  13346       10
-    ## 14:  Change >=0.5   Jtu 0.39976299 0.0033330986   6219       20
-    ## 15:  Cool <= -0.5   Jtu 0.39646555 0.0008493252 112999       NA
-    ## 16: Stable <=0.05   Jtu 0.41079301 0.0018963926  28142       NA
-    ## 17: Stable <=0.05   Jtu 0.39673059 0.0055696448   3523        1
-    ## 18: Stable <=0.05   Jtu 0.39575557 0.0098195132   1014       10
-    ## 19: Stable <=0.05   Jtu 0.44369265 0.0177423259    362       20
-    ## 20:   Warm >= 0.5   Jtu 0.39722601 0.0005913475 226367       NA
-    ## 21:  Change >=0.5   Jne 0.11975196 0.0002839410 339366       NA
-    ## 22:  Change >=0.5   Jne 0.12011161 0.0010987511  23728        1
-    ## 23:  Change >=0.5   Jne 0.11791130 0.0014279691  13346       10
-    ## 24:  Change >=0.5   Jne 0.12430301 0.0021485320   6219       20
-    ## 25:  Cool <= -0.5   Jne 0.11793869 0.0004867605 112999       NA
-    ## 26: Stable <=0.05   Jne 0.12240402 0.0010540973  28142       NA
-    ## 27: Stable <=0.05   Jne 0.12118209 0.0029777338   3523        1
-    ## 28: Stable <=0.05   Jne 0.11249637 0.0052166820   1014       10
-    ## 29: Stable <=0.05   Jne 0.09560664 0.0075501827    362       20
-    ## 30:   Warm >= 0.5   Jne 0.12065711 0.0003495027 226367       NA
-    ## 31:  Change >=0.5  Horn 0.41598316 0.0006042510 327079       NA
-    ## 32:  Change >=0.5  Horn 0.34528808 0.0022800180  22980        1
-    ## 33:  Change >=0.5  Horn 0.39639168 0.0030767514  12923       10
-    ## 34:  Change >=0.5  Horn 0.42733560 0.0042280176   5921       20
-    ## 35:  Cool <= -0.5  Horn 0.41133237 0.0010486230 109598       NA
-    ## 36: Stable <=0.05  Horn 0.44018401 0.0022642391  26629       NA
-    ## 37: Stable <=0.05  Horn 0.41125764 0.0066359834   3302        1
-    ## 38: Stable <=0.05  Horn 0.40920880 0.0118359968    965       10
-    ## 39: Stable <=0.05  Horn 0.47199668 0.0200272914    359       20
-    ## 40:   Warm >= 0.5  Horn 0.41832689 0.0007392664 217481       NA
-    ##              text  type        ave           se      n duration
+    ##              text  type       ave           se      n duration
+    ##  1:  Change >=0.5 Jbeta 0.6002095 0.0003610318 589418       NA
+    ##  2:  Change >=0.5 Jbeta 0.5359723 0.0014581158  39169        1
+    ##  3:  Change >=0.5 Jbeta 0.5723561 0.0018278849  22423       10
+    ##  4:  Change >=0.5 Jbeta 0.6402557 0.0027132290   9958       20
+    ##  5:  Cool <= -0.5 Jbeta 0.6066283 0.0006551779 188968       NA
+    ##  6: Stable <=0.05 Jbeta 0.6051975 0.0009785149  83940       NA
+    ##  7: Stable <=0.05 Jbeta 0.5625294 0.0027096435  11618        1
+    ##  8: Stable <=0.05 Jbeta 0.6399932 0.0046113191   3774       10
+    ##  9: Stable <=0.05 Jbeta 0.5934181 0.0105802353    698       20
+    ## 10:   Warm >= 0.5 Jbeta 0.5971806 0.0004321189 400450       NA
+    ## 11:  Change >=0.5   Jtu 0.4459941 0.0004281782 589418       NA
+    ## 12:  Change >=0.5   Jtu 0.3797385 0.0016539601  39169        1
+    ## 13:  Change >=0.5   Jtu 0.4161877 0.0021343203  22423       10
+    ## 14:  Change >=0.5   Jtu 0.4865784 0.0032528815   9958       20
+    ## 15:  Cool <= -0.5   Jtu 0.4662617 0.0007791891 188968       NA
+    ## 16: Stable <=0.05   Jtu 0.4262683 0.0012346728  83940       NA
+    ## 17: Stable <=0.05   Jtu 0.3731232 0.0033285498  11618        1
+    ## 18: Stable <=0.05   Jtu 0.4690068 0.0060822619   3774       10
+    ## 19: Stable <=0.05   Jtu 0.4478041 0.0123191172    698       20
+    ## 20:   Warm >= 0.5   Jtu 0.4364300 0.0005111580 400450       NA
+    ## 21:  Change >=0.5   Jne 0.1468606 0.0002732904 589418       NA
+    ## 22:  Change >=0.5   Jne 0.1470520 0.0010593737  39169        1
+    ## 23:  Change >=0.5   Jne 0.1500010 0.0014011557  22423       10
+    ## 24:  Change >=0.5   Jne 0.1453703 0.0021878906   9958       20
+    ## 25:  Cool <= -0.5   Jne 0.1335554 0.0004590099 188968       NA
+    ## 26: Stable <=0.05   Jne 0.1725461 0.0007931707  83940       NA
+    ## 27: Stable <=0.05   Jne 0.1836436 0.0021939665  11618        1
+    ## 28: Stable <=0.05   Jne 0.1671645 0.0036860889   3774       10
+    ## 29: Stable <=0.05   Jne 0.1360153 0.0075265148    698       20
+    ## 30:   Warm >= 0.5   Jne 0.1531392 0.0003385034 400450       NA
+    ## 31:  Change >=0.5  Horn 0.5179450 0.0004985121 573102       NA
+    ## 32:  Change >=0.5  Horn 0.4294316 0.0019581135  38120        1
+    ## 33:  Change >=0.5  Horn 0.4816639 0.0025324227  21867       10
+    ## 34:  Change >=0.5  Horn 0.5768760 0.0037623253   9634       20
+    ## 35:  Cool <= -0.5  Horn 0.5261015 0.0008946141 183776       NA
+    ## 36: Stable <=0.05  Horn 0.5075724 0.0013575413  81011       NA
+    ## 37: Stable <=0.05  Horn 0.4341489 0.0036774869  11137        1
+    ## 38: Stable <=0.05  Horn 0.5463031 0.0064589171   3634       10
+    ## 39: Stable <=0.05  Horn 0.5497366 0.0146317342    647       20
+    ## 40:   Warm >= 0.5  Horn 0.5140948 0.0006000470 389326       NA
+    ##              text  type       ave           se      n duration
 
 ## Plots of turnover rates binned by warming rates
 
@@ -253,20 +281,116 @@ p5
 
 ![](turnover_vs_temperature_plots_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-5.png)<!-- -->
 
-## Plots of turnover rates binned by warming rates and duration
+# Plot turnover binned by warming rates vs duration
 
-### Jaccard turnover dissimilarity
+## Jaccard turnover dissimilarity
 
 Very slow to render (10 min?)
 
 ``` r
 ggplot(trends[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
-  geom_smooth(method = 'gam', aes(color = '<=0.05')) +
-  geom_smooth(data = trends[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], method = 'loess', aes(color = '0.05-0.1')) +
-  geom_smooth(data = trends[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], method = 'loess', aes(color = '0.1-0.5')) +
+  geom_smooth(aes(color = '<=0.05')) +
+  geom_smooth(data = trends[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], aes(color = '0.05-0.1')) +
+  geom_smooth(data = trends[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], aes(color = '0.1-0.5')) +
   geom_smooth(data = trends[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
   scale_x_log10() + 
   labs(y = 'Jaccard dissimilarity', color = '°C change')
 ```
 
-![](turnover_vs_temperature_plots_files/figure-gfm/slope%20vs.%20temperature%20trend%20vs.%20duration-1.png)<!-- -->
+![](turnover_vs_temperature_plots_files/figure-gfm/diss%20vs.%20temperature%20trend%20vs.%20duration-1.png)<!-- -->
+
+## By realm
+
+``` r
+terr <- trends[REALM == 'Terrestrial', ]
+p1 <- ggplot(terr[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
+  geom_smooth(aes(color = '<=0.05')) +
+  geom_smooth(data = terr[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], aes(color = '0.05-0.1')) +
+  geom_smooth(data = terr[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], aes(color = '0.1-0.5')) +
+  geom_smooth(data = terr[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Jaccard dissimilarity', color = '°C change', title = 'Terrestrial')
+
+mar <- trends[REALM == 'Marine', ]
+p2 <- ggplot(mar[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
+  geom_smooth(aes(color = '<=0.05')) +
+  geom_smooth(data = mar[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], aes(color = '0.05-0.1')) +
+  geom_smooth(data = mar[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], aes(color = '0.1-0.5')) +
+  geom_smooth(data = mar[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Jaccard dissimilarity', color = '°C change', title = 'Marine')
+
+fre <- trends[REALM == 'Freshwater', ]
+p3 <- ggplot(fre[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
+  geom_smooth(aes(color = '<=0.05')) +
+  geom_smooth(data = fre[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], aes(color = '0.05-0.1')) +
+  geom_smooth(data = fre[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], aes(color = '0.1-0.5')) +
+  geom_smooth(data = fre[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Jaccard dissimilarity', color = '°C change', title = 'Freshwater')
+
+grid.arrange(p1, p2, p3, ncol = 3)
+```
+
+![](turnover_vs_temperature_plots_files/figure-gfm/diss%20vs.%20temperature%20trend%20vs.%20duration%20by%20realm-1.png)<!-- -->
+
+## By body size
+
+``` r
+small <- trends[mass_mean_weight < 1, ]
+p1 <- ggplot(small[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
+  geom_smooth(aes(color = '<=0.05')) +
+  geom_smooth(data = small[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], aes(color = '0.05-0.1')) +
+  geom_smooth(data = small[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], aes(color = '0.1-0.5')) +
+  geom_smooth(data = small[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Jaccard dissimilarity', color = '°C change', title = '<1 g')
+
+med <- trends[mass_mean_weight < 10000 & mass_mean_weight >= 1, ]
+p2 <- ggplot(med[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
+  geom_smooth(aes(color = '<=0.05')) +
+  geom_smooth(data = med[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], aes(color = '0.05-0.1')) +
+  geom_smooth(data = med[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], aes(color = '0.1-0.5')) +
+  geom_smooth(data = med[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Jaccard dissimilarity', color = '°C change', title = '1g to 10kg')
+
+lg <- trends[mass_mean_weight >= 10000, ]
+p3 <- ggplot(lg[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
+  geom_smooth(aes(color = '<=0.05')) +
+  geom_smooth(data = lg[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], aes(color = '0.05-0.1')) +
+  geom_smooth(data = lg[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], aes(color = '0.1-0.5')) +
+  geom_smooth(data = lg[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Jaccard dissimilarity', color = '°C change', title = '>10kg')
+
+grid.arrange(p1, p2, p3, ncol = 3)
+```
+
+![](turnover_vs_temperature_plots_files/figure-gfm/diss%20vs.%20temperature%20trend%20vs.%20duration%20by%20body%20size-1.png)<!-- -->
+
+## By endo/ectotherm
+
+``` r
+ecto <- trends[endofrac <= 0.5, ]
+p1 <- ggplot(ecto[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
+  geom_smooth(aes(color = '<=0.05')) +
+  geom_smooth(data = ecto[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], aes(color = '0.05-0.1')) +
+  geom_smooth(data = ecto[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], aes(color = '0.1-0.5')) +
+  geom_smooth(data = ecto[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Jaccard dissimilarity', color = '°C change', title = 'Mostly ectotherms')
+
+endo <- trends[endofrac > 0.5, ]
+p2 <- ggplot(endo[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
+  geom_smooth(aes(color = '<=0.05')) +
+  geom_smooth(data = endo[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], aes(color = '0.05-0.1')) +
+  geom_smooth(data = endo[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], aes(color = '0.1-0.5')) +
+  geom_smooth(data = endo[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
+  scale_x_log10() + 
+  labs(y = 'Jaccard dissimilarity', color = '°C change', title = 'Mostly endotherms')
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+![](turnover_vs_temperature_plots_files/figure-gfm/diss%20vs.%20temperature%20trend%20vs.%20duration%20by%20endofrac-1.png)<!-- -->

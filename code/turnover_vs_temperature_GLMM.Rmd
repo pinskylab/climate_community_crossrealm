@@ -137,12 +137,13 @@ if(file.exists('temp/modRFrID.rds')) modRFrID <- readRDS('temp/modRFrID.rds')
 if(file.exists('temp/modRFnestedRE.rds')) modRFnestedRE <- readRDS('temp/modRFnestedRE.rds')
 if(file.exists('temp/modRFslopeRE.rds')) modRFslopeRE <- readRDS('temp/modRFslopeRE.rds')
 if(file.exists('temp/modRFdisp.rds')) modRFdisp <- readRDS('temp/modRFdisp.rds')
+if(file.exists('temp/modRFdisp2lev.rds')) modRFdisp2lev <- readRDS('temp/modRFdisp2lev.rds')
 
 
-AICtab(modRFgauss, modRFbeta, modRFrID, modRFnestedRE, modRFslopeRE, modRFdisp)
-summary(modRFdisp)
+AICtab(modRFgauss, modRFbeta, modRFrID, modRFnestedRE, modRFslopeRE, modRFdisp, modRFdisp2lev)
+summary(modRFdisp2lev)
 ```
-Chooses beta errors, random slopes (tempchange_abs.sc) & intercepts for taxa_mod2, STUDY_ID, rarefyID, and variance scaled to nspp.
+Chooses beta errors, random slopes (tempchange_abs.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp.
 We haven't dealt with potential testing on the boundary issues here yet.
 
 
