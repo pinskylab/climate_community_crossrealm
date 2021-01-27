@@ -155,18 +155,21 @@ grid.arrange(p1, p2, p3, ncol = 3)
 p1 <- ggplot(trends[REALM == 'Marine',], aes(tempchange, Jtu)) +
   geom_point(aes(color = as.factor(STUDY_ID)), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  geom_smooth(method = 'lm', formula = y ~ abs(x), na.rm = TRUE) +
   labs(x = 'Temperature change (°C)', y = 'Jaccard turnover') + 
   theme(legend.position = "none")
 
 p2 <- ggplot(trends[REALM == 'Marine',], aes(tempchange, Jbeta)) +
   geom_point(aes(color = as.factor(STUDY_ID)), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  geom_smooth(method = 'lm', formula = y ~ abs(x), na.rm = TRUE) +
   labs(x = 'Temperature change (°C)', y = 'Jaccard total') + 
   theme(legend.position = "none")
 
 p3 <- ggplot(trends[REALM == 'Marine',], aes(tempchange, Horn)) +
   geom_point(aes(color = as.factor(STUDY_ID)), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  geom_smooth(method = 'lm', formula = y ~ abs(x), na.rm = TRUE) +
   labs(x = 'Temperature change (°C)', y = 'Morisita-Horn') + 
   theme(legend.position = "none")
 
@@ -180,18 +183,21 @@ grid.arrange(p1, p2, p3, ncol = 3)
 p1 <- ggplot(trends[duration == 1 & REALM == 'Marine', ], aes(tempchange, Jtu)) +
   geom_point(aes(color = as.factor(STUDY_ID)), size = 0.2, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  geom_smooth(method = 'lm', formula = y ~ abs(x), na.rm = TRUE) +
   labs(x = 'Temperature change (°C)', y = 'Jaccard turnover') + 
   theme(legend.position = "none")
 
 p2 <- ggplot(trends[duration == 1 & REALM == 'Marine', ], aes(tempchange, Jbeta)) +
   geom_point(aes(color = as.factor(STUDY_ID)), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  geom_smooth(method = 'lm', formula = y ~ abs(x), na.rm = TRUE) +
   labs(x = 'Temperature change (°C)', y = 'Jaccard total') + 
   theme(legend.position = "none")
 
 p3 <- ggplot(trends[duration == 1 & REALM == 'Marine', ], aes(tempchange, Horn)) +
   geom_point(aes(color = as.factor(STUDY_ID)), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  geom_smooth(method = 'lm', formula = y ~ abs(x), na.rm = TRUE) +
   labs(x = 'Temperature change (°C)', y = 'Morisita-Horn') + 
   theme(legend.position = "none")
 
@@ -203,18 +209,21 @@ grid.arrange(p1, p2, p3, ncol = 3)
 p1 <- ggplot(trends[duration == 10 & REALM == 'Marine', ], aes(tempchange, Jtu)) +
   geom_point(aes(color = as.factor(STUDY_ID)), size = 0.2, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  geom_smooth(method = 'lm', formula = y ~ abs(x), na.rm = TRUE) +
   labs(x = 'Temperature change (°C)', y = 'Jaccard turnover') + 
   theme(legend.position = "none")
 
 p2 <- ggplot(trends[duration == 10 & REALM == 'Marine', ], aes(tempchange, Jbeta)) +
   geom_point(aes(color = as.factor(STUDY_ID)), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  geom_smooth(method = 'lm', formula = y ~ abs(x), na.rm = TRUE) +
   labs(x = 'Temperature change (°C)', y = 'Jaccard total') + 
   theme(legend.position = "none")
 
 p3 <- ggplot(trends[duration == 10 & REALM == 'Marine', ], aes(tempchange, Horn)) +
   geom_point(aes(color = as.factor(STUDY_ID)), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE) +
+  geom_smooth(method = 'lm', formula = y ~ abs(x), na.rm = TRUE) +
   labs(x = 'Temperature change (°C)', y = 'Morisita-Horn') + 
   theme(legend.position = "none")
 
@@ -276,7 +285,7 @@ trendsum4
 ```
 
 ## Plots of turnover rates binned by warming rates
-```{r turnover vs. temperature violin plot, message = FALSE, warning = FALSE}
+```{r turnover vs. temperature violin plot, message = FALSE, warning = FALSE, echo=FALSE}
 p1 <- ggplot(trends[!is.na(tempchangetext1), ], aes(tempchangetext1, Horn)) +
   geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
   labs(x = '', y = 'Horn dissimilarity', tag = 'A', title = 'Rate of temperature change') +
@@ -343,7 +352,7 @@ p4
 p5
 ```
 
-# Plot turnover binned by warming rates vs duration
+# Plot dissimilarity binned by tempchange vs duration
 ## Jaccard turnover dissimilarity
 Very slow to render (10 min?)
 ```{r diss vs. temperature trend vs. duration, message = FALSE, warning = FALSE, fig.width=10, fig.height = 3}
@@ -354,8 +363,6 @@ ggplot(trends[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
   geom_smooth(data = trends[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
   scale_x_log10() + 
   labs(y = 'Jaccard dissimilarity', color = '°C change')
-
-
 ```
 
 ## By realm
@@ -448,3 +455,124 @@ p2 <- ggplot(endo[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
 grid.arrange(p1, p2, ncol = 2)
 
 ```
+
+# Plot dissimilarity binned by duration vs tempchange
+## Jaccard turnover dissimilarity
+```{r diss vs. tempchange by duration, message = FALSE, warning = FALSE, fig.width=10, fig.height = 3}
+ggplot(trends[duration == 1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = trends[duration ==5,], aes(color = '5')) +
+  geom_smooth(data = trends[duration==10,], aes(color = '10')) +
+  geom_smooth(data = trends[duration==15,], aes(color = '15')) +
+  geom_smooth(data = trends[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration')
+```
+
+## By realm
+```{r diss vs. tempchange by duration by realm, message = FALSE, warning = FALSE, fig.width=10, fig.height = 3}
+terr <- trends[REALM == 'Terrestrial', ]
+p1 <- ggplot(terr[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = terr[duration==5,], aes(color = '5')) +
+  geom_smooth(data = terr[duration==10,], aes(color = '10')) +
+  geom_smooth(data = terr[duration==15,], aes(color = '15')) +
+  geom_smooth(data = terr[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = 'Terrestrial')
+
+mar <- trends[REALM == 'Marine', ]
+p2 <- ggplot(mar[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = mar[duration==5,], aes(color = '5')) +
+  geom_smooth(data = mar[duration==10,], aes(color = '10')) +
+  geom_smooth(data = mar[duration==15,], aes(color = '15')) +
+  geom_smooth(data = mar[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = 'Marine')
+
+fre <- trends[REALM == 'Freshwater', ]
+p3 <- ggplot(fre[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = fre[duration==5,], aes(color = '5')) +
+  geom_smooth(data = fre[duration==10,], aes(color = '10')) +
+  geom_smooth(data = fre[duration==15,], aes(color = '15')) +
+  geom_smooth(data = fre[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = 'Freshwater')
+
+grid.arrange(p1, p2, p3, ncol = 3)
+
+```
+
+## By body size
+```{r diss vs. temperature trend by duration by body size, message = FALSE, warning = FALSE, fig.width=10, fig.height = 3}
+small <- trends[mass_mean_weight < 1, ]
+p1 <- ggplot(small[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = small[duration==5,], aes(color = '5')) +
+  geom_smooth(data = small[duration==10,], aes(color = '10')) +
+  geom_smooth(data = small[duration==15,], aes(color = '15')) +
+  geom_smooth(data = small[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = '<1 g')
+
+med <- trends[mass_mean_weight < 10000 & mass_mean_weight >= 1, ]
+p2 <- ggplot(med[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = med[duration==5,], aes(color = '5')) +
+  geom_smooth(data = med[duration==10,], aes(color = '10')) +
+  geom_smooth(data = med[duration==15,], aes(color = '15')) +
+  geom_smooth(data = med[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = '1g to 10kg')
+
+lg <- trends[mass_mean_weight >= 10000, ]
+p3 <- ggplot(lg[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = lg[duration==5,], aes(color = '5')) +
+  geom_smooth(data = lg[duration==10,], aes(color = '10')) +
+  geom_smooth(data = lg[duration==15,], aes(color = '15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = '>10kg')
+
+grid.arrange(p1, p2, p3, ncol = 3)
+
+```
+
+
+## By endo/ectotherm
+```{r diss vs. temperature trend by duration by endofrac, message = FALSE, warning = FALSE, fig.width=7, fig.height = 3}
+ecto <- trends[endofrac <= 0.5, ]
+p1 <- ggplot(ecto[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = ecto[duration==5,], aes(color = '5')) +
+  geom_smooth(data = ecto[duration==10,], aes(color = '10')) +
+  geom_smooth(data = ecto[duration==15,], aes(color = '15')) +
+  geom_smooth(data = ecto[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = 'Mostly ectotherms')
+
+endo <- trends[endofrac > 0.5, ]
+p2 <- ggplot(endo[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = endo[duration==5,], aes(color = '5')) +
+  geom_smooth(data = endo[duration==10,], aes(color = '10')) +
+  geom_smooth(data = endo[duration==15,], aes(color = '15')) +
+  geom_smooth(data = ecto[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = 'Mostly endotherms')
+
+grid.arrange(p1, p2, ncol = 2)
+
+```
+## By realm, body size AND endo/ecto
+```{r diss vs. tempchange by duration mass endofrac, message = FALSE, warning = FALSE, fig.width=7, fig.height = 7}
+trends[duration == 1, dur_bin := '[1] yr']
+trends[duration > 1 & duration <= 5, dur_bin := '(1-5] yr']
+trends[duration > 5 & duration <= 10, dur_bin := '(5-10] yr']
+trends[duration > 10 & duration <= 20, dur_bin := '(10-20] yr']
+trends[duration > 20, dur_bin := '>20 yr']
+trends[mass_mean_weight <= 1, mass_bin := '<=1 g']
+trends[mass_mean_weight > 1 & mass_mean_weight <= 10000, mass_bin := '(1 g-10 kg]']
+trends[mass_mean_weight > 10000, mass_bin := '>10 kg']
+trends[endofrac > 0.5, endoTF := 'endo']
+trends[endofrac <= 0.5, endoTF := 'ecto']
+ggplot(trends[!is.na(mass_bin), ], aes(x=abs(tempchange), y=Jtu, color = dur_bin, group = dur_bin)) +
+  geom_smooth() +
+  facet_grid(mass_bin + endoTF~REALM, scales = 'free') +
+  labs(y = 'Jaccard dissimilarity', title = '')
+```
+
+

@@ -192,96 +192,9 @@ trendsum4
 
 ## Plots of turnover rates binned by warming rates
 
-``` r
-p1 <- ggplot(trends[!is.na(tempchangetext1), ], aes(tempchangetext1, Horn)) +
-  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
-  labs(x = '', y = 'Horn dissimilarity', tag = 'A', title = 'Rate of temperature change') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=10)) +
-  geom_abline(intercept = 0, slope = 0)
+![](turnover_vs_temperature_plots_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-1.png)<!-- -->![](turnover_vs_temperature_plots_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-2.png)<!-- -->![](turnover_vs_temperature_plots_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-3.png)<!-- -->![](turnover_vs_temperature_plots_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-4.png)<!-- -->![](turnover_vs_temperature_plots_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-5.png)<!-- -->
 
-p2 <- ggplot(trends[!is.na(tempchangetext2), ], aes(tempchangetext2, Horn)) +
-  geom_violin(draw_quantiles = c(0.25, 0.5, 0.75), fill = 'grey') +
-  labs(x = '', y = 'Horn dissimilarity', tag = 'B', title = 'Rate of temperature change') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=10)) +
-  geom_abline(intercept = 0, slope = 0)
-
-p3 <- ggplot(trendsum4[type %in% c('Jtu', 'Jbeta', 'Horn') & is.na(duration)], 
-             aes(text, ave, group = type, color = type)) +
-  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
-  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width= 0.1, position = position_dodge(width = 0.25)) +
-  labs(x = '', y = 'Dissimilarity', title = 'All time intervals') +
-  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=10),
-        axis.text.x = element_text(angle = 45, vjust = 0.7))
-
-p4 <- ggplot(trendsum4[type %in% c('Jtu', 'Jbeta', 'Horn') & duration==1, ], 
-             aes(text, ave, group = type, color = type)) +
-  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
-  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width= 0.1, position = position_dodge(width = 0.25)) +
-  labs(x = '', y = 'Dissimilarity', title = '1-year interval') +
-  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=10),
-        axis.text.x = element_text(angle = 45, vjust = 0.7))
-
-p5 <- ggplot(trendsum4[type %in% c('Jtu', 'Jbeta', 'Horn') & duration==10, ], 
-             aes(text, ave, group = type, color = type)) +
-  geom_point(position = position_dodge(width = 0.25), size = 0.5) +
-  geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width= 0.1, position = position_dodge(width = 0.25)) +
-  labs(x = '', y = 'Dissimilarity', title = '10-year interval') +
-  geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=10),
-        axis.text.x = element_text(angle = 45, vjust = 0.7))
-
-p1
-```
-
-![](turnover_vs_temperature_plots_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-1.png)<!-- -->
-
-``` r
-p2
-```
-
-![](turnover_vs_temperature_plots_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-2.png)<!-- -->
-
-``` r
-p3
-```
-
-![](turnover_vs_temperature_plots_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-3.png)<!-- -->
-
-``` r
-p4
-```
-
-![](turnover_vs_temperature_plots_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-4.png)<!-- -->
-
-``` r
-p5
-```
-
-![](turnover_vs_temperature_plots_files/figure-gfm/turnover%20vs.%20temperature%20violin%20plot-5.png)<!-- -->
-
-# Plot turnover binned by warming rates vs duration
+# Plot dissimilarity binned by tempchange vs duration
 
 ## Jaccard turnover dissimilarity
 
@@ -394,3 +307,134 @@ grid.arrange(p1, p2, ncol = 2)
 ```
 
 ![](turnover_vs_temperature_plots_files/figure-gfm/diss%20vs.%20temperature%20trend%20vs.%20duration%20by%20endofrac-1.png)<!-- -->
+
+# Plot dissimilarity binned by duration vs tempchange
+
+## Jaccard turnover dissimilarity
+
+``` r
+ggplot(trends[duration == 1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = trends[duration ==5,], aes(color = '5')) +
+  geom_smooth(data = trends[duration==10,], aes(color = '10')) +
+  geom_smooth(data = trends[duration==15,], aes(color = '15')) +
+  geom_smooth(data = trends[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration')
+```
+
+![](turnover_vs_temperature_plots_files/figure-gfm/diss%20vs.%20tempchange%20by%20duration-1.png)<!-- -->
+
+## By realm
+
+``` r
+terr <- trends[REALM == 'Terrestrial', ]
+p1 <- ggplot(terr[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = terr[duration==5,], aes(color = '5')) +
+  geom_smooth(data = terr[duration==10,], aes(color = '10')) +
+  geom_smooth(data = terr[duration==15,], aes(color = '15')) +
+  geom_smooth(data = terr[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = 'Terrestrial')
+
+mar <- trends[REALM == 'Marine', ]
+p2 <- ggplot(mar[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = mar[duration==5,], aes(color = '5')) +
+  geom_smooth(data = mar[duration==10,], aes(color = '10')) +
+  geom_smooth(data = mar[duration==15,], aes(color = '15')) +
+  geom_smooth(data = mar[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = 'Marine')
+
+fre <- trends[REALM == 'Freshwater', ]
+p3 <- ggplot(fre[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = fre[duration==5,], aes(color = '5')) +
+  geom_smooth(data = fre[duration==10,], aes(color = '10')) +
+  geom_smooth(data = fre[duration==15,], aes(color = '15')) +
+  geom_smooth(data = fre[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = 'Freshwater')
+
+grid.arrange(p1, p2, p3, ncol = 3)
+```
+
+![](turnover_vs_temperature_plots_files/figure-gfm/diss%20vs.%20tempchange%20by%20duration%20by%20realm-1.png)<!-- -->
+
+## By body size
+
+``` r
+small <- trends[mass_mean_weight < 1, ]
+p1 <- ggplot(small[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = small[duration==5,], aes(color = '5')) +
+  geom_smooth(data = small[duration==10,], aes(color = '10')) +
+  geom_smooth(data = small[duration==15,], aes(color = '15')) +
+  geom_smooth(data = small[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = '<1 g')
+
+med <- trends[mass_mean_weight < 10000 & mass_mean_weight >= 1, ]
+p2 <- ggplot(med[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = med[duration==5,], aes(color = '5')) +
+  geom_smooth(data = med[duration==10,], aes(color = '10')) +
+  geom_smooth(data = med[duration==15,], aes(color = '15')) +
+  geom_smooth(data = med[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = '1g to 10kg')
+
+lg <- trends[mass_mean_weight >= 10000, ]
+p3 <- ggplot(lg[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = lg[duration==5,], aes(color = '5')) +
+  geom_smooth(data = lg[duration==10,], aes(color = '10')) +
+  geom_smooth(data = lg[duration==15,], aes(color = '15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = '>10kg')
+
+grid.arrange(p1, p2, p3, ncol = 3)
+```
+
+![](turnover_vs_temperature_plots_files/figure-gfm/diss%20vs.%20temperature%20trend%20by%20duration%20by%20body%20size-1.png)<!-- -->
+
+## By endo/ectotherm
+
+``` r
+ecto <- trends[endofrac <= 0.5, ]
+p1 <- ggplot(ecto[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = ecto[duration==5,], aes(color = '5')) +
+  geom_smooth(data = ecto[duration==10,], aes(color = '10')) +
+  geom_smooth(data = ecto[duration==15,], aes(color = '15')) +
+  geom_smooth(data = ecto[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = 'Mostly ectotherms')
+
+endo <- trends[endofrac > 0.5, ]
+p2 <- ggplot(endo[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
+  geom_smooth(aes(color = '1')) +
+  geom_smooth(data = endo[duration==5,], aes(color = '5')) +
+  geom_smooth(data = endo[duration==10,], aes(color = '10')) +
+  geom_smooth(data = endo[duration==15,], aes(color = '15')) +
+  geom_smooth(data = ecto[duration>15,], aes(color = '>15')) +
+  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = 'Mostly endotherms')
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+![](turnover_vs_temperature_plots_files/figure-gfm/diss%20vs.%20temperature%20trend%20by%20duration%20by%20endofrac-1.png)<!-- -->
+\#\# By realm, body size AND endo/ecto
+
+``` r
+trends[duration == 1, dur_bin := '[1] yr']
+trends[duration > 1 & duration <= 5, dur_bin := '(1-5] yr']
+trends[duration > 5 & duration <= 10, dur_bin := '(5-10] yr']
+trends[duration > 10 & duration <= 20, dur_bin := '(10-20] yr']
+trends[duration > 20, dur_bin := '>20 yr']
+trends[mass_mean_weight <= 1, mass_bin := '<=1 g']
+trends[mass_mean_weight > 1 & mass_mean_weight <= 10000, mass_bin := '(1 g-10 kg]']
+trends[mass_mean_weight > 10000, mass_bin := '>10 kg']
+trends[endofrac > 0.5, endoTF := 'endo']
+trends[endofrac <= 0.5, endoTF := 'ecto']
+ggplot(trends[!is.na(mass_bin), ], aes(x=abs(tempchange), y=Jtu, color = dur_bin, group = dur_bin)) +
+  geom_smooth() +
+  facet_grid(mass_bin + endoTF~REALM, scales = 'free') +
+  labs(y = 'Jaccard dissimilarity', title = '')
+```
+
+![](turnover_vs_temperature_plots_files/figure-gfm/diss%20vs.%20tempchange%20by%20duration%20mass%20endofrac-1.png)<!-- -->
