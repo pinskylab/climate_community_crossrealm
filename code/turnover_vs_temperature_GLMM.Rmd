@@ -1,6 +1,6 @@
 ---
 title: 'Temperature change and the community response to temperature change across realms'
-subtitle: '(using mixed effects models)'
+subtitle: '(using beta models)'
 output: 
     github_document: default
 
@@ -137,18 +137,19 @@ if(file.exists('temp/modRFrID.rds')) modRFrID <- readRDS('temp/modRFrID.rds')
 if(file.exists('temp/modRFnestedRE.rds')) modRFnestedRE <- readRDS('temp/modRFnestedRE.rds')
 if(file.exists('temp/modRFslopeRE.rds')) modRFslopeRE <- readRDS('temp/modRFslopeRE.rds')
 if(file.exists('temp/modRFdisp.rds')) modRFdisp <- readRDS('temp/modRFdisp.rds')
+if(file.exists('temp/modRFdisp2lev.rds')) modRFdisp2lev <- readRDS('temp/modRFdisp2lev.rds')
 
 
-AICtab(modRFgauss, modRFbeta, modRFrID, modRFnestedRE, modRFslopeRE, modRFdisp)
-summary(modRFdisp)
+AICtab(modRFgauss, modRFbeta, modRFrID, modRFnestedRE, modRFslopeRE, modRFdisp, modRFdisp2lev)
+summary(modRFdisp2lev)
 ```
-Chooses beta errors, random slopes (tempchange_abs.sc) & intercepts for taxa_mod2, STUDY_ID, rarefyID, and variance scaled to nspp.
+Chooses beta errors, random slopes (tempchange_abs.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp.
 We haven't dealt with potential testing on the boundary issues here yet.
 
 
 ## Temperature-only models
 ### Load the models
-```{r LME temperature only}
+```{r temperature only}
 # all years
 modonlyTchangeJtu <- readRDS('temp/modonlyTchangeJtu.rds')
 modonlyTchangeJbeta <- readRDS('temp/modonlyTchangeJbeta.rds')
@@ -295,41 +296,77 @@ duration is in years
 
 ### Plot the response
 ```{r plot TD response}
-newdat <- expand.grid(duration = c(1, 10), tempchange = seq(0.01, 3, length.out = 2), 
+if(!file.exists('temp/modTDJtu_preds.rds')) {
+  newdat <- expand.grid(duration = c(1, 50), tempchange = seq(0.01, 5, length.out = 5), 
                       taxa_mod2 = NA, STUDY_ID = NA, rarefyID = NA,
                       Nspp = 60) # no REs, ave number of species
-scl <- attr(trends$tempchange_abs.sc, 'scaled:scale') # scaling factor for tempchange
-newdat$tempchange_abs.sc <- abs(newdat$tempchange)/scl
-cent <- attr(trends$nspp.sc, 'scaled:center') 
-scl <- attr(trends$nspp.sc, 'scaled:scale') 
-newdat$nspp.sc <- (log(newdat$Nspp) - cent)/scl
-newdat$Jtu <- predict(modTDJtu, newdata = newdat, se.fit = FALSE, re.form = NA, type = 'response')
+  scl <- attr(trends$tempchange_abs.sc, 'scaled:scale') # scaling factor for tempchange
+  newdat$tempchange_abs.sc <- abs(newdat$tempchange)/scl
+  cent <- attr(trends$nspp.sc, 'scaled:center') 
+  scl <- attr(trends$nspp.sc, 'scaled:scale') 
+  newdat$nspp.sc <- (log(newdat$Nspp) - cent)/scl
+  Jtu <- predict(modTDJtu, newdata = newdat, se.fit = TRUE, re.form = NA, type = 'response')
+  newdat$durationfac <- as.factor(newdat$duration)
+  newdat$Jtu <- Jtu$fit
+  newdat$Jtu.se <- Jtu$se.fit
+  
+  saveRDS(newdat, file = 'temp/modTDJtu_preds.rds')
+} else {
+  newdat <- readRDS('temp/modTDJtu_preds.rds')
+}
+
+ggplot(newdat, aes(tempchange, Jtu, color = durationfac, group = durationfac)) +
+  geom_line() +
+  geom_ribbon(aes(ymin=Jtu - 1.96*Jtu.se, ymax=Jtu + 1.96*Jtu.se), alpha = 0.1, linetype = 'blank')
 ```
 
 ## Temperature and duration by REALM
 ### Load the models
-```{r LME temperature duration realm}
-
-if(file.exists('temp/modTDrealmJtu.rds')) modTDJrealmtu <- readRDS('temp/modTDrealmJtu.rds')
+```{r temperature duration realm}
+# all years
+if(file.exists('temp/modTDrealmJtu.rds')) modTDrealmJtu <- readRDS('temp/modTDrealmJtu.rds')
 if(file.exists('temp/modTDrealmJbeta.rds')) modTDrealmJbeta <- readRDS('temp/modTDrealmJbeta.rds')
 if(file.exists('temp/modTDrealmHorn.rds')) modTDrealmHorn <- readRDS('temp/modTDrealmHorn.rds')
+
+# 1 year
+if(file.exists('temp/modTDrealm1yrJtu.rds')) modTDrealm1yrJtu <- readRDS('temp/modTDrealm1yrJtu.rds')
+if(file.exists('temp/modTDrealm1yrJbeta.rds')) modTDrealm1yrJbeta <- readRDS('temp/modTDrealm1yrJbeta.rds')
+if(file.exists('temp/modTDrealm1yrHorn.rds')) modTDrealm1yrHorn <- readRDS('temp/modTDrealm1yrHorn.rds')
+
+# 10 year
+if(file.exists('temp/modTDrealm10yrJtu.rds')) modTDrealm10yrJtu <- readRDS('temp/modTDrealm10yrJtu.rds')
+if(file.exists('temp/modTDrealm10yrJbeta.rds')) modTDrealm10yrJbeta <- readRDS('temp/modTDrealm10yrJbeta.rds')
+if(file.exists('temp/modTDrealm10yrHorn.rds')) modTDrealm10yrHorn <- readRDS('temp/modTDrealm10yrHorn.rds')
 
 ```
 
 ### Summary
-```{r summary of TD mods}
+```{r summary of TDrealm mods}
 summary(modTDrealmJtu)
 summary(modTDrealmJbeta)
 summary(modTDrealmHorn)
 ```
 
+### Summary (1 yr)
+```{r summary of TDrealm1yr mods}
+summary(modTDrealm1yrJtu)
+summary(modTDrealm1yrJbeta)
+summary(modTDrealm1yrHorn)
+```
+
+### Summary (10 yr)
+```{r summary of TDrealm10yr mods}
+summary(modTDrealm10yrJtu)
+summary(modTDrealm10yrJbeta)
+summary(modTDrealm10yrHorn)
+```
 
 ### Plot the temp coefficients from TD realm models
-```{r modTD coefs}
+```{r modTD realm coefs}
 
-coefs1 <- summary(modTDrealmJtu)$tTable
-coefs2 <- summary(modTDrealmJbeta)$tTable
-coefs3 <- summary(modTDrealmHorn)$tTable
+coefs1 <- summary(modTDrealmJtu)$coefficients$cond
+coefs2 <- summary(modTDrealmJbeta)$coefficients$cond
+coefs3 <- summary(modTDrealmHorn)$coefficients$cond
 
 varstoplot <- unique(c(rownames(coefs1), rownames(coefs2), rownames(coefs3)))
 varstoplot <- varstoplot[which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot))] # vars to plot
@@ -374,4 +411,19 @@ for(i in 1:length(varstoplot)){
 legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Horn'), cex = 0.5)
 ```
 
+## Full models
+### Load the models
+```{r full}
+# all years
+if(file.exists('temp/modFullendo.rds')) modFullendo <- readRDS('temp/modFullendo.rds')
+if(file.exists('temp/modFullmass.rds')) modFullmass <- readRDS('temp/modFullmass.rds')
+
+
+```
+
+### Summary
+```{r summary of full mods}
+summary(modFullendo)
+summary(modFullmass)
+```
 
