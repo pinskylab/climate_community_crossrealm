@@ -1,21 +1,42 @@
----
-title: "Sample global temperature dataset trends"
-output:
-    github_document: default
----
-```{r setup}
-require(data.table)
-require(ncdf4)
-require(ggplot2)
-require(gridExtra)
+Sample global temperature dataset trends
+================
 
+``` r
+require(data.table)
+```
+
+    ## Loading required package: data.table
+
+``` r
+require(ncdf4)
+```
+
+    ## Loading required package: ncdf4
+
+``` r
+require(ggplot2)
+```
+
+    ## Loading required package: ggplot2
+
+``` r
+require(gridExtra)
+```
+
+    ## Loading required package: gridExtra
+
+``` r
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
 ```
 
 # Read in BioTime and temperature data
-Using average daily temperature by month from CRU TS
-Using average temperature by month from ERSST. NOAA_ERSST_V5 data provided by the NOAA/OAR/ESRL PSD, Boulder, Colorado, USA, from their Web site at https://www.esrl.noaa.gov/psd/
-```{r}
+
+Using average daily temperature by month from CRU TS Using average
+temperature by month from ERSST. NOAA\_ERSST\_V5 data provided by the
+NOAA/OAR/ESRL PSD, Boulder, Colorado, USA, from their Web site at
+<https://www.esrl.noaa.gov/psd/>
+
+``` r
 # biotime covariate data, including temperature trends
 trends <- fread('output/turnover_w_covariates.csv.gz')
 trends[, REALM2 := as.character(REALM)] # group terrestrial and freshwater
@@ -26,6 +47,11 @@ n = nc_open('dataDL/cruts/cru_ts4.03.1901.2018.tmp.dat.nc') # Open the netCDF fi
 # print(n) # get information about the file format
 cruts = ncvar_get(n, 'tmp') # dim order: 720 lon x 360 lat x 1416 time (observations are month, time measured in days since Jan 1, 1900). 0 lon is at date line.
 dim(cruts)
+```
+
+    ## [1]  720  360 1416
+
+``` r
 dates <- format(as.Date(as.numeric(ncvar_get(n, 'time')), origin=as.Date('1900-01-01')), format = '%Y%m')
 dimnames(cruts) <- list(lon_cruts = ncvar_get(n, 'lon'), lat_cruts = ncvar_get(n, 'lat'), time = dates)
 nc_close(n)
@@ -35,26 +61,47 @@ n = nc_open('dataDL/ersst/sst.mnmean.nc') # Open the netCDF file
 # print(n) # get information about the file format
 ersst = ncvar_get(n, 'sst') # dim order: 180 lon x 89 lat x 1994 time (observations are month, time measured in days since Jan 1, 1800). 0 lon is at greenwhich mean.
 dim(ersst)
+```
+
+    ## [1]  180   89 1997
+
+``` r
 dates <- format(as.Date(as.numeric(ncvar_get(n, 'time')), origin = as.Date('1800-01-01')), format = '%Y%m')
 dimnames(ersst) <- list(lon_ersst = ncvar_get(n, 'lon'), lat_ersst = ncvar_get(n, 'lat'), time = dates)
 nc_close(n)
-
 ```
 
 Check the temperature data read in correctly
-```{r}
+
+``` r
 # CTU TS
 head(dimnames(cruts)[[3]]) # 190101: good
-tail(dimnames(cruts)[[3]]) # should be Dec. 2018: good
-
-# ERSST
-head(dimnames(ersst)[[3]]) # should be Jan. 1854: good
-tail(dimnames(ersst)[[3]]) # should be 2020: good
-
 ```
 
+    ## [1] "190101" "190102" "190103" "190104" "190105" "190106"
+
+``` r
+tail(dimnames(cruts)[[3]]) # should be Dec. 2018: good
+```
+
+    ## [1] "201807" "201808" "201809" "201810" "201811" "201812"
+
+``` r
+# ERSST
+head(dimnames(ersst)[[3]]) # should be Jan. 1854: good
+```
+
+    ## [1] "185401" "185402" "185403" "185404" "185405" "185406"
+
+``` r
+tail(dimnames(ersst)[[3]]) # should be 2020: good
+```
+
+    ## [1] "201912" "202001" "202002" "202003" "202004" "202005"
+
 # Average temperature by year
-```{r}
+
+``` r
 # CRU TS
 crutsmelt <- as.data.table(cruts, value.name='cruts') # reshape to long format
 crutsmelt[, YEAR := as.numeric(substr(time, 1,4))] # extract year
@@ -64,22 +111,26 @@ crutsyr <- crutsmelt[, .(cruts = mean(cruts, na.rm=TRUE)), by = .(lat_cruts = as
 ersstmelt <- as.data.table(ersst, value.name = 'ersst')
 ersstmelt[, YEAR := as.numeric(substr(time, 1,4))]
 ersstyr <- ersstmelt[, .(ersst = mean(ersst, na.rm=TRUE)), by = .(lat_ersst = as.numeric(lat_ersst), lon_ersst = as.numeric(lon_ersst), YEAR)]
-
 ```
 
 ## Plot CRU TS to make sure it worked
-```{r}
+
+``` r
 ggplot(crutsyr[YEAR == 1901,], aes(lon_cruts, lat_cruts, color = cruts)) + geom_point(size = 0.1)
 ```
-## Plot ERSST to make sure it worked
-```{r}
+
+![](sample_global_temp_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+\#\# Plot ERSST to make sure it worked
+
+``` r
 ggplot(ersstyr[YEAR == 1901,], aes(lon_ersst, lat_ersst, color = ersst)) + geom_point(size = 1) # plot to make sure it worked
 ```
 
-
+![](sample_global_temp_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 # Pick 50000 locations globally and assign sets of years
-```{r random locations}
+
+``` r
 n = 50000 # number of locations to pick
 
 # function to calculate lat/lon grid area. size is in degrees (length of one side)
@@ -119,49 +170,76 @@ ersstallyrs <- merge(ersstallyrs, ersstyr[, .(lat_ersst, lon_ersst, year2 = YEAR
 ```
 
 ## Temperature change
-```{r calc temp diff}
+
+``` r
 # CRU TS
 crutsallyrs[, dcruts := cruts2 - cruts1]
 
 # ERSST
 ersstallyrs[, dersst := ersst2 - ersst1]
-
 ```
 
 ## Check zeros
-```{r check zeros}
+
+``` r
 ersstallyrs[(ersst1 < -1.79 & ersst2 < -1.79), .N]/nrow(ersstallyrs) # fraction of values that are always frozen
-ersstallyrs[dersst == 0, summary(ersst1)] # temperatures of locations that have no change in temperature
-
-# remove comparisons that are at freezing temp all the time?
-#ersstallyrs <- ersstallyrs[!(ersst1 < -1.79 & ersst2 < -1.79),]
-
 ```
 
-## Merge and trim to 50k in each realm
-```{r merge}
-tempchange <- rbind(crutsallyrs[sample(1:.N, size = n), 
-                                .(lat = lat_cruts, lon = lon_cruts, REALM = 'Terrestrial', tempchange = dcruts, year1, year2)],
-                    ersstallyrs[sample(1:.N, size = n), 
-                                .(lat = lat_ersst, lon = lon_ersst, REALM = 'Marine', tempchange = dersst, year1, year2)])
+    ## [1] 0.01427964
+
+``` r
+ersstallyrs[dersst == 0, summary(ersst1)] # temperatures of locations that have no change in temperature
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##    -1.8    -1.8    -1.8    -1.8    -1.8    -1.8
+
+``` r
+# remove comparisons that are frozen all the time?
+#ersstallyrs <- ersstallyrs[!(ersst1 < -1.79 & ersst2 < -1.79),]
+```
+
+## Merge
+
+``` r
+tempchange <- rbind(crutsallyrs[, .(lat = lat_cruts, lon = lon_cruts, REALM = 'Terrestrial', tempchange = dcruts, year1, year2)],
+                    ersstallyrs[, .(lat = lat_ersst, lon = lon_ersst, REALM = 'Marine', tempchange = dersst, year1, year2)])
 
 tempchange[is.na(tempchange), .N] # some NA values
+```
+
+    ## [1] 5160
+
+``` r
 tempchange <- tempchange[!is.na(tempchange), ] # remove them
 ```
 
 # Summaries
-```{r summary}
+
+``` r
 # degC/year
 tempchange[, .(mean = mean(tempchange/(year2 - year1)), se = sd(tempchange/(year2 - year1))/sqrt(.N)), by = REALM]
+```
+
+    ##          REALM        mean           se
+    ## 1: Terrestrial 0.027474449 5.766445e-05
+    ## 2:      Marine 0.008697421 2.339284e-05
+
+``` r
 trends[!is.na(tempchange), .(mean = mean(tempchange/(year2 - year1)), se = sd(tempchange/(year2 - year1))/sqrt(.N)), by = REALM2]
 ```
 
+    ##       REALM2       mean           se
+    ## 1:    Marine 0.01984333 0.0002011485
+    ## 2: TerrFresh 0.02905946 0.0006314371
+
 # Plot
-```{r plot, fig.width=8, fig.height=3}
+
+``` r
 p1 <- ggplot(tempchange, aes(x = tempchange, fill = REALM)) +
     geom_density(alpha = 0.25) +
     scale_x_continuous(limits = c(-5.5, 5.5)) +
-    ggtitle('Random locations')
+    ggtitle('50k random locations')
 
 p2 <- ggplot(trends[!is.na(tempchange), ], aes(x = tempchange, fill = REALM2)) +
     geom_density(alpha = 0.25) +
@@ -171,8 +249,12 @@ p2 <- ggplot(trends[!is.na(tempchange), ], aes(x = tempchange, fill = REALM2)) +
 grid.arrange(p1, p2, nrow = 1)
 ```
 
-# Write out 
-```{r write}
-write.csv(tempchange, file = gzfile('output/temperature_trends_sampled.csv.gz'), row.names = FALSE)
+    ## Warning: Removed 88 rows containing non-finite values (stat_density).
 
+![](sample_global_temp_files/figure-gfm/plot-1.png)<!-- -->
+
+# Write out
+
+``` r
+write.csv(tempchange, file = gzfile('output/temperature_trends_sampled.csv.gz'), row.names = FALSE)
 ```
