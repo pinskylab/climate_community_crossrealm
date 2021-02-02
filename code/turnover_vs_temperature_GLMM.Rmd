@@ -149,7 +149,7 @@ We haven't dealt with potential testing on the boundary issues here yet.
 
 ## Temperature-only models
 ### Load the models
-```{r LME temperature only}
+```{r temperature only}
 # all years
 modonlyTchangeJtu <- readRDS('temp/modonlyTchangeJtu.rds')
 modonlyTchangeJbeta <- readRDS('temp/modonlyTchangeJbeta.rds')
@@ -322,11 +322,21 @@ ggplot(newdat, aes(tempchange, Jtu, color = durationfac, group = durationfac)) +
 
 ## Temperature and duration by REALM
 ### Load the models
-```{r LME temperature duration realm}
-
+```{r temperature duration realm}
+# all years
 if(file.exists('temp/modTDrealmJtu.rds')) modTDrealmJtu <- readRDS('temp/modTDrealmJtu.rds')
 if(file.exists('temp/modTDrealmJbeta.rds')) modTDrealmJbeta <- readRDS('temp/modTDrealmJbeta.rds')
 if(file.exists('temp/modTDrealmHorn.rds')) modTDrealmHorn <- readRDS('temp/modTDrealmHorn.rds')
+
+# 1 year
+if(file.exists('temp/modTDrealm1yrJtu.rds')) modTDrealm1yrJtu <- readRDS('temp/modTDrealm1yrJtu.rds')
+if(file.exists('temp/modTDrealm1yrJbeta.rds')) modTDrealm1yrJbeta <- readRDS('temp/modTDrealm1yrJbeta.rds')
+if(file.exists('temp/modTDrealm1yrHorn.rds')) modTDrealm1yrHorn <- readRDS('temp/modTDrealm1yrHorn.rds')
+
+# 10 year
+if(file.exists('temp/modTDrealm10yrJtu.rds')) modTDrealm10yrJtu <- readRDS('temp/modTDrealm10yrJtu.rds')
+if(file.exists('temp/modTDrealm10yrJbeta.rds')) modTDrealm10yrJbeta <- readRDS('temp/modTDrealm10yrJbeta.rds')
+if(file.exists('temp/modTDrealm10yrHorn.rds')) modTDrealm10yrHorn <- readRDS('temp/modTDrealm10yrHorn.rds')
 
 ```
 
@@ -337,6 +347,19 @@ summary(modTDrealmJbeta)
 summary(modTDrealmHorn)
 ```
 
+### Summary (1 yr)
+```{r summary of TDrealm1yr mods}
+summary(modTDrealm1yrJtu)
+summary(modTDrealm1yrJbeta)
+summary(modTDrealm1yrHorn)
+```
+
+### Summary (10 yr)
+```{r summary of TDrealm10yr mods}
+summary(modTDrealm10yrJtu)
+summary(modTDrealm10yrJbeta)
+summary(modTDrealm10yrHorn)
+```
 
 ### Plot the temp coefficients from TD realm models
 ```{r modTD realm coefs}
@@ -388,4 +411,19 @@ for(i in 1:length(varstoplot)){
 legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Horn'), cex = 0.5)
 ```
 
+## Full models
+### Load the models
+```{r full}
+# all years
+if(file.exists('temp/modFullendo.rds')) modFullendo <- readRDS('temp/modFullendo.rds')
+if(file.exists('temp/modFullmass.rds')) modFullmass <- readRDS('temp/modFullmass.rds')
+
+
+```
+
+### Summary
+```{r summary of full mods}
+summary(modFullendo)
+summary(modFullmass)
+```
 
