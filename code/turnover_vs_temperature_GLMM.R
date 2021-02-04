@@ -487,7 +487,7 @@ if(fitmod == 'modFullMaEnMiNPHu'){
     i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
                                  microclim.sc, npp.sc, human_bowler.sc)]
     
-    modFullendo <- glmmTMB(Jtu.sc ~ tempchange_abs.sc*REALM + 
+    modFullMaEnMiNPHu <- glmmTMB(Jtu.sc ~ tempchange_abs.sc*REALM + 
                                tempchange_abs.sc*tempave_metab.sc + 
                                tempchange_abs.sc*duration.sc +
                                tempchange_abs.sc*mass.sc +
@@ -500,9 +500,9 @@ if(fitmod == 'modFullMaEnMiNPHu'){
                            family = beta_family(link = 'logit'), 
                            dispformula = ~nspp.sc, 
                            control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    summary(modFullendo)
-    saveRDS(modFullendo, file = 'temp/modFullendo.rds')
-    print('saved modFullendo.rds')
+    summary(modFullMaEnMiNPHu)
+    saveRDS(modFullMaEnMiNPHu, file = 'temp/modFullMaEnMiNPHu.rds')
+    print('saved modFullMaEnMiNPHu.rds')
     MATCHMOD <- TRUE
 }
 
