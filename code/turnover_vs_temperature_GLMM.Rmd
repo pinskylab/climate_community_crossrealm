@@ -1,6 +1,7 @@
 ---
 title: 'Temperature change and the community response to temperature change across realms'
 subtitle: '(using beta models)'
+subtitle: 'Evaluate and plot models'
 output: 
     github_document: default
 
@@ -19,6 +20,7 @@ library(gridExtra) # to combine ggplots together
 library(grid) # to combine ggplots together
 library(RColorBrewer)
 library(scales) # for defining custom scales in ggplot
+library(DHARMa) # for model diagnostics
 
 options(width=500) # turn off most text wrapping
 
@@ -417,13 +419,40 @@ legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Hor
 # all years
 if(file.exists('temp/modFullendo.rds')) modFullendo <- readRDS('temp/modFullendo.rds')
 if(file.exists('temp/modFullmass.rds')) modFullmass <- readRDS('temp/modFullmass.rds')
-
+if(file.exists('temp/modFullMaEnMiNPHu.rds')) modFullMaEnMiNPHu <- readRDS('temp/modFullMaEnMiNPHu.rds') # mass, endoecto, microclimate, NPP, humans
 
 ```
 
 ### Summary
-```{r summary of full mods}
+#### endo and mass models
+```{r summary endo and mass}
 summary(modFullendo)
 summary(modFullmass)
 ```
 
+#### Mass, endo, microclimate, NPP, humans
+```{r summary MaEnMiNPHu}
+summary(modFullMaEnMiNPHu)
+```
+
+### DHARMa simulate residuals
+#### Mass, endo, microclimate, NPP, humans
+##### Simulate residuals
+```{r dharma maenminphu}
+if(!file.exists('temp/res_MaEnMiNPHu.rds')) {
+  # make a vector of 1000 values that meet our completeness criteria
+  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                               microclim.sc, npp.sc, human_bowler.sc)] # needed because model fit with trends[i,]
+
+  res_MaEnMiNPHu <- simulateResiduals(modFullMaEnMiNPHu, n = 100)
+  
+  saveRDS(res_MaEnMiNPHu, file = 'temp/res_MaEnMiNPHu.rds')
+} else {
+  res_MaEnMiNPHu <- readRDS('temp/res_MaEnMiNPHu.rds')
+}
+```
+
+##### Plot residuals
+```{r plot darma maenminphu}
+plot(res_MaEnMiNPHu)
+```

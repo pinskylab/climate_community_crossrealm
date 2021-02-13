@@ -483,11 +483,11 @@ if(fitmod == 'modFullendo'){
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modFullMaEnMiNPHu'){
+if(fitmod == 'modFullMaEnMiNPHuJtu'){
     i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
                                  microclim.sc, npp.sc, human_bowler.sc)]
     
-    modFullMaEnMiNPHu <- glmmTMB(Jtu.sc ~ tempchange_abs.sc*REALM + 
+    modFullMaEnMiNPHuJtu <- glmmTMB(Jtu.sc ~ tempchange_abs.sc*REALM + 
                                tempchange_abs.sc*tempave_metab.sc + 
                                tempchange_abs.sc*duration.sc +
                                tempchange_abs.sc*mass.sc +
@@ -500,12 +500,57 @@ if(fitmod == 'modFullMaEnMiNPHu'){
                            family = beta_family(link = 'logit'), 
                            dispformula = ~nspp.sc, 
                            control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    summary(modFullMaEnMiNPHu)
-    saveRDS(modFullMaEnMiNPHu, file = 'temp/modFullMaEnMiNPHu.rds')
-    print('saved modFullMaEnMiNPHu.rds')
+    summary(modFullMaEnMiNPHuJtu)
+    saveRDS(modFullMaEnMiNPHuJtu, file = 'temp/modFullMaEnMiNPHuJtu.rds')
+    print('saved modFullMaEnMiNPHuJtu.rds')
     MATCHMOD <- TRUE
 }
 
+if(fitmod == 'modFullMaEnMiNPHu1yrJtu'){
+    i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, mass.sc, endothermfrac.sc,
+                                 microclim.sc, npp.sc, human_bowler.sc) & 
+                    duration == 1]
+    
+    modFullMaEnMiNPHu1yrJtu <- glmmTMB(Jtu.sc ~ tempchange_abs.sc*REALM + 
+                                     tempchange_abs.sc*tempave_metab.sc + 
+                                     tempchange_abs.sc*mass.sc +
+                                     tempchange_abs.sc*endothermfrac.sc +
+                                     tempchange_abs.sc*microclim.sc +
+                                     tempchange_abs.sc*npp.sc +
+                                     tempchange_abs.sc*human_bowler.sc:REALM2 +
+                                     (tempchange_abs.sc|STUDY_ID/rarefyID), 
+                                 data = trends[i,], 
+                                 family = beta_family(link = 'logit'), 
+                                 dispformula = ~nspp.sc, 
+                                 control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modFullMaEnMiNPHu1yrJtu)
+    saveRDS(modFullMaEnMiNPHu1yrJtu, file = 'temp/modFullMaEnMiNPHu1yrJtu.rds')
+    print('saved modFullMaEnMiNPHu1yrJtu.rds')
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modFullMaEnMiNPHu10yrJtu'){
+    i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, mass.sc, endothermfrac.sc,
+                                 microclim.sc, npp.sc, human_bowler.sc) & 
+                    duration == 10]
+    
+    modFullMaEnMiNPHu10yrJtu <- glmmTMB(Jtu.sc ~ tempchange_abs.sc*REALM + 
+                                           tempchange_abs.sc*tempave_metab.sc + 
+                                           tempchange_abs.sc*mass.sc +
+                                           tempchange_abs.sc*endothermfrac.sc +
+                                           tempchange_abs.sc*microclim.sc +
+                                           tempchange_abs.sc*npp.sc +
+                                           tempchange_abs.sc*human_bowler.sc:REALM2 +
+                                           (tempchange_abs.sc|STUDY_ID/rarefyID), 
+                                       data = trends[i,], 
+                                       family = beta_family(link = 'logit'), 
+                                       dispformula = ~nspp.sc, 
+                                       control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modFullMaEnMiNPHu10yrJtu)
+    saveRDS(modFullMaEnMiNPHu10yrJtu, file = 'temp/modFullMaEnMiNPHu10yrJtu.rds')
+    print('saved modFullMaEnMiNPHu10yrJtu.rds')
+    MATCHMOD <- TRUE
+}
 ####################################
 # final check that something ran
 if(MATCHMOD == FALSE) stop("Model name did not match anything", call.=FALSE)
