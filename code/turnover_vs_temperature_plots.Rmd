@@ -56,23 +56,35 @@ trends[, duration := year2 - year1]
 # Plot dissimilarity vs. temperature change
 ## All temporal scales
 ```{r plot diss vs temp change, echo=FALSE, fig.height = 9, fig.width = 11}
+cbPalette <- sample(c("#999999", "#E69F00", "#56B4E9", "#009E73", "#F0E442", "#0072B2", "#D55E00", "#CC79A7"), 
+                    length(unique(trends$rarefyID)),
+                    replace = TRUE)
+
 p1 <- ggplot(trends, aes(tempchange, Jtu)) +
-  geom_point(size = 0.2, alpha = 0.2, na.rm = TRUE) + 
+  geom_point(aes(color = as.factor(rarefyID)), size = 2, alpha = 0.05, na.rm = TRUE) + 
   geom_smooth(method = 'lm', formula = y ~ abs(x), na.rm = TRUE) + 
   labs(x = 'Temperature change (°C)', y = 'Jaccard turnover') +
-  facet_grid(~REALM, scales = 'free')
+  facet_grid(~REALM, scales = 'free') + 
+  theme(legend.position = "none") + 
+  theme(legend.position = "none", axis.text = element_text(size = 16)) +
+  scale_color_manual(values=cbPalette)
 
 p2 <- ggplot(trends, aes(tempchange, Jbeta)) +
-  geom_point(size = 0.2, alpha = 0.2, na.rm = TRUE) + 
+  geom_point(aes(color = as.factor(rarefyID)), size = 2, alpha = 0.05, na.rm = TRUE) + 
   geom_smooth(method = 'lm', formula = y ~ abs(x), na.rm = TRUE) +
   labs(x = 'Temperature change (°C)', y = 'Jaccard total') +
-  facet_grid(~REALM, scales = 'free')
+  facet_grid(~REALM, scales = 'free') + 
+  theme(legend.position = "none", axis.text = element_text(size = 16)) +
+  scale_color_manual(values=cbPalette)
 
 p3 <- ggplot(trends, aes(tempchange, Horn)) +
-  geom_point(size = 0.2, alpha = 0.2, na.rm = TRUE) + 
+  geom_point(aes(color = as.factor(rarefyID)), size = 2, alpha = 0.05, na.rm = TRUE) + 
   geom_smooth(method = 'lm', formula = y ~ abs(x), na.rm = TRUE) +
   labs(x = 'Temperature change (°C)', y = 'Morisita-Horn') +
-  facet_grid(~REALM, scales = 'free')
+  facet_grid(~REALM, scales = 'free') + 
+  theme(legend.position = "none") + 
+  theme(legend.position = "none", axis.text = element_text(size = 16)) +
+  scale_color_manual(values=cbPalette)
 
 
 
