@@ -38,58 +38,6 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 # Turnover and covariates assembled by turnover_vs_temperature_prep.Rmd
 trends <- fread('output/turnover_w_covariates.csv.gz')
 
-# trim to only data with some temperature change
-# important since sign of temperature change is a variable
-trends[tempchange == 0, .N] # number to remove
-trends <- trends[tempchange != 0, ] # also removes any NA values
-
-# set realm order
-trends[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
-
-# set up sign of temperature change
-trends[, tsign := factor(sign(tempchange))]
-
-# realm that combines Terrestrial and Freshwater, for interacting with human impact
-trends[, REALM2 := REALM]
-levels(trends$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
-
-# group Marine invertebrates/plants in with All
-trends[, taxa_mod2 := taxa_mod]
-trends[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
-
-# calculate duration
-trends[, duration := year2 - year1]
-
-#add a comparison id
-trends[, compID := paste0(rarefyID, '_', year1, '_', year2)]
-
-# transformation for 2 categories. Eq. 1 in Douma & Weedon 2019
-transform01 <- function(x) (x * (length(x) - 1) + 0.5) / (length(x))
-
-trends[, Jtu.sc := transform01(Jtu)]
-trends[, Jbeta.sc := transform01(Jbeta)]
-trends[, Horn.sc := transform01(Horn)]
-
-# Log-transform some variables, then center and scale. 
-trends[, tempave.sc := scale(tempave)]
-trends[, tempave_metab.sc := scale(tempave_metab)]
-trends[, seas.sc := scale(seas)]
-trends[, microclim.sc := scale(log(microclim))]
-trends[, tempchange.sc := scale(tempchange, center = FALSE)] # do not center
-trends[, tempchange_abs.sc := scale(abs(tempchange), center = FALSE)] # do not center, so that 0 is still 0 temperature change
-trends[, mass.sc := scale(log(mass_mean_weight))]
-trends[, speed.sc := scale(log(speed_mean_weight+1))]
-trends[, lifespan.sc := scale(log(lifespan_mean_weight))]
-trends[, consumerfrac.sc := scale(consfrac)]
-trends[, endothermfrac.sc := scale(endofrac)]
-trends[, nspp.sc := scale(log(Nspp))]
-trends[, thermal_bias.sc := scale(thermal_bias)]
-trends[, npp.sc := scale(log(npp))]
-trends[, veg.sc := scale(log(veg+1))]
-trends[, duration.sc := scale(log(duration))]
-trends[, human_bowler.sc := scale(log(human_bowler+1)), by = REALM2] # separate scaling by realm
-trends[REALM2 == 'TerrFresh', human_footprint.sc := scale(log(human_venter+1))]
-trends[REALM2 == 'Marine', human_footprint.sc := scale(log(human_halpern))]
 ```
 
 </details>
@@ -419,7 +367,7 @@ legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Hor
 # all years
 if(file.exists('temp/modFullendo.rds')) modFullendo <- readRDS('temp/modFullendo.rds')
 if(file.exists('temp/modFullmass.rds')) modFullmass <- readRDS('temp/modFullmass.rds')
-if(file.exists('temp/modFullMaEnMiNPHu.rds')) modFullMaEnMiNPHu <- readRDS('temp/modFullMaEnMiNPHu.rds') # mass, endoecto, microclimate, NPP, humans
+if(file.exists('temp/modFullMaEnMiNPHuJtu.rds')) modFullMaEnMiNPHuJtu <- readRDS('temp/modFullMaEnMiNPHuJtu.rds') # mass, endoecto, microclimate, NPP, humans
 
 ```
 
@@ -432,7 +380,7 @@ summary(modFullmass)
 
 #### Mass, endo, microclimate, NPP, humans
 ```{r summary MaEnMiNPHu}
-summary(modFullMaEnMiNPHu)
+summary(modFullMaEnMiNPHuJtu)
 ```
 
 ### DHARMa simulate residuals
@@ -448,6 +396,8 @@ if(!file.exists('temp/res_MaEnMiNPHu.rds')) {
   
   saveRDS(res_MaEnMiNPHu, file = 'temp/res_MaEnMiNPHu.rds')
 } else {
+  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                               microclim.sc, npp.sc, human_bowler.sc)] # needed because model fit with trends[i,]
   res_MaEnMiNPHu <- readRDS('temp/res_MaEnMiNPHu.rds')
 }
 ```
@@ -455,4 +405,12 @@ if(!file.exists('temp/res_MaEnMiNPHu.rds')) {
 ##### Plot residuals
 ```{r plot darma maenminphu}
 plot(res_MaEnMiNPHu)
+plotResiduals(res_MaEnMiNPHu, form=trends[i,REALM])
+plotResiduals(res_MaEnMiNPHu, trends[i,tempave_metab.sc])
+plotResiduals(res_MaEnMiNPHu, trends[i,duration.sc])
+plotResiduals(res_MaEnMiNPHu, trends[i,mass.sc])
+plotResiduals(res_MaEnMiNPHu, trends[i,endothermfrac.sc])
+plotResiduals(res_MaEnMiNPHu, trends[i,microclim.sc])
+plotResiduals(res_MaEnMiNPHu, trends[i,npp.sc])
+plotResiduals(res_MaEnMiNPHu, trends[i,human_bowler.sc])
 ```

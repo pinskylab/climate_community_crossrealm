@@ -96,12 +96,91 @@ bt <- merge(bt, veg[, .(rarefyID, veg = veg)], all.x = TRUE) # vegetation index
 bt[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 ```
 
+## Trim data
+```{r}
+# trim to only data with some temperature change
+# important since sign of temperature change is a variable
+bt[tempchange == 0, .N] # number to remove
+bt <- bt[tempchange != 0, ] # also removes any NA values
+```
+
+## Set up useful variables and transformations
+```{r}
+# set realm order
+bt[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
+
+# set up sign of temperature change
+bt[, tsign := factor(sign(tempchange))]
+
+# realm that combines Terrestrial and Freshwater, for interacting with human impact
+bt[, REALM2 := REALM]
+levels(bt$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
+
+# group Marine invertebrates/plants in with All
+bt[, taxa_mod2 := taxa_mod]
+bt[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
+
+# calculate duration
+bt[, duration := year2 - year1]
+
+#add a comparison id
+bt[, compID := paste0(rarefyID, '_', year1, '_', year2)]
+
+
+#######################
+## Transformations
+
+### Adjust response away from 0-1
+# transformation for 2 categories. Eq. 1 in Douma & Weedon 2019 MEE
+transform01 <- function(x) (x * (length(x) - 1) + 0.5) / (length(x))
+
+bt[, Jtu.sc := transform01(Jtu)]
+bt[, Jbeta.sc := transform01(Jbeta)]
+bt[, Horn.sc := transform01(Horn)]
+
+
+### Log-transform some variables, then center and scale. 
+bt[, tempave.sc := scale(tempave)]
+bt[, tempave_metab.sc := scale(tempave_metab)]
+bt[, seas.sc := scale(seas)]
+bt[, microclim.sc := scale(log(microclim))]
+bt[, tempchange.sc := scale(tempchange, center = FALSE)] # do not center
+bt[, tempchange_abs.sc := scale(abs(tempchange), center = FALSE)] # do not center, so that 0 is still 0 temperature change
+bt[, mass.sc := scale(log(mass_mean_weight))]
+bt[, speed.sc := scale(log(speed_mean_weight+1))]
+bt[, lifespan.sc := scale(log(lifespan_mean_weight))]
+bt[, consumerfrac.sc := scale(consfrac)]
+bt[, endothermfrac.sc := scale(endofrac)]
+bt[, nspp.sc := scale(log(Nspp))]
+bt[, thermal_bias.sc := scale(thermal_bias)]
+bt[, npp.sc := scale(log(npp))]
+bt[, veg.sc := scale(log(veg+1))]
+bt[, duration.sc := scale(log(duration))]
+bt[, human_bowler.sc := scale(log(human_bowler+1)), by = REALM2] # separate scaling by realm
+bt[REALM2 == 'TerrFresh', human_footprint.sc := scale(log(human_venter+1))]
+bt[REALM2 == 'Marine', human_footprint.sc := scale(log(human_halpern))]
+
+## save the centering and scaling
+scaling <- data.frame(center = t(t(sapply(bt, attr, 'scaled:center'))),
+                 scale = t(t(sapply(bt, attr, 'scaled:scale'))))
+scaling$var <- rownames(scaling)
+scaling <- scaling[!vapply(scaling$center, is.null, TRUE) | !vapply(scaling$scale, is.null, TRUE),]
+scaling$center[vapply(scaling$center, is.null, TRUE)] <- NA # turn null to NA
+scaling$center <- vapply(scaling$center, paste, collapse = ", ", character(1L)) # flatten list to character. not sure why it's a list.
+scaling$scale <- vapply(scaling$scale, paste, collapse = ", ", character(1L))
+```
+
 
 ## Write out
 Only if file doesn't yet exist
 ```{r write out}
 if(!file.exists(here('output', 'turnover_w_covariates.csv.gz'))){
-  write.csv(bt, gzfile(here('output', 'turnover_w_covariates.csv.gz')), row.names = FALSE)
+  write.csv(bt[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, duration, tsign, tempave.sc, tempave_metab.sc, seas.sc, 
+                  microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
+                  mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
+                  duration.sc, human_bowler.sc, REALM2)], 
+            gzfile(here('output', 'turnover_w_covariates.csv.gz')), row.names = FALSE)
+  write.csv(scaling, here('output','turnover_w_covariates_scaling.csv'), row.names = FALSE)
 }
 
 ```
