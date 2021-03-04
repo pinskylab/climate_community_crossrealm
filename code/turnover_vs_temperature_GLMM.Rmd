@@ -250,10 +250,12 @@ if(!file.exists('temp/modTDJtu_preds.rds')) {
   newdat <- expand.grid(duration = c(1, 50), tempchange = seq(0.01, 5, length.out = 5), 
                       taxa_mod2 = NA, STUDY_ID = NA, rarefyID = NA,
                       Nspp = 60) # no REs, ave number of species
-  scl <- attr(trends$tempchange_abs.sc, 'scaled:scale') # scaling factor for tempchange
-  newdat$tempchange_abs.sc <- abs(newdat$tempchange)/scl
-  cent <- attr(trends$nspp.sc, 'scaled:center') 
-  scl <- attr(trends$nspp.sc, 'scaled:scale') 
+  scaling <- fread('output/turnover_w_covariates_scaling.csv')
+  cent <- scaling$center[scaling$var == 'tempchange_abs.sc'] # centering
+  scl <- scaling$scale[scaling$var == 'tempchange_abs.sc'] # scaling factor for tempchange
+  newdat$tempchange_abs.sc <- (abs(newdat$tempchange)-cent)/scl
+  cent <- scaling$center[scaling$var == 'nspp.sc'] # centering
+  scl <- scaling$scale[scaling$var == 'nspp.sc'] # scaling factor for tempchange
   newdat$nspp.sc <- (log(newdat$Nspp) - cent)/scl
   Jtu <- predict(modTDJtu, newdata = newdat, se.fit = TRUE, re.form = NA, type = 'response')
   newdat$durationfac <- as.factor(newdat$duration)
@@ -367,7 +369,10 @@ legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Hor
 # all years
 if(file.exists('temp/modFullendo.rds')) modFullendo <- readRDS('temp/modFullendo.rds')
 if(file.exists('temp/modFullmass.rds')) modFullmass <- readRDS('temp/modFullmass.rds')
+
 if(file.exists('temp/modFullMaEnMiNPHuJtu.rds')) modFullMaEnMiNPHuJtu <- readRDS('temp/modFullMaEnMiNPHuJtu.rds') # mass, endoecto, microclimate, NPP, humans
+if(file.exists('temp/modFullMaEnMiNPHu1yrJtu.rds')) modFullMaEnMiNPHu1yrJtu <- readRDS('temp/modFullMaEnMiNPHu1yrJtu.rds')
+if(file.exists('temp/modFullMaEnMiNPHu10yrJtu.rds')) modFullMaEnMiNPHu10yrJtu <- readRDS('temp/modFullMaEnMiNPHu10yrJtu.rds')
 
 ```
 
@@ -379,38 +384,165 @@ summary(modFullmass)
 ```
 
 #### Mass, endo, microclimate, NPP, humans
+All
 ```{r summary MaEnMiNPHu}
 summary(modFullMaEnMiNPHuJtu)
+```
+
+1 yr
+```{r summary MaEnMiNPHu1}
+summary(modFullMaEnMiNPHu1yrJtu)
+```
+
+10 yr
+```{r summary MaEnMiNPHu10}
+summary(modFullMaEnMiNPHu10yrJtu)
 ```
 
 ### DHARMa simulate residuals
 #### Mass, endo, microclimate, NPP, humans
 ##### Simulate residuals
 ```{r dharma maenminphu}
-if(!file.exists('temp/res_MaEnMiNPHu.rds')) {
-  # make a vector of 1000 values that meet our completeness criteria
+if(!file.exists('temp/res_MaEnMiNPHuJtu.rds')) {
   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc)] # needed because model fit with trends[i,]
+                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc)] # needed because model fit with trends[i,]
 
-  res_MaEnMiNPHu <- simulateResiduals(modFullMaEnMiNPHu, n = 100)
+  res_MaEnMiNPHuJtu <- simulateResiduals(modFullMaEnMiNPHuJtu, n = 250)
   
-  saveRDS(res_MaEnMiNPHu, file = 'temp/res_MaEnMiNPHu.rds')
+  saveRDS(res_MaEnMiNPHuJtu, file = 'temp/res_MaEnMiNPHuJtu.rds')
 } else {
+  res_MaEnMiNPHuJtu <- readRDS('temp/res_MaEnMiNPHuJtu.rds')
+}
+
+if(!file.exists('temp/res_MaEnMiNPHu1yrJtu.rds')) {
   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc)] # needed because model fit with trends[i,]
-  res_MaEnMiNPHu <- readRDS('temp/res_MaEnMiNPHu.rds')
+                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+                duration == 1] # needed because model fit with trends[i,]
+
+  res_MaEnMiNPHu1yrJtu <- simulateResiduals(modFullMaEnMiNPHu1yrJtu, n = 250)
+  
+  saveRDS(res_MaEnMiNPHu1yrJtu, file = 'temp/res_MaEnMiNPHu1yrJtu.rds')
+} else {
+  res_MaEnMiNPHu1yrJtu <- readRDS('temp/res_MaEnMiNPHu1yrJtu.rds')
+}
+
+
+if(!file.exists('temp/res_MaEnMiNPHu10yrJtu.rds')) {
+  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+                duration == 10] # needed because model fit with trends[i,]
+
+  res_MaEnMiNPHu10yrJtu <- simulateResiduals(modFullMaEnMiNPHu10yrJtu, n = 250)
+  
+  saveRDS(res_MaEnMiNPHu10yrJtu, file = 'temp/res_MaEnMiNPHu10yrJtu.rds')
+} else {
+  res_MaEnMiNPHu10yrJtu <- readRDS('temp/res_MaEnMiNPHu10yrJtu.rds')
 }
 ```
 
 ##### Plot residuals
+All data
 ```{r plot darma maenminphu}
-plot(res_MaEnMiNPHu)
-plotResiduals(res_MaEnMiNPHu, form=trends[i,REALM])
-plotResiduals(res_MaEnMiNPHu, trends[i,tempave_metab.sc])
-plotResiduals(res_MaEnMiNPHu, trends[i,duration.sc])
-plotResiduals(res_MaEnMiNPHu, trends[i,mass.sc])
-plotResiduals(res_MaEnMiNPHu, trends[i,endothermfrac.sc])
-plotResiduals(res_MaEnMiNPHu, trends[i,microclim.sc])
-plotResiduals(res_MaEnMiNPHu, trends[i,npp.sc])
-plotResiduals(res_MaEnMiNPHu, trends[i,human_bowler.sc])
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+plot(res_MaEnMiNPHuJtu)
+plotResiduals(res_MaEnMiNPHuJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
+plotResiduals(res_MaEnMiNPHuJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+plotResiduals(res_MaEnMiNPHuJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
+plotResiduals(res_MaEnMiNPHuJtu, trends$duration.sc[i], xlab = 'duration.sc', main = '')
+plotResiduals(res_MaEnMiNPHuJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
+plotResiduals(res_MaEnMiNPHuJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
+plotResiduals(res_MaEnMiNPHuJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
+plotResiduals(res_MaEnMiNPHuJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
+plotResiduals(res_MaEnMiNPHuJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
 ```
+
+
+1yr data
+```{r plot darma maenminphu1yr}
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+              duration == 1]
+plot(res_MaEnMiNPHu1yrJtu)
+plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
+plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+plotResiduals(res_MaEnMiNPHu1yrJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
+plotResiduals(res_MaEnMiNPHu1yrJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
+plotResiduals(res_MaEnMiNPHu1yrJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
+plotResiduals(res_MaEnMiNPHu1yrJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
+plotResiduals(res_MaEnMiNPHu1yrJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
+plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
+```
+
+10yr data
+```{r plot darma maenminphu1yr}
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+              duration == 10]
+plot(res_MaEnMiNPHu10yrJtu)
+plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
+plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+plotResiduals(res_MaEnMiNPHu10yrJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
+plotResiduals(res_MaEnMiNPHu10yrJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
+plotResiduals(res_MaEnMiNPHu10yrJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
+plotResiduals(res_MaEnMiNPHu10yrJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
+plotResiduals(res_MaEnMiNPHu10yrJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
+plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
+```
+
+##### Overdispersion
+```{r}
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+testDispersion(res_MaEnMiNPHuJtu)
+
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+              duration == 1]
+testDispersion(res_MaEnMiNPHu1yrJtu)
+
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+              duration == 10]
+testDispersion(res_MaEnMiNPHu10yrJtu)
+```
+
+##### Near-zero-inflation
+Zero values have been transformed to slightly >0, so can't test zero-inflation directly
+```{r}
+countNearZero <- function(x) sum(x < 0.0001)
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+testGeneric(res_MaEnMiNPHuJtu, summary = countNearZero, alternative = 'greater')
+
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+              duration == 1]
+testGeneric(res_MaEnMiNPHu1yrJtu, summary = countNearZero, alternative = 'greater')
+
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+              duration == 10]
+testGeneric(res_MaEnMiNPHu10yrJtu, summary = countNearZero, alternative = 'greater')
+```
+
+##### Near-one-inflation
+```{r}
+countNearOne <- function(x) sum(x > 0.9999)
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+testGeneric(res_MaEnMiNPHuJtu, summary = countNearOne, alternative = 'greater')
+
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+              duration == 1]
+testGeneric(res_MaEnMiNPHu1yrJtu, summary = countNearOne, alternative = 'greater')
+
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+              duration == 10]
+testGeneric(res_MaEnMiNPHu10yrJtu, summary = countNearOne, alternative = 'greater')
+```
+
+
+

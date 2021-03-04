@@ -144,8 +144,8 @@ bt[, tempave.sc := scale(tempave)]
 bt[, tempave_metab.sc := scale(tempave_metab)]
 bt[, seas.sc := scale(seas)]
 bt[, microclim.sc := scale(log(microclim))]
-bt[, tempchange.sc := scale(tempchange, center = FALSE)] # do not center
-bt[, tempchange_abs.sc := scale(abs(tempchange), center = FALSE)] # do not center, so that 0 is still 0 temperature change
+bt[, tempchange.sc := scale(tempchange, center = TRUE)] # do not center
+bt[, tempchange_abs.sc := scale(abs(tempchange), center = TRUE)] # do not center, so that 0 is still 0 temperature change
 bt[, mass.sc := scale(log(mass_mean_weight))]
 bt[, speed.sc := scale(log(speed_mean_weight+1))]
 bt[, lifespan.sc := scale(log(lifespan_mean_weight))]
@@ -175,7 +175,7 @@ scaling$scale <- vapply(scaling$scale, paste, collapse = ", ", character(1L))
 Only if file doesn't yet exist
 ```{r write out}
 if(!file.exists(here('output', 'turnover_w_covariates.csv.gz'))){
-  write.csv(bt[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, duration, tsign, tempave.sc, tempave_metab.sc, seas.sc, 
+  write.csv(bt[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, duration, Jtu.sc, Jbeta.sc, Horn.sc, tsign, tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
                   duration.sc, human_bowler.sc, REALM2)], 
