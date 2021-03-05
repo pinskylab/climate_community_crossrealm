@@ -77,6 +77,15 @@ if(fitmod == 'modRFrID'){
     print('saved modRDrID.rds')
     MATCHMOD <- TRUE
 }
+if(fitmod == 'modRF2lev'){
+    print(paste(sum(i), 'data points'))
+    modRFnestedRE <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
+                             control = glmmTMBControl(profile=TRUE)) # add nested random effects
+    summary(modRFnestedRE)
+    saveRDS(modRFnestedRE, file = 'temp/modRFnestedRE.rds')
+    print('saved modRFnestedRE.rds')
+    MATCHMOD <- TRUE
+}
 if(fitmod == 'modRFnestedRE'){
     print(paste(sum(i), 'data points'))
     modRFnestedRE <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
@@ -498,10 +507,10 @@ if(fitmod == 'modFullMaEnMiNPHu1yrJtu'){
                                      tempchange_abs.sc*microclim.sc +
                                      tempchange_abs.sc*npp.sc +
                                      tempchange_abs.sc*human_bowler.sc:REALM2 +
-                                     (tempchange_abs.sc|STUDY_ID/rarefyID), 
+                                     (1|STUDY_ID/rarefyID), 
                                  data = trends[i,], 
                                  family = beta_family(link = 'logit'), 
-                                 #dispformula = ~nspp.sc, diagnose_vcov() suggests this is causing convergence issues
+                                 dispformula = ~nspp.sc,
                                  control = glmmTMBControl(profile=TRUE))
     summary(modFullMaEnMiNPHu1yrJtu)
     saveRDS(modFullMaEnMiNPHu1yrJtu, file = 'temp/modFullMaEnMiNPHu1yrJtu.rds')
