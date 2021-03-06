@@ -79,11 +79,11 @@ if(fitmod == 'modRFrID'){
 }
 if(fitmod == 'modRF2lev'){
     print(paste(sum(i), 'data points'))
-    modRFnestedRE <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
+    modRF2lev <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
                              control = glmmTMBControl(profile=TRUE)) # add nested random effects
-    summary(modRFnestedRE)
-    saveRDS(modRFnestedRE, file = 'temp/modRFnestedRE.rds')
-    print('saved modRFnestedRE.rds')
+    summary(modRF2lev)
+    saveRDS(modRF2lev, file = 'temp/modRF2lev.rds')
+    print('saved modRF2lev.rds')
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modRFnestedRE'){
@@ -128,16 +128,37 @@ if(fitmod == 'modRFdisp'){
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modRFdisp2levOnlyint'){
+if(fitmod == 'modRFdisp2levOnlyint'){ # 2 level RE, no slope, + dispersion formula
     print(paste(sum(i), 'data points'))
     modRFdisp2levOnlyint <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
                              dispformula = ~nspp.sc, 
-                             control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+                             control = glmmTMBControl(profile=TRUE))
     summary(modRFdisp2levOnlyint)
     saveRDS(modRFdisp2levOnlyint, file = 'temp/modRFdisp2levOnlyint.rds')
     print('saved modRFdisp2levOnlyint.rds')
     MATCHMOD <- TRUE
 }
+
+if(fitmod == 'modRFdurslope2lev'){ # 2 level RE, slope vs. duration
+    print(paste(sum(i), 'data points'))
+    modRFdurslope2lev <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
+                             control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modRFdurslope2lev)
+    saveRDS(modRFdurslope2lev, file = 'temp/modRFdurslope2lev.rds')
+    print('saved modRFdurslope2lev.rds')
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modRFdurslope2levdisp'){ # 2 level RE, slope vs. duration, disp formula
+    print(paste(sum(i), 'data points'))
+    modRFdurslope2levdisp <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
+                             dispformula = ~nspp.sc, 
+                             control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modRFdurslope2levdisp)
+    saveRDS(modRFdurslope2levdisp, file = 'temp/modRFdurslope2levdisp.rds')
+    print('saved modRFdurslope2levdisp.rds')
+    MATCHMOD <- TRUE
+}
+
 
 ##################################
 ## temperature-only models (all years)

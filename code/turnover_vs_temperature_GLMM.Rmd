@@ -7,10 +7,7 @@ output:
 
 ---
 # Prep
-First run turnover_vs_temperature_GLMM.R to fit the models.
-<details>
-<summary>Click to expand code</summary>
-
+First run turnover_vs_temperature_GLMM_fit.R to fit the models.
 ```{r setup}
 library(data.table) # for handling large datasets
 library(ggplot2) # for some plotting
@@ -21,6 +18,7 @@ library(grid) # to combine ggplots together
 library(RColorBrewer)
 library(scales) # for defining custom scales in ggplot
 library(DHARMa) # for model diagnostics
+library(here) # for relative paths
 
 options(width=500) # turn off most text wrapping
 
@@ -31,16 +29,12 @@ signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, invers
 
 # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
-```
 
-
-```{r load, trim, set up data}
 # Turnover and covariates assembled by turnover_vs_temperature_prep.Rmd
-trends <- fread('output/turnover_w_covariates.csv.gz')
+trends <- fread(here('output', 'turnover_w_covariates.csv.gz'))
 
 ```
 
-</details>
 
 # Summary stats
 ## Examine how many data points are available
@@ -84,15 +78,18 @@ And choose the one with lowest AIC
 if(file.exists('temp/modRFgauss.rds')) modRFgauss <- readRDS('temp/modRFgauss.rds')
 if(file.exists('temp/modRFbeta.rds')) modRFbeta <- readRDS('temp/modRFbeta.rds')
 if(file.exists('temp/modRFrID.rds')) modRFrID <- readRDS('temp/modRFrID.rds')
+if(file.exists('temp/modRF2lev.rds')) modRF2lev <- readRDS('temp/modRF2lev.rds')
 if(file.exists('temp/modRFnestedRE.rds')) modRFnestedRE <- readRDS('temp/modRFnestedRE.rds')
 #if(file.exists('temp/modRFslopeRE.rds')) modRFslopeRE <- readRDS('temp/modRFslopeRE.rds') # too complex to fit
-#if(file.exists('temp/modRFdisp.rds')) modRFdisp <- readRDS('temp/modRFdisp.rds')
-#if(file.exists('temp/modRFdisp2lev.rds')) modRFdisp2lev <- readRDS('temp/modRFdisp2lev.rds')
-if(file.exists('temp/modRFdisp2lev.rds')) modRFdisp2levOnlyint <- readRDS('temp/modRFdisp2levOnlyint.rds')
+if(file.exists('temp/modRFdisp.rds')) modRFdisp <- readRDS('temp/modRFdisp.rds')
+if(file.exists('temp/modRFdisp2lev.rds')) modRFdisp2lev <- readRDS('temp/modRFdisp2lev.rds')
+if(file.exists('temp/modRFdisp2levOnlyint.rds')) modRFdisp2levOnlyint <- readRDS('temp/modRFdisp2levOnlyint.rds')
+if(file.exists('temp/modRFdurslope2lev.rds')) modRFdurslope2lev <- readRDS('temp/modRFdurslope2lev.rds')
+if(file.exists('temp/modRFdurslope2levdisp.rds')) modRFdurslope2levdisp <- readRDS('temp/modRFdurslope2levdisp.rds')
 
 
-AICtab(modRFgauss, modRFbeta, modRFrID, modRFnestedRE, modRFdisp2levOnlyint)
-summary(modRFdisp2levOnlyint)
+AICtab(modRFgauss, modRFbeta, modRFrID, modRF2lev, modRFnestedRE, modRFdisp, modRFdisp2lev, modRFdisp2levOnlyint,
+       modRFdurslope2lev, modRFdurslope2levdisp)
 ```
 Chooses beta errors, random slopes (tempchange_abs.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp.
 We haven't dealt with potential testing on the boundary issues here yet.
@@ -667,7 +664,7 @@ newdat$tempchange[1:6] <- rep(c(0.0001, -0.0001), 3)
 newdat$var[1:6] <- 'test'
 
 # write out
-write.csv(newdat, 'temp/newdata.csv')
+write.csv(newdat, 'temp/newdata.csv', row.names = FALSE)
 
 ```
 
@@ -676,11 +673,10 @@ nohup code/turnover_vs_temperature_GLMM_pred.R temp/modFullMaEnMiNPHuJtu.rds tem
 
 Load the predictions and plot
 ```{r}
-if(file.exists('temp/modFullMaEnMiNPHuJtu_preds.rds')) {
-  newdat <- readRDS('temp/modFullMaEnMiNPHuJtu_preds.rds')
-}
+newdat <- readRDS('temp/modFullMaEnMiNPHuJtu_preds.rds')
 
-ggplot(newdat, aes(tempchange, pred)) +
+
+ggplot(newdat[var == 'tempchange_abs.sc'], aes(tempchange_abs.sc, pred)) +
   geom_line() +
   geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1, linetype = 'blank')
 ```

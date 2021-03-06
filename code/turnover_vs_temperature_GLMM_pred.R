@@ -52,7 +52,7 @@ newdat$pred.se <- preds$se.fit
 ##############
 # save
 ##############
-outpath <- paste0(gsub(modpath, '.rds', ''), '_preds.rds')
+outpath <- paste0(gsub('.rds', '', modpath), '_preds.rds')
 saveRDS(newdat, file = outpath)
 
 print(paste('Wrote', outpath))
