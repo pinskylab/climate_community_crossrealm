@@ -158,13 +158,24 @@ if(fitmod == 'modRFdurslope2levdisp'){ # 2 level RE, slope vs. duration, disp fo
     MATCHMOD <- TRUE
 }
 
+if(fitmod == 'modRFdurslope2levdisprealm'){ # 2 level RE, slope vs. duration, disp formula by realm
+    print(paste(sum(i), 'data points'))
+    modRFdurslope2levdisp <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
+                                     dispformula = ~nspp.sc+REALM, 
+                                     control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modRFdurslope2levdisp)
+    saveRDS(modRFdurslope2levdisp, file = 'temp/modRFdurslope2levdisp.rds')
+    print('saved modRFdurslope2levdisp.rds')
+    MATCHMOD <- TRUE
+}
+
 
 ##################################
 ## temperature-only models (all years)
 if(fitmod == 'modonlyTchangeJtu'){
     i <- trends[, complete.cases(Jtu.sc, tempchange, nspp.sc)]
     print(paste(sum(i), 'data points'))
-    modonlyTchangeJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modonlyTchangeJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) + (duration.sc|STUDY_ID/rarefyID),
                              data = trends[i,], 
                              family = beta_family(link = 'logit'), 
                              dispformula = ~nspp.sc)
@@ -177,7 +188,7 @@ if(fitmod == 'modonlyTchangeJtu'){
 if(fitmod == 'modonlyTchangeJbeta'){
     i <- trends[, complete.cases(Jbeta.sc, tempchange, nspp.sc)]
     print(paste(sum(i), 'data points'))
-    modonlyTchangeJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange) + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modonlyTchangeJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange) + (duration.sc|STUDY_ID/rarefyID),
                                data = trends[i,], 
                                family = beta_family(link = 'logit'), 
                                dispformula = ~nspp.sc)
@@ -190,7 +201,7 @@ if(fitmod == 'modonlyTchangeJbeta'){
 if(fitmod == 'modonlyTchangeHorn'){
     i <- trends[, complete.cases(Horn.sc, tempchange, nspp.sc)]
     print(paste(sum(i), 'data points'))
-    modonlyTchangeHorn <- glmmTMB(Horn.sc ~ abs(tempchange) + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modonlyTchangeHorn <- glmmTMB(Horn.sc ~ abs(tempchange) + (duration.sc|STUDY_ID/rarefyID),
                               data = trends[i,], 
                               family = beta_family(link = 'logit'), 
                               dispformula = ~nspp.sc)
@@ -206,7 +217,7 @@ if(fitmod == 'modonlyTchangeHorn'){
 if(fitmod == 'modonlyTchange1yrJtu'){
     i <- trends[, complete.cases(Jtu.sc, tempchange, nspp.sc) & duration == 1]
     print(paste(sum(i), 'data points'))
-    modonlyTchange1yrJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modonlyTchange1yrJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) + (1|STUDY_ID/rarefyID),
                                  data = trends[i,], 
                                  family = beta_family(link = 'logit'), 
                                  dispformula = ~nspp.sc)
@@ -219,7 +230,7 @@ if(fitmod == 'modonlyTchange1yrJtu'){
 if(fitmod == 'modonlyTchange1yrJbeta'){
     i <- trends[, complete.cases(Jbeta.sc, tempchange, nspp.sc) & duration == 1]
     print(paste(sum(i), 'data points'))
-    modonlyTchange1yrJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange) + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modonlyTchange1yrJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange) + (1|STUDY_ID/rarefyID),
                                    data = trends[i,], 
                                    family = beta_family(link = 'logit'), 
                                    dispformula = ~nspp.sc)
@@ -232,7 +243,7 @@ if(fitmod == 'modonlyTchange1yrJbeta'){
 if(fitmod == 'modonlyTchange1yrHorn'){
     i <- trends[, complete.cases(Horn.sc, tempchange, nspp.sc) & duration == 1]
     print(paste(sum(i), 'data points'))
-    modonlyTchange1yrHorn <- glmmTMB(Horn.sc ~ abs(tempchange) + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modonlyTchange1yrHorn <- glmmTMB(Horn.sc ~ abs(tempchange) + (1|STUDY_ID/rarefyID),
                                   data = trends[i,], 
                                   family = beta_family(link = 'logit'), 
                                   dispformula = ~nspp.sc)
@@ -247,7 +258,7 @@ if(fitmod == 'modonlyTchange1yrHorn'){
 if(fitmod == 'modonlyTchange10yrJtu'){
     i <- trends[, complete.cases(Jtu.sc, tempchange, nspp.sc) & duration == 10]
     print(paste(sum(i), 'data points'))
-    modonlyTchange10yrJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modonlyTchange10yrJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) + (1|STUDY_ID/rarefyID),
                                     data = trends[i,], 
                                     family = beta_family(link = 'logit'), 
                                     dispformula = ~nspp.sc)
@@ -260,7 +271,7 @@ if(fitmod == 'modonlyTchange10yrJtu'){
 if(fitmod == 'modonlyTchange10yrJbeta'){
     i <- trends[, complete.cases(Jbeta.sc, tempchange, nspp.sc) & duration == 10]
     print(paste(sum(i), 'data points'))
-    modonlyTchange10yrJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange) + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modonlyTchange10yrJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange) + (1|STUDY_ID/rarefyID),
                                       data = trends[i,], 
                                       family = beta_family(link = 'logit'), 
                                       dispformula = ~nspp.sc)
@@ -273,7 +284,7 @@ if(fitmod == 'modonlyTchange10yrJbeta'){
 if(fitmod == 'modonlyTchange10yrHorn'){
     i <- trends[, complete.cases(Horn.sc, tempchange, nspp.sc) & duration == 10]
     print(paste(sum(i), 'data points'))
-    modonlyTchange10yrHorn <- glmmTMB(Horn.sc ~ abs(tempchange) + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modonlyTchange10yrHorn <- glmmTMB(Horn.sc ~ abs(tempchange) + (1|STUDY_ID/rarefyID),
                                      data = trends[i,], 
                                      family = beta_family(link = 'logit'), 
                                      dispformula = ~nspp.sc)
@@ -288,7 +299,7 @@ if(fitmod == 'modonlyTchange10yrHorn'){
 if(fitmod == 'modTDJtu'){
     i <- trends[, complete.cases(Jtu.sc, REALM, tempchange, nspp.sc)]
     print(paste(sum(i), 'data points'))
-    modTDJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) * duration + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modTDJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) * duration + (duration.sc|STUDY_ID/rarefyID),
                     data = trends[i,], 
                     family = beta_family(link = 'logit'), 
                     dispformula = ~nspp.sc)
@@ -301,7 +312,7 @@ if(fitmod == 'modTDJtu'){
 if(fitmod == 'modTDJbeta'){
     i <- trends[, complete.cases(Jbeta.sc, REALM, tempchange, nspp.sc)]
     print(paste(sum(i), 'data points'))
-    modTDJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange)*duration + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modTDJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange)*duration + (duration.sc|STUDY_ID/rarefyID),
                       data = trends[i,], 
                       family = beta_family(link = 'logit'), 
                       dispformula = ~nspp.sc)
@@ -314,7 +325,7 @@ if(fitmod == 'modTDJbeta'){
 if(fitmod == 'modTDHorn'){
     i <- trends[, complete.cases(Horn.sc, REALM, tempchange, nspp.sc)]
     print(paste(sum(i), 'data points'))
-    modTDHorn <- glmmTMB(Horn.sc ~ abs(tempchange)*duration + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modTDHorn <- glmmTMB(Horn.sc ~ abs(tempchange)*duration + (duration.sc|STUDY_ID/rarefyID),
                      data = trends[i,], 
                      family = beta_family(link = 'logit'), 
                      dispformula = ~nspp.sc)
@@ -329,7 +340,7 @@ if(fitmod == 'modTDHorn'){
 if(fitmod == 'modTDrealmJtu'){
     i <- trends[, complete.cases(Jtu.sc, REALM, tempchange, nspp.sc)]
     print(paste(sum(i), 'data points'))
-    modTDrealmJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) * duration + abs(tempchange) * REALM + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modTDrealmJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) * duration + abs(tempchange) * REALM + (duration.sc|STUDY_ID/rarefyID),
                          data = trends[i,], 
                          family = beta_family(link = 'logit'), 
                          dispformula = ~nspp.sc)
@@ -342,7 +353,7 @@ if(fitmod == 'modTDrealmJtu'){
 if(fitmod == 'modTDrealmJbeta'){
     i <- trends[, complete.cases(Jbeta.sc, REALM, tempchange, nspp.sc)]
     print(paste(sum(i), 'data points'))
-    modTDrealmJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange)*duration + abs(tempchange) * REALM + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modTDrealmJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange)*duration + abs(tempchange) * REALM + (duration.sc|STUDY_ID/rarefyID),
                            data = trends[i,], 
                            family = beta_family(link = 'logit'), 
                            dispformula = ~nspp.sc)
@@ -355,7 +366,7 @@ if(fitmod == 'modTDrealmJbeta'){
 if(fitmod == 'modTDrealmHorn'){
     i <- trends[, complete.cases(Horn.sc, REALM, tempchange, nspp.sc)]
     print(paste(sum(i), 'data points'))
-    modTDrealmHorn <- glmmTMB(Horn.sc ~ abs(tempchange)*duration + abs(tempchange) * REALM + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modTDrealmHorn <- glmmTMB(Horn.sc ~ abs(tempchange)*duration + abs(tempchange) * REALM + (duration.sc|STUDY_ID/rarefyID),
                           data = trends[i,], 
                           family = beta_family(link = 'logit'), 
                           dispformula = ~nspp.sc)
@@ -370,7 +381,7 @@ if(fitmod == 'modTDrealmHorn'){
 if(fitmod == 'modTrealm1yrJtu'){
     i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) & duration == 1]
     print(paste(sum(i), 'data points'))
-    modTrealm1yrJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) * REALM + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modTrealm1yrJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) * REALM + (1|STUDY_ID/rarefyID),
                                     data = trends[i,], 
                                     family = beta_family(link = 'logit'), 
                                     dispformula = ~nspp.sc)
@@ -383,7 +394,7 @@ if(fitmod == 'modTrealm1yrJtu'){
 if(fitmod == 'modTrealm1yrJbeta'){
     i <- trends[, complete.cases(Jbeta.sc, tempchange, REALM, nspp.sc) & duration == 1]
     print(paste(sum(i), 'data points'))
-    modTrealm1yrJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange) * REALM + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modTrealm1yrJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange) * REALM + (1|STUDY_ID/rarefyID),
                                       data = trends[i,], 
                                       family = beta_family(link = 'logit'), 
                                       dispformula = ~nspp.sc)
@@ -396,7 +407,7 @@ if(fitmod == 'modTrealm1yrJbeta'){
 if(fitmod == 'modTrealm1yrHorn'){
     i <- trends[, complete.cases(Horn.sc, tempchange, REALM, nspp.sc) & duration == 1]
     print(paste(sum(i), 'data points'))
-    modTrealm1yrHorn <- glmmTMB(Horn.sc ~ abs(tempchange) * REALM + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modTrealm1yrHorn <- glmmTMB(Horn.sc ~ abs(tempchange) * REALM + (1|STUDY_ID/rarefyID),
                                      data = trends[i,], 
                                      family = beta_family(link = 'logit'), 
                                      dispformula = ~nspp.sc)
@@ -412,7 +423,7 @@ if(fitmod == 'modTrealm1yrHorn'){
 if(fitmod == 'modTrealm10yrJtu'){
     i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) & duration == 10]
     print(paste(sum(i), 'data points'))
-    modTrealm10yrJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) * REALM + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modTrealm10yrJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) * REALM + (1|STUDY_ID/rarefyID),
                                data = trends[i,], 
                                family = beta_family(link = 'logit'), 
                                dispformula = ~nspp.sc)
@@ -425,7 +436,7 @@ if(fitmod == 'modTrealm10yrJtu'){
 if(fitmod == 'modTrealm10yrJbeta'){
     i <- trends[, complete.cases(Jbeta.sc, tempchange, REALM, nspp.sc) & duration == 10]
     print(paste(sum(i), 'data points'))
-    modTrealm10yrJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange) * REALM + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modTrealm10yrJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange) * REALM + (1|STUDY_ID/rarefyID),
                                  data = trends[i,], 
                                  family = beta_family(link = 'logit'), 
                                  dispformula = ~nspp.sc)
@@ -438,7 +449,7 @@ if(fitmod == 'modTrealm10yrJbeta'){
 if(fitmod == 'modTrealm10yrHorn'){
     i <- trends[, complete.cases(Horn.sc, tempchange, REALM, nspp.sc) & duration == 10]
     print(paste(sum(i), 'data points'))
-    modTrealm10yrHorn <- glmmTMB(Horn.sc ~ abs(tempchange) * REALM + (tempchange_abs.sc|STUDY_ID/rarefyID),
+    modTrealm10yrHorn <- glmmTMB(Horn.sc ~ abs(tempchange) * REALM + (1|STUDY_ID/rarefyID),
                                 data = trends[i,], 
                                 family = beta_family(link = 'logit'), 
                                 dispformula = ~nspp.sc)
@@ -460,7 +471,7 @@ if(fitmod == 'modFullmass'){
                             tempchange_abs.sc*tempave_metab.sc + 
                             tempchange_abs.sc*duration.sc +
                             tempchange_abs.sc*mass.sc +
-                            (tempchange_abs.sc|STUDY_ID/rarefyID), 
+                            (duration.sc|STUDY_ID/rarefyID), 
                         data = trends[i,], 
                         family = beta_family(link = 'logit'), 
                         dispformula = ~nspp.sc, 
@@ -479,7 +490,7 @@ if(fitmod == 'modFullendo'){
                                tempchange_abs.sc*tempave_metab.sc + 
                                tempchange_abs.sc*duration.sc +
                                tempchange_abs.sc*endothermfrac.sc +
-                               (tempchange_abs.sc|STUDY_ID/rarefyID), 
+                               (duration.sc|STUDY_ID/rarefyID), 
                            data = trends[i,], 
                            family = beta_family(link = 'logit'), 
                            dispformula = ~nspp.sc, 
@@ -503,7 +514,7 @@ if(fitmod == 'modFullMaEnMiNPHuJtu'){
                                tempchange_abs.sc*microclim.sc +
                                tempchange_abs.sc*npp.sc +
                                tempchange_abs.sc*human_bowler.sc:REALM2 +
-                               (tempchange_abs.sc|STUDY_ID/rarefyID), 
+                               (duration.sc|STUDY_ID/rarefyID), 
                            data = trends[i,], 
                            family = beta_family(link = 'logit'), 
                            dispformula = ~nspp.sc,  # add dispersion formula
@@ -551,7 +562,7 @@ if(fitmod == 'modFullMaEnMiNPHu10yrJtu'){
                                            tempchange_abs.sc*microclim.sc +
                                            tempchange_abs.sc*npp.sc +
                                            tempchange_abs.sc*human_bowler.sc:REALM2 +
-                                           (tempchange_abs.sc|STUDY_ID/rarefyID), 
+                                           (1|STUDY_ID/rarefyID), 
                                        data = trends[i,], 
                                        family = beta_family(link = 'logit'), 
                                        dispformula = ~nspp.sc)#, 

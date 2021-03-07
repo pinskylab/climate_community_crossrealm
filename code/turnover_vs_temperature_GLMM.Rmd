@@ -86,10 +86,11 @@ if(file.exists('temp/modRFdisp2lev.rds')) modRFdisp2lev <- readRDS('temp/modRFdi
 if(file.exists('temp/modRFdisp2levOnlyint.rds')) modRFdisp2levOnlyint <- readRDS('temp/modRFdisp2levOnlyint.rds')
 if(file.exists('temp/modRFdurslope2lev.rds')) modRFdurslope2lev <- readRDS('temp/modRFdurslope2lev.rds')
 if(file.exists('temp/modRFdurslope2levdisp.rds')) modRFdurslope2levdisp <- readRDS('temp/modRFdurslope2levdisp.rds')
+if(file.exists('temp/modRFdurslope2levdisprealm.rds')) modRFdurslope2levdisprealm <- readRDS('temp/modRFdurslope2levdisprealm.rds')
 
 
 AICtab(modRFgauss, modRFbeta, modRFrID, modRF2lev, modRFnestedRE, modRFdisp, modRFdisp2lev, modRFdisp2levOnlyint,
-       modRFdurslope2lev, modRFdurslope2levdisp)
+       modRFdurslope2lev, modRFdurslope2levdisp, modRFdurslope2levdisprealm)
 ```
 Chooses beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp.
 We haven't dealt with potential testing on the boundary issues here yet.
@@ -279,14 +280,14 @@ if(file.exists('temp/modTDrealmJbeta.rds')) modTDrealmJbeta <- readRDS('temp/mod
 if(file.exists('temp/modTDrealmHorn.rds')) modTDrealmHorn <- readRDS('temp/modTDrealmHorn.rds')
 
 # 1 year
-if(file.exists('temp/modTDrealm1yrJtu.rds')) modTDrealm1yrJtu <- readRDS('temp/modTDrealm1yrJtu.rds')
-if(file.exists('temp/modTDrealm1yrJbeta.rds')) modTDrealm1yrJbeta <- readRDS('temp/modTDrealm1yrJbeta.rds')
-if(file.exists('temp/modTDrealm1yrHorn.rds')) modTDrealm1yrHorn <- readRDS('temp/modTDrealm1yrHorn.rds')
+if(file.exists('temp/modTrealm1yrJtu.rds')) modTrealm1yrJtu <- readRDS('temp/modTrealm1yrJtu.rds')
+if(file.exists('temp/modTrealm1yrJbeta.rds')) modTrealm1yrJbeta <- readRDS('temp/modTrealm1yrJbeta.rds')
+if(file.exists('temp/modTrealm1yrHorn.rds')) modTrealm1yrHorn <- readRDS('temp/modTrealm1yrHorn.rds')
 
 # 10 year
-if(file.exists('temp/modTDrealm10yrJtu.rds')) modTDrealm10yrJtu <- readRDS('temp/modTDrealm10yrJtu.rds')
-if(file.exists('temp/modTDrealm10yrJbeta.rds')) modTDrealm10yrJbeta <- readRDS('temp/modTDrealm10yrJbeta.rds')
-if(file.exists('temp/modTDrealm10yrHorn.rds')) modTDrealm10yrHorn <- readRDS('temp/modTDrealm10yrHorn.rds')
+if(file.exists('temp/modTrealm10yrJtu.rds')) modTrealm10yrJtu <- readRDS('temp/modTrealm10yrJtu.rds')
+if(file.exists('temp/modTrealm10yrJbeta.rds')) modTrealm10yrJbeta <- readRDS('temp/modTrealm10yrJbeta.rds')
+if(file.exists('temp/modTrealm10yrHorn.rds')) modTrealm10yrHorn <- readRDS('temp/modTrealm10yrHorn.rds')
 
 ```
 
@@ -298,18 +299,79 @@ summary(modTDrealmHorn)
 ```
 
 ### Summary (1 yr)
-```{r summary of TDrealm1yr mods}
-summary(modTDrealm1yrJtu)
-summary(modTDrealm1yrJbeta)
-summary(modTDrealm1yrHorn)
+```{r summary of Trealm1yr mods}
+summary(modTrealm1yrJtu)
+summary(modTrealm1yrJbeta)
+summary(modTrealm1yrHorn)
 ```
 
 ### Summary (10 yr)
-```{r summary of TDrealm10yr mods}
-summary(modTDrealm10yrJtu)
-summary(modTDrealm10yrJbeta)
-summary(modTDrealm10yrHorn)
+```{r summary of Trealm10yr mods}
+summary(modTrealm10yrJtu)
+summary(modTrealm10yrJbeta)
+summary(modTrealm10yrHorn)
 ```
+
+### DHARMa simulate residuals
+#### Simulate residuals
+```{r}
+if(!file.exists('temp/res_modTDrealmJtu.rds')) {
+  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, duration.sc, nspp.sc)] # needed because model fit with trends[i,]
+  res_modTDrealmJtu <- simulateResiduals(modTDrealmJtu, n = 250)
+  saveRDS(res_modTDrealmJtu, file = 'temp/res_modTDrealmJtu.rds')
+} else {
+  res_modTDrealmJtu <- readRDS('temp/res_modTDrealmJtu.rds')
+}
+
+if(!file.exists('temp/res_modTrealm1yrJtu.rds')) {
+  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
+                duration == 1] # needed because model fit with trends[i,]
+  res_modTrealm1yrJtu <- simulateResiduals(modTrealm1yrJtu, n = 250)
+  saveRDS(res_modTrealm1yrJtu, file = 'temp/res_modTrealm1yrJtu.rds')
+} else {
+  res_modTrealm1yrJtu <- readRDS('temp/res_modTrealm1yrJtu.rds')
+}
+
+
+if(!file.exists('temp/res_modTrealm10yrJtu.rds')) {
+  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
+                duration == 10] # needed because model fit with trends[i,]
+  res_modTrealm10yrJtu <- simulateResiduals(modTrealm10yrJtu, n = 250)
+  saveRDS(res_modTrealm10yrJtu, file = 'temp/res_modTrealm10yrJtu.rds')
+} else {
+  res_modTrealm10yrJtu <- readRDS('temp/res_modTrealm10yrJtu.rds')
+}
+```
+
+#### Plot residuals
+All data
+```{r}
+i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, duration.sc, nspp.sc)] # needed because model fit with trends[i,]
+plot(res_modTDrealmJtu)
+plotResiduals(res_modTDrealmJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
+plotResiduals(res_modTDrealmJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+plotResiduals(res_modTDrealmJtu, trends$duration[i], xlab = 'duration', main = '')
+```
+
+
+1yr data
+```{r}
+i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
+                duration == 1] # needed because model fit with trends[i,]
+plot(res_modTrealm1yrJtu)
+plotResiduals(res_modTrealm1yrJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
+plotResiduals(res_modTrealm1yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+```
+
+10yr data
+```{r}
+i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
+              duration == 10]
+plot(res_modTrealm10yrJtu)
+plotResiduals(res_modTrealm10yrJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
+plotResiduals(res_modTrealm10yrJtu, form=as.factor(trends$REALM[i]), xlab = 'REALM', main = '') # Freshwater, Marine, Terrestrial
+```
+
 
 ### Plot the temp coefficients from TD realm models
 ```{r modTD realm coefs}
@@ -544,7 +606,8 @@ testGeneric(res_MaEnMiNPHu10yrJtu, summary = countNearOne, alternative = 'greate
 
 
 ### Plot the response
-#### Set up the new data and write to file
+#### Main effects
+##### Set up and write to file
 ```{r}
 scaling <- fread('output/turnover_w_covariates_scaling.csv') # the scalings
 
@@ -669,9 +732,11 @@ write.csv(newdat, 'temp/newdata_main.csv', row.names = FALSE)
 ```
 
 Now go run on the command line
+```
 nohup code/turnover_vs_temperature_GLMM_pred.R temp/modFullMaEnMiNPHuJtu.rds temp/newdata_main.csv > logs/turnover_vs_temperature_GLMMmodFullMaEnMiNPHuJtu_pred.Rout &
+```
 
-#### Load the predictions and plot
+##### Load and plot
 ```{r, fig.width = 7, fig.height=7}
 newdat <- readRDS('temp/modFullMaEnMiNPHuJtu_preds.rds')
 newdat[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # set factor order
@@ -715,4 +780,136 @@ grid.arrange(p1, p2, p3, p4, p5, p6, p7, ncol = 2)
 
 
 
+
+#### Interactions
+##### Set up and write to file
+```{r}
+scaling <- fread('output/turnover_w_covariates_scaling.csv') # the scalings
+
+# set up the interactions to plot
+# if variable is logged before scaling (see assmble_turnover_covariates.Rmd), then need to mark it here and express the limits on a log10 scale (even though log transforming is log)
+ints <- data.frame(vars = c('tempave_metab', 'microclim', 'mass',
+                            'npp', 'duration', 'endothermfrac',
+                            'human_bowler', 'human_bowler'),
+                   min =      c(0,   -2,  0,   1.9, 0.5, 0,   0,   0), 
+                   max =      c(30,  0.8, 8,   3.7, 2,   1,   1,   1),
+                   log =      c(F,   T,   T,   T,   T,   F,   T,   T),
+                   len =      c(100, 100, 100, 100, 100, 100, 100, 100),
+                   discrete = c(F,   F,   F,   F,   F,   F,   F,   F),
+                   plus =     c(0,   0,   0,   0,   0,   0,   1,   1), # what to add before log-scaling
+                   REALM = c(rep('Freshwater', 6), 'Terrestrial', 'Marine'),
+                   REALM2 = c(rep('TerrFresh', 7), 'Marine'),
+                   stringsAsFactors = FALSE)
+baseall <- trends[, .(type = 'all', tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                      microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                      mass.sc = mean(mass.sc, na.rm=TRUE), 
+                      nspp.sc = 60,
+                      npp.sc = mean(npp.sc, na.rm=TRUE), 
+                      endothermfrac.sc = mean(endothermfrac.sc, na.rm=TRUE), 
+                      human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
+baseterr <- trends[REALM == 'Terrestrial', 
+                   .(type = 'Terrestrial', 
+                     tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE),
+                     microclim.sc = mean(microclim.sc, na.rm=TRUE),
+                     mass.sc = mean(mass.sc, na.rm=TRUE), 
+                     nspp.sc = 60, 
+                     npp.sc = mean(npp.sc, na.rm=TRUE), 
+                     endothermfrac.sc = mean(endothermfrac.sc, na.rm=TRUE), 
+                     human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
+basemar <- trends[REALM == 'Marine', 
+                  .(type = 'Marine',
+                    tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                    microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                    mass.sc = mean(mass.sc, na.rm=TRUE), 
+                    nspp.sc = 60, 
+                    npp.sc = mean(npp.sc, na.rm=TRUE), 
+                    endothermfrac.sc = mean(endothermfrac.sc, na.rm=TRUE), 
+                    human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
+basetab <- rbind(baseall, baseterr, basemar)
+basetab[, ':='(duration.sc = 0, nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_514668')]
+
+# make the data frames for each interaction to plot                
+for(j in 1:nrow(ints)){
+  # set up a grid of temperature trends and the interacting variable
+  if(ints$log[j]) intvars <- list(tempchange = seq(0, 4, length.out = 100), 
+                                  new = 10^seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
+                                  var = ints$vars[j])
+  if(!ints$log[j]) intvars <- list(tempchange = seq(0, 4, length.out = 100), 
+                                   new = seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
+                                   var = ints$vars[j])
+  names(intvars) <- c('tempchange', ints$vars[j], 'var')
+  thisdat <- expand.grid(intvars)
+  
+  # scale the interacting variable
+  cent <- scaling$center[scaling$var == paste0(vars$vars[j], '.sc')]
+  scl <- scaling$scale[scaling$var == paste0(vars$vars[j], '.sc')]
+  if(ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (log(thisdat[[ints$vars[j]]] + ints$plus[j]) - cent)/scl
+  if(!ints$log[j]) thisdat[[paste0(ints$var[j], '.sc')]] <- (thisdat[[ints$var[j]]] - cent)/scl
+  
+  # merge with the rest of the columns
+  # use realm-specific averages for human impacts
+  colnamestouse <- setdiff(colnames(basetab), paste0(ints$var[j], '.sc'))
+  if(ints$vars[j] != 'human_bowler'){
+    thisdat <- cbind(thisdat, basetab[type == 'all', ..colnamestouse])
+  }
+  if(ints$vars[j] == 'human_bowler' & ints$REALM[j] == 'Terrestrial'){
+    thisdat <- cbind(thisdat, basetab[type == 'Terrestrial', ..colnamestouse])
+  }
+  if(ints$vars[j] == 'human_bowler' & ints$REALM[j] == 'Marine'){
+    thisdat <- cbind(thisdat, basetab[type == 'Marine', ..colnamestouse])
+  }
+  
+  # add realm
+  thisdat$REALM <- ints$REALM[j]
+  thisdat$REALM2 <- ints$REALM2[j]
+  
+  # merge with the previous iterations
+  if(j == 1) newdat <- thisdat
+  if(j > 1){
+    colstoadd <- setdiff(colnames(thisdat), colnames(newdat))
+    for(toadd in colstoadd){
+      newdat[[toadd]] <- NA
+    }
+    
+    colstoadd2 <- setdiff(colnames(newdat), colnames(thisdat))
+    for(toadd in colstoadd2){
+      thisdat[[toadd]] <- NA
+    }
+    
+    newdat <- rbind(newdat, thisdat)
+  } 
+}
+
+# character so that new levels can be added
+newdat$REALM <- as.character(newdat$REALM)
+newdat$REALM2 <- as.character(newdat$REALM2)
+
+# add extra rows so that all factor levels are represented (for predict.lme to work, not sure about predict.glmmTMB)
+newdat <- rbind(newdat[1:6, ], newdat)
+newdat$REALM[1:6] <- c('Marine', 'Marine', 'Freshwater', 'Freshwater', 'Terrestrial', 'Terrestrial')
+newdat$REALM2[1:6] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh', 'TerrFresh', 'TerrFresh')
+newdat$tempchange[1:6] <- c(-0.2, 0.2, -0.2, 0.2, -0.2, 0.2)
+
+# trim to at least some temperature change (so that tsign is -1 or 1)
+newdat <- newdat[newdat$tempchange != 0,]
+
+# scale the temperature vars
+cent <- scaling$center[scaling$var == 'tempchange.sc']
+scl <- scaling$scale[scaling$var == 'tempchange.sc']
+newdat$tempchange.sc <- (newdat$tempchange-cent)/scl
+newdat$tempchange_abs <- abs(newdat$tempchange)
+
+cent <- scaling$center[scaling$var == 'tempchange_abs.sc']
+scl <- scaling$scale[scaling$var == 'tempchange_abs.sc']
+newdat$tempchange_abs.sc <- (newdat$tempchange_abs-cent)/scl
+
+# write out
+write.csv(newdat, 'temp/newdata_interactions.csv', row.names = FALSE)
+
+```
+
+Now go run on the command line
+```
+nohup code/turnover_vs_temperature_GLMM_pred.R temp/modFullMaEnMiNPHuJtu.rds temp/newdata_interactions.csv > logs/turnover_vs_temperature_GLMMmodFullMaEnMiNPHuJtu_pred_interactions.Rout &
+```
 
