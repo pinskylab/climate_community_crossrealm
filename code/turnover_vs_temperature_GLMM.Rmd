@@ -91,7 +91,7 @@ if(file.exists('temp/modRFdurslope2levdisp.rds')) modRFdurslope2levdisp <- readR
 AICtab(modRFgauss, modRFbeta, modRFrID, modRF2lev, modRFnestedRE, modRFdisp, modRFdisp2lev, modRFdisp2levOnlyint,
        modRFdurslope2lev, modRFdurslope2levdisp)
 ```
-Chooses beta errors, random slopes (tempchange_abs.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp.
+Chooses beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp.
 We haven't dealt with potential testing on the boundary issues here yet.
 
 
@@ -543,22 +543,22 @@ testGeneric(res_MaEnMiNPHu10yrJtu, summary = countNearOne, alternative = 'greate
 ```
 
 
-## Plot the response
-Set up the new data and write to file
+### Plot the response
+#### Set up the new data and write to file
 ```{r}
 scaling <- fread('output/turnover_w_covariates_scaling.csv') # the scalings
 
 # set up the variables to plot
 # if variable is logged before scaling (see 'center and scale' above), then need to mark it here and express the limits on a log10 scale (even though log transforming is log)
-vars <- data.frame(vars = c('tempchange_abs', 'tempave_metab', 'microclim', 'mass', 'npp', 'duration', 'endothermfrac', 'human_bowler', 'human_bowler'),
-                   min =      c(0,    0,   0,   -1,  1.9, 0.5, 0,   0,   0), 
-                   max =      c(4,    30,  0.8, 4,   3.7, 2,   1,   1,   1),
-                   log =      c(F,    F,   T,   T,   T,   T,   F,   T,   T),
-                   len =      c(100,  100, 100, 100, 100, 100, 100, 100, 100),
-                   discrete = c(F,    F,   F,   F,   F,   F,   F,   F,   F),
-                   plus =     c(0,    0,   0,   0,   0,   0,   0,   1,   1), # what to add before log-scaling
-                   REALM = c(rep('Terrestrial', 8), 'Marine'),
-                   REALM2 = c(rep('TerrFresh', 8), 'Marine'),
+vars <- data.frame(vars = c('tempchange_abs', 'tempchange_abs', 'tempchange_abs', 'tempave_metab', 'microclim', 'mass', 'npp', 'duration', 'endothermfrac', 'human_bowler', 'human_bowler'),
+                   min =      c(0,    0,   0,   0,   0,   -1,  1.9, 0.5, 0,   0,   0), 
+                   max =      c(4,    4,   4,   30,  0.8, 4,   3.7, 2,   1,   1,   1),
+                   log =      c(F,    F,   F,   F,   T,   T,   T,   T,   F,   T,   T),
+                   len =      c(100,  100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
+                   discrete = c(F,    F,   F,   F,   F,   F,   F,   F,   F,   F,   F),
+                   plus =     c(0,    0,   0,   0,   0,   0,   0,   0,   0,   1,   1), # what to add before log-scaling
+                   REALM = c('Freshwater', 'Marine', 'Terrestrial', rep('Terrestrial', 6), 'Terrestrial', 'Marine'),
+                   REALM2 = c('TerrFresh', 'Marine', rep('TerrFresh', 8), 'Marine'),
                    stringsAsFactors = FALSE)
 baseall <- trends[, .(type = 'all', 
                       tempchange = -0.0001,
@@ -664,21 +664,53 @@ newdat$tempchange[1:6] <- rep(c(0.0001, -0.0001), 3)
 newdat$var[1:6] <- 'test'
 
 # write out
-write.csv(newdat, 'temp/newdata.csv', row.names = FALSE)
+write.csv(newdat, 'temp/newdata_main.csv', row.names = FALSE)
 
 ```
 
 Now go run on the command line
-nohup code/turnover_vs_temperature_GLMM_pred.R temp/modFullMaEnMiNPHuJtu.rds temp/newdata.csv > logs/turnover_vs_temperature_GLMMmodFullMaEnMiNPHuJtu_pred.Rout &
+nohup code/turnover_vs_temperature_GLMM_pred.R temp/modFullMaEnMiNPHuJtu.rds temp/newdata_main.csv > logs/turnover_vs_temperature_GLMMmodFullMaEnMiNPHuJtu_pred.Rout &
 
-Load the predictions and plot
-```{r}
+#### Load the predictions and plot
+```{r, fig.width = 7, fig.height=7}
 newdat <- readRDS('temp/modFullMaEnMiNPHuJtu_preds.rds')
+newdat[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # set factor order
+newdat[, REALM2 := factor(REALM2, levels = c('TerrFresh', 'Marine'))] # set factor order
 
-
-ggplot(newdat[var == 'tempchange_abs.sc'], aes(tempchange_abs.sc, pred)) +
+p1 <- ggplot(newdat[var == 'tempchange_abs',], aes(tempchange_abs, pred, group = REALM, color = REALM, fill=REALM)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1, linetype = 'blank') +
   geom_line() +
-  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1, linetype = 'blank')
+  labs(y = 'Jaccard turnover') +
+  theme(legend.title = element_text(size = 6),legend.text = element_text(size = 6))
+p2 <- ggplot(newdat[var == 'tempave_metab',], aes(tempave_metab, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p3 <- ggplot(newdat[var == 'microclim',], aes(microclim, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p4 <- ggplot(newdat[var == 'mass',], aes(mass, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  scale_x_log10() +
+  labs(y = 'Jaccard turnover')
+p5 <- ggplot(newdat[var == 'npp',], aes(npp, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p6 <- ggplot(newdat[var == 'endothermfrac',], aes(endothermfrac, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p7 <- ggplot(newdat[var == 'human_bowler',], aes(human_bowler, pred, group = REALM2, color = REALM2, fill = REALM2)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1, linetype = 'blank') +
+  geom_line() +
+  labs(y = 'Jaccard turnover', x = 'Human impact') +
+  theme(legend.title = element_text(size = 6),legend.text = element_text(size = 6))
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, ncol = 2)
+
 ```
 
 

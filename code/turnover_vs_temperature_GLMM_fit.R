@@ -21,8 +21,7 @@ MATCHMOD <- FALSE # indicator to check if the argument matched a model name
 ###################################
 # print basic info about the job
 
-print('This is process #')
-print(Sys.getpid())
+print(paste('This is process #', Sys.getpid()))
 print(Sys.time())
 
 

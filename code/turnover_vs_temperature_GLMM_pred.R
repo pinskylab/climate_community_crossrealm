@@ -60,4 +60,4 @@ print(paste('Wrote', outpath))
 
 warnings()
 
-print(paste('Ended', Sys.time(), sep =''))
+print(paste('Ended', Sys.time()))
