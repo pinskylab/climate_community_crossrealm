@@ -160,12 +160,12 @@ if(fitmod == 'modRFdurslope2levdisp'){ # 2 level RE, slope vs. duration, disp fo
 
 if(fitmod == 'modRFdurslope2levdisprealm'){ # 2 level RE, slope vs. duration, disp formula by realm
     print(paste(sum(i), 'data points'))
-    modRFdurslope2levdisp <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
+    modRFdurslope2levdisprealm <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
                                      dispformula = ~nspp.sc+REALM, 
                                      control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    summary(modRFdurslope2levdisp)
-    saveRDS(modRFdurslope2levdisp, file = 'temp/modRFdurslope2levdisp.rds')
-    print('saved modRFdurslope2levdisp.rds')
+    summary(modRFdurslope2levdisprealm)
+    saveRDS(modRFdurslope2levdisprealm, file = 'temp/modRFdurslope2levdisprealm.rds')
+    print('saved modRFdurslope2levdisprealm.rds')
     MATCHMOD <- TRUE
 }
 
@@ -565,8 +565,8 @@ if(fitmod == 'modFullMaEnMiNPHu10yrJtu'){
                                            (1|STUDY_ID/rarefyID), 
                                        data = trends[i,], 
                                        family = beta_family(link = 'logit'), 
-                                       dispformula = ~nspp.sc)#, 
-#                                       control = glmmTMBControl(profile=TRUE))
+                                       dispformula = ~nspp.sc, 
+                                       control = glmmTMBControl(profile=TRUE))
     summary(modFullMaEnMiNPHu10yrJtu)
     saveRDS(modFullMaEnMiNPHu10yrJtu, file = 'temp/modFullMaEnMiNPHu10yrJtu.rds')
     print('saved modFullMaEnMiNPHu10yrJtu.rds')

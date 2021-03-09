@@ -90,10 +90,70 @@ if(file.exists('temp/modRFdurslope2levdisprealm.rds')) modRFdurslope2levdispreal
 
 
 AICtab(modRFgauss, modRFbeta, modRFrID, modRF2lev, modRFnestedRE, modRFdisp, modRFdisp2lev, modRFdisp2levOnlyint,
-       modRFdurslope2lev, modRFdurslope2levdisp, modRFdurslope2levdisprealm)
+       modRFdurslope2lev, modRFdurslope2levdisprealm)
 ```
-Chooses beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp.
+Chooses beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp + realm.
 We haven't dealt with potential testing on the boundary issues here yet.
+
+### DHARMa simulate residuals
+```{r}
+if(!file.exists('temp/res_RFdurslope2levdisprealm.rds')) {
+  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, 
+                               endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+  
+  res_RFdurslope2levdisprealm <- simulateResiduals(modRFdurslope2levdisprealm, n = 250)
+  
+  saveRDS(res_RFdurslope2levdisprealm, file = 'temp/res_RFdurslope2levdisprealm.rds')
+} else {
+  res_RFdurslope2levdisprealm <- readRDS('temp/res_RFdurslope2levdisprealm.rds')
+}
+```
+
+#### Plot residuals
+All data
+```{r}
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+plot(res_RFdurslope2levdisprealm)
+plotResiduals(res_RFdurslope2levdisprealm, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
+plotResiduals(res_RFdurslope2levdisprealm, form=trends$REALM[i], xlab = 'REALM', main = '')
+plotResiduals(res_RFdurslope2levdisprealm, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
+plotResiduals(res_RFdurslope2levdisprealm, trends$duration.sc[i], xlab = 'duration.sc', main = '')
+plotResiduals(res_RFdurslope2levdisprealm, trends$mass.sc[i], xlab = 'mass.sc', main = '')
+plotResiduals(res_RFdurslope2levdisprealm, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
+plotResiduals(res_RFdurslope2levdisprealm, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
+plotResiduals(res_RFdurslope2levdisprealm, trends$npp.sc[i], xlab = 'npp.sc', main = '')
+plotResiduals(res_RFdurslope2levdisprealm, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
+```
+
+
+#### Overdispersion
+```{r}
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+testDispersion(res_RFdurslope2levdisprealm)
+
+```
+
+#### Near-zero-inflation
+Zero values have been transformed to slightly >0, so can't test zero-inflation directly
+```{r}
+countNearZero <- function(x) sum(x < 0.0001)
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+testGeneric(res_RFdurslope2levdisprealm, summary = countNearZero, alternative = 'greater')
+
+```
+
+#### Near-one-inflation
+```{r}
+countNearOne <- function(x) sum(x > 0.9999)
+i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+testGeneric(res_RFdurslope2levdisprealm, summary = countNearOne, alternative = 'greater')
+
+```
+
 
 
 ## Temperature-only models
