@@ -505,7 +505,6 @@ if(fitmod == 'modFullMaEnMiNPHuJtu'){
     i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
                                  microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
     print(paste(sum(i), 'data points'))
-    
     modFullMaEnMiNPHuJtu <- glmmTMB(Jtu.sc ~ tempchange_abs.sc*REALM + 
                                tempchange_abs.sc*tempave_metab.sc + 
                                tempchange_abs.sc*duration.sc +
@@ -517,7 +516,7 @@ if(fitmod == 'modFullMaEnMiNPHuJtu'){
                                (duration.sc|STUDY_ID/rarefyID), 
                            data = trends[i,], 
                            family = beta_family(link = 'logit'), 
-                           dispformula = ~nspp.sc,  # add dispersion formula
+                           dispformula = ~nspp.sc+REALM,  # add dispersion formula
                            control = glmmTMBControl(profile=TRUE))
     summary(modFullMaEnMiNPHuJtu)
     saveRDS(modFullMaEnMiNPHuJtu, file = 'temp/modFullMaEnMiNPHuJtu.rds')
@@ -541,11 +540,35 @@ if(fitmod == 'modFullMaEnMiNPHu1yrJtu'){
                                      (1|STUDY_ID/rarefyID), 
                                  data = trends[i,], 
                                  family = beta_family(link = 'logit'), 
-                                 dispformula = ~nspp.sc,
+                                 dispformula = ~nspp.sc+REALM,
                                  control = glmmTMBControl(profile=TRUE))
     summary(modFullMaEnMiNPHu1yrJtu)
     saveRDS(modFullMaEnMiNPHu1yrJtu, file = 'temp/modFullMaEnMiNPHu1yrJtu.rds')
     print('saved modFullMaEnMiNPHu1yrJtu.rds')
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modFullMaEnMiNPHu5yrJtu'){
+    i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, mass.sc, endothermfrac.sc,
+                                 microclim.sc, npp.sc, human_bowler.sc, nspp.sc) & 
+                    duration == 5]
+    print(paste(sum(i), 'data points'))
+    
+    modFullMaEnMiNPHu5yrJtu <- glmmTMB(Jtu.sc ~ tempchange_abs.sc*REALM + 
+                                            tempchange_abs.sc*tempave_metab.sc + 
+                                            tempchange_abs.sc*mass.sc +
+                                            tempchange_abs.sc*endothermfrac.sc +
+                                            tempchange_abs.sc*microclim.sc +
+                                            tempchange_abs.sc*npp.sc +
+                                            tempchange_abs.sc*human_bowler.sc:REALM2 +
+                                            (1|STUDY_ID/rarefyID), 
+                                        data = trends[i,], 
+                                        family = beta_family(link = 'logit'), 
+                                        dispformula = ~nspp.sc+REALM, 
+                                        control = glmmTMBControl(profile=TRUE))
+    summary(modFullMaEnMiNPHu5yrJtu)
+    saveRDS(modFullMaEnMiNPHu5yrJtu, file = 'temp/modFullMaEnMiNPHu5yrJtu.rds')
+    print('saved modFullMaEnMiNPHu5yrJtu.rds')
     MATCHMOD <- TRUE
 }
 
@@ -565,13 +588,71 @@ if(fitmod == 'modFullMaEnMiNPHu10yrJtu'){
                                            (1|STUDY_ID/rarefyID), 
                                        data = trends[i,], 
                                        family = beta_family(link = 'logit'), 
-                                       dispformula = ~nspp.sc, 
+                                       dispformula = ~nspp.sc+REALM, 
                                        control = glmmTMBControl(profile=TRUE))
     summary(modFullMaEnMiNPHu10yrJtu)
     saveRDS(modFullMaEnMiNPHu10yrJtu, file = 'temp/modFullMaEnMiNPHu10yrJtu.rds')
     print('saved modFullMaEnMiNPHu10yrJtu.rds')
     MATCHMOD <- TRUE
 }
+
+
+####################################
+## Null models
+
+if(fitmod == 'modNullMaEnMiNPHuJtu'){
+    i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                                 microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+    print(paste(sum(i), 'data points'))
+    modNullMaEnMiNPHuJtu <- glmmTMB(Jtu.sc ~ 1 +
+                                        (duration.sc|STUDY_ID/rarefyID), 
+                                    data = trends[i,], 
+                                    family = beta_family(link = 'logit'), 
+                                    dispformula = ~nspp.sc+REALM,  # add dispersion formula
+                                    control = glmmTMBControl(profile=TRUE))
+    summary(modNullMaEnMiNPHuJtu)
+    saveRDS(modNullMaEnMiNPHuJtu, file = 'temp/modNullMaEnMiNPHuJtu.rds')
+    print('saved modNullMaEnMiNPHuJtu.rds')
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modNullMaEnMiNPHu1yrJtu'){
+    i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, mass.sc, endothermfrac.sc,
+                                 microclim.sc, npp.sc, human_bowler.sc, nspp.sc) & 
+                    duration == 1]
+    print(paste(sum(i), 'data points'))
+    
+    modNullMaEnMiNPHu1yrJtu <- glmmTMB(Jtu.sc ~ 1 +
+                                           (1|STUDY_ID/rarefyID), 
+                                       data = trends[i,], 
+                                       family = beta_family(link = 'logit'), 
+                                       dispformula = ~nspp.sc+REALM,
+                                       control = glmmTMBControl(profile=TRUE))
+    summary(modNullMaEnMiNPHu1yrJtu)
+    saveRDS(modNullMaEnMiNPHu1yrJtu, file = 'temp/modNullMaEnMiNPHu1yrJtu.rds')
+    print('saved modNullMaEnMiNPHu1yrJtu.rds')
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modNullMaEnMiNPHu5yrJtu'){
+    i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, mass.sc, endothermfrac.sc,
+                                 microclim.sc, npp.sc, human_bowler.sc, nspp.sc) & 
+                    duration == 5]
+    print(paste(sum(i), 'data points'))
+    
+    modNullMaEnMiNPHu5yrJtu <- glmmTMB(Jtu.sc ~ 1 +
+                                           (1|STUDY_ID/rarefyID), 
+                                       data = trends[i,], 
+                                       family = beta_family(link = 'logit'), 
+                                       dispformula = ~nspp.sc+REALM, 
+                                       control = glmmTMBControl(profile=TRUE))
+    summary(modNullMaEnMiNPHu5yrJtu)
+    saveRDS(modNullMaEnMiNPHu5yrJtu, file = 'temp/modNullMaEnMiNPHu5yrJtu.rds')
+    print('saved modNullMaEnMiNPHu5yrJtu.rds')
+    MATCHMOD <- TRUE
+}
+
+
 ####################################
 # final check that something ran
 if(MATCHMOD == FALSE) stop("Model name did not match anything", call.=FALSE)
