@@ -12,6 +12,7 @@ First run turnover_vs_temperature_GLMM_fit.R to fit the models.
 library(data.table) # for handling large datasets
 library(ggplot2) # for some plotting
 library(glmmTMB) # for ME models
+library(lme4) # for plotting random effects dotplot
 library(bbmle) # for AICtab
 library(gridExtra) # to combine ggplots together
 library(grid) # to combine ggplots together
@@ -95,9 +96,20 @@ AICtab(modRFgauss, modRFbeta, modRFrID, modRF2lev, modRFnestedRE, modRFdisp, mod
 Chooses beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp + realm.
 We haven't dealt with potential testing on the boundary issues here yet.
 
+### Summary
+```{r}
+summary(modRFdurslope2levdisprealm)
+```
+
+### Plot random effects
+```{r}
+lme4:::dotplot.ranef.mer(ranef(modRFdurslope2levdisprealm)$cond)
+```
+
 ### DHARMa simulate residuals
 ```{r}
-if(!file.exists('temp/res_RFdurslope2levdisprealm.rds')) {
+## run the top part by hand if needed. takes ~3 hrs
+if(FALSE) {
   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, 
                                endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
   
@@ -492,6 +504,7 @@ if(file.exists('temp/modFullmass.rds')) modFullmass <- readRDS('temp/modFullmass
 
 if(file.exists('temp/modFullMaEnMiNPHuJtu.rds')) modFullMaEnMiNPHuJtu <- readRDS('temp/modFullMaEnMiNPHuJtu.rds') # mass, endoecto, microclimate, NPP, humans
 if(file.exists('temp/modFullMaEnMiNPHu1yrJtu.rds')) modFullMaEnMiNPHu1yrJtu <- readRDS('temp/modFullMaEnMiNPHu1yrJtu.rds')
+if(file.exists('temp/modFullMaEnMiNPHu5yrJtu.rds')) modFullMaEnMiNPHu5yrJtu <- readRDS('temp/modFullMaEnMiNPHu5yrJtu.rds')
 if(file.exists('temp/modFullMaEnMiNPHu10yrJtu.rds')) modFullMaEnMiNPHu10yrJtu <- readRDS('temp/modFullMaEnMiNPHu10yrJtu.rds')
 
 ```
@@ -514,6 +527,11 @@ summary(modFullMaEnMiNPHuJtu)
 summary(modFullMaEnMiNPHu1yrJtu)
 ```
 
+5 yr
+```{r summary MaEnMiNPHu5}
+summary(modFullMaEnMiNPHu5yrJtu)
+```
+
 10 yr
 ```{r summary MaEnMiNPHu10}
 summary(modFullMaEnMiNPHu10yrJtu)
@@ -523,7 +541,8 @@ summary(modFullMaEnMiNPHu10yrJtu)
 #### Mass, endo, microclimate, NPP, humans
 ##### Simulate residuals
 ```{r dharma maenminphu}
-if(!file.exists('temp/res_MaEnMiNPHuJtu.rds')) {
+## run the top part by hand if needed. takes ~3 hrs for all data
+if(FALSE) {
   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc)] # needed because model fit with trends[i,]
 
@@ -534,7 +553,7 @@ if(!file.exists('temp/res_MaEnMiNPHuJtu.rds')) {
   res_MaEnMiNPHuJtu <- readRDS('temp/res_MaEnMiNPHuJtu.rds')
 }
 
-if(!file.exists('temp/res_MaEnMiNPHu1yrJtu.rds')) {
+if(FALSE) {
   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
                 duration == 1] # needed because model fit with trends[i,]
@@ -547,7 +566,7 @@ if(!file.exists('temp/res_MaEnMiNPHu1yrJtu.rds')) {
 }
 
 
-if(!file.exists('temp/res_MaEnMiNPHu10yrJtu.rds')) {
+if(FALSE) {
   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
                 duration == 10] # needed because model fit with trends[i,]
@@ -793,7 +812,7 @@ write.csv(newdat, 'temp/newdata_main.csv', row.names = FALSE)
 
 Now go run on the command line
 ```
-nohup code/turnover_vs_temperature_GLMM_pred.R temp/modFullMaEnMiNPHuJtu.rds temp/newdata_main.csv > logs/turnover_vs_temperature_GLMMmodFullMaEnMiNPHuJtu_pred.Rout &
+nohup code/turnover_vs_temperature_GLMM_pred.R temp/modFullMaEnMiNPHuJtu.rds temp/newdata_main.csv temp/modFullMaEnMiNPHuJtu_preds.rds >logs/turnover_vs_temperature_GLMMmodFullMaEnMiNPHuJtu_pred.Rout &
 ```
 
 ##### Load and plot
@@ -974,7 +993,7 @@ write.csv(newdat, 'temp/newdata_interactions.csv', row.names = FALSE)
 
 Now go run on the command line
 ```
-nohup code/turnover_vs_temperature_GLMM_pred.R temp/modFullMaEnMiNPHuJtu.rds temp/newdata_interactions.csv > logs/turnover_vs_temperature_GLMMmodFullMaEnMiNPHuJtu_pred_interactions.Rout &
+nohup code/turnover_vs_temperature_GLMM_pred.R temp/modFullMaEnMiNPHuJtu.rds temp/newdata_interactions.csv temp/modFullMaEnMiNPHuJtu_preds_interactions.rds >logs/turnover_vs_temperature_GLMMmodFullMaEnMiNPHuJtu_pred_interactions.Rout &
 ```
 
 ##### Load and plot
