@@ -972,6 +972,7 @@ newdat <- rbind(newdat[1:6, ], newdat)
 newdat$REALM[1:6] <- c('Marine', 'Marine', 'Freshwater', 'Freshwater', 'Terrestrial', 'Terrestrial')
 newdat$REALM2[1:6] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh', 'TerrFresh', 'TerrFresh')
 newdat$tempchange[1:6] <- c(-0.2, 0.2, -0.2, 0.2, -0.2, 0.2)
+newdat$var[1:6] <- 'test'
 
 # trim to at least some temperature change (so that tsign is -1 or 1)
 newdat <- newdat[newdat$tempchange != 0,]
@@ -997,32 +998,35 @@ nohup code/turnover_vs_temperature_GLMM_pred.R temp/modFullMaEnMiNPHuJtu.rds tem
 ```
 
 ##### Load and plot
-```{r}
-newdat <- readRDS('temp/modFullMaEnMiNPHuJtu_preds_interactions.rds')
-newdat[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # set factor order
-newdat[, REALM2 := factor(REALM2, levels = c('TerrFresh', 'Marine'))] # set factor order
+```{r, fig.width = 9, fig.height = 8}
+newdatint <- readRDS('temp/modFullMaEnMiNPHuJtu_preds_interactions.rds')
+newdatint[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # set factor order
+newdatint[, REALM2 := factor(REALM2, levels = c('TerrFresh', 'Marine'))] # set factor order
 
-ylims = c(-0.03, 0.03)
+ylims = c(0.2, 0.65)
 
 # prep the plots
-ints <- unique(newdat[ ,.(var, REALM2, log, discrete)])
+ints <- unique(newdatint[ ,.(var, REALM2, log, discrete)])
+ints <- ints[ints$var != 'test', ] # remove the extra rows
 intplots <- vector('list', nrow(ints))
 for(j in 1:length(intplots)){
-  subs <- newdat$var == ints$var[j] & newdat$tempchange > 0 # select warming side
+  subs <- newdatint$var == ints$var[j]
   xvar <- 'tempchange_abs'
   title <- ints$var[j]
   if(ints$var[j] %in% c('human_bowler')){
-    subs <- newdat$var == ints$var[j] & newdat$tempchange > 0 & newdat$REALM2 == ints$REALM2[j]
+    subs <- newdatint$var == ints$var[j] & newdatint$tempchange > 0 & newdatint$REALM2 == ints$REALM2[j]
     title <- paste0('human:', ints$REALM2[j])
   } 
   
-  thisplot <- ggplot(newdat[subs, ], 
-                     aes_string(x = xvar, y = 'preds', 
-                                group = ints$vars[j], 
-                                color = ints$vars[j])) +
+  thisplot <- ggplot(newdatint[subs, ], 
+                     aes_string(x = xvar, y = 'pred', 
+                                group = ints$var[j], 
+                                color = ints$var[j])) +
     geom_line() +
-    coord_cartesian(ylim = ylims) +
-    #theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm')) +
+    #coord_cartesian(ylim = ylims) +
+    theme(legend.title = element_text(size = 8), 
+          legend.text = element_text(size = 6),
+          legend.key.width = unit(0.1, 'inch')) +
     labs(title = title)
   if(ints$log[j] & !ints$discrete[j]){
     intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'log')
@@ -1034,5 +1038,8 @@ for(j in 1:length(intplots)){
     intplots[[j]] <- thisplot + scale_color_brewer(palette = "Dark2")
   }
 }
+
+grid.arrange(grobs = intplots, ncol = 3)
+
 ```
 
