@@ -597,6 +597,149 @@ if(fitmod == 'modFullMaEnMiNPHu10yrJtu'){
 }
 
 
+if(fitmod == 'modFullMaEnMiNPHuJbeta'){
+    i <- trends[, complete.cases(Jbeta.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                                 microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+    print(paste(sum(i), 'data points'))
+    modFullMaEnMiNPHuJbeta <- glmmTMB(Jbeta.sc ~ tempchange_abs.sc*REALM + 
+                                        tempchange_abs.sc*tempave_metab.sc + 
+                                        tempchange_abs.sc*duration.sc +
+                                        tempchange_abs.sc*mass.sc +
+                                        tempchange_abs.sc*endothermfrac.sc +
+                                        tempchange_abs.sc*microclim.sc +
+                                        tempchange_abs.sc*npp.sc +
+                                        tempchange_abs.sc*human_bowler.sc:REALM2 +
+                                        (duration.sc|STUDY_ID/rarefyID), 
+                                    data = trends[i,], 
+                                    family = beta_family(link = 'logit'), 
+                                    dispformula = ~nspp.sc+REALM,  # add dispersion formula
+                                    control = glmmTMBControl(profile=TRUE))
+    summary(modFullMaEnMiNPHuJbeta)
+    saveRDS(modFullMaEnMiNPHuJbeta, file = 'temp/modFullMaEnMiNPHuJbeta.rds')
+    print('saved modFullMaEnMiNPHuJbeta.rds')
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modFullMaEnMiNPHu1yrJbeta'){
+    i <- trends[, complete.cases(Jbeta.sc, tempchange_abs.sc, REALM, tempave_metab.sc, mass.sc, endothermfrac.sc,
+                                 microclim.sc, npp.sc, human_bowler.sc, nspp.sc) & 
+                    duration == 1]
+    print(paste(sum(i), 'data points'))
+    
+    modFullMaEnMiNPHu1yrJbeta <- glmmTMB(Jbeta.sc ~ tempchange_abs.sc*REALM + 
+                                           tempchange_abs.sc*tempave_metab.sc + 
+                                           tempchange_abs.sc*mass.sc +
+                                           tempchange_abs.sc*endothermfrac.sc +
+                                           tempchange_abs.sc*microclim.sc +
+                                           tempchange_abs.sc*npp.sc +
+                                           tempchange_abs.sc*human_bowler.sc:REALM2 +
+                                           (1|STUDY_ID/rarefyID), 
+                                       data = trends[i,], 
+                                       family = beta_family(link = 'logit'), 
+                                       dispformula = ~nspp.sc+REALM,
+                                       control = glmmTMBControl(profile=TRUE))
+    summary(modFullMaEnMiNPHu1yrJbeta)
+    saveRDS(modFullMaEnMiNPHu1yrJbeta, file = 'temp/modFullMaEnMiNPHu1yrJbeta.rds')
+    print('saved modFullMaEnMiNPHu1yrJbeta.rds')
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modFullMaEnMiNPHu5yrJbeta'){
+    i <- trends[, complete.cases(Jbeta.sc, tempchange_abs.sc, REALM, tempave_metab.sc, mass.sc, endothermfrac.sc,
+                                 microclim.sc, npp.sc, human_bowler.sc, nspp.sc) & 
+                    duration == 5]
+    print(paste(sum(i), 'data points'))
+    
+    modFullMaEnMiNPHu5yrJbeta <- glmmTMB(Jbeta.sc ~ tempchange_abs.sc*REALM + 
+                                           tempchange_abs.sc*tempave_metab.sc + 
+                                           tempchange_abs.sc*mass.sc +
+                                           tempchange_abs.sc*endothermfrac.sc +
+                                           tempchange_abs.sc*microclim.sc +
+                                           tempchange_abs.sc*npp.sc +
+                                           tempchange_abs.sc*human_bowler.sc:REALM2 +
+                                           (1|STUDY_ID/rarefyID), 
+                                       data = trends[i,], 
+                                       family = beta_family(link = 'logit'), 
+                                       dispformula = ~nspp.sc+REALM, 
+                                       control = glmmTMBControl(profile=TRUE))
+    summary(modFullMaEnMiNPHu5yrJbeta)
+    saveRDS(modFullMaEnMiNPHu5yrJbeta, file = 'temp/modFullMaEnMiNPHu5yrJbeta.rds')
+    print('saved modFullMaEnMiNPHu5yrJbeta.rds')
+    MATCHMOD <- TRUE
+}
+
+
+if(fitmod == 'modFullMaEnMiNPHuHorn'){
+    i <- trends[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+                                 microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+    print(paste(sum(i), 'data points'))
+    modFullMaEnMiNPHuHorn <- glmmTMB(Horn.sc ~ tempchange_abs.sc*REALM + 
+                                          tempchange_abs.sc*tempave_metab.sc + 
+                                          tempchange_abs.sc*duration.sc +
+                                          tempchange_abs.sc*mass.sc +
+                                          tempchange_abs.sc*endothermfrac.sc +
+                                          tempchange_abs.sc*microclim.sc +
+                                          tempchange_abs.sc*npp.sc +
+                                          tempchange_abs.sc*human_bowler.sc:REALM2 +
+                                          (duration.sc|STUDY_ID/rarefyID), 
+                                      data = trends[i,], 
+                                      family = beta_family(link = 'logit'), 
+                                      dispformula = ~nspp.sc+REALM,  # add dispersion formula
+                                      control = glmmTMBControl(profile=TRUE))
+    summary(modFullMaEnMiNPHuHorn)
+    saveRDS(modFullMaEnMiNPHuHorn, file = 'temp/modFullMaEnMiNPHuHorn.rds')
+    print('saved modFullMaEnMiNPHuHorn.rds')
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modFullMaEnMiNPHu1yrHorn'){
+    i <- trends[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, mass.sc, endothermfrac.sc,
+                                 microclim.sc, npp.sc, human_bowler.sc, nspp.sc) & 
+                    duration == 1]
+    print(paste(sum(i), 'data points'))
+    
+    modFullMaEnMiNPHu1yrHorn <- glmmTMB(Horn.sc ~ tempchange_abs.sc*REALM + 
+                                             tempchange_abs.sc*tempave_metab.sc + 
+                                             tempchange_abs.sc*mass.sc +
+                                             tempchange_abs.sc*endothermfrac.sc +
+                                             tempchange_abs.sc*microclim.sc +
+                                             tempchange_abs.sc*npp.sc +
+                                             tempchange_abs.sc*human_bowler.sc:REALM2 +
+                                             (1|STUDY_ID/rarefyID), 
+                                         data = trends[i,], 
+                                         family = beta_family(link = 'logit'), 
+                                         dispformula = ~nspp.sc+REALM,
+                                         control = glmmTMBControl(profile=TRUE))
+    summary(modFullMaEnMiNPHu1yrHorn)
+    saveRDS(modFullMaEnMiNPHu1yrHorn, file = 'temp/modFullMaEnMiNPHu1yrHorn.rds')
+    print('saved modFullMaEnMiNPHu1yrHorn.rds')
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modFullMaEnMiNPHu5yrHorn'){
+    i <- trends[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, mass.sc, endothermfrac.sc,
+                                 microclim.sc, npp.sc, human_bowler.sc, nspp.sc) & 
+                    duration == 5]
+    print(paste(sum(i), 'data points'))
+    
+    modFullMaEnMiNPHu5yrHorn <- glmmTMB(Horn.sc ~ tempchange_abs.sc*REALM + 
+                                             tempchange_abs.sc*tempave_metab.sc + 
+                                             tempchange_abs.sc*mass.sc +
+                                             tempchange_abs.sc*endothermfrac.sc +
+                                             tempchange_abs.sc*microclim.sc +
+                                             tempchange_abs.sc*npp.sc +
+                                             tempchange_abs.sc*human_bowler.sc:REALM2 +
+                                             (1|STUDY_ID/rarefyID), 
+                                         data = trends[i,], 
+                                         family = beta_family(link = 'logit'), 
+                                         dispformula = ~nspp.sc+REALM, 
+                                         control = glmmTMBControl(profile=TRUE))
+    summary(modFullMaEnMiNPHu5yrHorn)
+    saveRDS(modFullMaEnMiNPHu5yrHorn, file = 'temp/modFullMaEnMiNPHu5yrHorn.rds')
+    print('saved modFullMaEnMiNPHu5yrHorn.rds')
+    MATCHMOD <- TRUE
+}
+
 ####################################
 ## Null models
 
