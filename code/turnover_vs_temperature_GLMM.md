@@ -362,7 +362,9 @@ testDispersion(res_RFdurslope2levdisprealm)
 #### Near-zero-inflation
 
 (Zero values have been transformed to slightly \>0, so can’t test
-zero-inflation directly) Near-zero values are not inflated.
+zero-inflation directly)
+
+Near-zero values are not inflated.
 
 ``` r
 countNearZero <- function(x) sum(x < 0.0001)
@@ -402,7 +404,9 @@ testGeneric(res_RFdurslope2levdisprealm, summary = countNearOne, alternative = '
 
 ## Temperature-change-only models
 
-Not run right now \#\#\# Load the models
+Not run right now
+
+### Load the models
 
 ``` r
 # all years
@@ -487,7 +491,9 @@ CIs are 1.96\*SE
 
 ## Temperature-change\&duration models
 
-Not run right now \#\#\# Load the models
+Not run right now
+
+### Load the models
 
 ``` r
 # all years
@@ -554,7 +560,9 @@ for(i in 1:length(varstoplot)){
 legend('bottomright', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Horn'), cex = 0.5)
 ```
 
-abs(tempchange) is in degC duration is in years
+abs(tempchange) is in degC
+
+duration is in years
 
 ### Plot the response
 
@@ -1060,21 +1068,28 @@ if(exists('modTDrealmJtu') & exists('modTDrealmJbeta') & exists('modTDrealmHorn'
 
 ## Full models
 
-There are a number of different models here: - Three response variables
-(Jaccard turnover, Jaccard total, and Morisita-Horn) - Four subsets of
-the data: all, only 1-year time-steps, only 5-year time-steps, and only
-10-year time-steps
+There are a number of different models here:
 
-Some take-aways for now: - Larger temperature-change is not consistently
-associated with greater community composition change through time. The
-strongest positive associations between temperature change and community
-change are usually for freshwater ecosystems and those with few
-available microclimates and low human impact. For the all data subset,
-the temperature-change effect is stronger for longer durations. - In
-contrast, greater community change through time is pretty consistently
-associated with - higher metabolic temperatures (tempave\_metab.sc) -
-higher NPP (npp.sc) - low human impacts on land/in freshwater
-(human\_bowler.sc:REALM2TerrFresh)
+  - Three response variables (Jaccard turnover, Jaccard total, and
+    Morisita-Horn)
+  - Four subsets of the data: all, only 1-year time-steps, only 5-year
+    time-steps, and only 10-year time-steps
+
+Some take-aways for now:
+
+  - Larger temperature-change is not consistently associated with
+    greater community composition change through time. The strongest
+    positive associations between temperature change and community
+    change are usually for freshwater ecosystems and those with few
+    available microclimates and low human impact. For the all data
+    subset, the temperature-change effect is stronger for longer
+    durations.
+  - In contrast, greater community change through time is pretty
+    consistently associated with
+      - higher metabolic temperatures (tempave\_metab.sc)
+      - higher NPP (npp.sc)
+      - low human impacts on land/in freshwater
+        (human\_bowler.sc:REALM2TerrFresh)
 
 ### Load the models
 

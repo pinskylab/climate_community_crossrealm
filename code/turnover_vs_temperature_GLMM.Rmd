@@ -516,10 +516,12 @@ if(exists('modTDrealmJtu') & exists('modTDrealmJbeta') & exists('modTDrealmHorn'
 
 ## Full models
 There are a number of different models here:
+
 - Three response variables (Jaccard turnover, Jaccard total, and Morisita-Horn)
 - Four subsets of the data: all, only 1-year time-steps, only 5-year time-steps, and only 10-year time-steps
 
 Some take-aways for now:
+
 - Larger temperature-change is not consistently associated with greater community composition change through time. The strongest positive associations between temperature change and community change are usually for freshwater ecosystems and those with few available microclimates and low human impact. For the all data subset, the temperature-change effect is stronger for longer durations.
 - In contrast, greater community change through time is pretty consistently associated with 
   - higher metabolic temperatures (tempave_metab.sc)
