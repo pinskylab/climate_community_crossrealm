@@ -1,6 +1,9 @@
 Turnover covariate data prep and visualization
 ================
 
+If running on Annotate with R 3.5.2, also make sure to manually load
+mgcv 1.8-26, not the auto-loaded 1.8-33.
+
 ``` r
 library(data.table)
 library(ggplot2)
@@ -104,13 +107,99 @@ bt <- merge(bt, veg[, .(rarefyID, veg = veg)], all.x = TRUE) # vegetation index
 bt[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 ```
 
+## Trim data
+
+``` r
+# trim to only data with some temperature change
+# important since sign of temperature change is a variable
+bt[tempchange == 0, .N] # number to remove
+```
+
+    ## [1] 95
+
+``` r
+bt <- bt[tempchange != 0, ] # also removes any NA values
+```
+
+## Set up useful variables and transformations
+
+``` r
+# set realm order
+bt[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
+
+# set up sign of temperature change
+bt[, tsign := factor(sign(tempchange))]
+
+# realm that combines Terrestrial and Freshwater, for interacting with human impact
+bt[, REALM2 := REALM]
+levels(bt$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
+
+# group Marine invertebrates/plants in with All
+bt[, taxa_mod2 := taxa_mod]
+bt[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
+
+# calculate duration
+bt[, duration := year2 - year1]
+
+#add a comparison id
+bt[, compID := paste0(rarefyID, '_', year1, '_', year2)]
+
+
+#######################
+## Transformations
+
+### Adjust response away from 0-1
+# transformation for 2 categories. Eq. 1 in Douma & Weedon 2019 MEE
+transform01 <- function(x) (x * (length(x) - 1) + 0.5) / (length(x))
+
+bt[, Jtu.sc := transform01(Jtu)]
+bt[, Jbeta.sc := transform01(Jbeta)]
+bt[, Horn.sc := transform01(Horn)]
+
+
+### Log-transform some variables, then center and scale. 
+bt[, tempave.sc := scale(tempave)]
+bt[, tempave_metab.sc := scale(tempave_metab)]
+bt[, seas.sc := scale(seas)]
+bt[, microclim.sc := scale(log(microclim))]
+bt[, tempchange.sc := scale(tempchange, center = TRUE)] # do not center
+bt[, tempchange_abs.sc := scale(abs(tempchange), center = TRUE)] # do not center, so that 0 is still 0 temperature change
+bt[, mass.sc := scale(log(mass_mean_weight))]
+bt[, speed.sc := scale(log(speed_mean_weight+1))]
+bt[, lifespan.sc := scale(log(lifespan_mean_weight))]
+bt[, consumerfrac.sc := scale(consfrac)]
+bt[, endothermfrac.sc := scale(endofrac)]
+bt[, nspp.sc := scale(log(Nspp))]
+bt[, thermal_bias.sc := scale(thermal_bias)]
+bt[, npp.sc := scale(log(npp))]
+bt[, veg.sc := scale(log(veg+1))]
+bt[, duration.sc := scale(log(duration))]
+bt[, human_bowler.sc := scale(log(human_bowler+1)), by = REALM2] # separate scaling by realm
+bt[REALM2 == 'TerrFresh', human_footprint.sc := scale(log(human_venter+1))]
+bt[REALM2 == 'Marine', human_footprint.sc := scale(log(human_halpern))]
+
+## save the centering and scaling
+scaling <- data.frame(center = t(t(sapply(bt, attr, 'scaled:center'))),
+                 scale = t(t(sapply(bt, attr, 'scaled:scale'))))
+scaling$var <- rownames(scaling)
+scaling <- scaling[!vapply(scaling$center, is.null, TRUE) | !vapply(scaling$scale, is.null, TRUE),]
+scaling$center[vapply(scaling$center, is.null, TRUE)] <- NA # turn null to NA
+scaling$center <- vapply(scaling$center, paste, collapse = ", ", character(1L)) # flatten list to character. not sure why it's a list.
+scaling$scale <- vapply(scaling$scale, paste, collapse = ", ", character(1L))
+```
+
 ## Write out
 
 Only if file doesn’t yet exist
 
 ``` r
 if(!file.exists(here('output', 'turnover_w_covariates.csv.gz'))){
-  write.csv(bt, gzfile(here('output', 'turnover_w_covariates.csv.gz')), row.names = FALSE)
+  write.csv(bt[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, duration, Jtu.sc, Jbeta.sc, Horn.sc, tsign, tempave.sc, tempave_metab.sc, seas.sc, 
+                  microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
+                  mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
+                  duration.sc, human_bowler.sc, REALM2)], 
+            gzfile(here('output', 'turnover_w_covariates.csv.gz')), row.names = FALSE)
+  write.csv(scaling, here('output','turnover_w_covariates_scaling.csv'), row.names = FALSE)
 }
 ```
 
@@ -136,50 +225,6 @@ btave <- bt[, .(Jtu = mean(Jtu), minyrBT = min(year1), maxyrBT = max(year2), nyr
 btave[, REALM2 := REALM]
 levels(btave$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
 ```
-
-## Try a logit-transform of the response variables
-
-``` r
-logit = function(x) return(log(x/(1-x)))
-
-# have to adjust variables away from 0 and 1
-jtumin = bt[Jtu > 0, min(Jtu)]
-jtumax = bt[Jtu < 1, max(Jtu)]
-bt[Jtu > 0 & Jtu < 1, Jtulogit := logit(Jtu)]
-bt[Jtu == 0, Jtulogit := logit(jtumin)]
-bt[Jtu == 1, Jtulogit := logit(jtumax)]
-
-jbetamin = bt[Jbeta > 0, min(Jbeta)]
-jbetamax = bt[Jbeta < 1, max(Jbeta)]
-bt[Jbeta > 0 & Jbeta < 1, Jbetalogit := logit(Jbeta)]
-bt[Jbeta == 0, Jbetalogit := logit(jbetamin)]
-bt[Jbeta == 1, Jbetalogit := logit(jbetamax)]
-
-hornmin = bt[Horn > 0, min(Horn)]
-hornmax = bt[Horn < 1, max(Horn)]
-bt[Horn > 0 & Horn < 1, Hornlogit := logit(Horn)]
-bt[Horn == 0, Hornlogit := logit(hornmin)]
-bt[Horn == 1, Hornlogit := logit(hornmax)]
-
-bt[, summary(Jtulogit)]
-```
-
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ## -4.1821 -1.5656 -0.4055 -0.3728  0.6931  3.9120
-
-``` r
-bt[, summary(Jbetalogit)]
-```
-
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ## -5.5922 -0.4855  0.3365  1.0419  1.8718  5.7301
-
-``` r
-bt[, summary(Hornlogit)]
-```
-
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##  -27.46   -1.85   -0.12    2.90    3.38   19.55   41879
 
 ## Log-transform some explanantory variables, then center and scale.
 
@@ -215,58 +260,58 @@ bt[, summary(Jbeta)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.0000  0.3810  0.5833  0.6043  0.8667  1.0000
+    ##  0.0000  0.3793  0.5833  0.6044  0.8667  1.0000
 
 ``` r
 bt[, summary(Jtu)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.0000  0.1728  0.4000  0.4381  0.6667  1.0000
+    ##  0.0000  0.1724  0.4000  0.4382  0.6667  1.0000
 
 ``` r
 bt[, summary(Horn)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##    0.00    0.14    0.47    0.52    0.97    1.00   41879
+    ##    0.00    0.14    0.47    0.52    0.97    1.00   39806
 
 ``` r
 # fraction 0 or 1
 bt[, sum(Jbeta == 0)/.N]
 ```
 
-    ## [1] 0.02257946
+    ## [1] 0.02247243
 
 ``` r
 bt[, sum(Jtu == 0)/.N]
 ```
 
-    ## [1] 0.1925047
+    ## [1] 0.192674
 
 ``` r
 bt[!is.na(Horn), sum(Horn == 0)/.N]
 ```
 
-    ## [1] 0.007767746
+    ## [1] 0.007786032
 
 ``` r
 bt[, sum(Jbeta == 1)/.N]
 ```
 
-    ## [1] 0.1709619
+    ## [1] 0.1716813
 
 ``` r
 bt[, sum(Jtu == 1)/.N]
 ```
 
-    ## [1] 0.1709619
+    ## [1] 0.1716813
 
 ``` r
 bt[!is.na(Horn), sum(Horn == 1)/.N]
 ```
 
-    ## [1] 0.1747303
+    ## [1] 0.1752462
 
 ``` r
 # histograms
@@ -286,24 +331,6 @@ invisible(bt[, hist(Horn, main = 'Morisita-Horn', breaks = 80)])
 ```
 
 ![](assemble_turnover_covariates_files/figure-gfm/histograms%20response-3.png)<!-- -->
-
-``` r
-invisible(bt[, hist(Jbetalogit, main = 'logit(Jaccard total)', breaks = 80)])
-```
-
-![](assemble_turnover_covariates_files/figure-gfm/histograms%20response-4.png)<!-- -->
-
-``` r
-invisible(bt[, hist(Jtulogit, main = 'logit(Jaccard turnover)', breaks = 80)])
-```
-
-![](assemble_turnover_covariates_files/figure-gfm/histograms%20response-5.png)<!-- -->
-
-``` r
-invisible(bt[, hist(Hornlogit, main = 'logit(Morisita-Horn)', breaks = 80)])
-```
-
-![](assemble_turnover_covariates_files/figure-gfm/histograms%20response-6.png)<!-- -->
 
 ## Unscaled covariates
 
@@ -380,10 +407,11 @@ pairs(formula = ~ tempave.sc + tempave_metab.sc + seas.sc + microclim.sc + tempc
 
 ![](assemble_turnover_covariates_files/figure-gfm/pairs-1.png)<!-- -->
 
-Mass and lifespan look tightly correlated, but r only 0.56…?
-Tempave\_metab and lifespan don’t look tightly correlated, but r= -0.81
-Tempave\_metab and speed don’t look tightly correlated, but r= -0.83
-Lifespan and speed don’t look tightly correlated, but r = 0.73
+  - Mass and lifespan look tightly correlated, but r only 0.56…?
+  - Tempave\_metab and lifespan don’t look tightly correlated, but r=
+    -0.81
+  - Tempave\_metab and speed don’t look tightly correlated, but r= -0.83
+  - Lifespan and speed don’t look tightly correlated, but r = 0.73
 
 # Compare covariates across realms
 
@@ -391,7 +419,7 @@ Lifespan and speed don’t look tightly correlated, but r = 0.73
 i <- bt[, !duplicated(rarefyID)]; sum(i)
 ```
 
-    ## [1] 53467
+    ## [1] 52623
 
 ``` r
 par(mfrow=c(5,3))
@@ -424,11 +452,12 @@ beanplot(veg ~ REALM, data = bt[i & REALM !='Marine',], what = c(1,1,1,1), col =
 
 ![](assemble_turnover_covariates_files/figure-gfm/compare%20across%20realms-1.png)<!-- -->
 
-Marine are in generally warmer locations (seawater doesn’t freeze)
-Marine have much lower seasonality. Marine and freshwater have some very
-small masses (plankton), but much of dataset is similar to terrestrial.
-Marine has a lot of slow, crawling organisms, but land has plants. Land
-also has birds (fast).
+  - Marine are in generally warmer locations (seawater doesn’t freeze)
+  - Marine have much lower seasonality.
+  - Marine and freshwater have some very small masses (plankton), but
+    much of dataset is similar to terrestrial.
+  - Marine has a lot of slow, crawling organisms, but land has plants.
+    Land also has birds (fast).
 
 # Frequency of time differences
 
@@ -440,6 +469,15 @@ invisible(bt[, hist(year2 - year1, breaks = seq(0.5, 120.5, by = 1))])
 
 # Plot dissimilarity vs. time
 
+    ## Warning: Computation failed in `stat_smooth()`:
+    ## unused argument (env = p.env)
+    
+    ## Warning: Computation failed in `stat_smooth()`:
+    ## unused argument (env = p.env)
+    
+    ## Warning: Computation failed in `stat_smooth()`:
+    ## unused argument (env = p.env)
+
 ![](assemble_turnover_covariates_files/figure-gfm/plot%20diss%20vs%20time-1.png)<!-- -->
 
 # Plot dissimilarity vs. explanatory variables
@@ -448,9 +486,141 @@ Lines are ggplot smoother fits Just Jtu for now, averaged within
 rarefyID
 ![](assemble_turnover_covariates_files/figure-gfm/plot%20diss%20v%20explanatory%20vars-1.png)<!-- -->
 
-Strong trends with temperature change, but trends are pretty symmetric
-around no trend in temperature, which implies warming or cooling drives
-similar degree of community turnover. Some indication of less turnover
-for larger organisms (mass) Higher turnover on land with higher
-seasonality? More turnover for shorter-lived organisms? No really clear
-differences among realms.
+  - Strong trends with temperature change, but trends are pretty
+    symmetric around no trend in temperature, which implies warming or
+    cooling drives similar degree of community turnover.
+  - Some indication of less turnover for larger organisms (mass)
+  - Higher turnover on land with higher seasonality?
+  - More turnover for shorter-lived organisms?
+  - No really clear differences among realms.
+
+## Plot by realm, tempave\_metab, npp, human
+
+### Jtu
+
+``` r
+bt[tempave_metab <= 10, temp_bin := '<=10 degC']
+bt[tempave_metab > 10 & tempave_metab <=25, temp_bin := '(10-25]']
+bt[tempave_metab > 25, temp_bin := '>25 degC']
+bt[, temp_bin := ordered(temp_bin, c('<=10 degC', '(10-25]', '>25 degC'))]
+
+bt[npp <= 700, npp_bin := '<=700 mgC m-2 day-1']
+bt[npp > 700 & npp <= 1100, npp_bin := '(700-1100]']
+bt[npp > 1100, npp_bin := '>1100 mgC m-2 day-1']
+bt[, npp_bin := ordered(npp_bin, c('<=700 mgC m-2 day-1', '(700-1100]', '>1100 mgC m-2 day-1'))]
+
+bt[human_bowler <= 1, hum_bin := '<=1']
+bt[human_bowler > 1 & human_bowler <= 3, hum_bin := '(1-3]']
+bt[human_bowler > 3, hum_bin := '>3']
+bt[, hum_bin := ordered(hum_bin, c('<=1', '(1-3]', '>3'))]
+
+ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin), ], aes(x=tempave_metab, y=Jtu.sc, color = hum_bin, group = hum_bin)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(npp_bin~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = 'All data')
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+``` r
+ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 1, ], 
+        aes(x=tempave_metab, y=Jtu.sc, color = hum_bin, group = hum_bin)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(npp_bin~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = '1 yr')
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
+
+``` r
+ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 5, ], 
+       aes(x=tempave_metab, y=Jtu.sc, color = hum_bin, group = hum_bin)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(npp_bin~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = '5 yr')
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-3-3.png)<!-- -->
+
+``` r
+ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 10, ], 
+       aes(x=tempave_metab, y=Jtu.sc, color = hum_bin, group = hum_bin)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(npp_bin~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = '10 yr')
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-3-4.png)<!-- -->
+
+### Horn
+
+``` r
+ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin), ], aes(x=tempave_metab, y=Horn.sc, color = hum_bin, group = hum_bin)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(npp_bin~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = 'All data')
+```
+
+    ## Warning: Removed 39509 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 39509 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+``` r
+ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 1, ], 
+        aes(x=tempave_metab, y=Horn.sc, color = hum_bin, group = hum_bin)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(npp_bin~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = '1 yr')
+```
+
+    ## Warning: Removed 3837 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 3837 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
+
+``` r
+ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 5, ], 
+       aes(x=tempave_metab, y=Horn.sc, color = hum_bin, group = hum_bin)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(npp_bin~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = '5 yr')
+```
+
+    ## Warning: Removed 2517 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 2517 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-3.png)<!-- -->
+
+``` r
+ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 10, ], 
+       aes(x=tempave_metab, y=Horn.sc, color = hum_bin, group = hum_bin)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(npp_bin~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = '10 yr')
+```
+
+    ## Warning: Removed 1544 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 1544 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-4.png)<!-- -->
