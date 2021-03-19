@@ -482,6 +482,8 @@ invisible(bt[, hist(year2 - year1, breaks = seq(0.5, 120.5, by = 1))])
 
 # Plot dissimilarity vs. explanatory variables
 
+## Each variable individually
+
 Lines are ggplot smoother fits Just Jtu for now, averaged within
 rarefyID
 ![](assemble_turnover_covariates_files/figure-gfm/plot%20diss%20v%20explanatory%20vars-1.png)<!-- -->
@@ -494,9 +496,7 @@ rarefyID
   - More turnover for shorter-lived organisms?
   - No really clear differences among realms.
 
-## Plot by realm, tempave\_metab, npp, human
-
-### Jtu
+## Bin some variables
 
 ``` r
 bt[tempave_metab <= 10, temp_bin := '<=10 degC']
@@ -513,7 +513,63 @@ bt[human_bowler <= 1, hum_bin := '<=1']
 bt[human_bowler > 1 & human_bowler <= 3, hum_bin := '(1-3]']
 bt[human_bowler > 3, hum_bin := '>3']
 bt[, hum_bin := ordered(hum_bin, c('<=1', '(1-3]', '>3'))]
+```
 
+## Plot vs. tempave\_metab
+
+### Jtu
+
+#### By realm
+
+``` r
+ggplot(bt, aes(x=tempave_metab, y=Jtu.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = 'All data')
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+``` r
+ ggplot(bt[duration == 1, ], 
+        aes(x=tempave_metab, y=Jtu.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = '1 yr')
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
+
+``` r
+ggplot(bt[duration == 5, ], 
+       aes(x=tempave_metab, y=Jtu.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = '5 yr')
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-3.png)<!-- -->
+
+``` r
+ggplot(bt[duration == 10, ], 
+       aes(x=tempave_metab, y=Jtu.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = '10 yr')
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-4.png)<!-- -->
+\#\#\#\# by realm, npp, human impact
+
+``` r
 ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin), ], aes(x=tempave_metab, y=Jtu.sc, color = hum_bin, group = hum_bin)) +
   geom_point(size = 1, alpha = 0.05) +
   #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
@@ -522,7 +578,7 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin), ], aes(x=tempave_metab, y=Jtu.sc, c
   labs(y = 'Jaccard turnover', title = 'All data')
 ```
 
-![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ``` r
  ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 1, ], 
@@ -534,7 +590,7 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin), ], aes(x=tempave_metab, y=Jtu.sc, c
   labs(y = 'Jaccard turnover', title = '1 yr')
 ```
 
-![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
 
 ``` r
 ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 5, ], 
@@ -546,7 +602,7 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 5, ],
   labs(y = 'Jaccard turnover', title = '5 yr')
 ```
 
-![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-3-3.png)<!-- -->
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-5-3.png)<!-- -->
 
 ``` r
 ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 10, ], 
@@ -558,9 +614,76 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 10, ],
   labs(y = 'Jaccard turnover', title = '10 yr')
 ```
 
-![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-3-4.png)<!-- -->
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-5-4.png)<!-- -->
 
 ### Horn
+
+#### By realm
+
+``` r
+ggplot(bt, aes(x=tempave_metab, y=Horn.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = 'All data')
+```
+
+    ## Warning: Removed 39806 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 39806 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+``` r
+ ggplot(bt[duration == 1, ], 
+        aes(x=tempave_metab, y=Horn.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = '1 yr')
+```
+
+    ## Warning: Removed 3887 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 3887 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
+
+``` r
+ggplot(bt[duration == 5, ], 
+       aes(x=tempave_metab, y=Horn.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = '5 yr')
+```
+
+    ## Warning: Removed 2545 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 2545 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-6-3.png)<!-- -->
+
+``` r
+ggplot(bt[duration == 10, ], 
+       aes(x=tempave_metab, y=Horn.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = '10 yr')
+```
+
+    ## Warning: Removed 1544 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 1544 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-6-4.png)<!-- -->
+
+#### by realm, npp, human impact
 
 ``` r
 ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin), ], aes(x=tempave_metab, y=Horn.sc, color = hum_bin, group = hum_bin)) +
@@ -575,7 +698,7 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin), ], aes(x=tempave_metab, y=Horn.sc, 
 
     ## Warning: Removed 39509 rows containing missing values (geom_point).
 
-![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
  ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 1, ], 
@@ -591,7 +714,7 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin), ], aes(x=tempave_metab, y=Horn.sc, 
 
     ## Warning: Removed 3837 rows containing missing values (geom_point).
 
-![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
 
 ``` r
 ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 5, ], 
@@ -607,7 +730,7 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 5, ],
 
     ## Warning: Removed 2517 rows containing missing values (geom_point).
 
-![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-3.png)<!-- -->
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-7-3.png)<!-- -->
 
 ``` r
 ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 10, ], 
@@ -623,4 +746,260 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 10, ],
 
     ## Warning: Removed 1544 rows containing missing values (geom_point).
 
-![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-4.png)<!-- -->
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-7-4.png)<!-- -->
+
+## Plot vs. npp
+
+### Jtu
+
+#### By realm
+
+``` r
+ggplot(bt, aes(x=npp, y=Jtu.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = 'All data')
+```
+
+    ## Warning: Removed 3658 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 3658 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+ ggplot(bt[duration == 1, ], 
+        aes(x=npp, y=Jtu.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = '1 yr')
+```
+
+    ## Warning: Removed 540 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 540 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
+
+``` r
+ggplot(bt[duration == 5, ], 
+       aes(x=npp, y=Jtu.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = '5 yr')
+```
+
+    ## Warning: Removed 281 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 281 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-8-3.png)<!-- -->
+
+``` r
+ggplot(bt[duration == 10, ], 
+       aes(x=npp, y=Jtu.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = '10 yr')
+```
+
+    ## Warning: Removed 115 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 115 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-8-4.png)<!-- -->
+
+### Horn
+
+#### By realm
+
+``` r
+ggplot(bt, aes(x=npp, y=Horn.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = 'All data')
+```
+
+    ## Warning: Removed 43167 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 43167 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
+ ggplot(bt[duration == 1, ], 
+        aes(x=npp, y=Horn.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = '1 yr')
+```
+
+    ## Warning: Removed 4377 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 4377 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
+
+``` r
+ggplot(bt[duration == 5, ], 
+       aes(x=npp, y=Horn.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = '5 yr')
+```
+
+    ## Warning: Removed 2798 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 2798 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-9-3.png)<!-- -->
+
+``` r
+ggplot(bt[duration == 10, ], 
+       aes(x=npp, y=Horn.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = '10 yr')
+```
+
+    ## Warning: Removed 1659 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 1659 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-9-4.png)<!-- -->
+
+## Plot vs. human impact
+
+### Jtu
+
+#### By realm
+
+``` r
+ggplot(bt, aes(x=human_bowler, y=Jtu.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = 'All data')
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+``` r
+ ggplot(bt[duration == 1, ], 
+        aes(x=human_bowler, y=Jtu.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = '1 yr')
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->
+
+``` r
+ggplot(bt[duration == 5, ], 
+       aes(x=human_bowler, y=Jtu.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = '5 yr')
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-10-3.png)<!-- -->
+
+``` r
+ggplot(bt[duration == 10, ], 
+       aes(x=human_bowler, y=Jtu.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Jaccard turnover', title = '10 yr')
+```
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-10-4.png)<!-- -->
+
+### Horn
+
+#### By realm
+
+``` r
+ggplot(bt, aes(x=human_bowler, y=Horn.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = 'All data')
+```
+
+    ## Warning: Removed 39806 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 39806 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+``` r
+ ggplot(bt[duration == 1, ], 
+        aes(x=human_bowler, y=Horn.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = '1 yr')
+```
+
+    ## Warning: Removed 3887 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 3887 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
+
+``` r
+ggplot(bt[duration == 5, ], 
+       aes(x=human_bowler, y=Horn.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = '5 yr')
+```
+
+    ## Warning: Removed 2545 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 2545 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-11-3.png)<!-- -->
+
+``` r
+ggplot(bt[duration == 10, ], 
+       aes(x=human_bowler, y=Horn.sc)) +
+  geom_point(size = 1, alpha = 0.05) +
+  #geom_smooth(method = 'gam', formula = y~s(x, k = 5), method.args = list(family = 'quasibinomial')) +
+  geom_smooth(method = 'glm', linetype = 'dashed', method.args = list(family = 'quasibinomial')) +
+  facet_grid(~ REALM, scales = 'free') +
+  labs(y = 'Morisita-Horn dissimilarity', title = '10 yr')
+```
+
+    ## Warning: Removed 1544 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 1544 rows containing missing values (geom_point).
+
+![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-11-4.png)<!-- -->

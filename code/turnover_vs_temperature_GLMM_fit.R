@@ -343,7 +343,7 @@ if(fitmod == 'modTDrealmJtu'){
     modTDrealmJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) * duration + abs(tempchange) * REALM + (duration.sc|STUDY_ID/rarefyID),
                          data = trends[i,], 
                          family = beta_family(link = 'logit'), 
-                         dispformula = ~nspp.sc)
+                         dispformula = ~nspp.sc+REALM)
     summary(modTDrealmJtu)
     saveRDS(modTDrealmJtu, file = 'temp/modTDrealmJtu.rds')
     print('saved modTDrealmJtu.rds')
@@ -356,7 +356,7 @@ if(fitmod == 'modTDrealmJbeta'){
     modTDrealmJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange)*duration + abs(tempchange) * REALM + (duration.sc|STUDY_ID/rarefyID),
                            data = trends[i,], 
                            family = beta_family(link = 'logit'), 
-                           dispformula = ~nspp.sc)
+                           dispformula = ~nspp.sc+REALM)
     summary(modTDrealmJbeta)
     saveRDS(modTDrealmJbeta, file = 'temp/modTDrealmJbeta.rds')
     print('saved modTDrealmJbeta.rds')
@@ -369,7 +369,7 @@ if(fitmod == 'modTDrealmHorn'){
     modTDrealmHorn <- glmmTMB(Horn.sc ~ abs(tempchange)*duration + abs(tempchange) * REALM + (duration.sc|STUDY_ID/rarefyID),
                           data = trends[i,], 
                           family = beta_family(link = 'logit'), 
-                          dispformula = ~nspp.sc)
+                          dispformula = ~nspp.sc+REALM)
     summary(modTDrealmHorn)
     saveRDS(modTDrealmHorn, file = 'temp/modTDrealmHorn.rds')
     print('saved modTDrealmHorn.rds')
@@ -384,7 +384,7 @@ if(fitmod == 'modTrealm1yrJtu'){
     modTrealm1yrJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) * REALM + (1|STUDY_ID/rarefyID),
                                     data = trends[i,], 
                                     family = beta_family(link = 'logit'), 
-                                    dispformula = ~nspp.sc)
+                                    dispformula = ~nspp.sc+REALM)
     summary(modTrealm1yrJtu)
     saveRDS(modTrealm1yrJtu, file = 'temp/modTrealm1yrJtu.rds')
     print('saved modTrealm1yrJtu.rds')
@@ -397,7 +397,7 @@ if(fitmod == 'modTrealm1yrJbeta'){
     modTrealm1yrJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange) * REALM + (1|STUDY_ID/rarefyID),
                                       data = trends[i,], 
                                       family = beta_family(link = 'logit'), 
-                                      dispformula = ~nspp.sc)
+                                      dispformula = ~nspp.sc+REALM)
     summary(modTrealm1yrJbeta)
     saveRDS(modTrealm1yrJbeta, file = 'temp/modTrealm1yrJbeta.rds')
     print('saved modTrealm1yrJbeta.rds')
@@ -410,7 +410,7 @@ if(fitmod == 'modTrealm1yrHorn'){
     modTrealm1yrHorn <- glmmTMB(Horn.sc ~ abs(tempchange) * REALM + (1|STUDY_ID/rarefyID),
                                      data = trends[i,], 
                                      family = beta_family(link = 'logit'), 
-                                     dispformula = ~nspp.sc)
+                                     dispformula = ~nspp.sc+REALM)
     summary(modTrealm1yrHorn)
     saveRDS(modTrealm1yrHorn, file = 'temp/modTrealm1yrHorn.rds')
     print('saved modTrealm1yrHorn.rds')
@@ -426,7 +426,7 @@ if(fitmod == 'modTrealm10yrJtu'){
     modTrealm10yrJtu <- glmmTMB(Jtu.sc ~ abs(tempchange) * REALM + (1|STUDY_ID/rarefyID),
                                data = trends[i,], 
                                family = beta_family(link = 'logit'), 
-                               dispformula = ~nspp.sc)
+                               dispformula = ~nspp.sc+REALM)
     summary(modTrealm10yrJtu)
     saveRDS(modTrealm10yrJtu, file = 'temp/modTrealm10yrJtu.rds')
     print('saved modTrealm10yrJtu.rds')
@@ -439,7 +439,7 @@ if(fitmod == 'modTrealm10yrJbeta'){
     modTrealm10yrJbeta <- glmmTMB(Jbeta.sc ~ abs(tempchange) * REALM + (1|STUDY_ID/rarefyID),
                                  data = trends[i,], 
                                  family = beta_family(link = 'logit'), 
-                                 dispformula = ~nspp.sc)
+                                 dispformula = ~nspp.sc+REALM)
     summary(modTrealm10yrJbeta)
     saveRDS(modTrealm10yrJbeta, file = 'temp/modTrealm10yrJbeta.rds')
     print('saved modTrealm10yrJbeta.rds')
@@ -452,7 +452,7 @@ if(fitmod == 'modTrealm10yrHorn'){
     modTrealm10yrHorn <- glmmTMB(Horn.sc ~ abs(tempchange) * REALM + (1|STUDY_ID/rarefyID),
                                 data = trends[i,], 
                                 family = beta_family(link = 'logit'), 
-                                dispformula = ~nspp.sc)
+                                dispformula = ~nspp.sc+REALM)
     summary(modTrealm10yrHorn)
     saveRDS(modTrealm10yrHorn, file = 'temp/modTrealm10yrHorn.rds')
     print('saved modTrealm10yrHorn.rds')
