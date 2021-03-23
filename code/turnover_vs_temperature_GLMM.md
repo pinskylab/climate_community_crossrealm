@@ -624,39 +624,41 @@ if(exists('modTDrealmJtu')) summary(modTDrealmJtu)
 
     ##  Family: beta  ( logit )
     ## Formula:          Jtu.sc ~ abs(tempchange) * duration + abs(tempchange) * REALM +      (duration.sc | STUDY_ID/rarefyID)
-    ## Dispersion:              ~nspp.sc
+    ## Dispersion:              ~nspp.sc + REALM
     ## Data: trends[i, ]
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ## -8335062 -8334869  4167547 -8335094  1277335 
+    ## -8675720 -8675503  4337878 -8675756  1277333 
     ## 
     ## Random effects:
     ## 
     ## Conditional model:
     ##  Groups            Name        Variance Std.Dev. Corr  
-    ##  rarefyID:STUDY_ID (Intercept) 0.22835  0.4779         
-    ##                    duration.sc 0.05880  0.2425   0.36  
-    ##  STUDY_ID          (Intercept) 0.74724  0.8644         
-    ##                    duration.sc 0.04256  0.2063   -0.12 
+    ##  rarefyID:STUDY_ID (Intercept) 0.23119  0.4808         
+    ##                    duration.sc 0.05379  0.2319   0.32  
+    ##  STUDY_ID          (Intercept) 2.68752  1.6394         
+    ##                    duration.sc 0.14591  0.3820   -0.02 
     ## Number of obs: 1277351, groups:  rarefyID:STUDY_ID, 52322; STUDY_ID, 305
     ## 
     ## Conditional model:
     ##                                    Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)                      -0.4143139  0.2182503  -1.898  0.05765 .  
-    ## abs(tempchange)                   0.0606565  0.0250075   2.426  0.01529 *  
-    ## duration                         -0.0077855  0.0003494 -22.285  < 2e-16 ***
-    ## REALMMarine                       0.4529942  0.2302814   1.967  0.04917 *  
-    ## REALMTerrestrial                 -0.1047002  0.2317289  -0.452  0.65140    
-    ## abs(tempchange):duration          0.0010982  0.0001898   5.786 7.19e-09 ***
-    ## abs(tempchange):REALMMarine      -0.0714955  0.0251399  -2.844  0.00446 ** 
-    ## abs(tempchange):REALMTerrestrial -0.0711738  0.0252863  -2.815  0.00488 ** 
+    ## (Intercept)                      -0.4303837  0.3737520  -1.152  0.24952    
+    ## abs(tempchange)                   0.0603276  0.0250581   2.408  0.01606 *  
+    ## duration                         -0.0029585  0.0003236  -9.143  < 2e-16 ***
+    ## REALMMarine                       0.4141390  0.4020033   1.030  0.30292    
+    ## REALMTerrestrial                 -0.8393297  0.3976593  -2.111  0.03480 *  
+    ## abs(tempchange):duration          0.0008374  0.0001739   4.814 1.48e-06 ***
+    ## abs(tempchange):REALMMarine      -0.0695000  0.0252085  -2.757  0.00583 ** 
+    ## abs(tempchange):REALMTerrestrial -0.0697287  0.0251154  -2.776  0.00550 ** 
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Dispersion model:
-    ##              Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -0.386571   0.001131  -341.9   <2e-16 ***
-    ## nspp.sc      0.566731   0.001146   494.6   <2e-16 ***
+    ##                   Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)      -0.386470   0.011218   -34.5   <2e-16 ***
+    ## nspp.sc           0.517466   0.001133   456.8   <2e-16 ***
+    ## REALMMarine      -0.179269   0.011271   -15.9   <2e-16 ***
+    ## REALMTerrestrial  2.116082   0.011612   182.2   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -707,47 +709,88 @@ if(exists('modTDrealmHorn')) summary(modTDrealmHorn)
 ```
 
     ##  Family: beta  ( logit )
-    ## Formula:          Horn.sc ~ abs(tempchange) * duration + abs(tempchange) * REALM +      (tempchange_abs.sc | STUDY_ID/rarefyID)
-    ## Dispersion:               ~nspp.sc
+    ## Formula:          Horn.sc ~ abs(tempchange) * duration + abs(tempchange) * REALM +      (duration.sc | STUDY_ID/rarefyID)
+    ## Dispersion:               ~nspp.sc + REALM
     ## Data: trends[i, ]
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ## -5480791 -5480598  2740412 -5480823  1248245 
+    ## -5707558 -5707341  2853797 -5707594  1248243 
     ## 
     ## Random effects:
     ## 
     ## Conditional model:
-    ##  Groups            Name              Variance Std.Dev. Corr  
-    ##  rarefyID:STUDY_ID (Intercept)       0.34116  0.5841         
-    ##                    tempchange_abs.sc 0.05060  0.2249   -0.27 
-    ##  STUDY_ID          (Intercept)       1.77322  1.3316         
-    ##                    tempchange_abs.sc 0.03549  0.1884   -0.11 
+    ##  Groups            Name        Variance Std.Dev. Corr  
+    ##  rarefyID:STUDY_ID (Intercept) 0.31142  0.5581         
+    ##                    duration.sc 0.03127  0.1768   0.11  
+    ##  STUDY_ID          (Intercept) 3.27650  1.8101         
+    ##                    duration.sc 0.16702  0.4087   -0.04 
     ## Number of obs: 1248261, groups:  rarefyID:STUDY_ID, 51273; STUDY_ID, 285
     ## 
     ## Conditional model:
     ##                                    Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)                      -0.0027357  0.3132606   -0.01    0.993    
-    ## abs(tempchange)                   0.1336873  0.0868157    1.54    0.124    
-    ## duration                          0.0152959  0.0001873   81.66  < 2e-16 ***
-    ## REALMMarine                       0.4321479  0.3404020    1.27    0.204    
-    ## REALMTerrestrial                 -0.4785726  0.3359105   -1.42    0.154    
-    ## abs(tempchange):duration         -0.0015503  0.0001949   -7.95  1.8e-15 ***
-    ## abs(tempchange):REALMMarine      -0.0444408  0.0935769   -0.47    0.635    
-    ## abs(tempchange):REALMTerrestrial -0.1154658  0.0966282   -1.19    0.232    
+    ## (Intercept)                       0.2005832  0.4127947   0.486   0.6270    
+    ## abs(tempchange)                   0.0203508  0.0224670   0.906   0.3650    
+    ## duration                          0.0085557  0.0002923  29.268  < 2e-16 ***
+    ## REALMMarine                       0.4062522  0.4463564   0.910   0.3627    
+    ## REALMTerrestrial                 -0.8118263  0.4371280  -1.857   0.0633 .  
+    ## abs(tempchange):duration          0.0012318  0.0001563   7.882 3.22e-15 ***
+    ## abs(tempchange):REALMMarine      -0.0179733  0.0226059  -0.795   0.4266    
+    ## abs(tempchange):REALMTerrestrial -0.0281321  0.0225341  -1.248   0.2119    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Dispersion model:
-    ##             Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) 0.533139   0.001282   416.0   <2e-16 ***
-    ## nspp.sc     0.553574   0.001194   463.4   <2e-16 ***
+    ##                   Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)       0.434962   0.011683    37.2  < 2e-16 ***
+    ## nspp.sc           0.463157   0.001159   399.8  < 2e-16 ***
+    ## REALMMarine      -0.070563   0.011730    -6.0 1.79e-09 ***
+    ## REALMTerrestrial  1.692746   0.012082   140.1  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ### Summary (1 yr)
 
 ``` r
-if(exists('modTDrealm1yrJtu')) summary(modTrealm1yrJtu)
+if(exists('modTrealm1yrJtu')) summary(modTrealm1yrJtu)
+```
+
+    ##  Family: beta  ( logit )
+    ## Formula:          Jtu.sc ~ abs(tempchange) * REALM + (1 | STUDY_ID/rarefyID)
+    ## Dispersion:              ~nspp.sc + REALM
+    ## Data: trends[i, ]
+    ## 
+    ##       AIC       BIC    logLik  deviance  df.resid 
+    ## -962802.7 -962685.8  481413.3 -962826.7    125574 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups            Name        Variance Std.Dev.
+    ##  rarefyID:STUDY_ID (Intercept) 0.1629   0.4036  
+    ##  STUDY_ID          (Intercept) 2.2154   1.4884  
+    ## Number of obs: 125586, groups:  rarefyID:STUDY_ID, 30311; STUDY_ID, 249
+    ## 
+    ## Conditional model:
+    ##                                  Estimate Std. Error z value Pr(>|z|)  
+    ## (Intercept)                      -0.78129    0.36337  -2.150   0.0315 *
+    ## abs(tempchange)                   0.10123    0.09322   1.086   0.2776  
+    ## REALMMarine                       0.62122    0.39006   1.593   0.1112  
+    ## REALMTerrestrial                 -0.21457    0.39263  -0.546   0.5847  
+    ## abs(tempchange):REALMMarine      -0.14511    0.09417  -1.541   0.1233  
+    ## abs(tempchange):REALMTerrestrial -0.09808    0.09393  -1.044   0.2964  
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)      -0.52032    0.03565  -14.60   <2e-16 ***
+    ## nspp.sc           0.39707    0.00335  118.51   <2e-16 ***
+    ## REALMMarine      -0.08498    0.03575   -2.38   0.0175 *  
+    ## REALMTerrestrial  1.84309    0.03708   49.70   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+``` r
 if(exists('modTrealm1yrJbeta')) summary(modTrealm1yrJbeta)
 ```
 
@@ -792,38 +835,36 @@ if(exists('modTrealm1yrHorn')) summary(modTrealm1yrHorn)
 ```
 
     ##  Family: beta  ( logit )
-    ## Formula:          Horn.sc ~ abs(tempchange) * REALM + (tempchange_abs.sc | STUDY_ID/rarefyID)
-    ## Dispersion:               ~nspp.sc
+    ## Formula:          Horn.sc ~ abs(tempchange) * REALM + (1 | STUDY_ID/rarefyID)
+    ## Dispersion:               ~nspp.sc + REALM
     ## Data: trends[i, ]
     ## 
     ##       AIC       BIC    logLik  deviance  df.resid 
-    ## -458839.6 -458703.6  229433.8 -458867.6    122715 
+    ## -475045.3 -474928.7  237534.7 -475069.3    122717 
     ## 
     ## Random effects:
     ## 
     ## Conditional model:
-    ##  Groups            Name              Variance Std.Dev. Corr  
-    ##  rarefyID:STUDY_ID (Intercept)       0.163269 0.40407        
-    ##                    tempchange_abs.sc 0.001416 0.03763  -1.00 
-    ##  STUDY_ID          (Intercept)       1.540831 1.24130        
-    ##                    tempchange_abs.sc 0.031750 0.17818  -0.15 
+    ##  Groups            Name        Variance Std.Dev.
+    ##  rarefyID:STUDY_ID (Intercept) 0.2134   0.462   
+    ##  STUDY_ID          (Intercept) 2.8833   1.698   
     ## Number of obs: 122729, groups:  rarefyID:STUDY_ID, 29717; STUDY_ID, 232
     ## 
     ## Conditional model:
-    ##                                  Estimate Std. Error z value Pr(>|z|)  
-    ## (Intercept)                      -0.35083    0.30956  -1.133   0.2571  
-    ## abs(tempchange)                   0.02179    0.11379   0.192   0.8482  
-    ## REALMMarine                       0.60790    0.33484   1.815   0.0694 .
-    ## REALMTerrestrial                  0.09853    0.33679   0.293   0.7699  
-    ## abs(tempchange):REALMMarine      -0.07145    0.12166  -0.587   0.5570  
-    ## abs(tempchange):REALMTerrestrial -0.01901    0.12656  -0.150   0.8806  
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ##                                  Estimate Std. Error z value Pr(>|z|)
+    ## (Intercept)                      -0.30581    0.41043  -0.745    0.456
+    ## abs(tempchange)                   0.02172    0.08896   0.244    0.807
+    ## REALMMarine                       0.55453    0.44492   1.246    0.213
+    ## REALMTerrestrial                 -0.22254    0.44414  -0.501    0.616
+    ## abs(tempchange):REALMMarine      -0.06341    0.08987  -0.706    0.481
+    ## abs(tempchange):REALMTerrestrial -0.02328    0.08960  -0.260    0.795
     ## 
     ## Dispersion model:
-    ##             Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) 0.259493   0.004443   58.40   <2e-16 ***
-    ## nspp.sc     0.327475   0.003446   95.03   <2e-16 ***
+    ##                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)      0.028799   0.034489    0.84  0.40371    
+    ## nspp.sc          0.301012   0.003453   87.16  < 2e-16 ***
+    ## REALMMarine      0.102754   0.034526    2.98  0.00292 ** 
+    ## REALMTerrestrial 1.896259   0.036008   52.66  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -835,33 +876,35 @@ if(exists('modTrealm10yrJtu')) summary(modTrealm10yrJtu)
 
     ##  Family: beta  ( logit )
     ## Formula:          Jtu.sc ~ abs(tempchange) * REALM + (1 | STUDY_ID/rarefyID)
-    ## Dispersion:              ~nspp.sc
+    ## Dispersion:              ~nspp.sc + REALM
     ## Data: trends[i, ]
     ## 
     ##       AIC       BIC    logLik  deviance  df.resid 
-    ## -319424.8 -319336.7  159722.4 -319444.8     49464 
+    ## -334326.2 -334220.5  167175.1 -334350.2     49462 
     ## 
     ## Random effects:
     ## 
     ## Conditional model:
     ##  Groups            Name        Variance Std.Dev.
-    ##  rarefyID:STUDY_ID (Intercept) 0.3900   0.6245  
-    ##  STUDY_ID          (Intercept) 0.8707   0.9331  
+    ##  rarefyID:STUDY_ID (Intercept) 0.2798   0.529   
+    ##  STUDY_ID          (Intercept) 3.1839   1.784   
     ## Number of obs: 49474, groups:  rarefyID:STUDY_ID, 17246; STUDY_ID, 156
     ## 
     ## Conditional model:
-    ##                                  Estimate Std. Error z value Pr(>|z|)
-    ## (Intercept)                      -0.48453    0.29925  -1.619    0.105
-    ## abs(tempchange)                  -0.07552    0.11395  -0.663    0.507
-    ## REALMMarine                       0.45167    0.32523   1.389    0.165
-    ## REALMTerrestrial                  0.03474    0.33011   0.105    0.916
-    ## abs(tempchange):REALMMarine      -0.01000    0.11501  -0.087    0.931
-    ## abs(tempchange):REALMTerrestrial  0.07310    0.11534   0.634    0.526
+    ##                                   Estimate Std. Error z value Pr(>|z|)
+    ## (Intercept)                      -0.486560   0.485602  -1.002    0.316
+    ## abs(tempchange)                  -0.069174   0.116491  -0.594    0.553
+    ## REALMMarine                       0.455924   0.537287   0.849    0.396
+    ## REALMTerrestrial                 -0.496257   0.532090  -0.933    0.351
+    ## abs(tempchange):REALMMarine      -0.008919   0.117550  -0.076    0.940
+    ## abs(tempchange):REALMTerrestrial  0.066917   0.116876   0.573    0.567
     ## 
     ## Dispersion model:
-    ##              Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) -0.213515   0.007206  -29.63   <2e-16 ***
-    ## nspp.sc      0.705189   0.006402  110.15   <2e-16 ***
+    ##                   Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)      -0.294554   0.051737   -5.69 1.25e-08 ***
+    ## nspp.sc           0.594553   0.006247   95.18  < 2e-16 ***
+    ## REALMMarine      -0.180564   0.051933   -3.48 0.000507 ***
+    ## REALMTerrestrial  2.280556   0.054052   42.19  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -908,36 +951,36 @@ if(exists('modTrealm10yrHorn')) summary(modTrealm10yrHorn)
 ```
 
     ##  Family: beta  ( logit )
-    ## Formula:          Horn.sc ~ abs(tempchange) * REALM + (tempchange_abs.sc | STUDY_ID/rarefyID)
-    ## Dispersion:               ~nspp.sc
+    ## Formula:          Horn.sc ~ abs(tempchange) * REALM + (1 | STUDY_ID/rarefyID)
+    ## Dispersion:               ~nspp.sc + REALM
     ## Data: trends[i, ]
     ## 
     ##       AIC       BIC    logLik  deviance  df.resid 
-    ## -222428.9 -222305.8  111228.4 -222456.9     48428 
+    ## -230642.9 -230537.4  115333.4 -230666.9     48430 
     ## 
     ## Random effects:
     ## 
     ## Conditional model:
-    ##  Groups            Name              Variance  Std.Dev.  Corr  
-    ##  rarefyID:STUDY_ID (Intercept)       1.008e-01 3.175e-01       
-    ##                    tempchange_abs.sc 2.801e-12 1.674e-06 1.00  
-    ##  STUDY_ID          (Intercept)       1.842e+00 1.357e+00       
-    ##                    tempchange_abs.sc 2.025e-02 1.423e-01 -0.16 
+    ##  Groups            Name        Variance Std.Dev.
+    ##  rarefyID:STUDY_ID (Intercept) 0.1301   0.3608  
+    ##  STUDY_ID          (Intercept) 3.2300   1.7972  
     ## Number of obs: 48442, groups:  rarefyID:STUDY_ID, 17015; STUDY_ID, 148
     ## 
     ## Conditional model:
-    ##                                  Estimate Std. Error z value Pr(>|z|)
-    ## (Intercept)                       0.12856    0.37489   0.343    0.732
-    ## abs(tempchange)                   0.05462    0.11946   0.457    0.647
-    ## REALMMarine                       0.34650    0.41772   0.830    0.407
-    ## REALMTerrestrial                 -0.23250    0.41472  -0.561    0.575
-    ## abs(tempchange):REALMMarine      -0.04008    0.12756  -0.314    0.753
-    ## abs(tempchange):REALMTerrestrial  0.01550    0.13345   0.116    0.908
+    ##                                   Estimate Std. Error z value Pr(>|z|)
+    ## (Intercept)                       0.142228   0.478792   0.297    0.766
+    ## abs(tempchange)                   0.023639   0.107016   0.221    0.825
+    ## REALMMarine                       0.312218   0.535801   0.583    0.560
+    ## REALMTerrestrial                 -0.327173   0.525988  -0.622    0.534
+    ## abs(tempchange):REALMMarine      -0.042590   0.107963  -0.394    0.693
+    ## abs(tempchange):REALMTerrestrial -0.003458   0.107517  -0.032    0.974
     ## 
     ## Dispersion model:
-    ##             Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept) 0.506473   0.007812   64.83   <2e-16 ***
-    ## nspp.sc     0.608845   0.006214   97.98   <2e-16 ***
+    ##                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)       0.37734    0.05329    7.08 1.43e-12 ***
+    ## nspp.sc           0.47335    0.00617   76.72  < 2e-16 ***
+    ## REALMMarine      -0.09952    0.05343   -1.86   0.0625 .  
+    ## REALMTerrestrial  1.74992    0.05586   31.33  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1066,7 +1109,321 @@ if(exists('modTDrealmJtu') & exists('modTDrealmJbeta') & exists('modTDrealmHorn'
 
 ![](turnover_vs_temperature_GLMM_files/figure-gfm/modTD%20realm%20coefs-1.png)<!-- -->
 
-## Full models
+## Full models w/ only main effects
+
+### Load the models
+
+``` r
+# all years
+if(file.exists('temp/modMainMaEnMiNPHuJtu.rds')) modMainMaEnMiNPHuJtu <- readRDS('temp/modMainMaEnMiNPHuJtu.rds') # mass, endoecto, microclimate, NPP, humans
+if(file.exists('temp/modMainMaEnMiNPHu1yrJtu.rds')) modMainMaEnMiNPHu1yrJtu <- readRDS('temp/modMainMaEnMiNPHu1yrJtu.rds')
+if(file.exists('temp/modMainMaEnMiNPHu5yrJtu.rds')) modMainMaEnMiNPHu5yrJtu <- readRDS('temp/modMainMaEnMiNPHu5yrJtu.rds')
+if(file.exists('temp/modMainMaEnMiNPHu10yrJtu.rds')) modMainMaEnMiNPHu10yrJtu <- readRDS('temp/modMainMaEnMiNPHu10yrJtu.rds')
+
+if(file.exists('temp/modMainMaEnMiNPHuJbeta.rds')) modMainMaEnMiNPHuJbeta <- readRDS('temp/modMainMaEnMiNPHuJbeta.rds')
+if(file.exists('temp/modMainMaEnMiNPHu1yrJbeta.rds')) modMainMaEnMiNPHu1yrJbeta <- readRDS('temp/modMainMaEnMiNPHu1yrJbeta.rds')
+if(file.exists('temp/modMainMaEnMiNPHu5yrJbeta.rds')) modMainMaEnMiNPHu5yrJbeta <- readRDS('temp/modMainMaEnMiNPHu5yrJbeta.rds')
+
+if(file.exists('temp/modMainMaEnMiNPHuHorn.rds')) modMainMaEnMiNPHuHorn <- readRDS('temp/modMainMaEnMiNPHuHorn.rds')
+if(file.exists('temp/modMainMaEnMiNPHu1yrHorn.rds')) modMainMaEnMiNPHu1yrHorn <- readRDS('temp/modMainMaEnMiNPHu1yrHorn.rds')
+if(file.exists('temp/modMainMaEnMiNPHu10yrHorn.rds')) modMainMaEnMiNPHu10yrHorn <- readRDS('temp/modMainMaEnMiNPHu10yrHorn.rds')
+```
+
+### Summary
+
+#### Jtu
+
+##### All
+
+``` r
+if(exists('modMainMaEnMiNPHuJtu')) summary(modMainMaEnMiNPHuJtu)
+```
+
+    ##  Family: beta  ( logit )
+    ## Formula:          Jtu.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + duration.sc +      mass.sc + endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (duration.sc | STUDY_ID/rarefyID)
+    ## Dispersion:              ~nspp.sc + REALM
+    ## Data: trends[i, ]
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ## -8377092 -8376827  4188568 -8377136  1258794 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups            Name        Variance Std.Dev. Corr  
+    ##  rarefyID:STUDY_ID (Intercept) 0.23152  0.4812         
+    ##                    duration.sc 0.05531  0.2352   0.32  
+    ##  STUDY_ID          (Intercept) 2.77279  1.6652         
+    ##                    duration.sc 0.10561  0.3250   -0.06 
+    ## Number of obs: 1258816, groups:  rarefyID:STUDY_ID, 50637; STUDY_ID, 285
+    ## 
+    ## Conditional model:
+    ##                                   Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                     -0.2239350  0.3868561  -0.579  0.56268    
+    ## tempchange_abs.sc                0.0003509  0.0009518   0.369  0.71236    
+    ## REALMMarine                      0.2764678  0.4155660   0.665  0.50587    
+    ## REALMTerrestrial                -1.1476358  0.4158267  -2.760  0.00578 ** 
+    ## tempave_metab.sc                 0.1587361  0.0137520  11.543  < 2e-16 ***
+    ## duration.sc                      0.1436783  0.0261029   5.504 3.71e-08 ***
+    ## mass.sc                         -0.0064644  0.0069402  -0.931  0.35162    
+    ## endothermfrac.sc                 0.0676433  0.0530119   1.276  0.20195    
+    ## microclim.sc                     0.0281412  0.0046478   6.055 1.41e-09 ***
+    ## npp.sc                           0.0447176  0.0056758   7.879 3.31e-15 ***
+    ## human_bowler.sc:REALM2Marine     0.0080688  0.0050905   1.585  0.11295    
+    ## human_bowler.sc:REALM2TerrFresh -0.1023482  0.0103614  -9.878  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                   Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)      -0.397335   0.011263   -35.3   <2e-16 ***
+    ## nspp.sc           0.512811   0.001147   447.3   <2e-16 ***
+    ## REALMMarine      -0.166849   0.011318   -14.7   <2e-16 ***
+    ## REALMTerrestrial  2.153632   0.011660   184.7   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+##### 1 yr
+
+``` r
+if(exists('modMainMaEnMiNPHu1yrJtu')) summary(modMainMaEnMiNPHu1yrJtu)
+```
+
+    ##  Family: beta  ( logit )
+    ## Formula:          Jtu.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + mass.sc +      endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
+    ## Dispersion:              ~nspp.sc + REALM
+    ## Data: trends[i, ]
+    ## 
+    ##       AIC       BIC    logLik  deviance  df.resid 
+    ## -930370.6 -930205.3  465202.3 -930404.6    123317 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups            Name        Variance Std.Dev.
+    ##  rarefyID:STUDY_ID (Intercept) 0.1639   0.4048  
+    ##  STUDY_ID          (Intercept) 2.2262   1.4920  
+    ## Number of obs: 123334, groups:  rarefyID:STUDY_ID, 29530; STUDY_ID, 229
+    ## 
+    ## Conditional model:
+    ##                                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                     -0.636541   0.372894  -1.707  0.08782 .  
+    ## tempchange_abs.sc               -0.006871   0.004326  -1.588  0.11219    
+    ## REALMMarine                      0.451603   0.396766   1.138  0.25503    
+    ## REALMTerrestrial                -0.458325   0.411377  -1.114  0.26523    
+    ## tempave_metab.sc                 0.156484   0.023779   6.581 4.68e-11 ***
+    ## mass.sc                         -0.027595   0.011612  -2.376  0.01748 *  
+    ## endothermfrac.sc                 0.004161   0.074552   0.056  0.95549    
+    ## microclim.sc                     0.002586   0.007010   0.369  0.71221    
+    ## npp.sc                           0.025571   0.009196   2.781  0.00542 ** 
+    ## human_bowler.sc:REALM2Marine     0.008161   0.007926   1.030  0.30316    
+    ## human_bowler.sc:REALM2TerrFresh -0.100907   0.012681  -7.957 1.76e-15 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                   Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)      -0.534394   0.035784  -14.93   <2e-16 ***
+    ## nspp.sc           0.389733   0.003389  115.01   <2e-16 ***
+    ## REALMMarine      -0.068100   0.035896   -1.90   0.0578 .  
+    ## REALMTerrestrial  1.884983   0.037237   50.62   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+##### 10 yr
+
+``` r
+if(exists('modMainMaEnMiNPHu10yrJtu'))  summary(modMainMaEnMiNPHu10yrJtu)
+```
+
+    ##  Family: beta  ( logit )
+    ## Formula:          Jtu.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + mass.sc +      endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
+    ## Dispersion:              ~nspp.sc + REALM
+    ## Data: trends[i, ]
+    ## 
+    ##       AIC       BIC    logLik  deviance  df.resid 
+    ## -319740.9 -319591.5  159887.5 -319774.9     48621 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups            Name        Variance Std.Dev.
+    ##  rarefyID:STUDY_ID (Intercept) 0.2812   0.5303  
+    ##  STUDY_ID          (Intercept) 3.2136   1.7926  
+    ## Number of obs: 48638, groups:  rarefyID:STUDY_ID, 16776; STUDY_ID, 147
+    ## 
+    ## Conditional model:
+    ##                                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                     -0.499774   0.501951  -0.996  0.31941    
+    ## tempchange_abs.sc               -0.009806   0.004049  -2.422  0.01545 *  
+    ## REALMMarine                      0.423065   0.547759   0.772  0.43990    
+    ## REALMTerrestrial                -0.376472   0.563216  -0.668  0.50386    
+    ## tempave_metab.sc                 0.203599   0.039420   5.165 2.41e-07 ***
+    ## mass.sc                         -0.019200   0.021130  -0.909  0.36353    
+    ## endothermfrac.sc                -0.144023   0.125426  -1.148  0.25086    
+    ## microclim.sc                    -0.007176   0.012008  -0.598  0.55012    
+    ## npp.sc                           0.046751   0.015380   3.040  0.00237 ** 
+    ## human_bowler.sc:REALM2Marine    -0.032489   0.014096  -2.305  0.02117 *  
+    ## human_bowler.sc:REALM2TerrFresh -0.114963   0.023123  -4.972 6.64e-07 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                   Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)      -0.303259   0.051995   -5.83 5.46e-09 ***
+    ## nspp.sc           0.589724   0.006348   92.89  < 2e-16 ***
+    ## REALMMarine      -0.167490   0.052207   -3.21  0.00134 ** 
+    ## REALMTerrestrial  2.316368   0.054328   42.64  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+#### Horn
+
+##### All
+
+``` r
+if(exists('modMainMaEnMiNPHuHorn')) summary(modMainMaEnMiNPHuHorn)
+```
+
+    ##  Family: beta  ( logit )
+    ## Formula:          Horn.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + duration.sc +      mass.sc + endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (duration.sc | STUDY_ID/rarefyID)
+    ## Dispersion:               ~nspp.sc + REALM
+    ## Data: trends[i, ]
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ## -5457714 -5457450  2728879 -5457758  1230065 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups            Name        Variance Std.Dev. Corr  
+    ##  rarefyID:STUDY_ID (Intercept) 0.29651  0.5445         
+    ##                    duration.sc 0.03393  0.1842   0.10  
+    ##  STUDY_ID          (Intercept) 3.63745  1.9072         
+    ##                    duration.sc 0.10107  0.3179   -0.09 
+    ## Number of obs: 1230087, groups:  rarefyID:STUDY_ID, 49635; STUDY_ID, 265
+    ## 
+    ## Conditional model:
+    ##                                   Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                      0.5769262  0.4380344   1.317 0.187812    
+    ## tempchange_abs.sc                0.0079510  0.0008994   8.841  < 2e-16 ***
+    ## REALMMarine                      0.1989103  0.4761401   0.418 0.676126    
+    ## REALMTerrestrial                -1.3241403  0.4718070  -2.807 0.005008 ** 
+    ## tempave_metab.sc                 0.3874056  0.0146629  26.421  < 2e-16 ***
+    ## duration.sc                      0.2923217  0.0256957  11.376  < 2e-16 ***
+    ## mass.sc                          0.0052436  0.0073551   0.713 0.475896    
+    ## endothermfrac.sc                -0.0226685  0.0566395  -0.400 0.688991    
+    ## microclim.sc                     0.0786250  0.0050942  15.434  < 2e-16 ***
+    ## npp.sc                           0.1233544  0.0061632  20.015  < 2e-16 ***
+    ## human_bowler.sc:REALM2Marine     0.0464631  0.0055926   8.308  < 2e-16 ***
+    ## human_bowler.sc:REALM2TerrFresh -0.0405747  0.0113682  -3.569 0.000358 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                   Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)       0.419311   0.011730    35.7  < 2e-16 ***
+    ## nspp.sc           0.452435   0.001171   386.3  < 2e-16 ***
+    ## REALMMarine      -0.049090   0.011778    -4.2 3.07e-05 ***
+    ## REALMTerrestrial  1.728725   0.012134   142.5  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+##### 1 yr
+
+``` r
+if(exists('modMainMaEnMiNPHu1yrHorn')) summary(modMainMaEnMiNPHu1yrHorn)
+```
+
+    ##  Family: beta  ( logit )
+    ## Formula:          Horn.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + mass.sc +      endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
+    ## Dispersion:               ~nspp.sc + REALM
+    ## Data: trends[i, ]
+    ## 
+    ##       AIC       BIC    logLik  deviance  df.resid 
+    ## -449329.1 -449164.3  224681.6 -449363.1    120528 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups            Name        Variance Std.Dev.
+    ##  rarefyID:STUDY_ID (Intercept) 0.220    0.469   
+    ##  STUDY_ID          (Intercept) 3.092    1.759   
+    ## Number of obs: 120545, groups:  rarefyID:STUDY_ID, 28955; STUDY_ID, 212
+    ## 
+    ## Conditional model:
+    ##                                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                     -0.025048   0.435552  -0.058 0.954139    
+    ## tempchange_abs.sc               -0.007165   0.004137  -1.732 0.083276 .  
+    ## REALMMarine                      0.363796   0.469035   0.776 0.437969    
+    ## REALMTerrestrial                -0.786739   0.479734  -1.640 0.101016    
+    ## tempave_metab.sc                 0.316483   0.024508  12.913  < 2e-16 ***
+    ## mass.sc                         -0.002836   0.011689  -0.243 0.808335    
+    ## endothermfrac.sc                 0.115794   0.078340   1.478 0.139381    
+    ## microclim.sc                     0.056941   0.007393   7.702 1.34e-14 ***
+    ## npp.sc                           0.086190   0.009653   8.929  < 2e-16 ***
+    ## human_bowler.sc:REALM2Marine     0.023065   0.008360   2.759 0.005800 ** 
+    ## human_bowler.sc:REALM2TerrFresh -0.047376   0.012867  -3.682 0.000231 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)      0.017934   0.034650    0.52 0.604766    
+    ## nspp.sc          0.289285   0.003501   82.63  < 2e-16 ***
+    ## REALMMarine      0.124424   0.034694    3.59 0.000335 ***
+    ## REALMTerrestrial 1.944902   0.036201   53.72  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+##### 10 yr
+
+``` r
+if(exists('modMainMaEnMiNPHu10yrHorn'))summary(modMainMaEnMiNPHu10yrHorn)
+```
+
+    ##  Family: beta  ( logit )
+    ## Formula:          Horn.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + mass.sc +      endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
+    ## Dispersion:               ~nspp.sc + REALM
+    ## Data: trends[i, ]
+    ## 
+    ##       AIC       BIC    logLik  deviance  df.resid 
+    ## -218504.3 -218355.2  109269.2 -218538.3     47589 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups            Name        Variance Std.Dev.
+    ##  rarefyID:STUDY_ID (Intercept) 0.1242   0.3524  
+    ##  STUDY_ID          (Intercept) 3.6017   1.8978  
+    ## Number of obs: 47606, groups:  rarefyID:STUDY_ID, 16545; STUDY_ID, 139
+    ## 
+    ## Conditional model:
+    ##                                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                      0.294078   0.517474   0.568  0.56983    
+    ## tempchange_abs.sc                0.006021   0.004191   1.437  0.15081    
+    ## REALMMarine                      0.185440   0.573233   0.323  0.74632    
+    ## REALMTerrestrial                -0.465234   0.579724  -0.803  0.42226    
+    ## tempave_metab.sc                 0.442610   0.034117  12.973  < 2e-16 ***
+    ## mass.sc                         -0.002410   0.018002  -0.134  0.89351    
+    ## endothermfrac.sc                -0.272966   0.117259  -2.328  0.01992 *  
+    ## microclim.sc                     0.030011   0.010055   2.985  0.00284 ** 
+    ## npp.sc                           0.138928   0.012808  10.847  < 2e-16 ***
+    ## human_bowler.sc:REALM2Marine     0.007231   0.012202   0.593  0.55347    
+    ## human_bowler.sc:REALM2TerrFresh -0.073635   0.017041  -4.321 1.55e-05 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                   Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)       0.376814   0.053485    7.05 1.85e-12 ***
+    ## nspp.sc           0.471082   0.006284   74.97  < 2e-16 ***
+    ## REALMMarine      -0.084981   0.053636   -1.58    0.113    
+    ## REALMTerrestrial  1.767450   0.056128   31.49  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+## Full models w/ interactions
 
 There are a number of different models here:
 
@@ -1819,7 +2176,7 @@ if(exists('res_MaEnMiNPHuJtu')){
 }
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
     ## 
     ##  DHARMa nonparametric dispersion test via sd of residuals fitted vs. simulated
@@ -1844,7 +2201,7 @@ if(exists('res_MaEnMiNPHu10yrJtu')){
 }
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-25-2.png)<!-- -->
 
     ## 
     ##  DHARMa nonparametric dispersion test via sd of residuals fitted vs. simulated
@@ -1868,7 +2225,7 @@ if(exists('res_MaEnMiNPHuJtu')){
 }
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
 
     ## 
     ##  DHARMa generic simulation test
@@ -1893,7 +2250,7 @@ if(exists('res_MaEnMiNPHu10yrJtu')){
 }
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-19-2.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-26-2.png)<!-- -->
 
     ## 
     ##  DHARMa generic simulation test
@@ -1914,7 +2271,7 @@ if(exists('res_MaEnMiNPHuJtu')){
 }
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
     ## 
     ##  DHARMa generic simulation test
@@ -1939,7 +2296,7 @@ if(exists('res_MaEnMiNPHu10yrJtu')){
 }
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-20-2.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-27-2.png)<!-- -->
 
     ## 
     ##  DHARMa generic simulation test
@@ -2122,7 +2479,7 @@ p7 <- ggplot(newdat[var == 'human_bowler',], aes(human_bowler, pred, group = REA
 grid.arrange(p1, p2, p3, p4, p5, p6, p7, ncol = 2)
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 #### Interactions
 
@@ -2307,4 +2664,4 @@ for(j in 1:length(intplots)){
 grid.arrange(grobs = intplots, ncol = 3)
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->

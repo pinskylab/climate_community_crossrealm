@@ -384,7 +384,7 @@ if(exists('modTDrealmHorn')) summary(modTDrealmHorn)
 
 ### Summary (1 yr)
 ```{r summary of Trealm1yr mods}
-if(exists('modTDrealm1yrJtu')) summary(modTrealm1yrJtu)
+if(exists('modTrealm1yrJtu')) summary(modTrealm1yrJtu)
 if(exists('modTrealm1yrJbeta')) summary(modTrealm1yrJbeta)
 if(exists('modTrealm1yrHorn')) summary(modTrealm1yrHorn)
 ```
@@ -514,7 +514,62 @@ if(exists('modTDrealmJtu') & exists('modTDrealmJbeta') & exists('modTDrealmHorn'
 }
 ```
 
-## Full models
+## Full models w/ only main effects
+
+
+### Load the models
+```{r}
+# all years
+if(file.exists('temp/modMainMaEnMiNPHuJtu.rds')) modMainMaEnMiNPHuJtu <- readRDS('temp/modMainMaEnMiNPHuJtu.rds') # mass, endoecto, microclimate, NPP, humans
+if(file.exists('temp/modMainMaEnMiNPHu1yrJtu.rds')) modMainMaEnMiNPHu1yrJtu <- readRDS('temp/modMainMaEnMiNPHu1yrJtu.rds')
+if(file.exists('temp/modMainMaEnMiNPHu5yrJtu.rds')) modMainMaEnMiNPHu5yrJtu <- readRDS('temp/modMainMaEnMiNPHu5yrJtu.rds')
+if(file.exists('temp/modMainMaEnMiNPHu10yrJtu.rds')) modMainMaEnMiNPHu10yrJtu <- readRDS('temp/modMainMaEnMiNPHu10yrJtu.rds')
+
+if(file.exists('temp/modMainMaEnMiNPHuJbeta.rds')) modMainMaEnMiNPHuJbeta <- readRDS('temp/modMainMaEnMiNPHuJbeta.rds')
+if(file.exists('temp/modMainMaEnMiNPHu1yrJbeta.rds')) modMainMaEnMiNPHu1yrJbeta <- readRDS('temp/modMainMaEnMiNPHu1yrJbeta.rds')
+if(file.exists('temp/modMainMaEnMiNPHu5yrJbeta.rds')) modMainMaEnMiNPHu5yrJbeta <- readRDS('temp/modMainMaEnMiNPHu5yrJbeta.rds')
+
+if(file.exists('temp/modMainMaEnMiNPHuHorn.rds')) modMainMaEnMiNPHuHorn <- readRDS('temp/modMainMaEnMiNPHuHorn.rds')
+if(file.exists('temp/modMainMaEnMiNPHu1yrHorn.rds')) modMainMaEnMiNPHu1yrHorn <- readRDS('temp/modMainMaEnMiNPHu1yrHorn.rds')
+if(file.exists('temp/modMainMaEnMiNPHu10yrHorn.rds')) modMainMaEnMiNPHu10yrHorn <- readRDS('temp/modMainMaEnMiNPHu10yrHorn.rds')
+
+```
+
+### Summary
+#### Jtu
+##### All
+```{r}
+if(exists('modMainMaEnMiNPHuJtu')) summary(modMainMaEnMiNPHuJtu)
+```
+
+##### 1 yr
+```{r}
+if(exists('modMainMaEnMiNPHu1yrJtu')) summary(modMainMaEnMiNPHu1yrJtu)
+```
+
+##### 10 yr
+```{r}
+if(exists('modMainMaEnMiNPHu10yrJtu'))  summary(modMainMaEnMiNPHu10yrJtu)
+```
+
+#### Horn
+##### All
+```{r}
+if(exists('modMainMaEnMiNPHuHorn')) summary(modMainMaEnMiNPHuHorn)
+```
+
+##### 1 yr
+```{r}
+if(exists('modMainMaEnMiNPHu1yrHorn')) summary(modMainMaEnMiNPHu1yrHorn)
+```
+
+##### 10 yr
+```{r}
+if(exists('modMainMaEnMiNPHu10yrHorn'))summary(modMainMaEnMiNPHu10yrHorn)
+```
+
+
+## Full models w/ interactions
 There are a number of different models here:
 
 - Three response variables (Jaccard turnover, Jaccard total, and Morisita-Horn)
