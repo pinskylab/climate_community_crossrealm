@@ -1423,6 +1423,217 @@ if(exists('modMainMaEnMiNPHu10yrHorn'))summary(modMainMaEnMiNPHu10yrHorn)
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
+## Full models w/ only main effects, averaged by time-series (rarefyID)
+
+### Load the models
+
+``` r
+# all years
+if(file.exists('temp/modMainAveMaEnMiNPHu1yrJtu.rds')) modMainAveMaEnMiNPHu1yrJtu <- readRDS('temp/modMainAveMaEnMiNPHu1yrJtu.rds')
+if(file.exists('temp/modMainAveMaEnMiNPHu5yrJtu.rds')) modMainAveMaEnMiNPHu5yrJtu <- readRDS('temp/modMainAveMaEnMiNPHu5yrJtu.rds')
+if(file.exists('temp/modMainAveMaEnMiNPHu10yrJtu.rds')) modMainAveMaEnMiNPHu10yrJtu <- readRDS('temp/modMainAveMaEnMiNPHu10yrJtu.rds')
+
+if(file.exists('temp/modMainAveMaEnMiNPHu1yrJbeta.rds')) modMainAveMaEnMiNPHu1yrJbeta <- readRDS('temp/modMainAveMaEnMiNPHu1yrJbeta.rds')
+if(file.exists('temp/modMainAveMaEnMiNPHu5yrJbeta.rds')) modMainAveMaEnMiNPHu5yrJbeta <- readRDS('temp/modMainAveMaEnMiNPHu5yrJbeta.rds')
+
+if(file.exists('temp/modMainAveMaEnMiNPHu1yrHorn.rds')) modMainAveMaEnMiNPHu1yrHorn <- readRDS('temp/modMainAveMaEnMiNPHu1yrHorn.rds')
+if(file.exists('temp/modMainAveMaEnMiNPHu10yrHorn.rds')) modMainAveMaEnMiNPHu10yrHorn <- readRDS('temp/modMainAveMaEnMiNPHu10yrHorn.rds')
+```
+
+### Summary
+
+#### Jtu
+
+##### 1 yr
+
+``` r
+if(exists('modMainAveMaEnMiNPHu1yrJtu')) summary(modMainAveMaEnMiNPHu1yrJtu)
+```
+
+    ##  Family: beta  ( logit )
+    ## Formula:          Jtu.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + mass.sc +      endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
+    ## Dispersion:              ~nspp.sc + REALM
+    ## Data: trendsave
+    ## 
+    ##       AIC       BIC    logLik  deviance  df.resid 
+    ## -143837.7 -143696.7   71935.8 -143871.7     29513 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups            Name        Variance Std.Dev.
+    ##  rarefyID:STUDY_ID (Intercept) 0.8443   0.9189  
+    ##  STUDY_ID          (Intercept) 1.9372   1.3918  
+    ## Number of obs: 29530, groups:  rarefyID:STUDY_ID, 29530; STUDY_ID, 229
+    ## 
+    ## Conditional model:
+    ##                                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                     -0.787728   0.412049  -1.912 0.055910 .  
+    ## tempchange_abs.sc               -0.052917   0.016011  -3.305 0.000950 ***
+    ## REALMMarine                      0.575199   0.430417   1.336 0.181427    
+    ## REALMTerrestrial                -0.112346   0.454025  -0.247 0.804564    
+    ## tempave_metab.sc                 0.401655   0.035426  11.338  < 2e-16 ***
+    ## mass.sc                         -0.001127   0.016834  -0.067 0.946633    
+    ## endothermfrac.sc                -0.182609   0.099211  -1.841 0.065677 .  
+    ## microclim.sc                     0.028235   0.011629   2.428 0.015181 *  
+    ## npp.sc                           0.078107   0.014330   5.451 5.02e-08 ***
+    ## human_bowler.sc:REALM2Marine     0.035730   0.012808   2.790 0.005277 ** 
+    ## human_bowler.sc:REALM2TerrFresh -0.079099   0.021595  -3.663 0.000249 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)       1.12689    0.07455   15.12  < 2e-16 ***
+    ## nspp.sc           1.12963    0.01210   93.32  < 2e-16 ***
+    ## REALMMarine       0.38245    0.07221    5.30 1.18e-07 ***
+    ## REALMTerrestrial  1.70563    0.09049   18.85  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+##### 10 yr
+
+``` r
+if(exists('modMainAveMaEnMiNPHu10yrJtu'))  summary(modMainAveMaEnMiNPHu10yrJtu)
+```
+
+    ##  Family: beta  ( logit )
+    ## Formula:          Jtu.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + mass.sc +      endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
+    ## Dispersion:              ~nspp.sc + REALM
+    ## Data: trendsave
+    ## 
+    ##       AIC       BIC    logLik  deviance  df.resid 
+    ## -100534.6 -100403.2   50284.3 -100568.6     16759 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups            Name        Variance Std.Dev.
+    ##  rarefyID:STUDY_ID (Intercept) 1.354    1.163   
+    ##  STUDY_ID          (Intercept) 2.011    1.418   
+    ## Number of obs: 16776, groups:  rarefyID:STUDY_ID, 16776; STUDY_ID, 147
+    ## 
+    ## Conditional model:
+    ##                                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                     -0.426739   0.488655  -0.873 0.382503    
+    ## tempchange_abs.sc               -0.055096   0.019122  -2.881 0.003961 ** 
+    ## REALMMarine                      0.419188   0.519749   0.807 0.419943    
+    ## REALMTerrestrial                -0.359062   0.548427  -0.655 0.512653    
+    ## tempave_metab.sc                 0.335623   0.058308   5.756 8.61e-09 ***
+    ## mass.sc                         -0.002453   0.029952  -0.082 0.934717    
+    ## endothermfrac.sc                -0.179968   0.136725  -1.316 0.188081    
+    ## microclim.sc                    -0.037538   0.019425  -1.932 0.053301 .  
+    ## npp.sc                           0.087885   0.023982   3.665 0.000248 ***
+    ## human_bowler.sc:REALM2Marine    -0.043080   0.021486  -2.005 0.044961 *  
+    ## human_bowler.sc:REALM2TerrFresh -0.141007   0.046510  -3.032 0.002432 ** 
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)       0.73354    0.09815    7.47  7.8e-14 ***
+    ## nspp.sc           0.91564    0.01612   56.79  < 2e-16 ***
+    ## REALMMarine       0.27352    0.09515    2.87  0.00404 ** 
+    ## REALMTerrestrial  1.64986    0.13130   12.57  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+#### Horn
+
+##### 1 yr
+
+``` r
+if(exists('modMainAveMaEnMiNPHu1yrHorn')) summary(modMainAveMaEnMiNPHu1yrHorn)
+```
+
+    ##  Family: beta  ( logit )
+    ## Formula:          Horn.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + mass.sc +      endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
+    ## Dispersion:               ~nspp.sc + REALM
+    ## Data: trendsave
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ## -81786.8 -81646.1  40910.4 -81820.8    28938 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups            Name        Variance Std.Dev.
+    ##  rarefyID:STUDY_ID (Intercept) 0.3007   0.5484  
+    ##  STUDY_ID          (Intercept) 2.9678   1.7227  
+    ## Number of obs: 28955, groups:  rarefyID:STUDY_ID, 28955; STUDY_ID, 212
+    ## 
+    ## Conditional model:
+    ##                                 Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                     -0.28011    0.47630  -0.588 0.556471    
+    ## tempchange_abs.sc               -0.01796    0.01430  -1.256 0.209255    
+    ## REALMMarine                      0.50441    0.50535   0.998 0.318209    
+    ## REALMTerrestrial                -0.77762    0.52300  -1.487 0.137057    
+    ## tempave_metab.sc                 0.61527    0.03296  18.667  < 2e-16 ***
+    ## mass.sc                         -0.01769    0.01572  -1.125 0.260429    
+    ## endothermfrac.sc                -0.12315    0.10529  -1.170 0.242122    
+    ## microclim.sc                     0.08928    0.01078   8.285  < 2e-16 ***
+    ## npp.sc                           0.10332    0.01345   7.685 1.53e-14 ***
+    ## human_bowler.sc:REALM2Marine     0.04554    0.01203   3.785 0.000154 ***
+    ## human_bowler.sc:REALM2TerrFresh -0.01843    0.01750  -1.053 0.292179    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)      0.871082   0.065410   13.32  < 2e-16 ***
+    ## nspp.sc          0.661158   0.009768   67.69  < 2e-16 ***
+    ## REALMMarine      0.291924   0.061835    4.72 2.35e-06 ***
+    ## REALMTerrestrial 1.482469   0.080166   18.49  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+##### 10 yr
+
+``` r
+if(exists('modMainAveMaEnMiNPHu10yrHorn'))summary(modMainAveMaEnMiNPHu10yrHorn)
+```
+
+    ##  Family: beta  ( logit )
+    ## Formula:          Horn.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + mass.sc +      endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
+    ## Dispersion:               ~nspp.sc + REALM
+    ## Data: trendsave
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ## -71691.9 -71560.7  35862.9 -71725.9    16528 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups            Name        Variance  Std.Dev. 
+    ##  rarefyID:STUDY_ID (Intercept) 3.129e-09 5.593e-05
+    ##  STUDY_ID          (Intercept) 2.521e+00 1.588e+00
+    ## Number of obs: 16545, groups:  rarefyID:STUDY_ID, 16545; STUDY_ID, 139
+    ## 
+    ## Conditional model:
+    ##                                 Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                      0.32474    0.49218   0.660   0.5094    
+    ## tempchange_abs.sc               -0.02281    0.01298  -1.758   0.0787 .  
+    ## REALMMarine                      0.22207    0.53519   0.415   0.6782    
+    ## REALMTerrestrial                -0.63935    0.54601  -1.171   0.2416    
+    ## tempave_metab.sc                 0.48595    0.04115  11.809  < 2e-16 ***
+    ## mass.sc                         -0.01219    0.02135  -0.571   0.5680    
+    ## endothermfrac.sc                -0.30210    0.11849  -2.550   0.0108 *  
+    ## microclim.sc                     0.02006    0.01375   1.458   0.1448    
+    ## npp.sc                           0.11999    0.01708   7.026 2.13e-12 ***
+    ## human_bowler.sc:REALM2Marine     0.01245    0.01532   0.813   0.4163    
+    ## human_bowler.sc:REALM2TerrFresh -0.04556    0.02942  -1.549   0.1214    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)      0.378647   0.073205    5.17 2.31e-07 ***
+    ## nspp.sc          0.510150   0.009819   51.95  < 2e-16 ***
+    ## REALMMarine      0.198060   0.072789    2.72  0.00651 ** 
+    ## REALMTerrestrial 1.224127   0.083419   14.67  < 2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
 ## Full models w/ interactions
 
 There are a number of different models here:
@@ -2176,7 +2387,7 @@ if(exists('res_MaEnMiNPHuJtu')){
 }
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
     ## 
     ##  DHARMa nonparametric dispersion test via sd of residuals fitted vs. simulated
@@ -2201,7 +2412,7 @@ if(exists('res_MaEnMiNPHu10yrJtu')){
 }
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-25-2.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-30-2.png)<!-- -->
 
     ## 
     ##  DHARMa nonparametric dispersion test via sd of residuals fitted vs. simulated
@@ -2225,7 +2436,7 @@ if(exists('res_MaEnMiNPHuJtu')){
 }
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
     ## 
     ##  DHARMa generic simulation test
@@ -2250,7 +2461,7 @@ if(exists('res_MaEnMiNPHu10yrJtu')){
 }
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-26-2.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-31-2.png)<!-- -->
 
     ## 
     ##  DHARMa generic simulation test
@@ -2271,7 +2482,7 @@ if(exists('res_MaEnMiNPHuJtu')){
 }
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
     ## 
     ##  DHARMa generic simulation test
@@ -2296,7 +2507,7 @@ if(exists('res_MaEnMiNPHu10yrJtu')){
 }
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-27-2.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-32-2.png)<!-- -->
 
     ## 
     ##  DHARMa generic simulation test
@@ -2479,7 +2690,7 @@ p7 <- ggplot(newdat[var == 'human_bowler',], aes(human_bowler, pred, group = REA
 grid.arrange(p1, p2, p3, p4, p5, p6, p7, ncol = 2)
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
 #### Interactions
 
@@ -2664,4 +2875,4 @@ for(j in 1:length(intplots)){
 grid.arrange(grobs = intplots, ncol = 3)
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
