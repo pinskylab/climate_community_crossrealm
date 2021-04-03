@@ -1,8 +1,13 @@
-Turnover covariate data prep and visualization
+Pairwise dissimilarity covariate data prep and visualization
 ================
 
-If running on Annotate with R 3.5.2, also make sure to manually load
-mgcv 1.8-26, not the auto-loaded 1.8-33.
+``` r
+library('mgcv', lib.loc = '/usr/lib64/R/library') # when running on Annotate. Need to load 1.8-26, not 1.8-33.
+```
+
+    ## Loading required package: nlme
+
+    ## This is mgcv 1.8-26. For overview type 'help("mgcv-package")'.
 
 ``` r
 library(data.table)
@@ -37,7 +42,7 @@ signedsqrt_trans <- function() trans_new('signedsqrt',
 # biotime taxa category and other info
 load(here::here('data', 'biotime_blowes', 'bt_malin.Rdata')) # load bt_malin
 btinfo <- data.table(bt_malin); rm(bt_malin)
-btinfo <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Biome, taxa_mod, REALM, STUDY_ID)]
+btinfo <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Biome, taxa_mod, N, S, REALM, STUDY_ID)]
 
 # biotime community dissimilarity data
 load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians
@@ -46,7 +51,7 @@ bt[, year1 := as.numeric(year1)] # not sure why it gets read in as character
 bt[, year2 := as.numeric(year2)]
 bt[, Horn := 1- Hornsim] # convert similarity to dissimilarity
 bt[, Hornsim := NULL]
-bt <- merge(bt, btinfo[, .(rarefyID, rarefyID_x, rarefyID_y, REALM, STUDY_ID, Biome, taxa_mod)]) # add lat/lon and realm
+bt <- merge(bt, btinfo) # add lat/lon and realm
 
 # Temperature average, changes, and seasonality
 temperature <- fread(here('output', 'temperature_byrarefyID.csv.gz'))
@@ -110,16 +115,50 @@ bt[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 ## Trim data
 
 ``` r
+norig <- nrow(bt); norig
+```
+
+    ## [1] 1304150
+
+``` r
+# trim out studies with few species
+bt[S <= 2, .N]
+```
+
+    ## [1] 193407
+
+``` r
+bt <- bt[S > 2, ]
+  
+# or few individuals
+bt[N <= 6, .N]
+```
+
+    ## [1] 3272
+
+``` r
+bt <- bt[N > 6, ]
+
 # trim to only data with some temperature change
 # important since sign of temperature change is a variable
 bt[tempchange == 0, .N] # number to remove
 ```
 
-    ## [1] 95
+    ## [1] 55
 
 ``` r
 bt <- bt[tempchange != 0, ] # also removes any NA values
+
+nrow(bt)
 ```
+
+    ## [1] 1059663
+
+``` r
+nrow(bt)/norig
+```
+
+    ## [1] 0.8125315
 
 ## Set up useful variables and transformations
 
@@ -218,7 +257,7 @@ btave <- bt[, .(Jtu = mean(Jtu), minyrBT = min(year1), maxyrBT = max(year2), nyr
                 human_venter = mean(human_venter), human_halpern = mean(human_halpern)),  by = rarefyID]
 ```
 
-## Add useful variables
+### Add useful variables
 
 ``` r
 # realm that combined Terrestrial and Freshwater, for interacting with human impact
@@ -226,7 +265,7 @@ btave[, REALM2 := REALM]
 levels(btave$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
 ```
 
-## Log-transform some explanantory variables, then center and scale.
+### Log-transform some explanantory variables, then center and scale.
 
 ``` r
 btave[, tempave.sc := scale(tempave)]
@@ -260,58 +299,58 @@ bt[, summary(Jbeta)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.0000  0.3793  0.5833  0.6044  0.8667  1.0000
+    ##  0.0000  0.3636  0.5556  0.5866  0.8333  1.0000
 
 ``` r
 bt[, summary(Jtu)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.0000  0.1724  0.4000  0.4382  0.6667  1.0000
+    ##  0.0000  0.1852  0.3684  0.4238  0.6400  1.0000
 
 ``` r
 bt[, summary(Horn)]
 ```
 
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##    0.00    0.14    0.47    0.52    0.97    1.00   39806
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ##  0.0000  0.1327  0.4265  0.4981  0.9323  1.0000
 
 ``` r
 # fraction 0 or 1
 bt[, sum(Jbeta == 0)/.N]
 ```
 
-    ## [1] 0.02247243
+    ## [1] 0.01215386
 
 ``` r
 bt[, sum(Jtu == 0)/.N]
 ```
 
-    ## [1] 0.192674
+    ## [1] 0.1648477
 
 ``` r
 bt[!is.na(Horn), sum(Horn == 0)/.N]
 ```
 
-    ## [1] 0.007786032
+    ## [1] 0.00126644
 
 ``` r
 bt[, sum(Jbeta == 1)/.N]
 ```
 
-    ## [1] 0.1716813
+    ## [1] 0.1394217
 
 ``` r
 bt[, sum(Jtu == 1)/.N]
 ```
 
-    ## [1] 0.1716813
+    ## [1] 0.1394217
 
 ``` r
 bt[!is.na(Horn), sum(Horn == 1)/.N]
 ```
 
-    ## [1] 0.1752462
+    ## [1] 0.1394217
 
 ``` r
 # histograms
@@ -389,7 +428,9 @@ invisible(btave[, hist(human_footprint.sc, main = 'log Human impact score (Vente
 
 ![](assemble_turnover_covariates_files/figure-gfm/histograms%20scaled-1.png)<!-- -->
 
-# Check correlations among variables. Pearson’s r is on the lower diagonal.
+# Check correlations among variables
+
+Pearson’s r is in the lower triangle
 
 ``` r
 panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
@@ -419,7 +460,7 @@ pairs(formula = ~ tempave.sc + tempave_metab.sc + seas.sc + microclim.sc + tempc
 i <- bt[, !duplicated(rarefyID)]; sum(i)
 ```
 
-    ## [1] 52623
+    ## [1] 36601
 
 ``` r
 par(mfrow=c(5,3))
@@ -468,15 +509,6 @@ invisible(bt[, hist(year2 - year1, breaks = seq(0.5, 120.5, by = 1))])
 ![](assemble_turnover_covariates_files/figure-gfm/plot%20time%20differences-1.png)<!-- -->
 
 # Plot dissimilarity vs. time
-
-    ## Warning: Computation failed in `stat_smooth()`:
-    ## unused argument (env = p.env)
-    
-    ## Warning: Computation failed in `stat_smooth()`:
-    ## unused argument (env = p.env)
-    
-    ## Warning: Computation failed in `stat_smooth()`:
-    ## unused argument (env = p.env)
 
 ![](assemble_turnover_covariates_files/figure-gfm/plot%20diss%20vs%20time-1.png)<!-- -->
 
@@ -530,6 +562,8 @@ ggplot(bt, aes(x=tempave_metab, y=Jtu.sc)) +
   labs(y = 'Jaccard turnover', title = 'All data')
 ```
 
+    ## `geom_smooth()` using formula 'y ~ x'
+
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
@@ -541,6 +575,8 @@ ggplot(bt, aes(x=tempave_metab, y=Jtu.sc)) +
   facet_grid(~ REALM, scales = 'free') +
   labs(y = 'Jaccard turnover', title = '1 yr')
 ```
+
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
 
@@ -554,6 +590,8 @@ ggplot(bt[duration == 5, ],
   labs(y = 'Jaccard turnover', title = '5 yr')
 ```
 
+    ## `geom_smooth()` using formula 'y ~ x'
+
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-3.png)<!-- -->
 
 ``` r
@@ -565,6 +603,8 @@ ggplot(bt[duration == 10, ],
   facet_grid(~ REALM, scales = 'free') +
   labs(y = 'Jaccard turnover', title = '10 yr')
 ```
+
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-4-4.png)<!-- -->
 \#\#\#\# by realm, npp, human impact
@@ -578,6 +618,8 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin), ], aes(x=tempave_metab, y=Jtu.sc, c
   labs(y = 'Jaccard turnover', title = 'All data')
 ```
 
+    ## `geom_smooth()` using formula 'y ~ x'
+
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ``` r
@@ -589,6 +631,8 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin), ], aes(x=tempave_metab, y=Jtu.sc, c
   facet_grid(npp_bin~ REALM, scales = 'free') +
   labs(y = 'Jaccard turnover', title = '1 yr')
 ```
+
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
 
@@ -602,6 +646,11 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 5, ],
   labs(y = 'Jaccard turnover', title = '5 yr')
 ```
 
+    ## `geom_smooth()` using formula 'y ~ x'
+
+    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning -
+    ## Inf
+
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-5-3.png)<!-- -->
 
 ``` r
@@ -613,6 +662,8 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 10, ],
   facet_grid(npp_bin~ REALM, scales = 'free') +
   labs(y = 'Jaccard turnover', title = '10 yr')
 ```
+
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-5-4.png)<!-- -->
 
@@ -629,9 +680,7 @@ ggplot(bt, aes(x=tempave_metab, y=Horn.sc)) +
   labs(y = 'Morisita-Horn dissimilarity', title = 'All data')
 ```
 
-    ## Warning: Removed 39806 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 39806 rows containing missing values (geom_point).
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
@@ -645,9 +694,7 @@ ggplot(bt, aes(x=tempave_metab, y=Horn.sc)) +
   labs(y = 'Morisita-Horn dissimilarity', title = '1 yr')
 ```
 
-    ## Warning: Removed 3887 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 3887 rows containing missing values (geom_point).
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
 
@@ -661,9 +708,7 @@ ggplot(bt[duration == 5, ],
   labs(y = 'Morisita-Horn dissimilarity', title = '5 yr')
 ```
 
-    ## Warning: Removed 2545 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 2545 rows containing missing values (geom_point).
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-6-3.png)<!-- -->
 
@@ -677,9 +722,7 @@ ggplot(bt[duration == 10, ],
   labs(y = 'Morisita-Horn dissimilarity', title = '10 yr')
 ```
 
-    ## Warning: Removed 1544 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 1544 rows containing missing values (geom_point).
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-6-4.png)<!-- -->
 
@@ -694,9 +737,7 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin), ], aes(x=tempave_metab, y=Horn.sc, 
   labs(y = 'Morisita-Horn dissimilarity', title = 'All data')
 ```
 
-    ## Warning: Removed 39509 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 39509 rows containing missing values (geom_point).
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
@@ -710,9 +751,7 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin), ], aes(x=tempave_metab, y=Horn.sc, 
   labs(y = 'Morisita-Horn dissimilarity', title = '1 yr')
 ```
 
-    ## Warning: Removed 3837 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 3837 rows containing missing values (geom_point).
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
 
@@ -726,9 +765,10 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 5, ],
   labs(y = 'Morisita-Horn dissimilarity', title = '5 yr')
 ```
 
-    ## Warning: Removed 2517 rows containing non-finite values (stat_smooth).
+    ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 2517 rows containing missing values (geom_point).
+    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning -
+    ## Inf
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-7-3.png)<!-- -->
 
@@ -742,9 +782,7 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 10, ],
   labs(y = 'Morisita-Horn dissimilarity', title = '10 yr')
 ```
 
-    ## Warning: Removed 1544 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 1544 rows containing missing values (geom_point).
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-7-4.png)<!-- -->
 
@@ -763,9 +801,11 @@ ggplot(bt, aes(x=npp, y=Jtu.sc)) +
   labs(y = 'Jaccard turnover', title = 'All data')
 ```
 
-    ## Warning: Removed 3658 rows containing non-finite values (stat_smooth).
+    ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 3658 rows containing missing values (geom_point).
+    ## Warning: Removed 2877 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 2877 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
@@ -779,9 +819,11 @@ ggplot(bt, aes(x=npp, y=Jtu.sc)) +
   labs(y = 'Jaccard turnover', title = '1 yr')
 ```
 
-    ## Warning: Removed 540 rows containing non-finite values (stat_smooth).
+    ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 540 rows containing missing values (geom_point).
+    ## Warning: Removed 424 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 424 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
 
@@ -795,9 +837,11 @@ ggplot(bt[duration == 5, ],
   labs(y = 'Jaccard turnover', title = '5 yr')
 ```
 
-    ## Warning: Removed 281 rows containing non-finite values (stat_smooth).
+    ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 281 rows containing missing values (geom_point).
+    ## Warning: Removed 219 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 219 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-8-3.png)<!-- -->
 
@@ -811,9 +855,11 @@ ggplot(bt[duration == 10, ],
   labs(y = 'Jaccard turnover', title = '10 yr')
 ```
 
-    ## Warning: Removed 115 rows containing non-finite values (stat_smooth).
+    ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 115 rows containing missing values (geom_point).
+    ## Warning: Removed 97 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 97 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-8-4.png)<!-- -->
 
@@ -830,9 +876,11 @@ ggplot(bt, aes(x=npp, y=Horn.sc)) +
   labs(y = 'Morisita-Horn dissimilarity', title = 'All data')
 ```
 
-    ## Warning: Removed 43167 rows containing non-finite values (stat_smooth).
+    ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 43167 rows containing missing values (geom_point).
+    ## Warning: Removed 2877 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 2877 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
@@ -846,9 +894,11 @@ ggplot(bt, aes(x=npp, y=Horn.sc)) +
   labs(y = 'Morisita-Horn dissimilarity', title = '1 yr')
 ```
 
-    ## Warning: Removed 4377 rows containing non-finite values (stat_smooth).
+    ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 4377 rows containing missing values (geom_point).
+    ## Warning: Removed 424 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 424 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
 
@@ -862,9 +912,11 @@ ggplot(bt[duration == 5, ],
   labs(y = 'Morisita-Horn dissimilarity', title = '5 yr')
 ```
 
-    ## Warning: Removed 2798 rows containing non-finite values (stat_smooth).
+    ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 2798 rows containing missing values (geom_point).
+    ## Warning: Removed 219 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 219 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-9-3.png)<!-- -->
 
@@ -878,9 +930,11 @@ ggplot(bt[duration == 10, ],
   labs(y = 'Morisita-Horn dissimilarity', title = '10 yr')
 ```
 
-    ## Warning: Removed 1659 rows containing non-finite values (stat_smooth).
+    ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 1659 rows containing missing values (geom_point).
+    ## Warning: Removed 97 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 97 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-9-4.png)<!-- -->
 
@@ -899,6 +953,8 @@ ggplot(bt, aes(x=human_bowler, y=Jtu.sc)) +
   labs(y = 'Jaccard turnover', title = 'All data')
 ```
 
+    ## `geom_smooth()` using formula 'y ~ x'
+
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ``` r
@@ -910,6 +966,8 @@ ggplot(bt, aes(x=human_bowler, y=Jtu.sc)) +
   facet_grid(~ REALM, scales = 'free') +
   labs(y = 'Jaccard turnover', title = '1 yr')
 ```
+
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-10-2.png)<!-- -->
 
@@ -923,6 +981,8 @@ ggplot(bt[duration == 5, ],
   labs(y = 'Jaccard turnover', title = '5 yr')
 ```
 
+    ## `geom_smooth()` using formula 'y ~ x'
+
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-10-3.png)<!-- -->
 
 ``` r
@@ -934,6 +994,8 @@ ggplot(bt[duration == 10, ],
   facet_grid(~ REALM, scales = 'free') +
   labs(y = 'Jaccard turnover', title = '10 yr')
 ```
+
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-10-4.png)<!-- -->
 
@@ -950,9 +1012,7 @@ ggplot(bt, aes(x=human_bowler, y=Horn.sc)) +
   labs(y = 'Morisita-Horn dissimilarity', title = 'All data')
 ```
 
-    ## Warning: Removed 39806 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 39806 rows containing missing values (geom_point).
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
@@ -966,9 +1026,7 @@ ggplot(bt, aes(x=human_bowler, y=Horn.sc)) +
   labs(y = 'Morisita-Horn dissimilarity', title = '1 yr')
 ```
 
-    ## Warning: Removed 3887 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 3887 rows containing missing values (geom_point).
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
 
@@ -982,9 +1040,7 @@ ggplot(bt[duration == 5, ],
   labs(y = 'Morisita-Horn dissimilarity', title = '5 yr')
 ```
 
-    ## Warning: Removed 2545 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 2545 rows containing missing values (geom_point).
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-11-3.png)<!-- -->
 
@@ -998,8 +1054,6 @@ ggplot(bt[duration == 10, ],
   labs(y = 'Morisita-Horn dissimilarity', title = '10 yr')
 ```
 
-    ## Warning: Removed 1544 rows containing non-finite values (stat_smooth).
-
-    ## Warning: Removed 1544 rows containing missing values (geom_point).
+    ## `geom_smooth()` using formula 'y ~ x'
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-11-4.png)<!-- -->

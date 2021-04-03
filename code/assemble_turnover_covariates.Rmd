@@ -1,11 +1,12 @@
 ---
-title: "Turnover covariate data prep and visualization"
+title: "Pairwise dissimilarity covariate data prep and visualization"
 output:
   github_document: default
 ---
 
-If running on Annotate with R 3.5.2, also make sure to manually load mgcv 1.8-26, not the auto-loaded 1.8-33.
+
 ```{r setup}
+library('mgcv', lib.loc = '/usr/lib64/R/library') # when running on Annotate. Need to load 1.8-26, not 1.8-33.
 library(data.table)
 library(ggplot2)
 library(beanplot) # for beanplots
@@ -27,7 +28,7 @@ signedsqrt_trans <- function() trans_new('signedsqrt',
 # biotime taxa category and other info
 load(here::here('data', 'biotime_blowes', 'bt_malin.Rdata')) # load bt_malin
 btinfo <- data.table(bt_malin); rm(bt_malin)
-btinfo <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Biome, taxa_mod, REALM, STUDY_ID)]
+btinfo <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Biome, taxa_mod, N, S, REALM, STUDY_ID)]
 
 # biotime community dissimilarity data
 load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians
@@ -36,7 +37,7 @@ bt[, year1 := as.numeric(year1)] # not sure why it gets read in as character
 bt[, year2 := as.numeric(year2)]
 bt[, Horn := 1- Hornsim] # convert similarity to dissimilarity
 bt[, Hornsim := NULL]
-bt <- merge(bt, btinfo[, .(rarefyID, rarefyID_x, rarefyID_y, REALM, STUDY_ID, Biome, taxa_mod)]) # add lat/lon and realm
+bt <- merge(bt, btinfo) # add lat/lon and realm
 
 # Temperature average, changes, and seasonality
 temperature <- fread(here('output', 'temperature_byrarefyID.csv.gz'))
@@ -97,13 +98,29 @@ bt <- merge(bt, veg[, .(rarefyID, veg = veg)], all.x = TRUE) # vegetation index
 bt[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 ```
 
+
+
 ## Trim data
 ```{r}
+norig <- nrow(bt); norig
+# trim out studies with few species
+bt[S <= 2, .N]
+bt <- bt[S > 2, ]
+  
+# or few individuals
+bt[N <= 6, .N]
+bt <- bt[N > 6, ]
+
 # trim to only data with some temperature change
 # important since sign of temperature change is a variable
 bt[tempchange == 0, .N] # number to remove
 bt <- bt[tempchange != 0, ] # also removes any NA values
+
+nrow(bt)
+nrow(bt)/norig
+
 ```
+
 
 ## Set up useful variables and transformations
 ```{r}
@@ -202,7 +219,7 @@ btave <- bt[, .(Jtu = mean(Jtu), minyrBT = min(year1), maxyrBT = max(year2), nyr
 ```
 
 
-## Add useful variables
+### Add useful variables
 ```{r useful vars}
 # realm that combined Terrestrial and Freshwater, for interacting with human impact
 btave[, REALM2 := REALM]
@@ -210,7 +227,7 @@ levels(btave$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial",
 ```
 
 
-## Log-transform some explanantory variables, then center and scale. 
+### Log-transform some explanantory variables, then center and scale. 
 ```{r center and scale}
 btave[, tempave.sc := scale(tempave)]
 btave[, tempave_metab.sc := scale(tempave_metab)]
@@ -313,7 +330,8 @@ invisible(btave[, hist(human_footprint.sc, main = 'log Human impact score (Vente
 
 
 
-# Check correlations among variables. Pearson's r is on the lower diagonal.
+# Check correlations among variables 
+Pearson's r is in the lower triangle
 ```{r pairs, fig.height=10, fig.width=10}
 panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 {
