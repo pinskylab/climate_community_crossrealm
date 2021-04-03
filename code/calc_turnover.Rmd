@@ -18,18 +18,47 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStu
 # Load data
 ```{r load data}
 # BioTime
-load('data/biotime_blowes/bt_malin.Rdata') # loads bt_malin
-bt <- data.table(bt_malin); rm(bt_malin) # rename
+# biotime community dissimilarity data
+load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians, which has all pairwise dissimilarities
+bt <- data.table(rarefied_beta_medians); rm(rarefied_beta_medians)
+bt[, year1 := as.numeric(year1)] # not sure why it gets read in as character
+bt[, year2 := as.numeric(year2)]
+bt[, Horn := 1-Hornsim] # convert similarity to dissimilarity
+bt[, Hornsim := NULL]
 
 # BioTime data type
 load('data/biotime_blowes/time_series_data_type.Rdata') # loads rarefyID_type
 bt <- merge(bt, rarefyID_type, by = 'rarefyID', all.x = TRUE) # merge with biotime
 
-# BioTime temporal turnover null model
-load('data/biotime_blowes/z_scores_SAD.Rdata') # loads sim_summary
+# biotime taxa category and other info
+load(here::here('data', 'biotime_blowes', 'bt_malin.Rdata')) # load bt_malin
+btinfo <- data.table(bt_malin); rm(bt_malin)
+btinfo <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Biome, taxa_mod, S, N, REALM, STUDY_ID)]
+bt <- merge(bt, btinfo, by = 'rarefyID', all.x = TRUE)
 
 # richness
 rich <- fread('output/richness_by_rarefyID.csv.gz') # number of species
+```
+
+## Examine sample frequency and duration
+```{r}
+durations <- bt[, .(year1 = min(year1), year2 = max(year2), numsamps = length(unique(year2))+1), by = rarefyID][, .(duration = year2 - year1, numsamps), by = rarefyID]
+
+# how many studies with >= X years and annual sampling?
+durations[duration >= 3 & numsamps == duration+1, .N]
+durations[duration >= 5 & numsamps == duration+1, .N]
+durations[duration >= 10 & numsamps == duration+1, .N]
+durations[duration >= 20 & numsamps == duration+1, .N]
+```
+
+## Examine number of species and individuals
+```{r}
+hist(log10(btinfo$N))
+hist(log10(btinfo$S)); abline(v = log10(2), col = 'red') # line at 2 species
+
+nrow(btinfo)
+btinfo[S == 1, .N]
+
 ```
 
 ## Remove studies that don't meet quality thresholds
@@ -163,213 +192,6 @@ calctrendrem0 <- function(y, YEAR, nm = 'y'){
 
 }
 
-# function to get distance from last to first year
-calcfirstlast <- function(y, YEAR, nm = 'y'){
-  if(length(YEAR)>1){
-    o <- order(YEAR)
-    YEAR2 <- YEAR[o][2:length(YEAR)]
-    y2 <- y[o][2:length(y)]
-    
-    out <- list(y = y2[length(y2)], # dissimilarity for last year
-                y_se = NA_real_)
-  } else {
-    out <- list(y = NA_real_, y_se = NA_real_)
-  }
-
-  names(out) <- c(nm, paste0(nm, '_se'))
-  return(out)
-}
-
-# calc half-saturation constant from exponential fit
-# if pred = FALSE, return half-saturation
-# if pred = TRUE, return prediction data.frame
-calcexp <- function(y, YEAR, nm = 'y', pred = FALSE){
-    if(length(YEAR)>2){
-        o <- order(YEAR)
-        YEAR2 <- YEAR[o][2:length(YEAR)] - YEAR[1]
-        y2 <- y[o][2:length(y)]
-        
-        if(sum(!is.na(y2)) >= 1){ # make sure enough values to fit
-            
-            out <- tryCatch({
-                
-                modexp <- nls(y2 ~ Vm - Vm*exp(a * YEAR2), 
-                              start = list(a = -0.5, Vm = 1),
-                              algorithm = 'port',
-                              lower = c(-Inf, 0),
-                              upper = c(0, 1))
-                
-                if(!pred){
-                  # calc half-saturations
-                  cexp <- coef(modexp)
-                  hsexp <- with(as.data.frame(t(cexp)), log(1/2)/a)
-                  if(is.infinite(hsexp)) hsexp <- NA_real_
-                  
-                  out <- list(y = hsexp) # half-saturation
-                  names(out) <- nm
-                }
-                if(pred){
-                  # make predictions
-                  out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
-                  out$YEAR <- out$YEAR2 + YEAR[1]
-                  out$pred <- predict(modexp, newdata = out)
-                }
-                out
-                
-            }, warning = function(w) {
-              #print('warning')
-              if(!pred){
-                out <- list(y = NA_real_)
-                names(out) <- nm
-                return(out)
-                
-              }
-              if(pred){
-                out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
-                out$YEAR <- out$YEAR2 + YEAR[1]
-                out$pred <- NA
-                return(out)
-              }
-            }, error = function(e) {
-              #print('error')
-              if(!pred){
-                out <- list(y = NA_real_)
-                names(out) <- nm
-                return(out)
-                
-              }
-              if(pred){
-                out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
-                out$YEAR <- out$YEAR2 + YEAR[1]
-                out$pred <- NA
-                return(out)
-              }
-            })
-            return(out)
-            
-        } else {
-          if(!pred){
-            out <- list(y = NA_real_)
-            names(out) <- nm
-            return(out)
-            
-          }
-          if(pred){
-            out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
-            out$YEAR <- out$YEAR2 + YEAR[1]
-            out$pred <- NA
-            return(out)
-          }
-        }
-        
-    } else {
-      if(!pred){
-        out <- list(y = NA_real_)
-        names(out) <- nm
-        return(out)
-        
-      }
-      if(pred){
-        out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
-        out$YEAR <- out$YEAR2 + YEAR[1]
-        out$pred <- NA
-        return(out)
-      }
-    }
-}
-
-# calc half-saturation constant from Michaelis-Menton fits
-calcmm <- function(y, YEAR, nm = 'y', pred = FALSE){
-    if(length(YEAR)>2){
-        o <- order(YEAR)
-        YEAR2 <- YEAR[o][2:length(YEAR)] - YEAR[1]
-        y2 <- y[o][2:length(y)]
-        
-        if(sum(!is.na(y2)) >= 1){ # make sure enough values to fit
-          #print('fit model')
-          out <- tryCatch({
-            
-            modmm <- nls(y2 ~ Vm * YEAR2/(K + YEAR2), 
-                         start = list(K = mean(YEAR2), Vm = 1),
-                         algorithm = 'port', 
-                         lower = c(0, 0),
-                         upper = c(1000, 1))
-            
-            if(!pred){
-              #print('calc half-saturations')
-              cmm <- coef(modmm)
-              hsmm <- cmm[['K']]
-              
-              out <- list(y = hsmm)
-              names(out) <- nm
-            }
-            if(pred){
-              #print('make predictions')
-              out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
-              out$YEAR <- out$YEAR2 + YEAR[1]
-              out$pred <- predict(modmm, newdata = out)
-            }
-            out
-          }, warning = function(w) {
-            #print('warning')
-            if(!pred){
-              out <- list(y = NA_real_)
-              names(out) <- nm
-              return(out)
-              
-            }
-            if(pred){
-              out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
-              out$YEAR <- out$YEAR2 + YEAR[1]
-              out$pred <- NA
-              return(out)
-            }
-            
-          }, error = function(e) {
-            #print('error')
-            if(!pred){
-              out <- list(y = NA_real_)
-              names(out) <- nm
-              return(out)
-            }
-            if(pred){
-              out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
-              out$YEAR <- out$YEAR2 + YEAR[1]
-              out$pred <- NA
-              return(out)
-            }
-            
-          })
-          return(out)
-          
-        } else {
-          if(!pred){
-            out <- list(y = NA_real_)
-            names(out) <- nm
-            return(out)
-          }
-          if(pred){
-            out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
-            out$YEAR <- out$YEAR2 + YEAR[1]
-            out$pred <- NA
-            return(out)
-          }
-        }
-        
-    } else {
-      if(!pred){
-        out <- list(y = NA_real_)
-        names(out) <- nm
-        return(out)
-      }
-      if(pred){
-        out <- data.frame(YEAR2 = seq(0, max(YEAR2), length.out = 100))
-        out$YEAR <- out$YEAR2 + YEAR[1]
-        out$pred <- NA
-        return(out)
-      }
-    }
-}
 ```
 
 ## Do calculations
