@@ -520,18 +520,18 @@ if(exists('modTDrealmJtu') & exists('modTDrealmJbeta') & exists('modTDrealmHorn'
 ### Load the models
 ```{r}
 # all years
-if(file.exists('temp/modMainMaEnMiNPHuJtu.rds')) modMainMaEnMiNPHuJtu <- readRDS('temp/modMainMaEnMiNPHuJtu.rds') # mass, endoecto, microclimate, NPP, humans
-if(file.exists('temp/modMainMaEnMiNPHu1yrJtu.rds')) modMainMaEnMiNPHu1yrJtu <- readRDS('temp/modMainMaEnMiNPHu1yrJtu.rds')
-if(file.exists('temp/modMainMaEnMiNPHu5yrJtu.rds')) modMainMaEnMiNPHu5yrJtu <- readRDS('temp/modMainMaEnMiNPHu5yrJtu.rds')
-if(file.exists('temp/modMainMaEnMiNPHu10yrJtu.rds')) modMainMaEnMiNPHu10yrJtu <- readRDS('temp/modMainMaEnMiNPHu10yrJtu.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHuJtu.rds')) modMainJtu <- readRDS('temp/modMainTdTSeMiNPNspMaHuJtu.rds') # mass, endoecto, microclimate, NPP, humans
+if(file.exists('temp/modMainTdTSeMiNPNspMaHu1yrJtu.rds')) modMain1yrJtu <- readRDS('temp/modMainTdTSeMiNPNspMaHu1yrJtu.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHu5yrJtu.rds')) modMain5yrJtu <- readRDS('temp/modMainTdTSeMiNPNspMaHu5yrJtu.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHu10yrJtu.rds')) modMain10yrJtu <- readRDS('temp/modMainTdTSeMiNPNspMaHu10yrJtu.rds')
 
-if(file.exists('temp/modMainMaEnMiNPHuJbeta.rds')) modMainMaEnMiNPHuJbeta <- readRDS('temp/modMainMaEnMiNPHuJbeta.rds')
-if(file.exists('temp/modMainMaEnMiNPHu1yrJbeta.rds')) modMainMaEnMiNPHu1yrJbeta <- readRDS('temp/modMainMaEnMiNPHu1yrJbeta.rds')
-if(file.exists('temp/modMainMaEnMiNPHu5yrJbeta.rds')) modMainMaEnMiNPHu5yrJbeta <- readRDS('temp/modMainMaEnMiNPHu5yrJbeta.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHuJbeta.rds')) modMainJbeta <- readRDS('temp/modMainTdTSeMiNPNspMaHuJbeta.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHu1yrJbeta.rds')) modMain1yrJbeta <- readRDS('temp/modMainTdTSeMiNPNspMaHu1yrJbeta.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHu10yrJbeta.rds')) modMain10yrJbeta <- readRDS('temp/modMainTdTSeMiNPNspMaHu10yrJbeta.rds')
 
-if(file.exists('temp/modMainMaEnMiNPHuHorn.rds')) modMainMaEnMiNPHuHorn <- readRDS('temp/modMainMaEnMiNPHuHorn.rds')
-if(file.exists('temp/modMainMaEnMiNPHu1yrHorn.rds')) modMainMaEnMiNPHu1yrHorn <- readRDS('temp/modMainMaEnMiNPHu1yrHorn.rds')
-if(file.exists('temp/modMainMaEnMiNPHu10yrHorn.rds')) modMainMaEnMiNPHu10yrHorn <- readRDS('temp/modMainMaEnMiNPHu10yrHorn.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHuHorn.rds')) modMainHorn <- readRDS('temp/modMainTdTSeMiNPNspMaHuHorn.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHu1yrHorn.rds')) modMain1yrHorn <- readRDS('temp/modMainTdTSeMiNPNspMaHu1yrHorn.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHu10yrHorn.rds')) modMain10yrHorn <- readRDS('temp/modMainTdTSeMiNPNspMaHu10yrHorn.rds')
 
 ```
 
@@ -539,33 +539,33 @@ if(file.exists('temp/modMainMaEnMiNPHu10yrHorn.rds')) modMainMaEnMiNPHu10yrHorn 
 #### Jtu
 ##### All
 ```{r}
-if(exists('modMainMaEnMiNPHuJtu')) summary(modMainMaEnMiNPHuJtu)
+if(exists('modMainJtu')) summary(modMainJtu)
 ```
 
 ##### 1 yr
 ```{r}
-if(exists('modMainMaEnMiNPHu1yrJtu')) summary(modMainMaEnMiNPHu1yrJtu)
+if(exists('modMain1yrJtu')) summary(modMain1yrJtu)
 ```
 
 ##### 10 yr
 ```{r}
-if(exists('modMainMaEnMiNPHu10yrJtu'))  summary(modMainMaEnMiNPHu10yrJtu)
+if(exists('modMain10yrJtu'))  summary(modMain10yrJtu)
 ```
 
 #### Horn
 ##### All
 ```{r}
-if(exists('modMainMaEnMiNPHuHorn')) summary(modMainMaEnMiNPHuHorn)
+if(exists('modMainHorn')) summary(modMainHorn)
 ```
 
 ##### 1 yr
 ```{r}
-if(exists('modMainMaEnMiNPHu1yrHorn')) summary(modMainMaEnMiNPHu1yrHorn)
+if(exists('modMain1yrHorn')) summary(modMain1yrHorn)
 ```
 
 ##### 10 yr
 ```{r}
-if(exists('modMainMaEnMiNPHu10yrHorn'))summary(modMainMaEnMiNPHu10yrHorn)
+if(exists('modMain10yrHorn'))summary(modMain10yrHorn)
 ```
 
 ## Full models w/ only main effects, averaged by time-series (rarefyID)
