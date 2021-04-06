@@ -106,7 +106,8 @@ No clear discontinuities. Looks ok.
 lme4:::dotplot.ranef.mer(ranef(modRFdurslope2levdisprealm)$cond)
 ```
 
-### DHARMa simulate residuals
+### DHARMa model evaluation
+Need to re-run this with newly trimmed dataset (2021-04-05)
 ```{r}
 ## run the top part by hand if needed. takes ~3 hrs
 if(FALSE) {
@@ -124,20 +125,20 @@ if(FALSE) {
 #### Plot residuals for model fit to all data
 There are many outliers and signs of underdispersion, but this is probably ok. 
 ```{r}
-if(exists('res_RFdurslope2levdisprealm')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
-  plot(res_RFdurslope2levdisprealm)
-  plotResiduals(res_RFdurslope2levdisprealm, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, form=trends$REALM[i], xlab = 'REALM', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$duration.sc[i], xlab = 'duration.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$mass.sc[i], xlab = 'mass.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$npp.sc[i], xlab = 'npp.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
-}
+# if(exists('res_RFdurslope2levdisprealm')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+#   plot(res_RFdurslope2levdisprealm)
+#   plotResiduals(res_RFdurslope2levdisprealm, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, form=trends$REALM[i], xlab = 'REALM', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, trends$duration.sc[i], xlab = 'duration.sc', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, trends$mass.sc[i], xlab = 'mass.sc', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, trends$npp.sc[i], xlab = 'npp.sc', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
+# }
 ```
 
 
@@ -396,7 +397,8 @@ if(exists('modTrealm10yrJbeta')) summary(modTrealm10yrJbeta)
 if(exists('modTrealm10yrHorn')) summary(modTrealm10yrHorn)
 ```
 
-### DHARMa simulate residuals
+### DHARMa model evaluation
+Need to re-run this with newly trimmed dataset (2021-04-05)
 #### Simulate residuals
 ```{r}
 if(FALSE) {
@@ -430,36 +432,36 @@ if(FALSE) {
 #### Plot residuals
 All data
 ```{r}
-if(exists('res_modTDrealmJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, duration.sc, nspp.sc)] # needed because model fit with trends[i,]
-  plot(res_modTDrealmJtu)
-  plotResiduals(res_modTDrealmJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
-  plotResiduals(res_modTDrealmJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
-  plotResiduals(res_modTDrealmJtu, trends$duration[i], xlab = 'duration', main = '')
-}
+# if(exists('res_modTDrealmJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, duration.sc, nspp.sc)] # needed because model fit with trends[i,]
+#   plot(res_modTDrealmJtu)
+#   plotResiduals(res_modTDrealmJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
+#   plotResiduals(res_modTDrealmJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+#   plotResiduals(res_modTDrealmJtu, trends$duration[i], xlab = 'duration', main = '')
+# }
 ```
 
 
 1yr data
 ```{r}
-if(exists('res_modTDrealm1yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
-              duration == 1] # needed because model fit with trends[i,]
-  plot(res_modTrealm1yrJtu)
-  plotResiduals(res_modTrealm1yrJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
-  plotResiduals(res_modTrealm1yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
-}
+# if(exists('res_modTDrealm1yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
+#               duration == 1] # needed because model fit with trends[i,]
+#   plot(res_modTrealm1yrJtu)
+#   plotResiduals(res_modTrealm1yrJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
+#   plotResiduals(res_modTrealm1yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+# }
 ```
 
 10yr data
 ```{r}
-if(exists('res_modTDrealm10yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
-              duration == 10]
-  plot(res_modTrealm10yrJtu)
-  plotResiduals(res_modTrealm10yrJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
-  plotResiduals(res_modTrealm10yrJtu, form=as.factor(trends$REALM[i]), xlab = 'REALM', main = '') # Freshwater, Marine, Terrestrial
-}
+# if(exists('res_modTDrealm10yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
+#               duration == 10]
+#   plot(res_modTrealm10yrJtu)
+#   plotResiduals(res_modTrealm10yrJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
+#   plotResiduals(res_modTrealm10yrJtu, form=as.factor(trends$REALM[i]), xlab = 'REALM', main = '') # Freshwater, Marine, Terrestrial
+# }
 ```
 
 
@@ -566,6 +568,235 @@ if(exists('modMain1yrHorn')) summary(modMain1yrHorn)
 ##### 10 yr
 ```{r}
 if(exists('modMain10yrHorn'))summary(modMain10yrHorn)
+```
+
+### Plot the response
+#### Set up and write to file
+```{r, eval=FALSE}
+scaling <- fread('output/turnover_w_covariates_scaling.csv') # the scalings
+
+# set up the variables to plot
+# if variable is logged before scaling (see 'center and scale' above), then need to mark it here and express the limits on a log10 scale (even though log transforming is log)
+vars <- data.frame(vars = c('tempchange_abs', 'tempchange_abs', 'tempchange_abs', 'tempave_metab', 'seas', 'microclim', 'mass', 'npp', 
+                            'duration', 'nspp', 'human_bowler', 'human_bowler'),
+                   min =      c(0,    0,   0,   0,   0,   0,   -1,  1.9, 0.5, 0,   0,   0), 
+                   max =      c(4,    4,   4,   30,  16,  0.8, 4,   3.7, 2,   2.5, 1,   1),
+                   log =      c(F,    F,   F,   F,   F,   T,   T,   T,   T,   T,   T,   T),
+                   len =      c(100,  100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
+                   discrete = c(F,    F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F),
+                   plus =     c(0,    0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   1), # what to add before log-scaling
+                   REALM = c('Freshwater', 'Marine', 'Terrestrial', rep('Terrestrial', 7), 'Terrestrial', 'Marine'),
+                   REALM2 = c('TerrFresh', 'Marine', rep('TerrFresh', 9), 'Marine'),
+                   stringsAsFactors = FALSE)
+baseall <- trends[, .(type = 'all', 
+                      tempchange = -0.0001,
+                      tempchange_abs.sc = 0.0001,
+                      tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                      seas.sc = mean(seas.sc, na.rm=TRUE), 
+                      microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                      mass.sc = mean(mass.sc, na.rm=TRUE), 
+                      nspp.sc = mean(nspp.sc, na.rm=TRUE),
+                      nspp.sc = 60, 
+                      npp.sc = mean(npp.sc, na.rm=TRUE), 
+                      human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
+baseterr <- trends[REALM == 'Terrestrial', 
+                   .(type = 'Terrestrial', 
+                     tempchange = -0.0001,
+                     tempchange_abs.sc = 0.0001,
+                     tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                     seas.sc = mean(seas.sc, na.rm=TRUE), 
+                     microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                     mass.sc = mean(mass.sc, na.rm=TRUE), 
+                     nspp.sc = mean(nspp.sc, na.rm=TRUE),
+                     nspp.sc = 60, 
+                     npp.sc = mean(npp.sc, na.rm=TRUE), 
+                     human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
+basemar <- trends[REALM == 'Marine', 
+                  .(type = 'Marine',
+                    tempchange = -0.0001,
+                    tempchange_abs.sc = 0.0001,
+                    tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                    seas.sc = mean(seas.sc, na.rm=TRUE), 
+                    microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                    mass.sc = mean(mass.sc, na.rm=TRUE), 
+                    nspp.sc = mean(nspp.sc, na.rm=TRUE),
+                    nspp.sc = 60, 
+                    npp.sc = mean(npp.sc, na.rm=TRUE), 
+                    human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
+basetab <- rbind(baseall, baseterr, basemar)
+
+basetab[, ':='(duration.sc = 0, nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_504467')]
+
+# make the data frames for each interaction to plot                
+for(j in 1:nrow(vars)){
+    # set up the main effects
+    if(vars$log[j]){
+        thisdat <- data.frame(new = 10^seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
+                              var = vars$vars[j], stringsAsFactors = FALSE)
+    } 
+    if(!vars$log[j]){
+        thisdat <- data.frame(new = seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
+                              var = vars$vars[j], stringsAsFactors = FALSE)
+    }
+    names(thisdat) <- c(vars$vars[j], 'var')
+    
+    # scale the variable
+    cent <- scaling$center[scaling$var == paste0(vars$vars[j], '.sc')]
+    scl <- scaling$scale[scaling$var == paste0(vars$vars[j], '.sc')]
+    if(is.null(cent)) cent <- 0
+    if(!is.null(cent) & !is.null(scl)){
+        if(vars$log[j]) thisdat[[paste0(vars$var[j], '.sc')]] <- (log(thisdat[[vars$vars[j]]] + vars$plus[j]) - cent)/scl
+        if(!vars$log[j]) thisdat[[paste0(vars$var[j], '.sc')]] <- (thisdat[[vars$var[j]]] - cent)/scl
+    }
+    
+    # merge with the rest of the columns
+    # use realm-specific averages for human impacts
+    colnamestouse <- setdiff(colnames(basetab), paste0(vars$vars[j], '.sc'))
+    if(vars$vars[j] != 'human_bowler'){
+        thisdat <- cbind(thisdat, basetab[type == 'all', ..colnamestouse])
+    }
+    if(vars$vars[j] == 'human_bowler' & vars$REALM[j] == 'Terrestrial'){
+        thisdat <- cbind(thisdat, basetab[type == 'Terrestrial', ..colnamestouse])
+    }
+    if(vars$vars[j] == 'human_bowler' & vars$REALM[j] == 'Marine'){
+        thisdat <- cbind(thisdat, basetab[type == 'Marine', ..colnamestouse])
+    }
+    
+    # add realm
+    thisdat$REALM <- vars$REALM[j]
+    thisdat$REALM2 <- vars$REALM2[j]
+    
+    # merge with the previous iterations
+    if(j == 1) newdat <- thisdat
+    if(j > 1){
+        colstoadd <- setdiff(colnames(thisdat), colnames(newdat))
+        for(toadd in colstoadd){
+            newdat[[toadd]] <- NA
+        }
+        
+        colstoadd2 <- setdiff(colnames(newdat), colnames(thisdat))
+        for(toadd in colstoadd2){
+            thisdat[[toadd]] <- NA
+        }
+        
+        newdat <- rbind(newdat, thisdat)
+    } 
+}
+
+# character so that new levels can be added
+newdat$REALM <- as.character(newdat$REALM)
+newdat$REALM2 <- as.character(newdat$REALM2)
+
+# add extra rows so that all factor levels are represented (for predict.lme to work)
+newdat <- rbind(newdat[1:6, ], newdat)
+newdat$REALM[1:6] <- c('Marine', 'Marine', 'Freshwater', 'Freshwater', 'Terrestrial', 'Terrestrial')
+newdat$REALM2[1:6] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh', 'TerrFresh', 'TerrFresh')
+newdat$tempchange_abs.sc[1:6] <- rep(0.0001, 6)
+newdat$tempchange[1:6] <- rep(c(0.0001, -0.0001), 3)
+newdat$var[1:6] <- 'test'
+
+# write out
+write.csv(newdat, 'temp/newdata_main_only.csv', row.names = FALSE)
+
+```
+
+Now go run on the command line
+```
+nohup code/turnover_vs_temperature_GLMM_pred.R temp/modMainTdTSeMiNPNspMaHu1yrJtu.rds temp/newdata_main_only.csv temp/modMainTdTSeMiNPNspMaHu1yrJtu_preds.rds >logs/turnover_vs_temperature_GLMMmodMainTdTSeMiNPNspMaHu1yrJtu_pred.Rout &
+
+nohup code/turnover_vs_temperature_GLMM_pred.R temp/modMainTdTSeMiNPNspMaHu1yrHorn.rds temp/newdata_main_only.csv temp/modMainTdTSeMiNPNspMaHu1yrHorn_preds.rds >logs/turnover_vs_temperature_GLMMmodMainTdTSeMiNPNspMaHu1yrHorn_pred.Rout &
+```
+
+#### Load and plot Jtu 1yr
+```{r, fig.width = 7, fig.height=7}
+newdat <- readRDS(here('temp', 'modMainTdTSeMiNPNspMaHu1yrJtu_preds.rds'))
+newdat[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # set factor order
+newdat[, REALM2 := factor(REALM2, levels = c('TerrFresh', 'Marine'))] # set factor order
+
+p1 <- ggplot(newdat[var == 'tempchange_abs',], aes(tempchange_abs, pred, group = REALM, color = REALM, fill=REALM)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1, linetype = 'blank') +
+  geom_line() +
+  labs(y = 'Jaccard turnover') +
+  theme(legend.title = element_text(size = 6),legend.text = element_text(size = 6))
+p2 <- ggplot(newdat[var == 'tempave_metab',], aes(tempave_metab, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p3 <- ggplot(newdat[var == 'seas',], aes(seas, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p4 <- ggplot(newdat[var == 'microclim',], aes(microclim, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p5 <- ggplot(newdat[var == 'npp',], aes(npp, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p6 <- ggplot(newdat[var == 'nspp',], aes(nspp, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p7 <- ggplot(newdat[var == 'mass',], aes(mass, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  scale_x_log10() +
+  labs(y = 'Jaccard turnover')
+p8 <- ggplot(newdat[var == 'human_bowler',], aes(human_bowler, pred, group = REALM2, color = REALM2, fill = REALM2)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1, linetype = 'blank') +
+  geom_line() +
+  labs(y = 'Jaccard turnover', x = 'Human impact') +
+  theme(legend.title = element_text(size = 6),legend.text = element_text(size = 6))
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, ncol = 2)
+
+```
+
+#### Load and plot Horn 1yr
+```{r, fig.width = 7, fig.height=7}
+newdat <- readRDS(here('temp', 'modMainTdTSeMiNPNspMaHu1yrHorn_preds.rds'))
+newdat[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # set factor order
+newdat[, REALM2 := factor(REALM2, levels = c('TerrFresh', 'Marine'))] # set factor order
+
+p1 <- ggplot(newdat[var == 'tempchange_abs',], aes(tempchange_abs, pred, group = REALM, color = REALM, fill=REALM)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1, linetype = 'blank') +
+  geom_line() +
+  labs(y = 'Jaccard turnover') +
+  theme(legend.title = element_text(size = 6),legend.text = element_text(size = 6))
+p2 <- ggplot(newdat[var == 'tempave_metab',], aes(tempave_metab, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p3 <- ggplot(newdat[var == 'seas',], aes(seas, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p4 <- ggplot(newdat[var == 'microclim',], aes(microclim, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p5 <- ggplot(newdat[var == 'npp',], aes(npp, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p6 <- ggplot(newdat[var == 'nspp',], aes(nspp, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p7 <- ggplot(newdat[var == 'mass',], aes(mass, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  scale_x_log10() +
+  labs(y = 'Jaccard turnover')
+p8 <- ggplot(newdat[var == 'human_bowler',], aes(human_bowler, pred, group = REALM2, color = REALM2, fill = REALM2)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1, linetype = 'blank') +
+  geom_line() +
+  labs(y = 'Jaccard turnover', x = 'Human impact') +
+  theme(legend.title = element_text(size = 6),legend.text = element_text(size = 6))
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, ncol = 2)
+
 ```
 
 ## Full models w/ only main effects, averaged by time-series (rarefyID)
@@ -711,7 +942,8 @@ if(exists('modFullMaEnMiNPHu5yrHorn')) summary(modFullMaEnMiNPHu5yrHorn)
 ```
 
 
-### DHARMa simulate residuals
+### DHARMa model evaluation
+Need to re-run this with newly trimmed dataset (2021-04-05)
 #### Mass, endo, microclimate, NPP, humans
 ##### Simulate residuals
 ```{r dharma maenminphu}
@@ -756,80 +988,80 @@ if(FALSE) {
 ##### Plot residuals
 All data
 ```{r plot darma maenminphu}
-if(exists('res_MaEnMiNPHuJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
-  plot(res_MaEnMiNPHuJtu)
-  plotResiduals(res_MaEnMiNPHuJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, trends$duration.sc[i], xlab = 'duration.sc', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
-}
+# if(exists('res_MaEnMiNPHuJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+#   plot(res_MaEnMiNPHuJtu)
+#   plotResiduals(res_MaEnMiNPHuJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, trends$duration.sc[i], xlab = 'duration.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
+# }
 ```
 
 
 1yr data
 ```{r plot darma maenminphu1yr}
-if(exists('res_MaEnMiNPHu1yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 1]
-  plot(res_MaEnMiNPHu1yrJtu)
-  plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
-  plotResiduals(res_MaEnMiNPHu1yrJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu1yrJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu1yrJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu1yrJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu1yrJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
-}
+# if(exists('res_MaEnMiNPHu1yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 1]
+#   plot(res_MaEnMiNPHu1yrJtu)
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
+# }
 ```
 
 10yr data
 ```{r plot darma maenminphu10yr}
-if(exists('res_MaEnMiNPHu10yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 10]
-  plot(res_MaEnMiNPHu10yrJtu)
-  plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
-  plotResiduals(res_MaEnMiNPHu10yrJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu10yrJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu10yrJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu10yrJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu10yrJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
-}
+# if(exists('res_MaEnMiNPHu10yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 10]
+#   plot(res_MaEnMiNPHu10yrJtu)
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
+# }
 ```
 
 ##### Overdispersion
 ```{r}
-if(exists('res_MaEnMiNPHuJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
-  testDispersion(res_MaEnMiNPHuJtu)
-}
-
-if(exists('res_MaEnMiNPHu1yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 1]
-  testDispersion(res_MaEnMiNPHu1yrJtu)
-}
-
-if(exists('res_MaEnMiNPHu10yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 10]
-  testDispersion(res_MaEnMiNPHu10yrJtu)
-}
+# if(exists('res_MaEnMiNPHuJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+#   testDispersion(res_MaEnMiNPHuJtu)
+# }
+# 
+# if(exists('res_MaEnMiNPHu1yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 1]
+#   testDispersion(res_MaEnMiNPHu1yrJtu)
+# }
+# 
+# if(exists('res_MaEnMiNPHu10yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 10]
+#   testDispersion(res_MaEnMiNPHu10yrJtu)
+# }
 ```
 
 ##### Near-zero-inflation
@@ -837,50 +1069,50 @@ Zero values have been transformed to slightly >0, so can't test zero-inflation d
 ```{r}
 countNearZero <- function(x) sum(x < 0.0001)
 
-if(exists('res_MaEnMiNPHuJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
-  testGeneric(res_MaEnMiNPHuJtu, summary = countNearZero, alternative = 'greater')
-}
-
-if(exists('res_MaEnMiNPHu1yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 1]
-  testGeneric(res_MaEnMiNPHu1yrJtu, summary = countNearZero, alternative = 'greater')
-}
-
-if(exists('res_MaEnMiNPHu10yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 10]
-  testGeneric(res_MaEnMiNPHu10yrJtu, summary = countNearZero, alternative = 'greater')
-}
+# if(exists('res_MaEnMiNPHuJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+#   testGeneric(res_MaEnMiNPHuJtu, summary = countNearZero, alternative = 'greater')
+# }
+# 
+# if(exists('res_MaEnMiNPHu1yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 1]
+#   testGeneric(res_MaEnMiNPHu1yrJtu, summary = countNearZero, alternative = 'greater')
+# }
+# 
+# if(exists('res_MaEnMiNPHu10yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 10]
+#   testGeneric(res_MaEnMiNPHu10yrJtu, summary = countNearZero, alternative = 'greater')
+# }
 ```
 
 ##### Near-one-inflation
 ```{r}
 countNearOne <- function(x) sum(x > 0.9999)
 
-if(exists('res_MaEnMiNPHuJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
-  testGeneric(res_MaEnMiNPHuJtu, summary = countNearOne, alternative = 'greater')
-}
-
-if(exists('res_MaEnMiNPHu1yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 1]
-  testGeneric(res_MaEnMiNPHu1yrJtu, summary = countNearOne, alternative = 'greater')
-}
-
-if(exists('res_MaEnMiNPHu10yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 10]
-  testGeneric(res_MaEnMiNPHu10yrJtu, summary = countNearOne, alternative = 'greater')
-}
+# if(exists('res_MaEnMiNPHuJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+#   testGeneric(res_MaEnMiNPHuJtu, summary = countNearOne, alternative = 'greater')
+# }
+# 
+# if(exists('res_MaEnMiNPHu1yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 1]
+#   testGeneric(res_MaEnMiNPHu1yrJtu, summary = countNearOne, alternative = 'greater')
+# }
+# 
+# if(exists('res_MaEnMiNPHu10yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 10]
+#   testGeneric(res_MaEnMiNPHu10yrJtu, summary = countNearOne, alternative = 'greater')
+# }
 ```
 
 

@@ -62,19 +62,19 @@ trends <- fread(here('output', 'turnover_w_covariates.csv.gz'))
 cat('Overall # dissimilarities: ', nrow(trends), '\n')
 ```
 
-    ## Overall # dissimilarities:  1288067
+    ## Overall # dissimilarities:  1059663
 
 ``` r
 cat('# studies: ', trends[, length(unique(STUDY_ID))], '\n')
 ```
 
-    ## # studies:  330
+    ## # studies:  272
 
 ``` r
 cat('# timeseries: ', trends[, length(unique(rarefyID))], '\n')
 ```
 
-    ## # timeseries:  52623
+    ## # timeseries:  36601
 
 ``` r
 trends[!duplicated(rarefyID), table(REALM)]
@@ -82,7 +82,7 @@ trends[!duplicated(rarefyID), table(REALM)]
 
     ## REALM
     ##  Freshwater      Marine Terrestrial 
-    ##        1054       48195        3374
+    ##         547       32940        3114
 
 ``` r
 trends[!duplicated(rarefyID), table(taxa_mod)]
@@ -90,7 +90,7 @@ trends[!duplicated(rarefyID), table(taxa_mod)]
 
     ## taxa_mod
     ##                         All                  Amphibians                     Benthos                       Birds                        Fish               Invertebrates                     Mammals Marine invertebrates/plants                       Plant                    Reptiles 
-    ##                        1715                         381                        4672                       13617                       28276                        2906                         543                         206                         303                           4
+    ##                         605                         313                        4589                        7026                       22071                        1401                         145                         205                         242                           4
 
 ``` r
 trends[!duplicated(rarefyID), table(taxa_mod, REALM)]
@@ -98,15 +98,15 @@ trends[!duplicated(rarefyID), table(taxa_mod, REALM)]
 
     ##                              REALM
     ## taxa_mod                      Freshwater Marine Terrestrial
-    ##   All                                  0   1712           3
-    ##   Amphibians                           2      0         379
-    ##   Benthos                              0   4672           0
-    ##   Birds                                0  10945        2672
-    ##   Fish                              1037  27239           0
-    ##   Invertebrates                       13   2813          80
-    ##   Mammals                              0    496          47
-    ##   Marine invertebrates/plants          0    206           0
-    ##   Plant                                1    112         190
+    ##   All                                  0    602           3
+    ##   Amphibians                           2      0         311
+    ##   Benthos                              0   4589           0
+    ##   Birds                                0   4508        2518
+    ##   Fish                               535  21536           0
+    ##   Invertebrates                        9   1315          77
+    ##   Mammals                              0    106          39
+    ##   Marine invertebrates/plants          0    205           0
+    ##   Plant                                0     79         163
     ##   Reptiles                             1      0           3
 
 ### With all covariates
@@ -119,26 +119,26 @@ apply(trends[, .(Jtu.sc, REALM, tempave_metab.sc, seas.sc, microclim.sc, tempcha
 ```
 
     ##           Jtu.sc            REALM tempave_metab.sc          seas.sc     microclim.sc    tempchange.sc          mass.sc         speed.sc  consumerfrac.sc endothermfrac.sc          nspp.sc  thermal_bias.sc           npp.sc           veg.sc  human_bowler.sc 
-    ##          1288067          1288067          1288067          1288067          1274691          1288067          1285632          1285874          1288067          1288067          1277351          1178645          1284409          1276521          1288067
+    ##          1059663          1059663          1059663          1059663          1057424          1059663          1058130          1058448          1059663          1059663          1059663           976531          1056786          1049160          1059663
 
 ``` r
 i <- trends[, complete.cases(Jtu.sc, tempave_metab.sc, seas.sc, microclim.sc, tempchange.sc, mass.sc, speed.sc, consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
 cat('Overall # dissimilarities: ', sum(i), '\n')
 ```
 
-    ## Overall # dissimilarities:  1160127
+    ## Overall # dissimilarities:  966101
 
 ``` r
 cat('# studies: ', trends[i, length(unique(STUDY_ID))], '\n')
 ```
 
-    ## # studies:  231
+    ## # studies:  202
 
 ``` r
 cat('# timeseries: ', trends[i, length(unique(rarefyID))], '\n')
 ```
 
-    ## # timeseries:  48863
+    ## # timeseries:  35279
 
 ``` r
 trends[i & !duplicated(rarefyID), table(REALM)]
@@ -146,7 +146,7 @@ trends[i & !duplicated(rarefyID), table(REALM)]
 
     ## REALM
     ##  Freshwater      Marine Terrestrial 
-    ##         996       45083        2784
+    ##         523       32098        2658
 
 ``` r
 trends[i & !duplicated(rarefyID), table(taxa_mod)]
@@ -154,7 +154,7 @@ trends[i & !duplicated(rarefyID), table(taxa_mod)]
 
     ## taxa_mod
     ##                         All                  Amphibians                     Benthos                       Birds                        Fish               Invertebrates                     Mammals Marine invertebrates/plants                       Plant                    Reptiles 
-    ##                        1683                          12                        4643                       11888                       27152                        2569                         533                         206                         175                           2
+    ##                         579                          12                        4564                        6698                       21588                        1343                         140                         205                         148                           2
 
 ``` r
 trends[i & !duplicated(rarefyID), table(taxa_mod, REALM)]
@@ -162,15 +162,15 @@ trends[i & !duplicated(rarefyID), table(taxa_mod, REALM)]
 
     ##                              REALM
     ## taxa_mod                      Freshwater Marine Terrestrial
-    ##   All                                  0   1681           2
+    ##   All                                  0    577           2
     ##   Amphibians                           2      0          10
-    ##   Benthos                              0   4643           0
-    ##   Birds                                0   9338        2550
-    ##   Fish                               984  26168           0
-    ##   Invertebrates                        9   2494          66
-    ##   Mammals                              0    495          38
-    ##   Marine invertebrates/plants          0    206           0
-    ##   Plant                                1     58         116
+    ##   Benthos                              0   4564           0
+    ##   Birds                                0   4264        2434
+    ##   Fish                               515  21073           0
+    ##   Invertebrates                        6   1274          63
+    ##   Mammals                              0    106          34
+    ##   Marine invertebrates/plants          0    205           0
+    ##   Plant                                0     35         113
     ##   Reptiles                             0      0           2
 
 # Models
@@ -300,7 +300,9 @@ lme4:::dotplot.ranef.mer(ranef(modRFdurslope2levdisprealm)$cond)
 
 ![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-2-2.png)<!-- -->
 
-### DHARMa simulate residuals
+### DHARMa model evaluation
+
+Need to re-run this with newly trimmed dataset (2021-04-05)
 
 ``` r
 ## run the top part by hand if needed. takes ~3 hrs
@@ -322,23 +324,21 @@ There are many outliers and signs of underdispersion, but this is
 probably ok.
 
 ``` r
-if(exists('res_RFdurslope2levdisprealm')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
-  plot(res_RFdurslope2levdisprealm)
-  plotResiduals(res_RFdurslope2levdisprealm, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, form=trends$REALM[i], xlab = 'REALM', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$duration.sc[i], xlab = 'duration.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$mass.sc[i], xlab = 'mass.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$npp.sc[i], xlab = 'npp.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
-}
+# if(exists('res_RFdurslope2levdisprealm')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+#   plot(res_RFdurslope2levdisprealm)
+#   plotResiduals(res_RFdurslope2levdisprealm, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, form=trends$REALM[i], xlab = 'REALM', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, trends$duration.sc[i], xlab = 'duration.sc', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, trends$mass.sc[i], xlab = 'mass.sc', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, trends$npp.sc[i], xlab = 'npp.sc', main = '')
+#   plotResiduals(res_RFdurslope2levdisprealm, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
+# }
 ```
-
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-4-3.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-4-4.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-4-5.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-4-6.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-4-7.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-4-8.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-4-9.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-4-10.png)<!-- -->
 
 #### Overdispersion
 
@@ -984,9 +984,10 @@ if(exists('modTrealm10yrHorn')) summary(modTrealm10yrHorn)
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-### DHARMa simulate residuals
+### DHARMa model evaluation
 
-#### Simulate residuals
+Need to re-run this with newly trimmed dataset (2021-04-05) \#\#\#\#
+Simulate residuals
 
 ``` r
 if(FALSE) {
@@ -1022,37 +1023,37 @@ if(FALSE) {
 All data
 
 ``` r
-if(exists('res_modTDrealmJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, duration.sc, nspp.sc)] # needed because model fit with trends[i,]
-  plot(res_modTDrealmJtu)
-  plotResiduals(res_modTDrealmJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
-  plotResiduals(res_modTDrealmJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
-  plotResiduals(res_modTDrealmJtu, trends$duration[i], xlab = 'duration', main = '')
-}
+# if(exists('res_modTDrealmJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, duration.sc, nspp.sc)] # needed because model fit with trends[i,]
+#   plot(res_modTDrealmJtu)
+#   plotResiduals(res_modTDrealmJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
+#   plotResiduals(res_modTDrealmJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+#   plotResiduals(res_modTDrealmJtu, trends$duration[i], xlab = 'duration', main = '')
+# }
 ```
 
 1yr data
 
 ``` r
-if(exists('res_modTDrealm1yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
-              duration == 1] # needed because model fit with trends[i,]
-  plot(res_modTrealm1yrJtu)
-  plotResiduals(res_modTrealm1yrJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
-  plotResiduals(res_modTrealm1yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
-}
+# if(exists('res_modTDrealm1yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
+#               duration == 1] # needed because model fit with trends[i,]
+#   plot(res_modTrealm1yrJtu)
+#   plotResiduals(res_modTrealm1yrJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
+#   plotResiduals(res_modTrealm1yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+# }
 ```
 
 10yr data
 
 ``` r
-if(exists('res_modTDrealm10yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
-              duration == 10]
-  plot(res_modTrealm10yrJtu)
-  plotResiduals(res_modTrealm10yrJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
-  plotResiduals(res_modTrealm10yrJtu, form=as.factor(trends$REALM[i]), xlab = 'REALM', main = '') # Freshwater, Marine, Terrestrial
-}
+# if(exists('res_modTDrealm10yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
+#               duration == 10]
+#   plot(res_modTrealm10yrJtu)
+#   plotResiduals(res_modTrealm10yrJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
+#   plotResiduals(res_modTrealm10yrJtu, form=as.factor(trends$REALM[i]), xlab = 'REALM', main = '') # Freshwater, Marine, Terrestrial
+# }
 ```
 
 ### Plot the temp coefficients from TD realm models
@@ -1115,18 +1116,18 @@ if(exists('modTDrealmJtu') & exists('modTDrealmJbeta') & exists('modTDrealmHorn'
 
 ``` r
 # all years
-if(file.exists('temp/modMainMaEnMiNPHuJtu.rds')) modMainMaEnMiNPHuJtu <- readRDS('temp/modMainMaEnMiNPHuJtu.rds') # mass, endoecto, microclimate, NPP, humans
-if(file.exists('temp/modMainMaEnMiNPHu1yrJtu.rds')) modMainMaEnMiNPHu1yrJtu <- readRDS('temp/modMainMaEnMiNPHu1yrJtu.rds')
-if(file.exists('temp/modMainMaEnMiNPHu5yrJtu.rds')) modMainMaEnMiNPHu5yrJtu <- readRDS('temp/modMainMaEnMiNPHu5yrJtu.rds')
-if(file.exists('temp/modMainMaEnMiNPHu10yrJtu.rds')) modMainMaEnMiNPHu10yrJtu <- readRDS('temp/modMainMaEnMiNPHu10yrJtu.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHuJtu.rds')) modMainJtu <- readRDS('temp/modMainTdTSeMiNPNspMaHuJtu.rds') # mass, endoecto, microclimate, NPP, humans
+if(file.exists('temp/modMainTdTSeMiNPNspMaHu1yrJtu.rds')) modMain1yrJtu <- readRDS('temp/modMainTdTSeMiNPNspMaHu1yrJtu.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHu5yrJtu.rds')) modMain5yrJtu <- readRDS('temp/modMainTdTSeMiNPNspMaHu5yrJtu.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHu10yrJtu.rds')) modMain10yrJtu <- readRDS('temp/modMainTdTSeMiNPNspMaHu10yrJtu.rds')
 
-if(file.exists('temp/modMainMaEnMiNPHuJbeta.rds')) modMainMaEnMiNPHuJbeta <- readRDS('temp/modMainMaEnMiNPHuJbeta.rds')
-if(file.exists('temp/modMainMaEnMiNPHu1yrJbeta.rds')) modMainMaEnMiNPHu1yrJbeta <- readRDS('temp/modMainMaEnMiNPHu1yrJbeta.rds')
-if(file.exists('temp/modMainMaEnMiNPHu5yrJbeta.rds')) modMainMaEnMiNPHu5yrJbeta <- readRDS('temp/modMainMaEnMiNPHu5yrJbeta.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHuJbeta.rds')) modMainJbeta <- readRDS('temp/modMainTdTSeMiNPNspMaHuJbeta.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHu1yrJbeta.rds')) modMain1yrJbeta <- readRDS('temp/modMainTdTSeMiNPNspMaHu1yrJbeta.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHu10yrJbeta.rds')) modMain10yrJbeta <- readRDS('temp/modMainTdTSeMiNPNspMaHu10yrJbeta.rds')
 
-if(file.exists('temp/modMainMaEnMiNPHuHorn.rds')) modMainMaEnMiNPHuHorn <- readRDS('temp/modMainMaEnMiNPHuHorn.rds')
-if(file.exists('temp/modMainMaEnMiNPHu1yrHorn.rds')) modMainMaEnMiNPHu1yrHorn <- readRDS('temp/modMainMaEnMiNPHu1yrHorn.rds')
-if(file.exists('temp/modMainMaEnMiNPHu10yrHorn.rds')) modMainMaEnMiNPHu10yrHorn <- readRDS('temp/modMainMaEnMiNPHu10yrHorn.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHuHorn.rds')) modMainHorn <- readRDS('temp/modMainTdTSeMiNPNspMaHuHorn.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHu1yrHorn.rds')) modMain1yrHorn <- readRDS('temp/modMainTdTSeMiNPNspMaHu1yrHorn.rds')
+if(file.exists('temp/modMainTdTSeMiNPNspMaHu10yrHorn.rds')) modMain10yrHorn <- readRDS('temp/modMainTdTSeMiNPNspMaHu10yrHorn.rds')
 ```
 
 ### Summary
@@ -1136,144 +1137,147 @@ if(file.exists('temp/modMainMaEnMiNPHu10yrHorn.rds')) modMainMaEnMiNPHu10yrHorn 
 ##### All
 
 ``` r
-if(exists('modMainMaEnMiNPHuJtu')) summary(modMainMaEnMiNPHuJtu)
+if(exists('modMainJtu')) summary(modMainJtu)
 ```
 
     ##  Family: beta  ( logit )
-    ## Formula:          Jtu.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + duration.sc +      mass.sc + endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (duration.sc | STUDY_ID/rarefyID)
+    ## Formula:          Jtu.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + duration.sc +      seas.sc + microclim.sc + npp.sc + nspp.sc + mass.sc + human_bowler.sc:REALM2 +      (duration.sc | STUDY_ID/rarefyID)
     ## Dispersion:              ~nspp.sc + REALM
     ## Data: trends[i, ]
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ## -8377092 -8376827  4188568 -8377136  1258794 
+    ## -5710408 -5710136  2855227 -5710454  1053283 
     ## 
     ## Random effects:
     ## 
     ## Conditional model:
     ##  Groups            Name        Variance Std.Dev. Corr  
-    ##  rarefyID:STUDY_ID (Intercept) 0.23152  0.4812         
-    ##                    duration.sc 0.05531  0.2352   0.32  
-    ##  STUDY_ID          (Intercept) 2.77279  1.6652         
-    ##                    duration.sc 0.10561  0.3250   -0.06 
-    ## Number of obs: 1258816, groups:  rarefyID:STUDY_ID, 50637; STUDY_ID, 285
+    ##  rarefyID:STUDY_ID (Intercept) 0.25175  0.5017         
+    ##                    duration.sc 0.06661  0.2581   0.34  
+    ##  STUDY_ID          (Intercept) 2.70753  1.6455         
+    ##                    duration.sc 0.09670  0.3110   -0.06 
+    ## Number of obs: 1053306, groups:  rarefyID:STUDY_ID, 36346; STUDY_ID, 252
     ## 
     ## Conditional model:
     ##                                   Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)                     -0.2239350  0.3868561  -0.579  0.56268    
-    ## tempchange_abs.sc                0.0003509  0.0009518   0.369  0.71236    
-    ## REALMMarine                      0.2764678  0.4155660   0.665  0.50587    
-    ## REALMTerrestrial                -1.1476358  0.4158267  -2.760  0.00578 ** 
-    ## tempave_metab.sc                 0.1587361  0.0137520  11.543  < 2e-16 ***
-    ## duration.sc                      0.1436783  0.0261029   5.504 3.71e-08 ***
-    ## mass.sc                         -0.0064644  0.0069402  -0.931  0.35162    
-    ## endothermfrac.sc                 0.0676433  0.0530119   1.276  0.20195    
-    ## microclim.sc                     0.0281412  0.0046478   6.055 1.41e-09 ***
-    ## npp.sc                           0.0447176  0.0056758   7.879 3.31e-15 ***
-    ## human_bowler.sc:REALM2Marine     0.0080688  0.0050905   1.585  0.11295    
-    ## human_bowler.sc:REALM2TerrFresh -0.1023482  0.0103614  -9.878  < 2e-16 ***
+    ## (Intercept)                     -0.5921138  0.3992297  -1.483  0.13804    
+    ## tempchange_abs.sc               -0.0002628  0.0010030  -0.262  0.79330    
+    ## REALMMarine                      0.6118468  0.4333649   1.412  0.15799    
+    ## REALMTerrestrial                -1.0325896  0.4283330  -2.411  0.01592 *  
+    ## tempave_metab.sc                 0.0869444  0.0161045   5.399 6.71e-08 ***
+    ## duration.sc                      0.1677557  0.0273988   6.123 9.20e-10 ***
+    ## seas.sc                          0.0597108  0.0115824   5.155 2.53e-07 ***
+    ## microclim.sc                     0.0144432  0.0054468   2.652  0.00801 ** 
+    ## npp.sc                           0.0009645  0.0066959   0.144  0.88547    
+    ## nspp.sc                          0.2292026  0.0080777  28.375  < 2e-16 ***
+    ## mass.sc                         -0.0678494  0.0093111  -7.287 3.17e-13 ***
+    ## human_bowler.sc:REALM2Marine    -0.0011678  0.0056803  -0.206  0.83711    
+    ## human_bowler.sc:REALM2TerrFresh -0.0944843  0.0110598  -8.543  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Dispersion model:
     ##                   Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)      -0.397335   0.011263   -35.3   <2e-16 ***
-    ## nspp.sc           0.512811   0.001147   447.3   <2e-16 ***
-    ## REALMMarine      -0.166849   0.011318   -14.7   <2e-16 ***
-    ## REALMTerrestrial  2.153632   0.011660   184.7   <2e-16 ***
+    ## (Intercept)      -0.103143   0.014804   -6.97 3.23e-12 ***
+    ## nspp.sc           0.341040   0.001299  262.63  < 2e-16 ***
+    ## REALMMarine      -0.347762   0.014858  -23.41  < 2e-16 ***
+    ## REALMTerrestrial  2.100573   0.015107  139.05  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ##### 1 yr
 
 ``` r
-if(exists('modMainMaEnMiNPHu1yrJtu')) summary(modMainMaEnMiNPHu1yrJtu)
+if(exists('modMain1yrJtu')) summary(modMain1yrJtu)
 ```
 
     ##  Family: beta  ( logit )
-    ## Formula:          Jtu.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + mass.sc +      endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
+    ## Formula:          Jtu.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + seas.sc +      microclim.sc + npp.sc + nspp.sc + mass.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
     ## Dispersion:              ~nspp.sc + REALM
     ## Data: trends[i, ]
     ## 
     ##       AIC       BIC    logLik  deviance  df.resid 
-    ## -930370.6 -930205.3  465202.3 -930404.6    123317 
+    ## -606173.8 -606002.7  303104.9 -606209.8     98924 
     ## 
     ## Random effects:
     ## 
     ## Conditional model:
     ##  Groups            Name        Variance Std.Dev.
-    ##  rarefyID:STUDY_ID (Intercept) 0.1639   0.4048  
-    ##  STUDY_ID          (Intercept) 2.2262   1.4920  
-    ## Number of obs: 123334, groups:  rarefyID:STUDY_ID, 29530; STUDY_ID, 229
+    ##  rarefyID:STUDY_ID (Intercept) 0.1895   0.4353  
+    ##  STUDY_ID          (Intercept) 2.0194   1.4211  
+    ## Number of obs: 98942, groups:  rarefyID:STUDY_ID, 22042; STUDY_ID, 201
     ## 
     ## Conditional model:
     ##                                  Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)                     -0.636541   0.372894  -1.707  0.08782 .  
-    ## tempchange_abs.sc               -0.006871   0.004326  -1.588  0.11219    
-    ## REALMMarine                      0.451603   0.396766   1.138  0.25503    
-    ## REALMTerrestrial                -0.458325   0.411377  -1.114  0.26523    
-    ## tempave_metab.sc                 0.156484   0.023779   6.581 4.68e-11 ***
-    ## mass.sc                         -0.027595   0.011612  -2.376  0.01748 *  
-    ## endothermfrac.sc                 0.004161   0.074552   0.056  0.95549    
-    ## microclim.sc                     0.002586   0.007010   0.369  0.71221    
-    ## npp.sc                           0.025571   0.009196   2.781  0.00542 ** 
-    ## human_bowler.sc:REALM2Marine     0.008161   0.007926   1.030  0.30316    
-    ## human_bowler.sc:REALM2TerrFresh -0.100907   0.012681  -7.957 1.76e-15 ***
+    ## (Intercept)                     -0.967836   0.366653  -2.640 0.008299 ** 
+    ## tempchange_abs.sc               -0.007923   0.004706  -1.684 0.092268 .  
+    ## REALMMarine                      0.742344   0.395814   1.875 0.060726 .  
+    ## REALMTerrestrial                -0.482500   0.399607  -1.207 0.227264    
+    ## tempave_metab.sc                 0.103392   0.027349   3.780 0.000157 ***
+    ## seas.sc                          0.061752   0.016467   3.750 0.000177 ***
+    ## microclim.sc                    -0.010486   0.008038  -1.305 0.192030    
+    ## npp.sc                          -0.003530   0.010269  -0.344 0.731014    
+    ## nspp.sc                          0.239030   0.012972  18.426  < 2e-16 ***
+    ## mass.sc                         -0.064993   0.014828  -4.383 1.17e-05 ***
+    ## human_bowler.sc:REALM2Marine     0.002040   0.008647   0.236 0.813528    
+    ## human_bowler.sc:REALM2TerrFresh -0.104363   0.013383  -7.798 6.28e-15 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Dispersion model:
     ##                   Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)      -0.534394   0.035784  -14.93   <2e-16 ***
-    ## nspp.sc           0.389733   0.003389  115.01   <2e-16 ***
-    ## REALMMarine      -0.068100   0.035896   -1.90   0.0578 .  
-    ## REALMTerrestrial  1.884983   0.037237   50.62   <2e-16 ***
+    ## (Intercept)      -0.243815   0.050038   -4.87 1.10e-06 ***
+    ## nspp.sc           0.203027   0.003837   52.92  < 2e-16 ***
+    ## REALMMarine      -0.238092   0.050177   -4.75 2.08e-06 ***
+    ## REALMTerrestrial  1.826731   0.051067   35.77  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ##### 10 yr
 
 ``` r
-if(exists('modMainMaEnMiNPHu10yrJtu'))  summary(modMainMaEnMiNPHu10yrJtu)
+if(exists('modMain10yrJtu'))  summary(modMain10yrJtu)
 ```
 
     ##  Family: beta  ( logit )
-    ## Formula:          Jtu.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + mass.sc +      endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
+    ## Formula:          Jtu.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + seas.sc +      microclim.sc + npp.sc + nspp.sc + mass.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
     ## Dispersion:              ~nspp.sc + REALM
     ## Data: trends[i, ]
     ## 
     ##       AIC       BIC    logLik  deviance  df.resid 
-    ## -319740.9 -319591.5  159887.5 -319774.9     48621 
+    ## -211558.2 -211403.1  105797.1 -211594.2     40647 
     ## 
     ## Random effects:
     ## 
     ## Conditional model:
     ##  Groups            Name        Variance Std.Dev.
-    ##  rarefyID:STUDY_ID (Intercept) 0.2812   0.5303  
-    ##  STUDY_ID          (Intercept) 3.2136   1.7926  
-    ## Number of obs: 48638, groups:  rarefyID:STUDY_ID, 16776; STUDY_ID, 147
+    ##  rarefyID:STUDY_ID (Intercept) 0.3169   0.5629  
+    ##  STUDY_ID          (Intercept) 2.9215   1.7093  
+    ## Number of obs: 40665, groups:  rarefyID:STUDY_ID, 12892; STUDY_ID, 130
     ## 
     ## Conditional model:
     ##                                  Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)                     -0.499774   0.501951  -0.996  0.31941    
-    ## tempchange_abs.sc               -0.009806   0.004049  -2.422  0.01545 *  
-    ## REALMMarine                      0.423065   0.547759   0.772  0.43990    
-    ## REALMTerrestrial                -0.376472   0.563216  -0.668  0.50386    
-    ## tempave_metab.sc                 0.203599   0.039420   5.165 2.41e-07 ***
-    ## mass.sc                         -0.019200   0.021130  -0.909  0.36353    
-    ## endothermfrac.sc                -0.144023   0.125426  -1.148  0.25086    
-    ## microclim.sc                    -0.007176   0.012008  -0.598  0.55012    
-    ## npp.sc                           0.046751   0.015380   3.040  0.00237 ** 
-    ## human_bowler.sc:REALM2Marine    -0.032489   0.014096  -2.305  0.02117 *  
-    ## human_bowler.sc:REALM2TerrFresh -0.114963   0.023123  -4.972 6.64e-07 ***
+    ## (Intercept)                     -1.024651   0.500781  -2.046 0.040746 *  
+    ## tempchange_abs.sc               -0.010740   0.004236  -2.536 0.011224 *  
+    ## REALMMarine                      0.929647   0.553987   1.678 0.093327 .  
+    ## REALMTerrestrial                -0.191029   0.549879  -0.347 0.728289    
+    ## tempave_metab.sc                 0.101702   0.044042   2.309 0.020932 *  
+    ## seas.sc                          0.063007   0.026115   2.413 0.015834 *  
+    ## microclim.sc                    -0.017599   0.013452  -1.308 0.190771    
+    ## npp.sc                          -0.035232   0.016912  -2.083 0.037232 *  
+    ## nspp.sc                          0.230507   0.023982   9.612  < 2e-16 ***
+    ## mass.sc                         -0.094276   0.029036  -3.247 0.001167 ** 
+    ## human_bowler.sc:REALM2Marine    -0.043578   0.015372  -2.835 0.004584 ** 
+    ## human_bowler.sc:REALM2TerrFresh -0.084507   0.024746  -3.415 0.000638 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Dispersion model:
-    ##                   Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)      -0.303259   0.051995   -5.83 5.46e-09 ***
-    ## nspp.sc           0.589724   0.006348   92.89  < 2e-16 ***
-    ## REALMMarine      -0.167490   0.052207   -3.21  0.00134 ** 
-    ## REALMTerrestrial  2.316368   0.054328   42.64  < 2e-16 ***
+    ##                  Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)       0.07039    0.07064    1.00    0.319    
+    ## nspp.sc           0.41133    0.00707   58.18  < 2e-16 ***
+    ## REALMMarine      -0.39221    0.07081   -5.54 3.04e-08 ***
+    ## REALMTerrestrial  2.21113    0.07227   30.60  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1282,146 +1286,382 @@ if(exists('modMainMaEnMiNPHu10yrJtu'))  summary(modMainMaEnMiNPHu10yrJtu)
 ##### All
 
 ``` r
-if(exists('modMainMaEnMiNPHuHorn')) summary(modMainMaEnMiNPHuHorn)
+if(exists('modMainHorn')) summary(modMainHorn)
 ```
 
     ##  Family: beta  ( logit )
-    ## Formula:          Horn.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + duration.sc +      mass.sc + endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (duration.sc | STUDY_ID/rarefyID)
+    ## Formula:          Horn.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + duration.sc +      seas.sc + microclim.sc + npp.sc + nspp.sc + mass.sc + human_bowler.sc:REALM2 +      (duration.sc | STUDY_ID/rarefyID)
     ## Dispersion:               ~nspp.sc + REALM
     ## Data: trends[i, ]
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ## -5457714 -5457450  2728879 -5457758  1230065 
+    ## -4015739 -4015466  2007893 -4015785  1053283 
     ## 
     ## Random effects:
     ## 
     ## Conditional model:
     ##  Groups            Name        Variance Std.Dev. Corr  
-    ##  rarefyID:STUDY_ID (Intercept) 0.29651  0.5445         
-    ##                    duration.sc 0.03393  0.1842   0.10  
-    ##  STUDY_ID          (Intercept) 3.63745  1.9072         
-    ##                    duration.sc 0.10107  0.3179   -0.09 
-    ## Number of obs: 1230087, groups:  rarefyID:STUDY_ID, 49635; STUDY_ID, 265
+    ##  rarefyID:STUDY_ID (Intercept) 0.34790  0.5898         
+    ##                    duration.sc 0.03789  0.1947   0.10  
+    ##  STUDY_ID          (Intercept) 3.39111  1.8415         
+    ##                    duration.sc 0.11072  0.3327   -0.05 
+    ## Number of obs: 1053306, groups:  rarefyID:STUDY_ID, 36346; STUDY_ID, 252
     ## 
     ## Conditional model:
     ##                                   Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)                      0.5769262  0.4380344   1.317 0.187812    
-    ## tempchange_abs.sc                0.0079510  0.0008994   8.841  < 2e-16 ***
-    ## REALMMarine                      0.1989103  0.4761401   0.418 0.676126    
-    ## REALMTerrestrial                -1.3241403  0.4718070  -2.807 0.005008 ** 
-    ## tempave_metab.sc                 0.3874056  0.0146629  26.421  < 2e-16 ***
-    ## duration.sc                      0.2923217  0.0256957  11.376  < 2e-16 ***
-    ## mass.sc                          0.0052436  0.0073551   0.713 0.475896    
-    ## endothermfrac.sc                -0.0226685  0.0566395  -0.400 0.688991    
-    ## microclim.sc                     0.0786250  0.0050942  15.434  < 2e-16 ***
-    ## npp.sc                           0.1233544  0.0061632  20.015  < 2e-16 ***
-    ## human_bowler.sc:REALM2Marine     0.0464631  0.0055926   8.308  < 2e-16 ***
-    ## human_bowler.sc:REALM2TerrFresh -0.0405747  0.0113682  -3.569 0.000358 ***
+    ## (Intercept)                      0.1873784  0.4452581   0.421  0.67388    
+    ## tempchange_abs.sc                0.0073160  0.0009501   7.700 1.36e-14 ***
+    ## REALMMarine                      0.6400358  0.4840806   1.322  0.18611    
+    ## REALMTerrestrial                -1.3583357  0.4772959  -2.846  0.00443 ** 
+    ## tempave_metab.sc                 0.3246218  0.0174451  18.608  < 2e-16 ***
+    ## duration.sc                      0.3123821  0.0275863  11.324  < 2e-16 ***
+    ## seas.sc                          0.1658451  0.0128619  12.894  < 2e-16 ***
+    ## microclim.sc                     0.0966560  0.0060918  15.867  < 2e-16 ***
+    ## npp.sc                           0.0634134  0.0073724   8.601  < 2e-16 ***
+    ## nspp.sc                          0.1871572  0.0088422  21.166  < 2e-16 ***
+    ## mass.sc                         -0.0657430  0.0099925  -6.579 4.73e-11 ***
+    ## human_bowler.sc:REALM2Marine     0.0441577  0.0063303   6.976 3.05e-12 ***
+    ## human_bowler.sc:REALM2TerrFresh -0.0225688  0.0126010  -1.791  0.07329 .  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Dispersion model:
     ##                   Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)       0.419311   0.011730    35.7  < 2e-16 ***
-    ## nspp.sc           0.452435   0.001171   386.3  < 2e-16 ***
-    ## REALMMarine      -0.049090   0.011778    -4.2 3.07e-05 ***
-    ## REALMTerrestrial  1.728725   0.012134   142.5  < 2e-16 ***
+    ## (Intercept)       0.728148   0.014837   49.08   <2e-16 ***
+    ## nspp.sc           0.214304   0.001326  161.65   <2e-16 ***
+    ## REALMMarine      -0.208286   0.014892  -13.99   <2e-16 ***
+    ## REALMTerrestrial  1.675597   0.015150  110.60   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ##### 1 yr
 
 ``` r
-if(exists('modMainMaEnMiNPHu1yrHorn')) summary(modMainMaEnMiNPHu1yrHorn)
+if(exists('modMain1yrHorn')) summary(modMain1yrHorn)
 ```
 
     ##  Family: beta  ( logit )
-    ## Formula:          Horn.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + mass.sc +      endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
+    ## Formula:          Horn.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + seas.sc +      microclim.sc + npp.sc + nspp.sc + mass.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
     ## Dispersion:               ~nspp.sc + REALM
     ## Data: trends[i, ]
     ## 
     ##       AIC       BIC    logLik  deviance  df.resid 
-    ## -449329.1 -449164.3  224681.6 -449363.1    120528 
+    ## -307227.7 -307056.6  153631.8 -307263.7     98924 
     ## 
     ## Random effects:
     ## 
     ## Conditional model:
     ##  Groups            Name        Variance Std.Dev.
-    ##  rarefyID:STUDY_ID (Intercept) 0.220    0.469   
-    ##  STUDY_ID          (Intercept) 3.092    1.759   
-    ## Number of obs: 120545, groups:  rarefyID:STUDY_ID, 28955; STUDY_ID, 212
+    ##  rarefyID:STUDY_ID (Intercept) 0.252    0.502   
+    ##  STUDY_ID          (Intercept) 2.775    1.666   
+    ## Number of obs: 98942, groups:  rarefyID:STUDY_ID, 22042; STUDY_ID, 201
     ## 
     ## Conditional model:
     ##                                  Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)                     -0.025048   0.435552  -0.058 0.954139    
-    ## tempchange_abs.sc               -0.007165   0.004137  -1.732 0.083276 .  
-    ## REALMMarine                      0.363796   0.469035   0.776 0.437969    
-    ## REALMTerrestrial                -0.786739   0.479734  -1.640 0.101016    
-    ## tempave_metab.sc                 0.316483   0.024508  12.913  < 2e-16 ***
-    ## mass.sc                         -0.002836   0.011689  -0.243 0.808335    
-    ## endothermfrac.sc                 0.115794   0.078340   1.478 0.139381    
-    ## microclim.sc                     0.056941   0.007393   7.702 1.34e-14 ***
-    ## npp.sc                           0.086190   0.009653   8.929  < 2e-16 ***
-    ## human_bowler.sc:REALM2Marine     0.023065   0.008360   2.759 0.005800 ** 
-    ## human_bowler.sc:REALM2TerrFresh -0.047376   0.012867  -3.682 0.000231 ***
+    ## (Intercept)                     -0.478317   0.425542  -1.124  0.26100    
+    ## tempchange_abs.sc               -0.009212   0.004409  -2.089  0.03669 *  
+    ## REALMMarine                      0.797906   0.459845   1.735  0.08271 .  
+    ## REALMTerrestrial                -0.769329   0.463960  -1.658  0.09728 .  
+    ## tempave_metab.sc                 0.294328   0.027966  10.525  < 2e-16 ***
+    ## seas.sc                          0.145753   0.017394   8.380  < 2e-16 ***
+    ## microclim.sc                     0.077282   0.008354   9.251  < 2e-16 ***
+    ## npp.sc                           0.063296   0.010654   5.941 2.83e-09 ***
+    ## nspp.sc                          0.094616   0.013326   7.100 1.25e-12 ***
+    ## mass.sc                         -0.030295   0.014993  -2.021  0.04333 *  
+    ## human_bowler.sc:REALM2Marine     0.026543   0.008956   2.964  0.00304 ** 
+    ## human_bowler.sc:REALM2TerrFresh -0.032127   0.013553  -2.371  0.01776 *  
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Dispersion model:
-    ##                  Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)      0.017934   0.034650    0.52 0.604766    
-    ## nspp.sc          0.289285   0.003501   82.63  < 2e-16 ***
-    ## REALMMarine      0.124424   0.034694    3.59 0.000335 ***
-    ## REALMTerrestrial 1.944902   0.036201   53.72  < 2e-16 ***
+    ##                   Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)       0.280671   0.047257    5.94 2.86e-09 ***
+    ## nspp.sc           0.044827   0.004006   11.19  < 2e-16 ***
+    ## REALMMarine      -0.033670   0.047296   -0.71    0.477    
+    ## REALMTerrestrial  1.937041   0.048318   40.09  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 ##### 10 yr
 
 ``` r
-if(exists('modMainMaEnMiNPHu10yrHorn'))summary(modMainMaEnMiNPHu10yrHorn)
+if(exists('modMain10yrHorn'))summary(modMain10yrHorn)
 ```
 
     ##  Family: beta  ( logit )
-    ## Formula:          Horn.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + mass.sc +      endothermfrac.sc + microclim.sc + npp.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
+    ## Formula:          Horn.sc ~ tempchange_abs.sc + REALM + tempave_metab.sc + seas.sc +      microclim.sc + npp.sc + nspp.sc + mass.sc + human_bowler.sc:REALM2 +      (1 | STUDY_ID/rarefyID)
     ## Dispersion:               ~nspp.sc + REALM
     ## Data: trends[i, ]
     ## 
     ##       AIC       BIC    logLik  deviance  df.resid 
-    ## -218504.3 -218355.2  109269.2 -218538.3     47589 
+    ## -152793.2 -152638.2   76414.6 -152829.2     40647 
     ## 
     ## Random effects:
     ## 
     ## Conditional model:
     ##  Groups            Name        Variance Std.Dev.
-    ##  rarefyID:STUDY_ID (Intercept) 0.1242   0.3524  
-    ##  STUDY_ID          (Intercept) 3.6017   1.8978  
-    ## Number of obs: 47606, groups:  rarefyID:STUDY_ID, 16545; STUDY_ID, 139
+    ##  rarefyID:STUDY_ID (Intercept) 0.1577   0.3971  
+    ##  STUDY_ID          (Intercept) 3.5047   1.8721  
+    ## Number of obs: 40665, groups:  rarefyID:STUDY_ID, 12892; STUDY_ID, 130
     ## 
     ## Conditional model:
     ##                                  Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)                      0.294078   0.517474   0.568  0.56983    
-    ## tempchange_abs.sc                0.006021   0.004191   1.437  0.15081    
-    ## REALMMarine                      0.185440   0.573233   0.323  0.74632    
-    ## REALMTerrestrial                -0.465234   0.579724  -0.803  0.42226    
-    ## tempave_metab.sc                 0.442610   0.034117  12.973  < 2e-16 ***
-    ## mass.sc                         -0.002410   0.018002  -0.134  0.89351    
-    ## endothermfrac.sc                -0.272966   0.117259  -2.328  0.01992 *  
-    ## microclim.sc                     0.030011   0.010055   2.985  0.00284 ** 
-    ## npp.sc                           0.138928   0.012808  10.847  < 2e-16 ***
-    ## human_bowler.sc:REALM2Marine     0.007231   0.012202   0.593  0.55347    
-    ## human_bowler.sc:REALM2TerrFresh -0.073635   0.017041  -4.321 1.55e-05 ***
+    ## (Intercept)                     -0.022944   0.528830  -0.043  0.96539    
+    ## tempchange_abs.sc                0.002876   0.004447   0.647  0.51783    
+    ## REALMMarine                      0.522725   0.588551   0.888  0.37446    
+    ## REALMTerrestrial                -0.596892   0.581934  -1.026  0.30503    
+    ## tempave_metab.sc                 0.375892   0.037956   9.903  < 2e-16 ***
+    ## seas.sc                          0.066731   0.020678   3.227  0.00125 ** 
+    ## microclim.sc                     0.045242   0.011203   4.038 5.38e-05 ***
+    ## npp.sc                           0.094725   0.013883   6.823 8.90e-12 ***
+    ## nspp.sc                          0.051611   0.020588   2.507  0.01218 *  
+    ## mass.sc                         -0.055075   0.024942  -2.208  0.02724 *  
+    ## human_bowler.sc:REALM2Marine     0.010956   0.013147   0.833  0.40467    
+    ## human_bowler.sc:REALM2TerrFresh -0.061322   0.018641  -3.290  0.00100 ** 
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Dispersion model:
     ##                   Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)       0.376814   0.053485    7.05 1.85e-12 ***
-    ## nspp.sc           0.471082   0.006284   74.97  < 2e-16 ***
-    ## REALMMarine      -0.084981   0.053636   -1.58    0.113    
-    ## REALMTerrestrial  1.767450   0.056128   31.49  < 2e-16 ***
+    ## (Intercept)       0.783866   0.069073  11.348  < 2e-16 ***
+    ## nspp.sc           0.219843   0.007207  30.503  < 2e-16 ***
+    ## REALMMarine      -0.330565   0.069272  -4.772 1.82e-06 ***
+    ## REALMTerrestrial  1.660084   0.070930  23.405  < 2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+### Plot the response
+
+#### Set up and write to file
+
+``` r
+scaling <- fread('output/turnover_w_covariates_scaling.csv') # the scalings
+
+# set up the variables to plot
+# if variable is logged before scaling (see 'center and scale' above), then need to mark it here and express the limits on a log10 scale (even though log transforming is log)
+vars <- data.frame(vars = c('tempchange_abs', 'tempchange_abs', 'tempchange_abs', 'tempave_metab', 'seas', 'microclim', 'mass', 'npp', 
+                            'duration', 'nspp', 'human_bowler', 'human_bowler'),
+                   min =      c(0,    0,   0,   0,   0,   0,   -1,  1.9, 0.5, 0,   0,   0), 
+                   max =      c(4,    4,   4,   30,  16,  0.8, 4,   3.7, 2,   2.5, 1,   1),
+                   log =      c(F,    F,   F,   F,   F,   T,   T,   T,   T,   T,   T,   T),
+                   len =      c(100,  100, 100, 100, 100, 100, 100, 100, 100, 100, 100, 100),
+                   discrete = c(F,    F,   F,   F,   F,   F,   F,   F,   F,   F,   F,   F),
+                   plus =     c(0,    0,   0,   0,   0,   0,   0,   0,   0,   0,   1,   1), # what to add before log-scaling
+                   REALM = c('Freshwater', 'Marine', 'Terrestrial', rep('Terrestrial', 7), 'Terrestrial', 'Marine'),
+                   REALM2 = c('TerrFresh', 'Marine', rep('TerrFresh', 9), 'Marine'),
+                   stringsAsFactors = FALSE)
+baseall <- trends[, .(type = 'all', 
+                      tempchange = -0.0001,
+                      tempchange_abs.sc = 0.0001,
+                      tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                      seas.sc = mean(seas.sc, na.rm=TRUE), 
+                      microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                      mass.sc = mean(mass.sc, na.rm=TRUE), 
+                      nspp.sc = mean(nspp.sc, na.rm=TRUE),
+                      nspp.sc = 60, 
+                      npp.sc = mean(npp.sc, na.rm=TRUE), 
+                      human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
+baseterr <- trends[REALM == 'Terrestrial', 
+                   .(type = 'Terrestrial', 
+                     tempchange = -0.0001,
+                     tempchange_abs.sc = 0.0001,
+                     tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                     seas.sc = mean(seas.sc, na.rm=TRUE), 
+                     microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                     mass.sc = mean(mass.sc, na.rm=TRUE), 
+                     nspp.sc = mean(nspp.sc, na.rm=TRUE),
+                     nspp.sc = 60, 
+                     npp.sc = mean(npp.sc, na.rm=TRUE), 
+                     human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
+basemar <- trends[REALM == 'Marine', 
+                  .(type = 'Marine',
+                    tempchange = -0.0001,
+                    tempchange_abs.sc = 0.0001,
+                    tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                    seas.sc = mean(seas.sc, na.rm=TRUE), 
+                    microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                    mass.sc = mean(mass.sc, na.rm=TRUE), 
+                    nspp.sc = mean(nspp.sc, na.rm=TRUE),
+                    nspp.sc = 60, 
+                    npp.sc = mean(npp.sc, na.rm=TRUE), 
+                    human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
+basetab <- rbind(baseall, baseterr, basemar)
+
+basetab[, ':='(duration.sc = 0, nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_504467')]
+
+# make the data frames for each interaction to plot                
+for(j in 1:nrow(vars)){
+    # set up the main effects
+    if(vars$log[j]){
+        thisdat <- data.frame(new = 10^seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
+                              var = vars$vars[j], stringsAsFactors = FALSE)
+    } 
+    if(!vars$log[j]){
+        thisdat <- data.frame(new = seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
+                              var = vars$vars[j], stringsAsFactors = FALSE)
+    }
+    names(thisdat) <- c(vars$vars[j], 'var')
+    
+    # scale the variable
+    cent <- scaling$center[scaling$var == paste0(vars$vars[j], '.sc')]
+    scl <- scaling$scale[scaling$var == paste0(vars$vars[j], '.sc')]
+    if(is.null(cent)) cent <- 0
+    if(!is.null(cent) & !is.null(scl)){
+        if(vars$log[j]) thisdat[[paste0(vars$var[j], '.sc')]] <- (log(thisdat[[vars$vars[j]]] + vars$plus[j]) - cent)/scl
+        if(!vars$log[j]) thisdat[[paste0(vars$var[j], '.sc')]] <- (thisdat[[vars$var[j]]] - cent)/scl
+    }
+    
+    # merge with the rest of the columns
+    # use realm-specific averages for human impacts
+    colnamestouse <- setdiff(colnames(basetab), paste0(vars$vars[j], '.sc'))
+    if(vars$vars[j] != 'human_bowler'){
+        thisdat <- cbind(thisdat, basetab[type == 'all', ..colnamestouse])
+    }
+    if(vars$vars[j] == 'human_bowler' & vars$REALM[j] == 'Terrestrial'){
+        thisdat <- cbind(thisdat, basetab[type == 'Terrestrial', ..colnamestouse])
+    }
+    if(vars$vars[j] == 'human_bowler' & vars$REALM[j] == 'Marine'){
+        thisdat <- cbind(thisdat, basetab[type == 'Marine', ..colnamestouse])
+    }
+    
+    # add realm
+    thisdat$REALM <- vars$REALM[j]
+    thisdat$REALM2 <- vars$REALM2[j]
+    
+    # merge with the previous iterations
+    if(j == 1) newdat <- thisdat
+    if(j > 1){
+        colstoadd <- setdiff(colnames(thisdat), colnames(newdat))
+        for(toadd in colstoadd){
+            newdat[[toadd]] <- NA
+        }
+        
+        colstoadd2 <- setdiff(colnames(newdat), colnames(thisdat))
+        for(toadd in colstoadd2){
+            thisdat[[toadd]] <- NA
+        }
+        
+        newdat <- rbind(newdat, thisdat)
+    } 
+}
+
+# character so that new levels can be added
+newdat$REALM <- as.character(newdat$REALM)
+newdat$REALM2 <- as.character(newdat$REALM2)
+
+# add extra rows so that all factor levels are represented (for predict.lme to work)
+newdat <- rbind(newdat[1:6, ], newdat)
+newdat$REALM[1:6] <- c('Marine', 'Marine', 'Freshwater', 'Freshwater', 'Terrestrial', 'Terrestrial')
+newdat$REALM2[1:6] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh', 'TerrFresh', 'TerrFresh')
+newdat$tempchange_abs.sc[1:6] <- rep(0.0001, 6)
+newdat$tempchange[1:6] <- rep(c(0.0001, -0.0001), 3)
+newdat$var[1:6] <- 'test'
+
+# write out
+write.csv(newdat, 'temp/newdata_main_only.csv', row.names = FALSE)
+```
+
+Now go run on the command line
+
+    nohup code/turnover_vs_temperature_GLMM_pred.R temp/modMainTdTSeMiNPNspMaHu1yrJtu.rds temp/newdata_main_only.csv temp/modMainTdTSeMiNPNspMaHu1yrJtu_preds.rds >logs/turnover_vs_temperature_GLMMmodMainTdTSeMiNPNspMaHu1yrJtu_pred.Rout &
+    
+    nohup code/turnover_vs_temperature_GLMM_pred.R temp/modMainTdTSeMiNPNspMaHu1yrHorn.rds temp/newdata_main_only.csv temp/modMainTdTSeMiNPNspMaHu1yrHorn_preds.rds >logs/turnover_vs_temperature_GLMMmodMainTdTSeMiNPNspMaHu1yrHorn_pred.Rout &
+
+#### Load and plot Jtu 1yr
+
+``` r
+newdat <- readRDS(here('temp', 'modMainTdTSeMiNPNspMaHu1yrJtu_preds.rds'))
+newdat[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # set factor order
+newdat[, REALM2 := factor(REALM2, levels = c('TerrFresh', 'Marine'))] # set factor order
+
+p1 <- ggplot(newdat[var == 'tempchange_abs',], aes(tempchange_abs, pred, group = REALM, color = REALM, fill=REALM)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1, linetype = 'blank') +
+  geom_line() +
+  labs(y = 'Jaccard turnover') +
+  theme(legend.title = element_text(size = 6),legend.text = element_text(size = 6))
+p2 <- ggplot(newdat[var == 'tempave_metab',], aes(tempave_metab, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p3 <- ggplot(newdat[var == 'seas',], aes(seas, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p4 <- ggplot(newdat[var == 'microclim',], aes(microclim, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p5 <- ggplot(newdat[var == 'npp',], aes(npp, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p6 <- ggplot(newdat[var == 'nspp',], aes(nspp, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p7 <- ggplot(newdat[var == 'mass',], aes(mass, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  scale_x_log10() +
+  labs(y = 'Jaccard turnover')
+p8 <- ggplot(newdat[var == 'human_bowler',], aes(human_bowler, pred, group = REALM2, color = REALM2, fill = REALM2)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1, linetype = 'blank') +
+  geom_line() +
+  labs(y = 'Jaccard turnover', x = 'Human impact') +
+  theme(legend.title = element_text(size = 6),legend.text = element_text(size = 6))
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, ncol = 2)
+```
+
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
+#### Load and plot Horn 1yr
+
+``` r
+newdat <- readRDS(here('temp', 'modMainTdTSeMiNPNspMaHu1yrHorn_preds.rds'))
+newdat[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # set factor order
+newdat[, REALM2 := factor(REALM2, levels = c('TerrFresh', 'Marine'))] # set factor order
+
+p1 <- ggplot(newdat[var == 'tempchange_abs',], aes(tempchange_abs, pred, group = REALM, color = REALM, fill=REALM)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1, linetype = 'blank') +
+  geom_line() +
+  labs(y = 'Jaccard turnover') +
+  theme(legend.title = element_text(size = 6),legend.text = element_text(size = 6))
+p2 <- ggplot(newdat[var == 'tempave_metab',], aes(tempave_metab, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p3 <- ggplot(newdat[var == 'seas',], aes(seas, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p4 <- ggplot(newdat[var == 'microclim',], aes(microclim, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p5 <- ggplot(newdat[var == 'npp',], aes(npp, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p6 <- ggplot(newdat[var == 'nspp',], aes(nspp, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  labs(y = 'Jaccard turnover')
+p7 <- ggplot(newdat[var == 'mass',], aes(mass, pred)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1) +
+  geom_line() +
+  scale_x_log10() +
+  labs(y = 'Jaccard turnover')
+p8 <- ggplot(newdat[var == 'human_bowler',], aes(human_bowler, pred, group = REALM2, color = REALM2, fill = REALM2)) +
+  geom_ribbon(aes(ymin=pred-1.96*pred.se, ymax=pred+1.96*pred.se), alpha = 0.1, linetype = 'blank') +
+  geom_line() +
+  labs(y = 'Jaccard turnover', x = 'Human impact') +
+  theme(legend.title = element_text(size = 6),legend.text = element_text(size = 6))
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, ncol = 2)
+```
+
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 ## Full models w/ only main effects, averaged by time-series (rarefyID)
 
@@ -2269,11 +2509,10 @@ if(exists('modFullMaEnMiNPHu5yrHorn')) summary(modFullMaEnMiNPHu5yrHorn)
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-### DHARMa simulate residuals
+### DHARMa model evaluation
 
-#### Mass, endo, microclimate, NPP, humans
-
-##### Simulate residuals
+Need to re-run this with newly trimmed dataset (2021-04-05) \#\#\#\#
+Mass, endo, microclimate, NPP, humans \#\#\#\#\# Simulate residuals
 
 ``` r
 ## run the top part (if(FALSE)) by hand if needed. takes ~3 hrs for all data
@@ -2319,107 +2558,83 @@ if(FALSE) {
 All data
 
 ``` r
-if(exists('res_MaEnMiNPHuJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
-  plot(res_MaEnMiNPHuJtu)
-  plotResiduals(res_MaEnMiNPHuJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, trends$duration.sc[i], xlab = 'duration.sc', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
-  plotResiduals(res_MaEnMiNPHuJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
-}
+# if(exists('res_MaEnMiNPHuJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+#   plot(res_MaEnMiNPHuJtu)
+#   plotResiduals(res_MaEnMiNPHuJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, trends$duration.sc[i], xlab = 'duration.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHuJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
+# }
 ```
-
-![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu-1.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu-2.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu-3.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu-4.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu-5.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu-6.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu-7.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu-8.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu-9.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu-10.png)<!-- -->
 
 1yr data
 
 ``` r
-if(exists('res_MaEnMiNPHu1yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 1]
-  plot(res_MaEnMiNPHu1yrJtu)
-  plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
-  plotResiduals(res_MaEnMiNPHu1yrJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu1yrJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu1yrJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu1yrJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu1yrJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
-}
+# if(exists('res_MaEnMiNPHu1yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 1]
+#   plot(res_MaEnMiNPHu1yrJtu)
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu1yrJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
+# }
 ```
 
 10yr data
 
 ``` r
-if(exists('res_MaEnMiNPHu10yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 10]
-  plot(res_MaEnMiNPHu10yrJtu)
-  plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
-  plotResiduals(res_MaEnMiNPHu10yrJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu10yrJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu10yrJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu10yrJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu10yrJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
-  plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
-}
+# if(exists('res_MaEnMiNPHu10yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 10]
+#   plot(res_MaEnMiNPHu10yrJtu)
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
+#   plotResiduals(res_MaEnMiNPHu10yrJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
+# }
 ```
-
-![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu10yr-1.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu10yr-2.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu10yr-3.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu10yr-4.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu10yr-5.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu10yr-6.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu10yr-7.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu10yr-8.png)<!-- -->![](turnover_vs_temperature_GLMM_files/figure-gfm/plot%20darma%20maenminphu10yr-9.png)<!-- -->
 
 ##### Overdispersion
 
 ``` r
-if(exists('res_MaEnMiNPHuJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
-  testDispersion(res_MaEnMiNPHuJtu)
-}
+# if(exists('res_MaEnMiNPHuJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+#   testDispersion(res_MaEnMiNPHuJtu)
+# }
+# 
+# if(exists('res_MaEnMiNPHu1yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 1]
+#   testDispersion(res_MaEnMiNPHu1yrJtu)
+# }
+# 
+# if(exists('res_MaEnMiNPHu10yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 10]
+#   testDispersion(res_MaEnMiNPHu10yrJtu)
+# }
 ```
-
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
-
-    ## 
-    ##  DHARMa nonparametric dispersion test via sd of residuals fitted vs. simulated
-    ## 
-    ## data:  simulationOutput
-    ## ratioObsSim = 0.7724, p-value < 2.2e-16
-    ## alternative hypothesis: two.sided
-
-``` r
-if(exists('res_MaEnMiNPHu1yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 1]
-  testDispersion(res_MaEnMiNPHu1yrJtu)
-}
-
-if(exists('res_MaEnMiNPHu10yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 10]
-  testDispersion(res_MaEnMiNPHu10yrJtu)
-}
-```
-
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-30-2.png)<!-- -->
-
-    ## 
-    ##  DHARMa nonparametric dispersion test via sd of residuals fitted vs. simulated
-    ## 
-    ## data:  simulationOutput
-    ## ratioObsSim = 0.84436, p-value < 2.2e-16
-    ## alternative hypothesis: two.sided
 
 ##### Near-zero-inflation
 
@@ -2429,92 +2644,52 @@ zero-inflation directly
 ``` r
 countNearZero <- function(x) sum(x < 0.0001)
 
-if(exists('res_MaEnMiNPHuJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
-  testGeneric(res_MaEnMiNPHuJtu, summary = countNearZero, alternative = 'greater')
-}
+# if(exists('res_MaEnMiNPHuJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+#   testGeneric(res_MaEnMiNPHuJtu, summary = countNearZero, alternative = 'greater')
+# }
+# 
+# if(exists('res_MaEnMiNPHu1yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 1]
+#   testGeneric(res_MaEnMiNPHu1yrJtu, summary = countNearZero, alternative = 'greater')
+# }
+# 
+# if(exists('res_MaEnMiNPHu10yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 10]
+#   testGeneric(res_MaEnMiNPHu10yrJtu, summary = countNearZero, alternative = 'greater')
+# }
 ```
-
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
-
-    ## 
-    ##  DHARMa generic simulation test
-    ## 
-    ## data:  res_MaEnMiNPHuJtu
-    ## ratioObsSim = 1.1861, p-value = 0.292
-    ## alternative hypothesis: greater
-
-``` r
-if(exists('res_MaEnMiNPHu1yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 1]
-  testGeneric(res_MaEnMiNPHu1yrJtu, summary = countNearZero, alternative = 'greater')
-}
-
-if(exists('res_MaEnMiNPHu10yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 10]
-  testGeneric(res_MaEnMiNPHu10yrJtu, summary = countNearZero, alternative = 'greater')
-}
-```
-
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-31-2.png)<!-- -->
-
-    ## 
-    ##  DHARMa generic simulation test
-    ## 
-    ## data:  res_MaEnMiNPHu10yrJtu
-    ## ratioObsSim = 1.6762, p-value = 0.032
-    ## alternative hypothesis: greater
 
 ##### Near-one-inflation
 
 ``` r
 countNearOne <- function(x) sum(x > 0.9999)
 
-if(exists('res_MaEnMiNPHuJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
-  testGeneric(res_MaEnMiNPHuJtu, summary = countNearOne, alternative = 'greater')
-}
+# if(exists('res_MaEnMiNPHuJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+#   testGeneric(res_MaEnMiNPHuJtu, summary = countNearOne, alternative = 'greater')
+# }
+# 
+# if(exists('res_MaEnMiNPHu1yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 1]
+#   testGeneric(res_MaEnMiNPHu1yrJtu, summary = countNearOne, alternative = 'greater')
+# }
+# 
+# if(exists('res_MaEnMiNPHu10yrJtu')){
+#   i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
+#                                microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
+#                 duration == 10]
+#   testGeneric(res_MaEnMiNPHu10yrJtu, summary = countNearOne, alternative = 'greater')
+# }
 ```
-
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
-
-    ## 
-    ##  DHARMa generic simulation test
-    ## 
-    ## data:  res_MaEnMiNPHuJtu
-    ## ratioObsSim = 1.1629, p-value = 0.3
-    ## alternative hypothesis: greater
-
-``` r
-if(exists('res_MaEnMiNPHu1yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 1]
-  testGeneric(res_MaEnMiNPHu1yrJtu, summary = countNearOne, alternative = 'greater')
-}
-
-if(exists('res_MaEnMiNPHu10yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc) &
-                duration == 10]
-  testGeneric(res_MaEnMiNPHu10yrJtu, summary = countNearOne, alternative = 'greater')
-}
-```
-
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-32-2.png)<!-- -->
-
-    ## 
-    ##  DHARMa generic simulation test
-    ## 
-    ## data:  res_MaEnMiNPHu10yrJtu
-    ## ratioObsSim = 2.3932, p-value = 0.004
-    ## alternative hypothesis: greater
 
 ### Plot the response
 
@@ -2690,7 +2865,7 @@ p7 <- ggplot(newdat[var == 'human_bowler',], aes(human_bowler, pred, group = REA
 grid.arrange(p1, p2, p3, p4, p5, p6, p7, ncol = 2)
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
 #### Interactions
 
@@ -2875,4 +3050,4 @@ for(j in 1:length(intplots)){
 grid.arrange(grobs = intplots, ncol = 3)
 ```
 
-![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
+![](turnover_vs_temperature_GLMM_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->

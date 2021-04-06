@@ -193,7 +193,8 @@ scaling$scale <- vapply(scaling$scale, paste, collapse = ", ", character(1L))
 Only if file doesn't yet exist
 ```{r write out}
 if(!file.exists(here('output', 'turnover_w_covariates.csv.gz'))){
-  write.csv(bt[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, duration, Jtu.sc, Jbeta.sc, Horn.sc, tsign, tempave.sc, tempave_metab.sc, seas.sc, 
+  write.csv(bt[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, duration, Jtu.sc, Jbeta.sc, Horn.sc, tsign, 
+                  tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
                   duration.sc, human_bowler.sc, REALM2)], 
