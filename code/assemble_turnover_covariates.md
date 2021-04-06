@@ -42,7 +42,8 @@ signedsqrt_trans <- function() trans_new('signedsqrt',
 # biotime taxa category and other info
 load(here::here('data', 'biotime_blowes', 'bt_malin.Rdata')) # load bt_malin
 btinfo <- data.table(bt_malin); rm(bt_malin)
-btinfo <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Biome, taxa_mod, N, S, REALM, STUDY_ID)]
+btinfo[, Nave := mean(N), by = rarefyID] # average number of individuals in the timeseries
+btinfo <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Biome, taxa_mod, Nave, REALM, STUDY_ID)]
 
 # biotime community dissimilarity data
 load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians
@@ -121,30 +122,30 @@ norig <- nrow(bt); norig
     ## [1] 1304150
 
 ``` r
-# trim out studies with few species
-bt[S <= 2, .N]
+# trim out timeseries with too few species
+bt[Nspp <= 2 | is.na(Nspp), .N]
 ```
 
-    ## [1] 193407
+    ## [1] 16228
 
 ``` r
-bt <- bt[S > 2, ]
+bt <- bt[Nspp > 2, ]
   
 # or few individuals
-bt[N <= 6, .N]
+bt[Nave < 10, .N]
 ```
 
-    ## [1] 3272
+    ## [1] 41775
 
 ``` r
-bt <- bt[N > 6, ]
+bt <- bt[Nave >= 10 | is.na(Nave), ]
 
 # trim to only data with some temperature change
 # important since sign of temperature change is a variable
-bt[tempchange == 0, .N] # number to remove
+bt[tempchange == 0 | is.na(tempchange), .N] # number to remove
 ```
 
-    ## [1] 55
+    ## [1] 15390
 
 ``` r
 bt <- bt[tempchange != 0, ] # also removes any NA values
@@ -152,13 +153,25 @@ bt <- bt[tempchange != 0, ] # also removes any NA values
 nrow(bt)
 ```
 
-    ## [1] 1059663
+    ## [1] 1230757
 
 ``` r
 nrow(bt)/norig
 ```
 
-    ## [1] 0.8125315
+    ## [1] 0.9437235
+
+``` r
+bt[, length(unique(STUDY_ID))]
+```
+
+    ## [1] 300
+
+``` r
+bt[, length(unique(rarefyID))]
+```
+
+    ## [1] 45465
 
 ## Set up useful variables and transformations
 
@@ -233,7 +246,8 @@ Only if file doesn’t yet exist
 
 ``` r
 if(!file.exists(here('output', 'turnover_w_covariates.csv.gz'))){
-  write.csv(bt[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, duration, Jtu.sc, Jbeta.sc, Horn.sc, tsign, tempave.sc, tempave_metab.sc, seas.sc, 
+  write.csv(bt[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, duration, Jtu.sc, Jbeta.sc, Horn.sc, tsign, 
+                  tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
                   duration.sc, human_bowler.sc, REALM2)], 
@@ -299,58 +313,58 @@ bt[, summary(Jbeta)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.0000  0.3636  0.5556  0.5866  0.8333  1.0000
+    ##  0.0000  0.3750  0.5714  0.5947  0.8333  1.0000
 
 ``` r
 bt[, summary(Jtu)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.0000  0.1852  0.3684  0.4238  0.6400  1.0000
+    ##  0.0000  0.1714  0.3750  0.4254  0.6667  1.0000
 
 ``` r
 bt[, summary(Horn)]
 ```
 
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.0000  0.1327  0.4265  0.4981  0.9323  1.0000
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+    ##   0.000   0.133   0.445   0.506   0.947   1.000   29042
 
 ``` r
 # fraction 0 or 1
 bt[, sum(Jbeta == 0)/.N]
 ```
 
-    ## [1] 0.01215386
+    ## [1] 0.0190265
 
 ``` r
 bt[, sum(Jtu == 0)/.N]
 ```
 
-    ## [1] 0.1648477
+    ## [1] 0.1910418
 
 ``` r
 bt[!is.na(Horn), sum(Horn == 0)/.N]
 ```
 
-    ## [1] 0.00126644
+    ## [1] 0.003938538
 
 ``` r
 bt[, sum(Jbeta == 1)/.N]
 ```
 
-    ## [1] 0.1394217
+    ## [1] 0.1500995
 
 ``` r
 bt[, sum(Jtu == 1)/.N]
 ```
 
-    ## [1] 0.1394217
+    ## [1] 0.1500995
 
 ``` r
 bt[!is.na(Horn), sum(Horn == 1)/.N]
 ```
 
-    ## [1] 0.1394217
+    ## [1] 0.1533791
 
 ``` r
 # histograms
@@ -460,7 +474,7 @@ pairs(formula = ~ tempave.sc + tempave_metab.sc + seas.sc + microclim.sc + tempc
 i <- bt[, !duplicated(rarefyID)]; sum(i)
 ```
 
-    ## [1] 36601
+    ## [1] 45465
 
 ``` r
 par(mfrow=c(5,3))
@@ -648,9 +662,6 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 5, ],
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning -
-    ## Inf
-
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-5-3.png)<!-- -->
 
 ``` r
@@ -682,6 +693,10 @@ ggplot(bt, aes(x=tempave_metab, y=Horn.sc)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
+    ## Warning: Removed 29042 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 29042 rows containing missing values (geom_point).
+
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 ``` r
@@ -695,6 +710,10 @@ ggplot(bt, aes(x=tempave_metab, y=Horn.sc)) +
 ```
 
     ## `geom_smooth()` using formula 'y ~ x'
+
+    ## Warning: Removed 2846 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 2846 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
 
@@ -710,6 +729,10 @@ ggplot(bt[duration == 5, ],
 
     ## `geom_smooth()` using formula 'y ~ x'
 
+    ## Warning: Removed 1888 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 1888 rows containing missing values (geom_point).
+
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-6-3.png)<!-- -->
 
 ``` r
@@ -723,6 +746,10 @@ ggplot(bt[duration == 10, ],
 ```
 
     ## `geom_smooth()` using formula 'y ~ x'
+
+    ## Warning: Removed 1032 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 1032 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-6-4.png)<!-- -->
 
@@ -739,6 +766,10 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin), ], aes(x=tempave_metab, y=Horn.sc, 
 
     ## `geom_smooth()` using formula 'y ~ x'
 
+    ## Warning: Removed 28745 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 28745 rows containing missing values (geom_point).
+
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
@@ -752,6 +783,10 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin), ], aes(x=tempave_metab, y=Horn.sc, 
 ```
 
     ## `geom_smooth()` using formula 'y ~ x'
+
+    ## Warning: Removed 2796 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 2796 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
 
@@ -767,8 +802,9 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 5, ],
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning in max(ids, na.rm = TRUE): no non-missing arguments to max; returning -
-    ## Inf
+    ## Warning: Removed 1860 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 1860 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-7-3.png)<!-- -->
 
@@ -783,6 +819,10 @@ ggplot(bt[!is.na(npp_bin) & !is.na(hum_bin) & duration == 10, ],
 ```
 
     ## `geom_smooth()` using formula 'y ~ x'
+
+    ## Warning: Removed 1032 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 1032 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-7-4.png)<!-- -->
 
@@ -803,9 +843,9 @@ ggplot(bt, aes(x=npp, y=Jtu.sc)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 2877 rows containing non-finite values (stat_smooth).
+    ## Warning: Removed 3391 rows containing non-finite values (stat_smooth).
 
-    ## Warning: Removed 2877 rows containing missing values (geom_point).
+    ## Warning: Removed 3391 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
@@ -821,9 +861,9 @@ ggplot(bt, aes(x=npp, y=Jtu.sc)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 424 rows containing non-finite values (stat_smooth).
+    ## Warning: Removed 500 rows containing non-finite values (stat_smooth).
 
-    ## Warning: Removed 424 rows containing missing values (geom_point).
+    ## Warning: Removed 500 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
 
@@ -839,9 +879,9 @@ ggplot(bt[duration == 5, ],
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 219 rows containing non-finite values (stat_smooth).
+    ## Warning: Removed 262 rows containing non-finite values (stat_smooth).
 
-    ## Warning: Removed 219 rows containing missing values (geom_point).
+    ## Warning: Removed 262 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-8-3.png)<!-- -->
 
@@ -857,9 +897,9 @@ ggplot(bt[duration == 10, ],
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 97 rows containing non-finite values (stat_smooth).
+    ## Warning: Removed 105 rows containing non-finite values (stat_smooth).
 
-    ## Warning: Removed 97 rows containing missing values (geom_point).
+    ## Warning: Removed 105 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-8-4.png)<!-- -->
 
@@ -878,9 +918,9 @@ ggplot(bt, aes(x=npp, y=Horn.sc)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 2877 rows containing non-finite values (stat_smooth).
+    ## Warning: Removed 32136 rows containing non-finite values (stat_smooth).
 
-    ## Warning: Removed 2877 rows containing missing values (geom_point).
+    ## Warning: Removed 32136 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
@@ -896,9 +936,9 @@ ggplot(bt, aes(x=npp, y=Horn.sc)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 424 rows containing non-finite values (stat_smooth).
+    ## Warning: Removed 3296 rows containing non-finite values (stat_smooth).
 
-    ## Warning: Removed 424 rows containing missing values (geom_point).
+    ## Warning: Removed 3296 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
 
@@ -914,9 +954,9 @@ ggplot(bt[duration == 5, ],
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 219 rows containing non-finite values (stat_smooth).
+    ## Warning: Removed 2122 rows containing non-finite values (stat_smooth).
 
-    ## Warning: Removed 219 rows containing missing values (geom_point).
+    ## Warning: Removed 2122 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-9-3.png)<!-- -->
 
@@ -932,9 +972,9 @@ ggplot(bt[duration == 10, ],
 
     ## `geom_smooth()` using formula 'y ~ x'
 
-    ## Warning: Removed 97 rows containing non-finite values (stat_smooth).
+    ## Warning: Removed 1137 rows containing non-finite values (stat_smooth).
 
-    ## Warning: Removed 97 rows containing missing values (geom_point).
+    ## Warning: Removed 1137 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-9-4.png)<!-- -->
 
@@ -1014,6 +1054,10 @@ ggplot(bt, aes(x=human_bowler, y=Horn.sc)) +
 
     ## `geom_smooth()` using formula 'y ~ x'
 
+    ## Warning: Removed 29042 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 29042 rows containing missing values (geom_point).
+
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 ``` r
@@ -1027,6 +1071,10 @@ ggplot(bt, aes(x=human_bowler, y=Horn.sc)) +
 ```
 
     ## `geom_smooth()` using formula 'y ~ x'
+
+    ## Warning: Removed 2846 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 2846 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
 
@@ -1042,6 +1090,10 @@ ggplot(bt[duration == 5, ],
 
     ## `geom_smooth()` using formula 'y ~ x'
 
+    ## Warning: Removed 1888 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 1888 rows containing missing values (geom_point).
+
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-11-3.png)<!-- -->
 
 ``` r
@@ -1055,5 +1107,9 @@ ggplot(bt[duration == 10, ],
 ```
 
     ## `geom_smooth()` using formula 'y ~ x'
+
+    ## Warning: Removed 1032 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 1032 rows containing missing values (geom_point).
 
 ![](assemble_turnover_covariates_files/figure-gfm/unnamed-chunk-11-4.png)<!-- -->
