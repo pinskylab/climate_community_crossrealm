@@ -26,7 +26,6 @@ print(Sys.time())
 
 # load libraries ############################
 
-library(methods)
 library(data.table) # for handling large datasets
 library(glmmTMB) # for ME models
 
@@ -1276,6 +1275,43 @@ if(fitmod == 'modFullMaEnMiNPHu5yrHorn'){
     print('saved modFullMaEnMiNPHu5yrHorn.rds')
     MATCHMOD <- TRUE
 }
+
+# full models with duration interactions ############################
+
+if(fitmod == 'modDurIntTdTSeMiNPNspMaHu5yrJtu'){
+    trends[, maxyr := max(c(year1, year2)), by = rarefyID]
+    rowkeep <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc,
+                                 seas.sc, microclim.sc, npp.sc, mass.sc, human_bowler.sc, nspp.sc) &
+                    year1 > maxyr - 5 &
+                    year2 > maxyr - 5] # trim to complete cases in the last 5 years
+    rkeep <- trends[rowkeep, .(nyrs = length(unique(c(year1, year2)))), by = rarefyID][nyrs == 5, rarefyID] # find timeseries with exactly 5 years
+    i <- trends[, rowkeep & rarefyID %in% rkeep]
+    
+    trends[i, tempchange_abs.scTS := median(tempchange_abs.sc/duration), by = rarefyID] # Thiel-Sen estimator of the slope: median of all pairwise slopes
+ 
+    print(paste(sum(i), 'data points'))
+    modDurIntTdTSeMiNPNspMaHu5yrJtu <- glmmTMB(Jtu.sc ~ tempchange_abs.sc * duration +
+                                              REALM * duration + 
+                                              tempave_metab.sc * duration + 
+                                              seas.sc * duration+
+                                              microclim.sc * duration+
+                                              npp.sc * duration+
+                                              nspp.sc * duration+
+                                              mass.sc * duration +
+                                              human_bowler.sc:REALM2 * duration +
+                                              (duration.sc|STUDY_ID/rarefyID), 
+                                          data = trends[i,], 
+                                          family = beta_family(link = 'logit'), 
+                                          dispformula = ~nspp.sc+REALM,
+                                          control = glmmTMBControl(profile=TRUE))
+    summary(modDurIntTdTSeMiNPNspMaHu5yrJtu)
+    outfile = 'temp/modDurIntTdTSeMiNPNspMaHu5yrJtu.rds'
+    saveRDS(modDurIntTdTSeMiNPNspMaHu5yrJtu, file = outfile)
+    print(paste('saved', outfile))
+    MATCHMOD <- TRUE
+}
+
+
 
 # Null models ############################
 
