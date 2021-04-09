@@ -841,7 +841,7 @@ if(exists('modMainAveMaEnMiNPHu10yrHorn'))summary(modMainAveMaEnMiNPHu10yrHorn)
 ```
 
 
-## Full models w/ interactions
+## Full models w/ temperature interactions
 There are a number of different models here:
 
 - Three response variables (Jaccard turnover, Jaccard total, and Morisita-Horn)
@@ -1473,5 +1473,19 @@ for(j in 1:length(intplots)){
 
 grid.arrange(grobs = intplots, ncol = 3)
 
+```
+
+
+## Full models w/ duration interactions
+### Load the models
+```{r durint}
+# all years
+if(file.exists('temp/modDurIntTdTSeMiNPNspMaHu5yrJtu.rds')) modDurInt5yrJut <- readRDS('temp/modDurIntTdTSeMiNPNspMaHu5yrJtu.rds')
+
+```
+
+### Summary
+```{r summary durint}
+if(exists('modDurInt5yrJut')) summary(modDurInt5yrJut)
 ```
 

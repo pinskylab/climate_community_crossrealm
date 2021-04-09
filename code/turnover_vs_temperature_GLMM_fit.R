@@ -1287,18 +1287,18 @@ if(fitmod == 'modDurIntTdTSeMiNPNspMaHu5yrJtu'){
     rkeep <- trends[rowkeep, .(nyrs = length(unique(c(year1, year2)))), by = rarefyID][nyrs == 5, rarefyID] # find timeseries with exactly 5 years
     i <- trends[, rowkeep & rarefyID %in% rkeep]
     
-    trends[i, tempchange_abs.scTS := median(tempchange_abs.sc/duration), by = rarefyID] # Thiel-Sen estimator of the slope: median of all pairwise slopes
+    trends[i, tempchangeTS_abs := abs(median(tempchange/duration)), by = rarefyID] # Thiel-Sen estimator of the abs(slope): median of all pairwise differences
  
     print(paste(sum(i), 'data points'))
-    modDurIntTdTSeMiNPNspMaHu5yrJtu <- glmmTMB(Jtu.sc ~ tempchange_abs.sc * duration +
-                                              REALM * duration + 
-                                              tempave_metab.sc * duration + 
-                                              seas.sc * duration+
-                                              microclim.sc * duration+
-                                              npp.sc * duration+
-                                              nspp.sc * duration+
-                                              mass.sc * duration +
-                                              human_bowler.sc:REALM2 * duration +
+    modDurIntTdTSeMiNPNspMaHu5yrJtu <- glmmTMB(Jtu.sc ~ tempchangeTS_abs * duration.sc +
+                                              REALM * duration.sc + 
+                                              tempave_metab.sc * duration.sc + 
+                                              seas.sc * duration.sc+
+                                              microclim.sc * duration.sc+
+                                              npp.sc * duration.sc+
+                                              nspp.sc * duration.sc+
+                                              mass.sc * duration.sc +
+                                              human_bowler.sc:REALM2 * duration.sc +
                                               (duration.sc|STUDY_ID/rarefyID), 
                                           data = trends[i,], 
                                           family = beta_family(link = 'logit'), 
