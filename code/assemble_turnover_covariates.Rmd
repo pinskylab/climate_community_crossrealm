@@ -185,6 +185,13 @@ scaling <- scaling[!vapply(scaling$center, is.null, TRUE) | !vapply(scaling$scal
 scaling$center[vapply(scaling$center, is.null, TRUE)] <- NA # turn null to NA
 scaling$center <- vapply(scaling$center, paste, collapse = ", ", character(1L)) # flatten list to character. not sure why it's a list.
 scaling$scale <- vapply(scaling$scale, paste, collapse = ", ", character(1L))
+
+## save the transformations just entered above
+scaling$log <- FALSE # whether variable was log-transformed before scaling
+scaling$log[scaling$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'duration.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
+scaling$plus <- 0 # whether anything was added to the variable before logtransforming
+scaling$plus[scaling$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
+
 ```
 
 

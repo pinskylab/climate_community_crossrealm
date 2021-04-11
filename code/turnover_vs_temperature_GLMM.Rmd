@@ -18,6 +18,7 @@ library(RColorBrewer)
 library(scales) # for defining custom scales in ggplot
 library(DHARMa) # for model diagnostics
 library(here) # for relative paths
+library(performance) # for r2 calculations
 
 options(width=500) # turn off most text wrapping
 
@@ -570,6 +571,7 @@ if(exists('modMain1yrHorn')) summary(modMain1yrHorn)
 ```{r, echo=FALSE}
 if(exists('modMain10yrHorn'))summary(modMain10yrHorn)
 ```
+
 
 ### Plot the response
 #### Set up and write to file
@@ -1484,13 +1486,275 @@ grid.arrange(grobs = intplots, ncol = 3)
 ## Full models w/ duration interactions
 ### Load the models
 ```{r durint, echo=FALSE}
-# all years
-if(file.exists('temp/modDurIntTdTSeMiNPNspMaHu5yrJtu.rds')) modDurInt5yrJut <- readRDS('temp/modDurIntTdTSeMiNPNspMaHu5yrJtu.rds')
-
+if(file.exists('temp/modDurIntTdTSeMiNPNspMaHu5yrJtu.rds')){
+  modDurInt5yrJtu <- readRDS('temp/modDurIntTdTSeMiNPNspMaHu5yrJtu.rds')
+  # needed because model fit with trends[i,]
+  trends[, maxyr := max(c(year1, year2)), by = rarefyID]
+  rowkeep <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc,
+                                     seas.sc, microclim.sc, npp.sc, mass.sc, human_bowler.sc, nspp.sc) &
+                      year1 > maxyr - 5 &
+                      year2 > maxyr - 5] # trim to complete cases in the last 5 years
+  rkeep <- trends[rowkeep, .(nyrs = length(unique(c(year1, year2)))), by = rarefyID][nyrs == 5, rarefyID] # find timeseries with exactly 5 years
+  i <- trends[, rowkeep & rarefyID %in% rkeep]
+  
+  trends[i, tempchangeTS_abs := abs(median(tempchange/duration)), by = rarefyID] # Thiel-Sen estimator of the abs(slope): median of all pairwise differences
+}
 ```
 
 ### Summary
 ```{r summary durint, echo=FALSE}
-if(exists('modDurInt5yrJut')) summary(modDurInt5yrJut)
+if(exists('modDurInt5yrJut')) summary(modDurInt5yrJtu)
 ```
 
+### DHARMa model evaluation
+#### Simulate residuals
+```{r, echo=FALSE}
+## run the if(FALSE) part by hand if needed (e.g., the first time)
+if(FALSE) {
+  res_DurInt5yrJtu <- simulateResiduals(modDurInt5yrJtu, n = 250)
+  
+  saveRDS(res_DurInt5yrJtu, file = 'temp/res_DurInt5yrJtu.rds')
+} else {
+  if(file.exists(here('temp', 'res_DurInt5yrJtu.rds'))) res_DurInt5yrJtu <- readRDS(here('temp', 'res_DurInt5yrJtu.rds'))
+}
+```
+
+#### Plot residuals
+```{r, echo=FALSE}
+if(exists('res_DurInt5yrJtu')){
+  plot(res_DurInt5yrJtu)
+  plotResiduals(res_DurInt5yrJtu, trends$duration.sc[i], xlab = 'duration.sc', main = '')
+  plotResiduals(res_DurInt5yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
+  plotResiduals(res_DurInt5yrJtu, form=trends$tempchangeTS_abs[i], xlab = 'tempchangeTS_abs', main = '')
+  plotResiduals(res_DurInt5yrJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
+  plotResiduals(res_DurInt5yrJtu, trends$seas.sc[i], xlab = 'seas.sc', main = '')
+  plotResiduals(res_DurInt5yrJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
+  plotResiduals(res_DurInt5yrJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
+  plotResiduals(res_DurInt5yrJtu, trends$nspp.sc[i], xlab = 'nspp.sc', main = '')
+  plotResiduals(res_DurInt5yrJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
+  plotResiduals(res_DurInt5yrJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
+}
+```
+
+
+#### Overdispersion
+```{r, echo=FALSE}
+if(exists('res_DurInt5yrJtu')){
+  testDispersion(res_DurInt5yrJtu)
+}
+
+```
+
+#### Near-zero-inflation
+Zero values have been transformed to slightly >0, so can't test zero-inflation directly
+```{r, echo=FALSE,}
+countNearZero <- function(x) sum(x < 0.0001)
+
+if(exists('res_DurInt5yrJtu')){
+  testGeneric(res_DurInt5yrJtu, summary = countNearZero, alternative = 'greater')
+}
+
+```
+
+#### Near-one-inflation
+```{r, echo=FALSE, eval=FALSE}
+countNearOne <- function(x) sum(x > 0.9999)
+
+if(exists('res_DurInt5yrJtu')){
+  testGeneric(res_DurInt5yrJtu, summary = countNearOne, alternative = 'greater')
+}
+```
+
+### Interactions
+#### Set up and write to file
+Only run this once
+```{r, eval = FALSE, echo=FALSE}
+scaling <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # the scalings
+
+# set up the interactions to plot. min and max on a raw scale.
+ints <- data.frame(vars = c('tempchangeTS_abs', 'tempave_metab', 'seas', 'microclim', 
+                            'npp', 'nspp', 'mass',
+                            'human_bowler', 'human_bowler'),
+                   min =      c(0,   -10, 0,   0.1,   0.5,  1,    1,   0,   0), 
+                   max =      c(1,   40,  15,  6,   5000, 1000, 1e8, 10,  10),
+                   len =      c(100, 100, 100, 100, 100,  100,  100, 100, 100),
+                   discrete = c(F,   F,   F,   F,   F,    F,    F,   F,   F),
+                   REALM = c(rep('Terrestrial', 8), 'Marine'),
+                   REALM2 = c(rep('TerrFresh', 8), 'Marine'),
+                   stringsAsFactors = FALSE)
+baseall <- trends[, .(type = 'all', 
+                      tempchangeTS_abs = mean(tempchangeTS_abs, na.rm=TRUE), 
+                      tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                      seas.sc = mean(seas.sc, na.rm=TRUE), 
+                      microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                      npp.sc = mean(npp.sc, na.rm=TRUE), 
+                      nspp.sc = mean(nspp.sc, na.rm=TRUE),
+                      mass.sc = mean(mass.sc, na.rm=TRUE), 
+                      human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
+baseterr <- trends[REALM == 'Terrestrial', 
+                   .(type = 'Terrestrial', 
+                     tempchangeTS_abs = mean(tempchangeTS_abs, na.rm=TRUE), 
+                     tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                     seas.sc = mean(seas.sc, na.rm=TRUE), 
+                     microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                     npp.sc = mean(npp.sc, na.rm=TRUE), 
+                     nspp.sc = baseall$nspp.sc, # keep this the same across all
+                     mass.sc = mean(mass.sc, na.rm=TRUE), 
+                     human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
+basemar <- trends[REALM == 'Marine', 
+                  .(type = 'Marine',
+                    tempchangeTS_abs = mean(tempchangeTS_abs, na.rm=TRUE), 
+                    tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
+                    seas.sc = mean(seas.sc, na.rm=TRUE), 
+                    microclim.sc = mean(microclim.sc, na.rm=TRUE), 
+                    npp.sc = mean(npp.sc, na.rm=TRUE), 
+                    nspp.sc = baseall$nspp.sc,
+                    mass.sc = mean(mass.sc, na.rm=TRUE), 
+                    human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
+basetab <- rbind(baseall, baseterr, basemar)
+basetab[, ':='(STUDY_ID = trends[i, STUDY_ID][1], rarefyID = trends[i, rarefyID][1])] # pick the first RE level in the dataframe
+
+# make the data frames for each interaction to plot                
+for(j in 1:nrow(ints)){
+  # set up a grid of temperature trends and the interacting variable
+  if(ints$vars[j] == 'tempchangeTS_abs'){ # this one isn't in scaling, since made anew for each model based on duration
+    intvars <- list(duration = seq(1, 5, length.out = 100), 
+                    new = seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
+                    var = ints$vars[j])
+  } else {
+    log <- scaling$log[scaling$var == paste0(ints$vars[j], '.sc')]
+    plus <- scaling$plus[scaling$var == paste0(ints$vars[j], '.sc')]
+    if(log) intvars <- list(duration = seq(1, 5, length.out = 100), 
+                                    new = exp(seq(log(ints$min[j]+plus), log(ints$max[j]+plus), length.out = ints$len[j])),
+                                    var = ints$vars[j])
+    if(!log) intvars <- list(duration = seq(1, 5, length.out = 100), 
+                                     new = seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
+                                     var = ints$vars[j])
+  }
+  names(intvars) <- c('duration', ints$vars[j], 'var')
+  thisdat <- expand.grid(intvars)
+  
+  # scale the interacting variable
+  if(ints$vars[j] != 'tempchangeTS_abs'){ # this one isn't in scaling, since made anew for each model based on duration0
+    cent <- scaling$center[scaling$var == paste0(ints$vars[j], '.sc')]
+    scl <- scaling$scale[scaling$var == paste0(ints$vars[j], '.sc')]
+    log <- scaling$log[scaling$var == paste0(ints$vars[j], '.sc')]
+    plus <- scaling$plus[scaling$var == paste0(ints$vars[j], '.sc')]
+    if(log) thisdat[[paste0(ints$var[j], '.sc')]] <- (log(thisdat[[ints$vars[j]]] + plus) - cent)/scl
+    if(!log) thisdat[[paste0(ints$var[j], '.sc')]] <- (thisdat[[ints$var[j]]] - cent)/scl
+  }
+  
+  # merge with the rest of the columns
+  # use realm-specific averages for human impacts
+  colnamestouse <- setdiff(colnames(basetab), c(ints$var[j], paste0(ints$var[j], '.sc')))
+  if(ints$vars[j] != 'human_bowler'){
+    thisdat <- cbind(thisdat, basetab[type == 'all', ..colnamestouse])
+  }
+  if(ints$vars[j] == 'human_bowler' & ints$REALM[j] == 'Terrestrial'){
+    thisdat <- cbind(thisdat, basetab[type == 'Terrestrial', ..colnamestouse])
+  }
+  if(ints$vars[j] == 'human_bowler' & ints$REALM[j] == 'Marine'){
+    thisdat <- cbind(thisdat, basetab[type == 'Marine', ..colnamestouse])
+  }
+  
+  # add realm
+  thisdat$REALM <- ints$REALM[j]
+  thisdat$REALM2 <- ints$REALM2[j]
+  
+  # add plotting information
+  if(ints$vars[j] != 'tempchangeTS_abs'){
+    thisdat$log <- scaling$log[scaling$var == paste0(ints$vars[j], '.sc')]
+  } else {
+    thisdat$log <- FALSE
+  }
+  thisdat$discrete <- ints$discrete[j]
+  
+  # merge with the previous iterations
+  if(j == 1) newdat <- thisdat
+  if(j > 1){
+    colstoadd <- setdiff(colnames(thisdat), colnames(newdat))
+    for(toadd in colstoadd){
+      newdat[[toadd]] <- NA
+    }
+    
+    colstoadd2 <- setdiff(colnames(newdat), colnames(thisdat))
+    for(toadd in colstoadd2){
+      thisdat[[toadd]] <- NA
+    }
+    
+    newdat <- rbind(newdat, thisdat)
+  } 
+}
+
+# character so that new levels can be added
+newdat$REALM <- as.character(newdat$REALM)
+newdat$REALM2 <- as.character(newdat$REALM2)
+newdat$var <- as.character(newdat$var)
+
+# add extra rows so that all factor levels are represented (for predict.lme to work, not sure about predict.glmmTMB)
+newdat <- rbind(newdat[1:6, ], newdat)
+newdat$REALM[1:6] <- c('Marine', 'Marine', 'Freshwater', 'Freshwater', 'Terrestrial', 'Terrestrial')
+newdat$REALM2[1:6] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh', 'TerrFresh', 'TerrFresh')
+newdat$tempchange[1:6] <- c(-0.2, 0.2, -0.2, 0.2, -0.2, 0.2)
+newdat$var[1:6] <- 'test'
+
+# scale the duration
+cent <- scaling$center[scaling$var == 'duration.sc']
+scl <- scaling$scale[scaling$var == 'duration.sc']
+newdat$duration.sc <- (log(newdat$duration)-cent)/scl
+
+# write out
+write.csv(newdat, 'temp/newdata_interactions_DurInt.csv', row.names = FALSE)
+
+```
+
+Now go run on the command line
+```
+nohup code/turnover_vs_temperature_GLMM_pred.R temp/modDurIntTdTSeMiNPNspMaHu5yrJtu.rds temp/newdata_interactions_DurInt.csv temp/modDurIntTdTSeMiNPNspMaHu5yrJtu_preds_interactions.rds >logs/turnover_vs_temperature_GLMMmodDurIntTdTSeMiNPNspMaHu5yrJtu_pred_interactions.Rout &
+```
+
+#### Load and plot
+```{r, fig.width = 9, fig.height = 8, echo=FALSE}
+newdatint <- readRDS(here('temp', 'modDurIntTdTSeMiNPNspMaHu5yrJtu_preds_interactions.rds'))
+newdatint[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # set factor order
+newdatint[, REALM2 := factor(REALM2, levels = c('TerrFresh', 'Marine'))] # set factor order
+
+ylims = c(0.2, 0.65)
+
+# prep the plots
+ints <- unique(newdatint[ ,.(var, REALM2, log, discrete)])
+ints <- ints[ints$var != 'test', ] # remove the extra rows
+intplots <- vector('list', nrow(ints))
+for(j in 1:length(intplots)){
+  subs <- newdatint$var == ints$var[j]
+  xvar <- 'duration'
+  title <- ints$var[j]
+  if(ints$var[j] %in% c('human_bowler')){
+    subs <- newdatint$var == ints$var[j] & newdatint$tempchange > 0 & newdatint$REALM2 == ints$REALM2[j]
+    title <- paste0('human:', ints$REALM2[j])
+  } 
+  
+  thisplot <- ggplot(newdatint[subs, ], 
+                     aes_string(x = xvar, y = 'pred', 
+                                group = ints$var[j], 
+                                color = ints$var[j])) +
+    geom_line() +
+    #coord_cartesian(ylim = ylims) +
+    theme(legend.title = element_text(size = 8), 
+          legend.text = element_text(size = 6),
+          legend.key.width = unit(0.1, 'inch')) +
+    labs(title = title)
+  if(ints$log[j] & !ints$discrete[j]){
+    intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'log')
+  }
+  if(!ints$log[j] & !ints$discrete[j]){
+    intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'identity')
+  }
+  if(ints$discrete[j]){
+    intplots[[j]] <- thisplot + scale_color_brewer(palette = "Dark2")
+  }
+}
+
+grid.arrange(grobs = intplots, ncol = 3)
+
+```

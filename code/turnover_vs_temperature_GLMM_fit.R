@@ -28,6 +28,7 @@ print(Sys.time())
 
 library(data.table) # for handling large datasets
 library(glmmTMB) # for ME models
+library(performance) # for R2
 
 # load data ############################
 
@@ -48,6 +49,9 @@ if(fitmod == 'modRFgauss'){
     summary(modRFgauss)
     saveRDS(modRFgauss, file = 'temp/modRFgauss.rds')
     print('saved modRFgauss.rds')
+    print(Sys.time())
+    print(performance::r2(modRFgauss))
+    
     MATCHMOD <- TRUE
 }
 
@@ -57,6 +61,9 @@ if(fitmod == 'modRFbeta'){
     summary(modRFbeta)
     saveRDS(modRFbeta, file = 'temp/modRFbeta.rds')
     print('saved modRFbeta.rds')
+    print(Sys.time())
+    print(performance::r2(modRFbeta))
+    
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modRFrID'){
@@ -66,6 +73,8 @@ if(fitmod == 'modRFrID'){
     summary(modRFrID)
     saveRDS(modRFrID, file = 'temp/modRFrID.rds')
     print('saved modRDrID.rds')
+    print(Sys.time())
+    print(performance::r2(modRFrID))
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modRF2lev'){
@@ -75,6 +84,8 @@ if(fitmod == 'modRF2lev'){
     summary(modRF2lev)
     saveRDS(modRF2lev, file = 'temp/modRF2lev.rds')
     print('saved modRF2lev.rds')
+    print(Sys.time())
+    print(performance::r2(modRF2lev))
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modRFnestedRE'){
@@ -84,6 +95,8 @@ if(fitmod == 'modRFnestedRE'){
     summary(modRFnestedRE)
     saveRDS(modRFnestedRE, file = 'temp/modRFnestedRE.rds')
     print('saved modRFnestedRE.rds')
+    print(Sys.time())
+    print(performance::r2(modRFnestedRE))
     MATCHMOD <- TRUE
 }
 
@@ -94,6 +107,8 @@ if(fitmod == 'modRFslopeRE'){
     summary(modRFslopeRE)
     saveRDS(modRFslopeRE, file = 'temp/modRFslopeRE.rds')
     print('saved modRFslopeRE.rds')
+    print(Sys.time())
+    print(performance::r2(modRFslopeRE))
     MATCHMOD <- TRUE
 }
 
@@ -105,6 +120,8 @@ if(fitmod == 'modRFdisp2lev'){
     summary(modRFdisp2lev)
     saveRDS(modRFdisp2lev, file = 'temp/modRFdisp2lev.rds')
     print('saved modRFdisp2lev.rds')
+    print(Sys.time())
+    print(performance::r2(modRFdisp2lev))
     MATCHMOD <- TRUE
 }
 
@@ -116,6 +133,8 @@ if(fitmod == 'modRFdisp'){
     summary(modRFdisp)
     saveRDS(modRFdisp, file = 'temp/modRFdisp.rds')
     print('saved modRFdisp.rds')
+    print(Sys.time())
+    print(performance::r2(modRFdisp))
     MATCHMOD <- TRUE
 }
 
@@ -127,6 +146,8 @@ if(fitmod == 'modRFdisp2levOnlyint'){ # 2 level RE, no slope, + dispersion formu
     summary(modRFdisp2levOnlyint)
     saveRDS(modRFdisp2levOnlyint, file = 'temp/modRFdisp2levOnlyint.rds')
     print('saved modRFdisp2levOnlyint.rds')
+    print(Sys.time())
+    print(performance::r2(modRFdisp2levOnlyint))
     MATCHMOD <- TRUE
 }
 
@@ -137,6 +158,8 @@ if(fitmod == 'modRFdurslope2lev'){ # 2 level RE, slope vs. duration
     summary(modRFdurslope2lev)
     saveRDS(modRFdurslope2lev, file = 'temp/modRFdurslope2lev.rds')
     print('saved modRFdurslope2lev.rds')
+    print(Sys.time())
+    print(performance::r2(modRFdurslope2lev))
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modRFdurslope2levdisp'){ # 2 level RE, slope vs. duration, disp formula
@@ -147,6 +170,8 @@ if(fitmod == 'modRFdurslope2levdisp'){ # 2 level RE, slope vs. duration, disp fo
     summary(modRFdurslope2levdisp)
     saveRDS(modRFdurslope2levdisp, file = 'temp/modRFdurslope2levdisp.rds')
     print('saved modRFdurslope2levdisp.rds')
+    print(Sys.time())
+    print(performance::r2(modRFdurslope2levdisp))
     MATCHMOD <- TRUE
 }
 
@@ -158,6 +183,8 @@ if(fitmod == 'modRFdurslope2levdisprealm'){ # 2 level RE, slope vs. duration, di
     summary(modRFdurslope2levdisprealm)
     saveRDS(modRFdurslope2levdisprealm, file = 'temp/modRFdurslope2levdisprealm.rds')
     print('saved modRFdurslope2levdisprealm.rds')
+    print(Sys.time())
+    print(performance::r2(modRFdurslope2levdisprealm))
     MATCHMOD <- TRUE
 }
 
@@ -470,6 +497,8 @@ if(fitmod == 'modMainTdTSeMiNPNspMaHuJtu'){
     outfile = 'temp/modMainTdTSeMiNPNspMaHuJtu.rds'
     saveRDS(modMainTdTSeMiNPNspMaHuJtu, file = outfile)
     print(paste('saved', outfile))
+    print(Sys.time())
+    print(performance::r2(modMainTdTSeMiNPNspMaHuJtu))
     MATCHMOD <- TRUE
 }
 
@@ -497,6 +526,8 @@ if(fitmod == 'modMainTdTSeMiNPNspMaHu1yrJtu'){
     outfile = 'temp/modMainTdTSeMiNPNspMaHu1yrJtu.rds'
     saveRDS(modMainTdTSeMiNPNspMaHu1yrJtu, file = outfile)
     print(paste('saved', outfile))
+    print(Sys.time())
+    print(performance::r2(modMainTdTSeMiNPNspMaHu1yrJtu))
     MATCHMOD <- TRUE
 }
 
@@ -524,6 +555,8 @@ if(fitmod == 'modMainTdTSeMiNPNspMaHu5yrJtu'){
     outfile = 'temp/modMainTdTSeMiNPNspMaHu5yrJtu.rds'
     saveRDS(modMainTdTSeMiNPNspMaHu5yrJtu, file = outfile)
     print(paste('saved', outfile))
+    print(Sys.time())
+    print(performance::r2(modMainTdTSeMiNPNspMaHu5yrJtu))
     MATCHMOD <- TRUE
 }
 
@@ -551,6 +584,8 @@ if(fitmod == 'modMainTdTSeMiNPNspMaHu10yrJtu'){
     outfile = 'temp/modMainTdTSeMiNPNspMaHu10yrJtu.rds'
     saveRDS(modMainTdTSeMiNPNspMaHu10yrJtu, file = outfile)
     print(paste('saved', outfile))
+    print(Sys.time())
+    print(performance::r2(modMainTdTSeMiNPNspMaHu10yrJtu))
     MATCHMOD <- TRUE
 }
 
@@ -578,6 +613,8 @@ if(fitmod == 'modMainTdTSeMiNPNspMaHuJbeta'){
     outfile = 'temp/modMainTdTSeMiNPNspMaHuJbeta.rds'
     saveRDS(modMainTdTSeMiNPNspMaHuJbeta, file = outfile)
     print(paste('saved', outfile))
+    print(Sys.time())
+    print(performance::r2(modMainTdTSeMiNPNspMaHuJbeta))
     MATCHMOD <- TRUE
 }
 
@@ -605,6 +642,8 @@ if(fitmod == 'modMainTdTSeMiNPNspMaHu1yrJbeta'){
     outfile = 'temp/modMainTdTSeMiNPNspMaHu1yrJbeta.rds'
     saveRDS(modMainTdTSeMiNPNspMaHu1yrJbeta, file = outfile)
     print(paste('saved', outfile))
+    print(Sys.time())
+    print(performance::r2(modMainTdTSeMiNPNspMaHu1yrJbeta))
     MATCHMOD <- TRUE
 }
 
@@ -632,6 +671,8 @@ if(fitmod == 'modMainTdTSeMiNPNspMaHu10yrJbeta'){
     outfile = 'temp/modMainTdTSeMiNPNspMaHu5yrJbeta.rds'
     saveRDS(modMainTdTSeMiNPNspMaHu5yrJbeta, file = outfile)
     print(paste('saved', outfile))
+    print(Sys.time())
+    print(performance::r2(modMainTdTSeMiNPNspMaHu5yrJbeta))
     MATCHMOD <- TRUE
 }
 
@@ -659,6 +700,8 @@ if(fitmod == 'modMainTdTSeMiNPNspMaHuHorn'){
     outfile = 'temp/modMainTdTSeMiNPNspMaHuHorn.rds'
     saveRDS(modMainTdTSeMiNPNspMaHuHorn, file = outfile)
     print(paste('saved', outfile))
+    print(Sys.time())
+    print(performance::r2(modMainTdTSeMiNPNspMaHuHorn))
     MATCHMOD <- TRUE
 }
 
@@ -686,6 +729,8 @@ if(fitmod == 'modMainTdTSeMiNPNspMaHu1yrHorn'){
     outfile = 'temp/modMainTdTSeMiNPNspMaHu1yrHorn.rds'
     saveRDS(modMainTdTSeMiNPNspMaHu1yrHorn, file = outfile)
     print(paste('saved', outfile))
+    print(Sys.time())
+    print(performance::r2(modMainTdTSeMiNPNspMaHu1yrHorn))
     MATCHMOD <- TRUE
 }
 
@@ -713,6 +758,8 @@ if(fitmod == 'modMainTdTSeMiNPNspMaHu10yrHorn'){
     outfile = 'temp/modMainTdTSeMiNPNspMaHu10yrHorn.rds'
     saveRDS(modMainTdTSeMiNPNspMaHu10yrHorn, file = outfile)
     print(paste('saved', outfile))
+    print(Sys.time())
+    print(performance::r2(modMainTdTSeMiNPNspMaHu10yrHorn))
     MATCHMOD <- TRUE
 }
 
@@ -1278,6 +1325,43 @@ if(fitmod == 'modFullMaEnMiNPHu5yrHorn'){
 
 # full models with duration interactions ############################
 
+if(fitmod == 'modDurIntTdTSeMiNPNspMaHu3yrJtu'){
+    NYR = 3
+    trends[, maxyr := max(c(year1, year2)), by = rarefyID]
+    rowkeep <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration,
+                                       seas.sc, microclim.sc, npp.sc, mass.sc, human_bowler.sc, nspp.sc) &
+                          year1 > maxyr - NYR &
+                          year2 > maxyr - NYR] # trim to complete cases in the last NYR years
+    rkeep <- trends[rowkeep, .(nyrs = length(unique(c(year1, year2)))), by = rarefyID][nyrs == NYR, rarefyID] # find timeseries with exactly 5 years
+    i <- trends[, rowkeep & rarefyID %in% rkeep]
+    
+    trends[i, tempchangeTS_abs := abs(median(tempchange/duration)), by = rarefyID] # Thiel-Sen estimator of the abs(slope): median of all pairwise differences
+    
+    print(paste(sum(i), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration + REALM + nspp.sc +
+                                                   tempchangeTS_abs:duration +
+                                                   REALM : duration + 
+                                                   tempave_metab.sc : duration + 
+                                                   seas.sc : duration+
+                                                   microclim.sc : duration+
+                                                   npp.sc : duration+
+                                                   nspp.sc : duration+
+                                                   mass.sc : duration +
+                                                   human_bowler.sc:REALM2 : duration +
+                                                   (duration|STUDY_ID/rarefyID), 
+                                               data = trends[i,], 
+                                               family = beta_family(link = 'logit'), 
+                                               dispformula = ~nspp.sc+REALM,
+                                               control = glmmTMBControl(profile=TRUE))
+    print(summary(mod))
+    outfile = paste0('temp/modDurIntTdTSeMiNPNspMaHu', NYR, 'yrJtu.rds')
+    saveRDS(mod, file = outfile)
+    print(paste('saved', outfile))
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+
 if(fitmod == 'modDurIntTdTSeMiNPNspMaHu5yrJtu'){
     trends[, maxyr := max(c(year1, year2)), by = rarefyID]
     rowkeep <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc,
@@ -1290,7 +1374,7 @@ if(fitmod == 'modDurIntTdTSeMiNPNspMaHu5yrJtu'){
     trends[i, tempchangeTS_abs := abs(median(tempchange/duration)), by = rarefyID] # Thiel-Sen estimator of the abs(slope): median of all pairwise differences
  
     print(paste(sum(i), 'data points'))
-    modDurIntTdTSeMiNPNspMaHu5yrJtu <- glmmTMB(Jtu.sc ~ duration.sc + REALM + nspp.sc +
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + REALM + nspp.sc +
                                                    tempchangeTS_abs:duration.sc +
                                                    REALM : duration.sc + 
                                                    tempave_metab.sc : duration.sc + 
@@ -1305,10 +1389,12 @@ if(fitmod == 'modDurIntTdTSeMiNPNspMaHu5yrJtu'){
                                                family = beta_family(link = 'logit'), 
                                                dispformula = ~nspp.sc+REALM,
                                                control = glmmTMBControl(profile=TRUE))
-    summary(modDurIntTdTSeMiNPNspMaHu5yrJtu)
+    print(summary(mod))
     outfile = 'temp/modDurIntTdTSeMiNPNspMaHu5yrJtu.rds'
-    saveRDS(modDurIntTdTSeMiNPNspMaHu5yrJtu, file = outfile)
+    saveRDS(mod, file = outfile)
     print(paste('saved', outfile))
+    print(Sys.time())
+    print(performance::r2(mod))
     MATCHMOD <- TRUE
 }
 
