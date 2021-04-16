@@ -5,7 +5,7 @@ output:
 ---
 # Set up
 ```{r setup, include=FALSE}
-if(Sys.info()$nodename == 'annotate.sebs.rutgers.edu'){
+if(Sys.info()['nodename'] == 'annotate.sebs.rutgers.edu'){
   library('mgcv', lib.loc = '/usr/lib64/R/library') # when running on Annotate. Need to load 1.8-26, not 1.8-33.
 } else {
   library('mgcv')
@@ -80,15 +80,31 @@ length(unique(bt$rarefyID))
 ```{r plot turnover}
 test <- bt[rarefyID == '339_1085477',]
 test[, dY := year2 - year1]
-
-
-# make plot
 ggplot(test, aes(dY, Jtu)) +
     geom_point(alpha = 0.5) +
     geom_smooth(data = test, 
                 method = 'lm') + # a straight line fit
     labs(x = 'Year', y = 'Jaccard turnover')
 
+
+# a declining 3-year slope
+test <- bt[rarefyID == '112_529867' & year1>= 2002 & year2 <= 2004, ]
+test[, dY := year2 - year1]
+ggplot(test, aes(dY, Jtu)) +
+    geom_point(alpha = 0.5) +
+    geom_smooth(data = test, 
+                method = 'lm') + # a straight line fit
+    labs(x = 'Difference in years', y = 'Jaccard turnover')
+
+
+# a declining 20-year slope
+test <- bt[rarefyID == '213_435199' & year1>= 1987 & year2 <= 2006, ]
+test[, dY := year2 - year1]
+ggplot(test, aes(dY, Jtu)) +
+    geom_point(alpha = 0.5) +
+    geom_smooth(data = test, 
+                method = 'lm') + # a straight line fit
+    labs(x = 'Difference in years', y = 'Jaccard turnover')
 ```
 
 
