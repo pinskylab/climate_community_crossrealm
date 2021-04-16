@@ -5,7 +5,11 @@ output:
 ---
 # Set up
 ```{r setup, include=FALSE}
-library('mgcv', lib.loc = '/usr/lib64/R/library') # when running on Annotate. Need to load 1.8-26, not 1.8-33.
+if(Sys.info()$nodename == 'annotate.sebs.rutgers.edu'){
+  library('mgcv', lib.loc = '/usr/lib64/R/library') # when running on Annotate. Need to load 1.8-26, not 1.8-33.
+} else {
+  library('mgcv')
+}
 library(data.table)
 library(ggplot2)
 
@@ -65,7 +69,7 @@ length(unique(bt$rarefyID))
 # number of years per study (in remaining samples)
 nyrs <- bt[, .(nyrBT = length(unique(c(year1, year2)))), by = rarefyID]
 
-# >2 species, count data, >2 yrs
+# >2 species, >2 yrs
 bt <- bt[rarefyID %in% rich[Nspp > 2, rarefyID] & 
            rarefyID %in% nyrs[nyrBT > 2, rarefyID], ]
 

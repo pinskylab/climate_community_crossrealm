@@ -1,13 +1,10 @@
 ---
-title: 'Turnover vs. temperature plots'
+title: 'Dissimilarity vs. temperature plots'
 output: 
     github_document: default
 
 ---
 # Prep
-<details>
-<summary>Click to expand code</summary>
-
 ```{r setup}
 library(data.table) # for handling large datasets
 library(ggplot2) # for some plotting
@@ -29,29 +26,13 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 
 
 ```{r load data}
-# Turnover and covariates assembled by turnover_vs_temperature_prep.Rmd
+# dissimilarity and covariates assembled by turnover_vs_temperature_prep.Rmd
 trends <- fread('output/turnover_w_covariates.csv.gz')
 
 # set realm order
 trends[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
-
-# set up sign of temperature change
-trends[, tsign := factor(sign(tempchange))]
-
-# realm that combined Terrestrial and Freshwater, for interacting with human impact
-trends[, REALM2 := REALM]
-levels(trends$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
-
-# group Marine invertebrates/plants in with All
-trends[, taxa_mod2 := taxa_mod]
-trends[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
-
-# calculate duration
-trends[, duration := year2 - year1]
 ```
 
-
-</details>
 
 # Plot dissimilarity vs. temperature change
 ## All temporal scales
