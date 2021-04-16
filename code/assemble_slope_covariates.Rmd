@@ -1,0 +1,502 @@
+---
+title: "Dissimilarity slope covariate data prep and visualization"
+output:
+  github_document: default
+---
+Uses slope of dissimilarity vs. time from calc_turnover.Rmd.
+
+```{r setup}
+library('mgcv', lib.loc = '/usr/lib64/R/library') # when running on Annotate. Need to load 1.8-26, not 1.8-33.
+library(data.table)
+library(ggplot2)
+library(beanplot) # for beanplots
+library(gridExtra) # to combine ggplots together
+library(grid) # to combine ggplots together
+require(scales) # for custom axis scales
+require(here)
+
+
+#knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
+
+signedsqrt_trans <- function() trans_new('signedsqrt', 
+                                         transform = function(x) sign(x)*sqrt(abs(x)), 
+                                         inverse = function(x) sign(x)*x^2)
+```
+
+# Load data
+```{r load data}
+# biotime community dissimilarity data
+bttrend <- readRDS(here('temp', 'trendstemp.rds'))
+
+# convert biotime to long format
+btlong <- melt(bttrend, id.vars = c('rarefyID', 'REALM', 'Biome', 'taxa_mod', 'STUDY_ID', 'rarefyID_x', 'rarefyID_y'),
+               measure.vars = list(c('Jtutrend3', 'Jbetatrend3', 'Horntrend3', 'Jtutrend5', 'Jbetatrend5', 'Horntrend5', 
+                                     'Jtutrend10', 'Jbetatrend10', 'Horntrend10', 'Jtutrend20', 'Jbetatrend20', 'Horntrend20'),
+                                     c('Jtutrend3_se', 'Jbetatrend3_se', 'Horntrend3_se', 'Jtutrend5_se', 'Jbetatrend5_se',
+                                       'Horntrend5_se', 'Jtutrend10_se', 'Jbetatrend10_se', 'Horntrend10_se', 'Jtutrend20_se',
+                                       'Jbetatrend20_se', 'Horntrend20_se'),
+                                     c('Jtutrend3_y1', 'Jbetatrend3_y1', 'Horntrend3_y1', 'Jtutrend5_y1', 'Jbetatrend5_y1',
+                                       'Horntrend5_y1', 'Jtutrend10_y1', 'Jbetatrend10_y1', 'Horntrend10_y1', 'Jtutrend20_y1',
+                                       'Jbetatrend20_y1', 'Horntrend20_y1'),
+                                     c('Jtutrend3_y2', 'Jbetatrend3_y2', 'Horntrend3_y2', 'Jtutrend5_y2', 'Jbetatrend5_y2',
+                                       'Horntrend5_y2', 'Jtutrend10_y2', 'Jbetatrend10_y2', 'Horntrend10_y2', 'Jtutrend20_y2',
+                                       'Jbetatrend20_y2','Horntrend20_y2')),
+                                value.name = c('disstrend', 'trendse', 'year1', 'year2'))
+btlong[, measure := rep(c('Jtu', 'Jbeta', 'Horn'), 4)[variable]] # add Jtu, Jbeta, or Horn
+btlong[, variable := NULL]
+btlong <- btlong[!is.na(year1) & !is.na(year2) & !is.na(disstrend), ] # trim out missing
+
+# biotime num individuals and other info
+load(here::here('data', 'biotime_blowes', 'bt_malin.Rdata')) # load bt_malin
+btinfo <- data.table(bt_malin); rm(bt_malin)
+btinfo[, Nave := mean(N), by = rarefyID] # average number of individuals in the timeseries
+btinfo <- btinfo[!duplicated(rarefyID), .(rarefyID, Nave)]
+
+# Temperature average, changes, and seasonality
+temperature <- fread(here('output', 'temperaturetrend_byrarefyID_by_year1_year2.csv.gz'))
+
+# microclimates
+microclim <- fread(here('output', 'microclimates.csv.gz'), drop = 1)
+
+# NPP
+npp <- fread(here('output', 'npplandocean.csv.gz'))
+
+# Body size
+bs <- fread(here('output', 'mass_byrarefyID.csv.gz'), drop = 1)
+bs[, ':='(STUDY_ID = NULL, REALM = NULL, taxa_mod = NULL)] # remove unnecessary columns 
+
+# Mobility
+speed <- fread(here('output', 'speed_byrarefyID.csv.gz'), drop = 1)
+speed[, ':='(STUDY_ID = NULL, REALM = NULL, taxa_mod = NULL)] # remove unnecessary columns 
+
+# Lifespan
+lsp <- fread(here('output', 'lifespan_byrarefyID.csv.gz'))
+
+# CTI
+cti <- fread(here('output', 'cti_byrarefyID.csv.gz'))
+    
+# consumer vs. producer
+consfrac <- fread(here('output', 'consfrac_byrarefyID.csv.gz'))
+
+# richness
+rich <- fread(here('output', 'richness_by_rarefyID.csv.gz')) # number of species
+
+# endotherm vs. ectotherm
+endofrac <- fread(here('output', 'endofrac_byrarefyID.csv.gz')) # endotherm vs. ectotherm classifications
+
+# human impact
+human <- fread(here('output', 'humanimpact_by_rarefyID.csv.gz'))
+
+# %veg
+veg <- as.data.table(readRDS(here('output', 'vct_by_rarefyID.rds')))
+veg[, veg := (`tree cover % (mean)` + 0.5 * `non-tree veg. % (mean)`)/100] # veg index from 0 (all non-veg) to 1 (all tree). Non-tree veg counts as 0.5.
+```
+
+
+## Add covariates to BT data
+```{r add covariate data}
+# add covariates
+bt <- merge(btlong, btinfo, all.x = TRUE, by = 'rarefyID')
+bt <- merge(bt, temperature, all.x = TRUE, by = c('rarefyID', 'year1', 'year2')) # temperature ave, ave metabolic, change, and seasonality
+bt <- merge(bt, microclim[, .(rarefyID, microclim = Temp_sd20km)], all.x = TRUE, by = 'rarefyID') # microclimates
+bt <- merge(bt, npp, all.x = TRUE, by = 'rarefyID') # npp
+bt <- merge(bt, bs[, .(rarefyID, mass = mass_mean_weight)], all.x = TRUE) # body size mass (g)
+bt <- merge(bt, cti[, .(rarefyID, thermal_bias)], all.x = TRUE) # thermal bias (degC)
+bt <- merge(bt, rich, all.x = TRUE) # species richness
+bt <- merge(bt, endofrac[, .(rarefyID, endofrac)], all.x = TRUE) # endotherm vs. ectotherm
+bt <- merge(bt, human[, .(rarefyID, human_bowler = atc)], all.x = TRUE) # human impact
+bt[REALM == 'Marine', veg := 0] # veg index is 0 at sea
+```
+
+
+
+## Trim data
+```{r}
+norig <- nrow(bt); norig
+# trim out timeseries with too few species
+bt[Nspp <= 2 | is.na(Nspp), .N] #0
+bt <- bt[Nspp > 2, ]
+  
+# or few individuals
+bt[Nave < 10, .N]
+bt <- bt[Nave >= 10 | is.na(Nave), ]
+
+
+nrow(bt)
+nrow(bt)/norig
+bt[, length(unique(STUDY_ID))]
+bt[, length(unique(rarefyID))]
+
+```
+
+
+## Set up useful variables and transformations
+```{r}
+# set realm order
+bt[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
+
+# realm that combines Terrestrial and Freshwater, for interacting with human impact
+bt[, REALM2 := REALM]
+levels(bt$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
+
+# group Marine invertebrates/plants in with All
+bt[, taxa_mod2 := taxa_mod]
+bt[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
+
+# calculate duration
+bt[, duration := year2 - year1]
+
+#add a comparison id
+bt[, compID := paste0(rarefyID, '_', year1, '_', year2)]
+
+
+#######################
+## Transformations
+
+### Log-transform some variables, then center and scale. 
+bt[, tempave.sc := scale(tempave)]
+bt[, tempave_metab.sc := scale(tempave_metab)]
+bt[, seas.sc := scale(seas)]
+bt[, microclim.sc := scale(log(microclim))]
+bt[, temptrend.sc := scale(temptrend, center = TRUE)]
+bt[, temptrend_abs.sc := scale(abs(temptrend), center = TRUE)]
+bt[, mass.sc := scale(log(mass))]
+bt[, thermal_bias.sc := scale(thermal_bias)]
+bt[, endothermfrac.sc := scale(endofrac)]
+bt[, nspp.sc := scale(log(Nspp))]
+bt[, npp.sc := scale(log(npp))]
+bt[, duration.sc := scale(log(duration))]
+bt[, human_bowler.sc := scale(log(human_bowler+1)), by = REALM2] # separate scaling by realm
+
+## save the centering and scaling
+scaling <- data.frame(center = t(t(sapply(bt, attr, 'scaled:center'))),
+                 scale = t(t(sapply(bt, attr, 'scaled:scale'))))
+scaling$var <- rownames(scaling)
+scaling <- scaling[!vapply(scaling$center, is.null, TRUE) | !vapply(scaling$scale, is.null, TRUE),]
+scaling$center[vapply(scaling$center, is.null, TRUE)] <- NA # turn null to NA
+scaling$center <- vapply(scaling$center, paste, collapse = ", ", character(1L)) # flatten list to character. not sure why it's a list.
+scaling$scale <- vapply(scaling$scale, paste, collapse = ", ", character(1L))
+
+## save the transformations just entered above
+scaling$log <- FALSE # whether variable was log-transformed before scaling
+scaling$log[scaling$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'duration.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
+scaling$plus <- 0 # whether anything was added to the variable before logtransforming
+scaling$plus[scaling$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
+
+```
+
+
+## Write out
+Only if file doesn't yet exist
+```{r write out}
+if(!file.exists(here('output', 'slope_w_covariates.csv.gz'))){
+  write.csv(bt[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, disstrend, trendse, measure, 
+                  tempave.sc, tempave_metab.sc, seas.sc, 
+                  microclim.sc, temptrend, temptrend.sc, temptrend_abs.sc,
+                  mass.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc,
+                  duration.sc, human_bowler.sc, REALM2)], 
+            gzfile(here('output', 'slope_w_covariates.csv.gz')), row.names = FALSE)
+  write.csv(scaling, here('output','slope_w_covariates_scaling.csv'), row.names = FALSE)
+}
+
+```
+
+
+
+# Check variable distributions
+## Response variables
+```{r histograms response}
+bt[measure =='Jbeta', summary(disstrend)]
+bt[measure =='Jtu', summary(disstrend)]
+bt[measure =='Horn', summary(disstrend)]
+
+# histograms for 3-year ts
+invisible(bt[measure =='Jbeta' & year2 - year1 == 2, hist(disstrend, main = 'Jaccard total 3-year slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & year2 - year1 == 2, hist(disstrend, main = 'Jaccard turnover 3-year slope', breaks = 80)])
+invisible(bt[measure =='Horn' & year2 - year1 == 2, hist(disstrend, main = 'Morisita-Horn 3-year slope', breaks = 80)])
+
+# histograms for 5-year ts
+invisible(bt[measure =='Jbeta' & year2 - year1 == 4, hist(disstrend, main = 'Jaccard total 5-year slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & year2 - year1 == 4, hist(disstrend, main = 'Jaccard turnover 5-year slope', breaks = 80)])
+invisible(bt[measure =='Horn' & year2 - year1 == 4, hist(disstrend, main = 'Morisita-Horn 5-year slope', breaks = 80)])
+
+# histograms for 10-year ts
+invisible(bt[measure =='Jbeta' & year2 - year1 == 9, hist(disstrend, main = 'Jaccard total 10-year slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & year2 - year1 == 9, hist(disstrend, main = 'Jaccard turnover 10-year slope', breaks = 80)])
+invisible(bt[measure =='Horn' & year2 - year1 == 9, hist(disstrend, main = 'Morisita-Horn 10-year slope', breaks = 80)])
+
+# histograms for 20-year ts
+invisible(bt[measure =='Jbeta' & year2 - year1 == 19, hist(disstrend, main = 'Jaccard total 20-year slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & year2 - year1 == 19, hist(disstrend, main = 'Jaccard turnover 20-year slope', breaks = 80)])
+invisible(bt[measure =='Horn' & year2 - year1 == 19, hist(disstrend, main = 'Morisita-Horn 20-year slope', breaks = 80)])
+
+
+```
+
+## Unscaled covariates
+```{r histograms unscaled, fig.height = 9}
+# histograms to examine
+cexmain = 0.6
+par(mfrow = c(5,4))
+invisible(bt[, hist(year1, main = 'Start year', cex.main = cexmain)])
+invisible(bt[, hist(year2 - year1, main = 'Duration (years)', cex.main = cexmain)])
+invisible(bt[, hist(mass, main = 'Mass (g)', cex.main = cexmain)])
+invisible(bt[, hist(tempave_metab, main = 'Metabolic temperature (°C)', cex.main = cexmain)])
+invisible(bt[, hist(endofrac, main = 'Endotherms (fraction)', cex.main = cexmain)])
+invisible(bt[, hist(tempave, main = 'Environmental temperature (°C)', cex.main = cexmain)])
+invisible(bt[, hist(temptrend, main = 'Temperature trend (°C/yr)', cex.main = cexmain)]) # all the raw data
+invisible(bt[, hist(seas, main = 'Seasonality (°C)', cex.main = cexmain)])
+invisible(bt[, hist(microclim, main = 'Microclimates (°C)', cex.main = cexmain)])
+invisible(bt[, hist(Nspp, main = 'Species richness', cex.main = cexmain)])
+invisible(bt[, hist(thermal_bias, main = 'Thermal bias (°C)', cex.main = cexmain)])
+invisible(bt[, hist(npp, main = 'Net primary productivity', cex.main = cexmain)])
+invisible(bt[, hist(human_bowler, main = 'Human impact score (Bowler)', cex.main = cexmain)])
+
+```
+
+## Scaled covariates
+```{r histograms scaled, fig.height = 9}
+# histograms to examine
+cexmain = 0.6
+par(mfrow = c(5,4))
+invisible(btave[, hist(tempave.sc, main = 'Environmental temperature (°C)', cex.main = cexmain)])
+invisible(btave[, hist(tempave_metab.sc, main = 'Metabolic temperature (°C)', cex.main = cexmain)])
+invisible(btave[, hist(seas.sc, main = 'Seasonality (°C)', cex.main = cexmain)])
+invisible(btave[, hist(microclim.sc, main = 'log Microclimates (°C)', cex.main = cexmain)])
+invisible(bt[, hist(tempchange.sc, main = 'Temperature trend (°C/yr)', cex.main = cexmain)])
+invisible(bt[, hist(tempchange_abs.sc, main = 'abs(Temperature trend) (°C/yr)', cex.main = cexmain)])
+invisible(btave[, hist(mass.sc, main = 'log Mass (g)', cex.main = cexmain)])
+invisible(btave[, hist(speed.sc, main = 'log Speed (km/hr)', cex.main = cexmain)])
+invisible(btave[, hist(lifespan.sc, main = 'log Lifespan (yr)', cex.main = cexmain)])
+invisible(btave[, hist(consumerfrac.sc, main = 'Consumers (fraction)', cex.main = cexmain)])
+invisible(btave[, hist(endothermfrac.sc, main = 'Endotherms (fraction)', cex.main = cexmain)])
+invisible(btave[, hist(nspp.sc, main = 'log Species richness', cex.main = cexmain)])
+invisible(btave[, hist(thermal_bias.sc, main = 'Thermal bias (°C)', cex.main = cexmain)])
+invisible(btave[, hist(npp.sc, main = 'log Net primary productivity', cex.main = cexmain)])
+invisible(btave[, hist(veg.sc, main = 'log Vegetation index', cex.main = cexmain)])
+invisible(btave[, hist(human_bowler.sc, main = 'log Human impact score (Bowler)', cex.main = cexmain)])
+invisible(btave[, hist(human_footprint.sc, main = 'log Human impact score (Venter & Halpern)', cex.main = cexmain)])
+
+```
+
+
+
+# Check correlations among variables 
+Pearson's r is in the lower triangle
+```{r pairs, fig.height=10, fig.width=10}
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- cor(x, y, use = 'pairwise.complete.obs')
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt) #, cex = cex.cor * r)
+}
+pairs(formula = ~ tempave.sc + tempave_metab.sc + seas.sc + microclim.sc + tempchange.sc + tempchange_abs.sc + mass.sc + speed.sc + lifespan.sc + consumerfrac.sc + endothermfrac.sc + nspp.sc + thermal_bias.sc + npp.sc + veg.sc + human_bowler.sc + human_footprint.sc, data = btave, gap = 1/10, cex = 0.2, col = '#00000022', lower.panel = panel.cor)
+
+```
+
+- Mass and lifespan look tightly correlated, but r only 0.56...?
+- Tempave_metab and lifespan don't look tightly correlated, but r= -0.81 
+- Tempave_metab and speed don't look tightly correlated, but r= -0.83 
+- Lifespan and speed don't look tightly correlated, but r = 0.73
+
+# Compare covariates across realms
+```{r compare across realms, fig.height=12, fig.width=9}
+i <- bt[, !duplicated(rarefyID)]; sum(i)
+par(mfrow=c(5,3))
+beanplot(rarefyID_y ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Latitude (degN)', ll = 0.05)
+beanplot(tempave ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature (degC)', ll = 0.05)
+beanplot(tempave_metab ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Metabolic Temperature (degC)', ll = 0.05, bw = 'nrd0') # nrd0 bandwidth to calculation gap
+beanplot(seas ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Seasonality (degC)', ll = 0.05)
+beanplot(microclim ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Microclimates (degC)', ll = 0.05)
+beanplot(tempchange ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature change (degC)', ll = 0.05)
+beanplot(mass_mean_weight ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Mass (g)', ll = 0.05, log = 'y')
+beanplot(speed_mean_weight +1 ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Speed (km/hr)', ll = 0.05, log = 'y')
+beanplot(lifespan_mean_weight ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Lifespan (yr)', ll = 0.05, log = 'y')
+#beanplot(consfrac ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Consumers (fraction)', ll = 0.05, log = '') # too sparse
+#beanplot(endofrac ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Endotherms (fraction)', ll = 0.05, log = '') # too sparse
+beanplot(Nspp ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Number of species', ll = 0.05, log = 'y')
+beanplot(thermal_bias ~ REALM, data = bt[i & !is.na(thermal_bias),], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Thermal bias (degC)', ll = 0.05)
+beanplot(npp ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'NPP', ll = 0.05)
+beanplot(veg ~ REALM, data = bt[i & REALM !='Marine',], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'veg', ll = 0.05)
+
+```
+
+- Marine are in generally warmer locations (seawater doesn't freeze)
+- Marine have much lower seasonality.
+- Marine and freshwater have some very small masses (plankton), but much of dataset is similar to terrestrial.
+- Marine has a lot of slow, crawling organisms, but land has plants. Land also has birds (fast).
+
+# Frequency of time differences
+```{r plot time differences}
+invisible(bt[, hist(year2 - year1, breaks = seq(0.5, 120.5, by = 1))])
+```
+
+# Plot slope vs. duration
+```{r plot slope vs duration, echo=FALSE, fig.height = 6, fig.width = 11}
+p1 <- ggplot(bt[measure == 'Jtu',], aes(year2 - year1, disstrend, group = REALM, color = REALM)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'lm', na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Years', y = 'Jaccard turnover slope')
+
+p2 <- ggplot(bt[measure == 'Jbeta',], aes(year2 - year1, disstrend, group = REALM, color = REALM)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'lm', na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Years', y = 'Jaccard total slope')
+
+p3 <- ggplot(bt[measure == 'Horn',], aes(year2 - year1, disstrend, group = REALM, color = REALM)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'lm', na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Years', y = 'Morisita-Horn slope')
+
+# without points
+p4 <- ggplot(bt[measure == 'Jtu',], aes(year2 - year1, disstrend, group = REALM, color = REALM)) +
+  geom_smooth(method = 'lm', na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Years', y = 'Jaccard turnover slope')
+
+p5 <- ggplot(bt[measure == 'Jbeta',], aes(year2 - year1, disstrend, group = REALM, color = REALM)) +
+  geom_smooth(method = 'lm', na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Years', y = 'Jaccard total slope')
+
+p6 <- ggplot(bt[measure == 'Horn',], aes(year2 - year1, disstrend, group = REALM, color = REALM)) +
+  geom_smooth(method = 'lm', na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Years', y = 'Morisita-Horn slope')
+
+
+
+grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 3)
+```
+
+# Plot dissimilarity vs. explanatory variables
+## Each variable individually
+Lines are ggplot smoother fits
+Just Jtu for now, averaged within rarefyID
+```{r plot diss v explanatory vars, echo=FALSE, warning = FALSE, message = FALSE, fig.height = 16, fig.width = 9}
+p1 <- ggplot(btave, aes(REALM, Jtu)) +
+  geom_boxplot(na.rm = TRUE) + 
+  labs(x = 'Realm', y = 'Jaccard turnover')
+
+p2 <- ggplot(btave, aes(tempave, Jtu)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Temperature (°C)', y = 'Jaccard turnover')
+
+p3 <- ggplot(btave, aes(tempave_metab, Jtu)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Metabolic temperature (°C)', y = 'Jaccard turnover')
+
+p4 <- ggplot(btave, aes(seas, Jtu)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Seasonality (°C)', y = 'Jaccard turnover')
+
+p5 <- ggplot(btave, aes(microclim, Jtu)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
+  labs(x = 'Microclimate availability (°C)', y = 'Jaccard turnover')
+
+p6 <- ggplot(btave, aes(mass_mean_weight, Jtu)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
+  labs(x = 'Mass (g))', y = 'Jaccard turnover')
+
+p7 <- ggplot(btave, aes(speed_mean_weight+1, Jtu)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
+  labs(x = 'Speed (km / hr))', y = 'Jaccard turnover')
+
+p8 <- ggplot(btave, aes(lifespan_mean_weight, Jtu)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
+  labs(x = 'Lifespan (yr))', y = 'Jaccard turnover')
+
+p9 <- ggplot(btave, aes(consfrac, Jtu)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 3), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Fraction consumers', y = 'Jaccard turnover')
+
+p10 <- ggplot(btave, aes(endofrac, Jtu)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 3), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Fraction endotherms', y = 'Jaccard turnover')
+
+p11 <- ggplot(btave, aes(Nspp, Jtu)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
+  labs(x = 'Number of species', y = 'Jaccard turnover')
+
+p12 <- ggplot(btave, aes(thermal_bias, Jtu)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Thermal bias (°C)', y = 'Jaccard turnover')
+
+p13 <- ggplot(btave, aes(npp, Jtu)) +
+  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
+  scale_color_brewer(palette="Set1") + 
+  scale_x_log10() +
+  labs(x = 'Net primary productivity (mg C / m2 / day)', y = 'Jaccard turnover')
+
+p14 <- ggplot(btave, aes(veg, Jtu, color = REALM)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Vegetation score', y = 'Jaccard turnover')
+
+p15 <- ggplot(btave, aes(human_bowler, Jtu, color = REALM)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Bowler human impact score', y = 'Jaccard turnover')
+
+p16 <- ggplot(btave, aes(human_venter, Jtu, color = REALM)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'scaled Human impact score (Venter)', y = 'Jaccard turnover')
+
+p17 <- ggplot(btave, aes(human_halpern, Jtu, color = REALM)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'scaled Human impact score (Halpern)', y = 'Jaccard turnover')
+
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16, p17, ncol = 2)
+```
+
+- Strong trends with temperature change, but trends are pretty symmetric around no trend in temperature, which implies warming or cooling drives similar degree of community turnover.
+- Some indication of less turnover for larger organisms (mass)
+- Higher turnover on land with higher seasonality?
+- More turnover for shorter-lived organisms?
+- No really clear differences among realms.
+
+
+
+
