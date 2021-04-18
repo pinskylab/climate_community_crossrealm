@@ -37,6 +37,7 @@ btlong <- melt(bt, id.vars = c('rarefyID', 'REALM', 'Biome', 'taxa_mod', 'STUDY_
 btlong[, measure := rep(c('Jtu', 'Jbeta', 'Horn'), 4)[variable]] # extract Jtu, Jbeta, or Horn
 btlong[, variable := NULL]
 btlong <- btlong[!is.na(year1) & !is.na(year2) & !is.na(disstrend), ] # trim out missing
+btlong <- btlong[!duplicated(cbind(rarefyID, year1, year2)), ] # trim out duplicated lat/lon/years
 
 # biotime species lists
 load('data/biotime_blowes/bt_grid_spp_list.Rdata') # loads bt_grid_spp_list. this has some studies not in bt.
@@ -91,6 +92,7 @@ crutsyr <- crutsmelt[, .(cruts = mean(cruts, na.rm=TRUE)), by = .(lat_cruts = as
 ersstmelt <- as.data.table(ersst, value.name = 'ersst')
 ersstmelt[, YEAR := as.numeric(substr(time, 1,4))]
 ersstyr <- ersstmelt[, .(ersst = mean(ersst, na.rm=TRUE)), by = .(lat_ersst = as.numeric(lat_ersst), lon_ersst = as.numeric(lon_ersst), YEAR)]
+ersstyr[lon_ersst > 180, lon_ersst := lon_ersst - 360] # convert to -180 to 180
 
 ```
 
@@ -129,17 +131,14 @@ ggplot(ersstseas, aes(lon_ersst, lat_ersst, color = seas_ersst)) + geom_point(si
 
 
 # Calculate temperature change slope based on biotime year pair/lat/lon
-Set up lat/lon grid in bt
-```{r set up lat/lon grid}
+```{r calc slope}
+# Set up lat/lon grid in bt
 btlong[, lat_cruts := floor(rarefyID_y*2)/2 + 0.25] # find nearest CRU TS lat and lon grid values (0.5)
 btlong[, lon_cruts := floor(rarefyID_x*2)/2 + 0.25]
 
 btlong[, lat_ersst := floor((rarefyID_y - 1)*0.5 + 1)/0.5] # find nearest ERSST lat and lon grid values (2).
 btlong[, lon_ersst := floor((rarefyID_x + 1)*0.5 + 1)/0.5]
 
-```
-
-```{r calc slope}
 # dataframe with all years
 btlongallyrs <- btlong[, .(year = seq(year1, year2)), by = .(rarefyID, year1, year2, lat_cruts, lon_cruts, lat_ersst, lon_ersst, REALM)]
 btlongallyrs <- merge(btlongallyrs, crutsyr[, .(year = YEAR, lat_cruts, lon_cruts, cruts)], all.x = TRUE)
@@ -152,28 +151,6 @@ tslopes <- merge(tslopes_cruts, tslopes_ersst, all = TRUE)
 
 ```
 
-## Check for missing CRU TS data in terrestrial, freshwater and marine. na is # missing values. n is # values with  data. Mostly missing in marine, as expected. Study 293 and 216 start before 1900.
-```{r}
-tslopes[REALM == 'Terrestrial', .(na = sum(is.na(trend_cruts)), n = sum(!is.na(trend_cruts))), by = .(rarefyID)][na > 0,]
-tslopes[REALM == 'Freshwater', .(na = sum(is.na(trend_cruts)), n = sum(!is.na(trend_cruts))), by = .(rarefyID)][na > 0,]
-tslopes[REALM == 'Marine', .(na = sum(is.na(trend_cruts)), n = sum(!is.na(trend_cruts))), by = .(rarefyID)][na > 0, .N]
-
-
-ggplot(tslopes[REALM %in% c('Terrestrial', 'Freshwater'), ], aes(lon_cruts, lat_cruts, color = is.na(trend_cruts))) +
-    geom_point(size = 0.2)
-
-```
-
-## Check for missing ERSST data in terrestrial, freshwater and marine. na is # missing values. n is # values with  data. Mostly missing in terrestrial and freshwater, as expected.
-```{r}
-tslopes[REALM == 'Terrestrial', .(na = sum(is.na(trend_ersst)), n = sum(!is.na(trend_ersst))), by = .(rarefyID)][na > 0,]
-tslopes[REALM == 'Freshwater', .(na = sum(is.na(trend_ersst)), n = sum(!is.na(trend_ersst))), by = .(rarefyID)][na > 0,]
-tslopes[REALM == 'Marine', .(na = sum(is.na(trend_ersst)), n = sum(!is.na(trend_ersst))), by = .(rarefyID)][na > 0, .N]
-
-
-ggplot(tslopes[REALM %in% c('Marine'), ], aes(lon_ersst, lat_ersst, color = is.na(trend_ersst))) +
-    geom_point(size = 0.2)
-```
 
 # Calculations by rarefyID
 Find fraction ectotherm vs. mammal vs. bird by rarefyID
@@ -287,6 +264,16 @@ out[!duplicated(rarefyID) & is.na(tempave_metab), .N]
 out[!duplicated(rarefyID) & is.na(temptrend), .N]
 out[!duplicated(rarefyID) & is.na(seas), .N]
 
+```
+
+```{r plot missing}
+ggplot(btsum, aes(lon_cruts, lat_cruts, color = is.na(tempave))) + geom_point(size=0.2)
+
+ggplot(btsum, aes(lon_cruts, lat_cruts, color = is.na(tempave_metab))) + geom_point(size=0.2)
+
+ggplot(btsum, aes(lon_cruts, lat_cruts, color = is.na(temptrend))) + geom_point(size=0.2)
+
+ggplot(btsum, aes(lon_cruts, lat_cruts, color = is.na(seas))) + geom_point(size=0.2)
 ```
 
 # Write out 
