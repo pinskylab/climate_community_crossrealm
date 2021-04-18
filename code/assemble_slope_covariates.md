@@ -13,7 +13,7 @@ if(Sys.info()['nodename'] == 'annotate.sebs.rutgers.edu'){
 
     ## Loading required package: nlme
 
-    ## This is mgcv 1.8-33. For overview type 'help("mgcv-package")'.
+    ## This is mgcv 1.8-26. For overview type 'help("mgcv-package")'.
 
 ``` r
 library(data.table)
@@ -32,7 +32,7 @@ require(here)
 
     ## Loading required package: here
 
-    ## here() starts at /Users/mpinsky/Documents/Rutgers/Community_and_climate/crossrealm/climate_community_crossrealm
+    ## here() starts at /local/home/malinp/climate_community_crossrealm
 
 ``` r
 #knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
@@ -125,6 +125,14 @@ Only if file doesn’t yet exist
 ## Scaled covariates
 
 ![](assemble_slope_covariates_files/figure-gfm/histograms%20scaled-1.png)<!-- -->
+
+# Response variable SE
+
+``` r
+ggplot(bt, aes(disstrend, trendse)) + geom_point() + facet_wrap(vars(year2 - year1 + 1, measure), scales = 'free', ncol = 3)
+```
+
+![](assemble_slope_covariates_files/figure-gfm/response%20SE-1.png)<!-- -->
 
 # Check correlations among variables
 

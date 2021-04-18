@@ -278,6 +278,10 @@ invisible(bt[, hist(human_bowler.sc, main = 'log Human impact score (Bowler)', c
 ```
 
 
+# Response variable SE
+```{r response SE, fig.width=9, fig.height=9}
+ggplot(bt, aes(disstrend, trendse)) + geom_point() + facet_wrap(vars(year2 - year1 + 1, measure), scales = 'free', ncol = 3)
+```
 
 # Check correlations among variables 
 Pearson's r is in the lower triangle
