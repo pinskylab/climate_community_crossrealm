@@ -107,14 +107,89 @@ Only if file doesn’t yet exist
 
 ## Response variables
 
-    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-    ## -1.000000 -0.018167  0.008529  0.013488  0.063542  0.652327
+``` r
+bt[measure =='Jbeta' & year2 - year1 == 2, summary(disstrend)]
+```
+
+    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+    ## -1.00000 -0.05417  0.01868  0.01601  0.12500  0.65233
+
+``` r
+bt[measure =='Jtu' & year2 - year1 == 2, summary(disstrend)]
+```
 
     ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-    ## -1.000000 -0.032807  0.000000  0.008329  0.057876  1.000000
+    ## -1.000000 -0.095238  0.000000  0.009226  0.125000  1.000000
+
+``` r
+bt[measure =='Horn' & year2 - year1 == 2, summary(disstrend)]
+```
 
     ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-    ## -0.999840 -0.070581 -0.005387 -0.012287  0.022541  1.000000
+    ## -0.999840 -0.145991 -0.009088 -0.013092  0.056011  1.000000
+
+``` r
+bt[measure =='Jbeta' & year2 - year1 == 4, summary(disstrend)]
+```
+
+    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+    ## -0.18000 -0.01237  0.00966  0.01168  0.03961  0.22500
+
+``` r
+bt[measure =='Jtu' & year2 - year1 == 4, summary(disstrend)]
+```
+
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+    ## -0.285000 -0.025749  0.001921  0.008775  0.043333  0.321702
+
+``` r
+bt[measure =='Horn' & year2 - year1 == 4, summary(disstrend)]
+```
+
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+    ## -0.289490 -0.044560 -0.003126 -0.012460  0.022781  0.299190
+
+``` r
+bt[measure =='Jbeta' & year2 - year1 == 9, summary(disstrend)]
+```
+
+    ##       Min.    1st Qu.     Median       Mean    3rd Qu.       Max. 
+    ## -0.0318462  0.0002491  0.0061082  0.0080168  0.0142269  0.0958410
+
+``` r
+bt[measure =='Jtu' & year2 - year1 == 9, summary(disstrend)]
+```
+
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+    ## -0.106219 -0.003782  0.003558  0.004162  0.013034  0.097424
+
+``` r
+bt[measure =='Horn' & year2 - year1 == 9, summary(disstrend)]
+```
+
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+    ## -0.140489 -0.017285 -0.005531 -0.009390  0.001275  0.050177
+
+``` r
+bt[measure =='Jbeta' & year2 - year1 == 19, summary(disstrend)]
+```
+
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+    ## -0.005446  0.002775  0.003934  0.004658  0.005762  0.028083
+
+``` r
+bt[measure =='Jtu' & year2 - year1 == 19, summary(disstrend)]
+```
+
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+    ## -0.019038  0.001050  0.002657  0.002810  0.004431  0.031571
+
+``` r
+bt[measure =='Horn' & year2 - year1 == 19, summary(disstrend)]
+```
+
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+    ## -0.033522 -0.008285 -0.004881 -0.006182 -0.002772  0.007307
 
 ![](assemble_slope_covariates_files/figure-gfm/histograms%20response-1.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-2.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-3.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-4.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-5.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-6.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-7.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-8.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-9.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-10.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-11.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-12.png)<!-- -->
 

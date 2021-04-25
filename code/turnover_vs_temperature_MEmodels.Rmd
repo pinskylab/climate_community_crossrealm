@@ -1,24 +1,21 @@
 ---
-title: 'Temperature change and the community response to temperature change across realms'
-subtitle: '(using mixed effects models)'
+title: 'Community dissimilarity slope through time using ME models'
 output: 
     github_document: default
 
 ---
 # Prep
-<details>
-<summary>Click to expand code</summary>
-
-```{r setup}
+```{r setup, echo = FALSE}
 library(data.table) # for handling large datasets
 library(ggplot2) # for some plotting
-library(nlme) # for ME models
+library(glmmTMB) # for ME models
 library(maps) # for map
 library(gridExtra) # to combine ggplots together
 library(grid) # to combine ggplots together
 library(RColorBrewer)
 library(MASS) # for stepAIC
-library(piecewiseSEM) # for rsquared() for nlme models
+library(DHARMa) # for model evaluation
+library(performance) # for r2() for nlme models
 library(scales) # for defining custom scales in ggplot
 
 options(width=500) # turn off most text wrapping
@@ -34,85 +31,41 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 
 
 ```{r load data}
-# Turnover and covariates assembled by turnover_vs_temperature_prep.Rmd
-trends <- fread('output/turnover_w_covariates.csv.gz')
+# Dissimilarity slope and covariates assembled by assemble_slope_covariates.Rmd
+trends <- fread('output/slope_w_covariates.csv.gz')
+scaling <- fread('output/slope_w_covariates_scaling.csv')
+scaling$center <- as.numeric(scaling$center)
 ```
 
-```{r trim data}
-# trim to only data with some temperature change
-# important since sign of temperature change is a variable
-trends[tempchange == 0, .N] # number to remove
-trends <- trends[tempchange != 0, ] # also removes any NA values
-```
-
-```{r set up use vars}
+```{r set up useful vars}
 # set realm order
 trends[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
+trends[, tsign := sign(temptrend)]
 
-# set up sign of temperature change
-trends[, tsign := factor(sign(tempchange))]
-
-# realm that combines Terrestrial and Freshwater, for interacting with human impact
-trends[, REALM2 := REALM]
-levels(trends$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
-
-# group Marine invertebrates/plants in with All
-trends[, taxa_mod2 := taxa_mod]
-trends[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
-
-# calculate duration
-trends[, duration := year2 - year1]
-
-#add a comparison id
-trends[, compID := paste0(rarefyID, '_', year1, '_', year2)]
-
+scl <- scaling$scale[scaling$var == 'nspp.sc']
+cent <- scaling$center[scaling$var == 'nspp.sc']
+trends[, nspp := exp(nspp.sc*scl+cent)]
 ```
-
-
-## Log-transform some variables, then center and scale. 
-``` {r center and scale}
-trends[, tempave.sc := scale(tempave)]
-trends[, tempave_metab.sc := scale(tempave_metab)]
-trends[, seas.sc := scale(seas)]
-trends[, microclim.sc := scale(log(microclim))]
-trends[, tempchange.sc := scale(tempchange, center = FALSE)] # do not center
-trends[, tempchange_abs.sc := scale(abs(tempchange), center = FALSE)] # do not center, so that 0 is still 0 temperature change
-trends[, mass.sc := scale(log(mass_mean_weight))]
-trends[, speed.sc := scale(log(speed_mean_weight+1))]
-trends[, lifespan.sc := scale(log(lifespan_mean_weight))]
-trends[, consumerfrac.sc := scale(consfrac)]
-trends[, endothermfrac.sc := scale(endofrac)]
-trends[, nspp.sc := scale(log(Nspp))]
-trends[, thermal_bias.sc := scale(thermal_bias)]
-trends[, npp.sc := scale(log(npp))]
-trends[, veg.sc := scale(log(veg+1))]
-trends[, duration.sc := scale(log(duration))]
-trends[, human_bowler.sc := scale(log(human_bowler+1)), by = REALM2] # separate scaling by realm
-trends[REALM2 == 'TerrFresh', human_footprint.sc := scale(log(human_venter+1))]
-trends[REALM2 == 'Marine', human_footprint.sc := scale(log(human_halpern))]
-```
-
-</details>
 
 # Summary stats
 ## Examine how many data points are available
 ### Just turnover and non-zero tempchange
 ```{r sample size all}
-cat('Overall # dissimilarities: ', nrow(trends), '\n')
+cat('Overall # slopes: '); table(trends$duration, trends$measure)
 cat('# studies: ', trends[, length(unique(STUDY_ID))], '\n')
 cat('# timeseries: ', trends[, length(unique(rarefyID))], '\n')
-trends[!duplicated(rarefyID), table(REALM)]
-trends[!duplicated(rarefyID), table(taxa_mod)]
-trends[!duplicated(rarefyID), table(taxa_mod, REALM)]
+trends[!duplicated(rarefyID) & duration == 2 & measure == 'Jtu', table(REALM)]
+trends[!duplicated(rarefyID) & duration == 2 & measure == 'Jtu', table(taxa_mod)]
+trends[!duplicated(rarefyID) & duration == 2 & measure == 'Jtu', table(taxa_mod, REALM)]
 ```
 
 ### With all covariates
 Use Bowler for human impact
 ```{r sample size Jtu covariates}
 # the cases we can compare
-apply(trends[, .(Jtu, REALM, tempave_metab.sc, seas.sc, microclim.sc, tempchange.sc, mass.sc, speed.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
-i <- trends[, complete.cases(Jtu, tempave_metab.sc, seas.sc, microclim.sc, tempchange.sc, mass.sc, speed.sc, consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
-cat('Overall # dissimilarities: ', sum(i), '\n')
+apply(trends[measure == 'Jtu' & duration == 2, .(disstrend, REALM, tempave_metab.sc, seas.sc, microclim.sc, temptrend.sc, mass.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, human_bowler.sc)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
+i <- trends[, complete.cases(disstrend, tempave_metab.sc, seas.sc, microclim.sc, temptrend.sc, mass.sc, nspp.sc, thermal_bias.sc, npp.sc, human_bowler.sc) & measure == 'Jtu' & duration == 2]
+cat('Overall # 3-year Jtu trends: ', sum(i), '\n')
 cat('# studies: ', trends[i, length(unique(STUDY_ID))], '\n')
 cat('# timeseries: ', trends[i, length(unique(rarefyID))], '\n')
 trends[i & !duplicated(rarefyID), table(REALM)]
@@ -124,552 +77,713 @@ trends[i & !duplicated(rarefyID), table(taxa_mod, REALM)]
 ## Choose the variance structure for mixed effects models
 Try combinations of
 
-- variance scaled to a power of the abs temperature trend
-- random intercept for taxa_mod2
-- random intercept for STUDY_ID
-- random intercept for rarefyID
-- random slope (abs temperature trend) for taxa_mod
-- random slope (abs temperature trend) for STUDY_ID
-- random intercept for compID (for overdispersion)
+- variance scaled to REALM, taxon group and/or number of species
+- random intercept for taxa_mod2, STUDY_ID, and/or rarefyID
 
-And choose the one with lowest AIC (not run: takes a long time)
-```{r choose variance structure, eval = FALSE}
+And choose the one with lowest AIC
+```{r choose variance structure, echo = FALSE}
 # fit models for variance structure
-fixed <- formula(Jtu ~ tempchange_abs.sc*REALM +
-                     tempchange_abs.sc*tsign + 
-                     tempchange_abs.sc*tempave_metab.sc + 
-                     tempchange_abs.sc*seas.sc + 
-                     tempchange_abs.sc*microclim.sc + 
-                     tempchange_abs.sc*mass.sc + 
-                     tempchange_abs.sc*speed.sc + 
-                     tempchange_abs.sc*consumerfrac.sc +
-                     tempchange_abs.sc*nspp.sc +
-                     tempchange_abs.sc*thermal_bias.sc:tsign +
-                     tempchange_abs.sc*npp.sc +
-                     tempchange_abs.sc*veg.sc +
-                     tempchange_abs.sc*duration.sc +
-                     tempchange_abs.sc*human_bowler.sc:REALM2)
-i <- trends[, complete.cases(Jtu, tempchange_abs.sc, REALM, tsign, tempave_metab.sc, seas.sc, 
-                             microclim.sc, mass.sc, speed.sc, consumerfrac.sc, nspp.sc,
-                             thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
+fixed <- 'disstrend ~ temptrend_abs.sc*REALM + temptrend_abs.sc*tempave_metab.sc + temptrend_abs.sc*seas.sc + temptrend_abs.sc*microclim.sc + temptrend_abs.sc*nspp.sc + temptrend_abs.sc*npp.sc + temptrend_abs.sc*mass.sc + temptrend_abs.sc*human_bowler.sc:REALM2 + temptrend_abs.sc*thermal_bias.sc:tsign'
+cont <- glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3))
+i <- trends[, complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc, seas.sc, 
+                             microclim.sc, mass.sc, nspp.sc, thermal_bias.sc,
+                             npp.sc, human_bowler.sc) & measure == 'Jtu' & duration == 4]
+sum(i)
+
 mods <- vector('list', 0)
-mods[[1]] <- gls(fixed, data = trends[i,])
-mods[[2]] <- gls(fixed, data = trends[i,], weights = varPower(0.5, ~tempchange_abs.sc))
+# variance structure
+mods[[1]] <- glmmTMB(formula(fixed), data = trends[i,], control = cont)
+mods[[2]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~nspp.sc, control = cont)
+mods[[3]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~REALM, control = cont)
+mods[[4]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~taxa_mod2, control = cont)
+mods[[5]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~trendse, control = cont)
 
-mods[[3]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2, control = lmeControl(opt = "optim"))
-mods[[4]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID, control = lmeControl(opt = "optim"))
-mods[[5]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2/STUDY_ID, control = lmeControl(opt = "optim"))
-mods[[6]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID, control = lmeControl(opt = "optim"))
-mods[[7]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2/STUDY_ID/rarefyID, control = lmeControl(opt = "optim"))
-mods[[8]] <- lme(fixed, data = trends[i,], random = ~1|STUDY_ID/rarefyID/compID, control = lmeControl(opt = "optim"))
-mods[[9]] <- lme(fixed, data = trends[i,], random = ~1|taxa_mod2/STUDY_ID/rarefyID/compID, control = lmeControl(opt = "optim"))
+mods[[6]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~nspp.sc + REALM, control = cont)
+mods[[7]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~nspp.sc + taxa_mod2, control = cont)
+mods[[8]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~nspp.sc + trendse, control = cont)
+mods[[9]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~REALM + taxa_mod2, control = cont)
+mods[[10]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~REALM + trendse, control = cont)
+mods[[11]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~taxa_mod2 + trendse, control = cont)
 
-mods[[10]] <- lme(fixed, data = trends[i,], random = ~tempchange_abs.sc | taxa_mod2)
-mods[[11]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ tempchange_abs.sc, STUDY_ID = ~ tempchange_abs.sc))
-mods[[12]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ tempchange_abs.sc, STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~tempchange_abs.sc))
-mods[[13]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~tempchange_abs.sc))
+mods[[12]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~nspp.sc + REALM + taxa_mod2, control = cont)
+mods[[13]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~nspp.sc + REALM + trendse, control = cont)
+mods[[14]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~nspp.sc + taxa_mod2 + trendse, control = cont)
+mods[[15]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~REALM + taxa_mod2 + trendse, control = cont)
 
-mods[[14]] <- lme(fixed, data = trends[i,], random = list(STUDY_ID = ~tempchange_abs.sc, rarefyID = ~tempchange_abs.sc), 
-                  weights = varPower(-0.5, ~tempchange_abs.sc))
-mods[[15]] <- lme(fixed, data = trends[i,], random = list(taxa_mod2 = ~ tempchange_abs.sc, 
-                                                          STUDY_ID = ~ tempchange_abs.sc, 
-                                                          rarefyID = ~tempchange_abs.sc), 
-                  weights = varPower(-0.5, ~tempchange_abs.sc))
+mods[[16]] <- glmmTMB(formula(fixed), data = trends[i,], disp = ~nspp.sc + REALM + taxa_mod2 + trendse, control = cont)
 
-save(mods, file = 'temp/modsRF.RData')
+# only RE
+mods[[17]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), data = trends[i,], control = cont)
+mods[[18]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), data = trends[i,], control = cont)
+mods[[19]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), data = trends[i,], control = cont)
+mods[[20]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), data = trends[i,], control = cont)
+mods[[21]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends[i,], control = cont)
+mods[[22]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], control = cont) # convergence problems
+
+# RE and variance structure
+mods[[23]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~nspp.sc, data = trends[i,], control = cont)
+mods[[24]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~REALM, data = trends[i,], control = cont)
+mods[[25]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~taxa_mod2, data = trends[i,], control = cont)
+mods[[26]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~trendse, data = trends[i,], control = cont)
+mods[[27]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~nspp.sc + REALM, data = trends[i,], control = cont)
+mods[[28]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~nspp.sc + taxa_mod2, data = trends[i,], control = cont)
+mods[[29]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~nspp.sc + trendse, data = trends[i,], control = cont)
+mods[[30]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~REALM + taxa_mod2, data = trends[i,], control = cont)
+mods[[31]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~REALM + trendse, data = trends[i,], control = cont)
+mods[[32]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[33]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~nspp.sc + REALM + taxa_mod2, data = trends[i,], control = cont)
+mods[[34]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~nspp.sc + REALM + trendse, data = trends[i,], control = cont)
+mods[[35]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~nspp.sc + taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[36]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~REALM + taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[37]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2)')), disp = ~nspp.sc + REALM + taxa_mod2 + trendse, data = trends[i,], control = cont)
+
+mods[[38]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~nspp.sc, data = trends[i,], control = cont)
+mods[[39]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~REALM, data = trends[i,], control = cont)
+mods[[40]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~taxa_mod2, data = trends[i,], control = cont)
+mods[[41]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~trendse, data = trends[i,], control = cont)
+mods[[42]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~nspp.sc + REALM, data = trends[i,], control = cont)
+mods[[43]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~nspp.sc + taxa_mod2, data = trends[i,], control = cont)
+mods[[44]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~nspp.sc + trendse, data = trends[i,], control = cont)
+mods[[45]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~REALM + taxa_mod2, data = trends[i,], control = cont)
+mods[[46]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~REALM + trendse, data = trends[i,], control = cont)
+mods[[47]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[48]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~nspp.sc + REALM + taxa_mod2, data = trends[i,], control = cont)
+mods[[49]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~nspp.sc + REALM + trendse, data = trends[i,], control = cont)
+mods[[50]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~nspp.sc + taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[51]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~REALM + taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[52]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID)')), disp = ~nspp.sc + REALM + taxa_mod2 + trendse, data = trends[i,], control = cont)
+
+mods[[53]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~nspp.sc, data = trends[i,], control = cont)
+mods[[54]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~REALM, data = trends[i,], control = cont)
+mods[[55]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~taxa_mod2, data = trends[i,], control = cont)
+mods[[56]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~trendse, data = trends[i,], control = cont)
+mods[[57]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~nspp.sc + REALM, data = trends[i,], control = cont)
+mods[[58]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~nspp.sc + taxa_mod2, data = trends[i,], control = cont)
+mods[[59]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~nspp.sc + trendse, data = trends[i,], control = cont)
+mods[[60]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~REALM + taxa_mod2, data = trends[i,], control = cont)
+mods[[61]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~REALM + trendse, data = trends[i,], control = cont)
+mods[[62]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[63]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~nspp.sc + REALM + taxa_mod2, data = trends[i,], control = cont)
+mods[[64]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~nspp.sc + REALM + trendse, data = trends[i,], control = cont)
+mods[[65]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~nspp.sc + taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[66]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~REALM + taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[67]] <- glmmTMB(formula(paste0(fixed, '+(1|rarefyID)')), disp = ~nspp.sc + REALM + taxa_mod2 + trendse, data = trends[i,], control = cont)
+
+mods[[68]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~nspp.sc, data = trends[i,], control = cont)
+mods[[69]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~REALM, data = trends[i,], control = cont)
+mods[[70]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~taxa_mod2, data = trends[i,], control = cont)
+mods[[71]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~trendse, data = trends[i,], control = cont)
+mods[[72]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~nspp.sc + REALM, data = trends[i,], control = cont)
+mods[[73]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~nspp.sc + taxa_mod2, data = trends[i,], control = cont)
+mods[[74]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~nspp.sc + trendse, data = trends[i,], control = cont)
+mods[[75]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~REALM + taxa_mod2, data = trends[i,], control = cont)
+mods[[76]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~REALM + trendse, data = trends[i,], control = cont)
+mods[[77]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[78]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~nspp.sc + REALM + taxa_mod2, data = trends[i,], control = cont)
+mods[[79]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~nspp.sc + REALM + trendse, data = trends[i,], control = cont)
+mods[[80]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~nspp.sc + taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[81]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~REALM + taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[82]] <- glmmTMB(formula(paste0(fixed, '+(1|taxa_mod2/STUDY_ID)')), disp = ~nspp.sc + REALM + taxa_mod2 + trendse, data = trends[i,], control = cont)
+
+mods[[83]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~nspp.sc, data = trends[i,], control = cont)
+mods[[84]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~REALM, data = trends[i,], control = cont)
+mods[[85]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~taxa_mod2, data = trends[i,], control = cont)
+mods[[86]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~trendse, data = trends[i,], control = cont)
+mods[[87]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~nspp.sc + REALM, data = trends[i,], control = cont)
+mods[[88]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~nspp.sc + taxa_mod2, data = trends[i,], control = cont)
+mods[[89]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~nspp.sc + trendse, data = trends[i,], control = cont)
+mods[[90]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~REALM + taxa_mod2, data = trends[i,], control = cont)
+mods[[91]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~REALM + trendse, data = trends[i,], control = cont)
+mods[[92]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[93]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~nspp.sc + REALM + taxa_mod2, data = trends[i,], control = cont)
+mods[[94]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~nspp.sc + REALM + trendse, data = trends[i,], control = cont)
+mods[[95]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~nspp.sc + taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[96]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~REALM + taxa_mod2 + trendse, data = trends[i,], control = cont)
+mods[[97]] <- glmmTMB(formula(paste0(fixed, '+(1|STUDY_ID/rarefyID)')), disp = ~nspp.sc + REALM + taxa_mod2 + trendse, data = trends[i,], control = cont)
+
+
+save(mods, file = 'temp/modsslopeRF.RData')
 
 aics <- sapply(mods, AIC)
-minaics <- aics - min(aics)
+minaics <- aics - min(aics, na.rm = TRUE)
 minaics
-which.min(aics)
+paste0('Lowest AIC is model #', which.min(aics))
+paste0('AICs within 4 are model #s ', paste(which(minaics < 4 & minaics >0), collapse = ', '))
+summary(mods[[which.min(aics)]])
 ```
-Chooses the random slopes (tempchange_abs.sc) & intercepts for taxa_mod2, STUDY_ID, rarefyID, and variance scaled to tempchange_abs.sc.
+Chooses the random intercepts for STUDY_ID, and variance scaled to number of species, REALM, taxa_mod2, and the standard error of the dissimilarity slope.
+
 We haven't dealt with potential testing on the boundary issues here yet.
 
+### DHARMa model evaluation
+```{r, echo=FALSE}
+res_bestVar <- simulateResiduals(mods[[52]], n = 250)
+```
 
-## Temperature-only models
-### Fit/load the models
+#### Plot residuals for model fit to all data
+There are many outliers and signs of minor underdispersion, but this is probably ok.
+```{r, echo=FALSE}
+plot(res_bestVar)
+plotResiduals(res_bestVar, form=trends$temptrend_abs.sc[i], xlab = 'temptrend_abs.sc', main = '')
+plotResiduals(res_bestVar, form=trends$REALM[i], xlab = 'REALM', main = '')
+plotResiduals(res_bestVar, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
+plotResiduals(res_bestVar, trends$mass.sc[i], xlab = 'mass.sc', main = '')
+plotResiduals(res_bestVar, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
+plotResiduals(res_bestVar, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
+plotResiduals(res_bestVar, trends$npp.sc[i], xlab = 'npp.sc', main = '')
+plotResiduals(res_bestVar, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
+```
+
+
+#### Overdispersion
+Evidence for under-dispersion
+```{r, echo=FALSE}
+testDispersion(res_bestVar)
+
+```
+
+
+## Temperature-trend-only models
+### Fit the models
 ```{r LME temperature only}
 
-randef <- list(taxa_mod2 = ~ abs(tempchange), STUDY_ID = ~ abs(tempchange), rarefyID = ~abs(tempchange))
-varef <- varPower(-0.5, ~abs(tempchange))
+form <- formula('disstrend ~ abs(temptrend) + (1|STUDY_ID)')
+dispform <- formula('~nspp.sc + REALM + taxa_mod2 + trendse')
 
-if(file.exists('temp/modonlyTchangeJtu.rds')){
-  modonlyTchangeJtu <- readRDS('temp/modonlyTchangeJtu.rds')
+# Jtu
+if(file.exists('temp/modslopeTtrendJtu3.rds')){
+  modslopeTtrendJtu3 <- readRDS('temp/modslopeTtrendJtu3.rds')
 } else {
-  i <- trends[, complete.cases(Jtu, tempchange)]
-  modonlyTchangeJtu <- lme(Jtu ~ abs(tempchange),
-                   random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modonlyTchangeJtu, file = 'temp/modonlyTchangeJtu.rds')
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 2 & measure == 'Jtu']
+  modslopeTtrendJtu3 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendJtu3, file = 'temp/modslopeTtrendJtu3.rds')
 }
 
-if(file.exists('temp/modonlyTchangeJbeta.rds')){
-  modonlyTchangeJbeta <- readRDS('temp/modonlyTchangeJbeta.rds')
+if(file.exists('temp/modslopeTtrendJtu5.rds')){
+  modslopeTtrendJtu5 <- readRDS('temp/modslopeTtrendJtu5.rds')
 } else {
-  i <- trends[, complete.cases(Jbeta, tempchange)]
-  modonlyTchangeJbeta <- lme(Jbeta ~ abs(tempchange),
-                   random = randef, weights = varef, data = trends[i,], method = 'REML', 
-                   control=lmeControl(msMaxIter = 100, maxIter = 100))
-  saveRDS(modonlyTchangeJbeta, file = 'temp/modonlyTchangeJbeta.rds')
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 4 & measure == 'Jtu']
+  modslopeTtrendJtu5 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendJtu5, file = 'temp/modslopeTtrendJtu5.rds')
 }
 
-if(file.exists('temp/modonlyTchangeHorn.rds')){
-  modonlyTchangeHorn <- readRDS('temp/modonlyTchangeHorn.rds')
+if(file.exists('temp/modslopeTtrendJtu10.rds')){
+  modslopeTtrendJtu10 <- readRDS('temp/modslopeTtrendJtu10.rds')
 } else {
-  i <- trends[, complete.cases(Horn, tempchange)]
-  modonlyTchangeHorn <- lme(Horn ~ abs(tempchange),
-                   random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modonlyTchangeHorn, file = 'temp/modonlyTchangeHorn.rds')
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 9 & measure == 'Jtu']
+  modslopeTtrendJtu10 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendJtu10, file = 'temp/modslopeTtrendJtu10.rds')
 }
 
+if(file.exists('temp/modslopeTtrendJtu20.rds')){
+  modslopeTtrendJtu20 <- readRDS('temp/modslopeTtrendJtu20.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 19 & measure == 'Jtu']
+  modslopeTtrendJtu20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(profile=TRUE))
+  saveRDS(modslopeTtrendJtu20, file = 'temp/modslopeTtrendJtu20.rds')
+}
+
+# Jbeta
+if(file.exists('temp/modslopeTtrendJbeta3.rds')){
+  modslopeTtrendJbeta3 <- readRDS('temp/modslopeTtrendJbeta3.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 2 & measure == 'Jbeta']
+  modslopeTtrendJbeta3 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendJbeta3, file = 'temp/modslopeTtrendJbeta3.rds')
+}
+
+if(file.exists('temp/modslopeTtrendJbeta5.rds')){
+  modslopeTtrendJbeta5 <- readRDS('temp/modslopeTtrendJbeta5.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 4 & measure == 'Jbeta']
+  modslopeTtrendJbeta5 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendJbeta5, file = 'temp/modslopeTtrendJbeta5.rds')
+}
+
+if(file.exists('temp/modslopeTtrendJbeta10.rds')){
+  modslopeTtrendJbeta10 <- readRDS('temp/modslopeTtrendJbeta10.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 9 & measure == 'Jbeta']
+  modslopeTtrendJbeta10 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendJbeta10, file = 'temp/modslopeTtrendJbeta10.rds')
+}
+
+if(file.exists('temp/modslopeTtrendJbeta20.rds')){
+  modslopeTtrendJbeta20 <- readRDS('temp/modslopeTtrendJbeta20.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 19 & measure == 'Jbeta']
+  modslopeTtrendJbeta20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(profile=TRUE))
+  saveRDS(modslopeTtrendJbeta20, file = 'temp/modslopeTtrendJbeta20.rds')
+}
+
+# Horn
+if(file.exists('temp/modslopeTtrendHorn3.rds')){
+  modslopeTtrendHorn3 <- readRDS('temp/modslopeTtrendHorn3.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 2 & measure == 'Horn']
+  modslopeTtrendHorn3 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendHorn3, file = 'temp/modslopeTtrendHorn3.rds')
+}
+
+if(file.exists('temp/modslopeTtrendHorn5.rds')){
+  modslopeTtrendHorn5 <- readRDS('temp/modslopeTtrendHorn5.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 4 & measure == 'Horn']
+  modslopeTtrendHorn5 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendHorn5, file = 'temp/modslopeTtrendHorn5.rds')
+}
+
+if(file.exists('temp/modslopeTtrendHorn10.rds')){
+  modslopeTtrendHorn10 <- readRDS('temp/modslopeTtrendHorn10.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 9 & measure == 'Horn']
+  modslopeTtrendHorn10 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendHorn10, file = 'temp/modslopeTtrendHorn10.rds')
+}
+
+if(file.exists('temp/modslopeTtrendHorn20.rds')){
+  modslopeTtrendHorn20 <- readRDS('temp/modslopeTtrendHorn20.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 19 & measure == 'Horn']
+  modslopeTtrendHorn20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(profile=TRUE))
+  saveRDS(modslopeTtrendHorn20, file = 'temp/modslopeTtrendHorn20.rds')
+}
 ```
 
-### Summary: Slope of dissimilarity
+### Summary
 ```{r summary of Tchangeonly mods}
-summary(modonlyTchangeJtu)
-summary(modonlyTchangeJbeta)
-summary(modonlyTchangeHorn)
+summary(modslopeTtrendJtu3)
+summary(modslopeTtrendJtu5)
+summary(modslopeTtrendJtu10)
+#summary(modslopeTtrendJtu20)
+
+summary(modslopeTtrendJbeta3)
+summary(modslopeTtrendJbeta5)
+summary(modslopeTtrendJbeta10)
+#summary(modslopeTtrendJbeta20)
+
+summary(modslopeTtrendHorn3)
+summary(modslopeTtrendHorn5)
+summary(modslopeTtrendHorn10)
+#summary(modslopeTtrendHorn20)
 ```
 
-### Plot the temp-only coefficients
-```{r modonlyT coefs}
-# make table of coefficients
-coefs1 <- as.data.frame(summary(modonlyTchangeJtu)$tTable)
-coefs2 <- as.data.frame(summary(modonlyTchangeJbeta)$tTable)
-coefs3 <- as.data.frame(summary(modonlyTchangeHorn)$tTable)
-coefs1$response <- 'Jtu'
-coefs2$response <- 'Jbeta'
-coefs3$response <- 'Horn'
-rows1 <- which(grepl('tempchange', rownames(coefs1))) # extract temperature effect
-cols <- c('Value', 'Std.Error', 'response')
-allcoefs <- rbind(coefs1[rows1, cols], coefs2[rows1, cols], coefs3[rows1, cols])
+## Temperature-trend models with REALM
+### Fit the models
+```{r LME temperature realm}
 
-allcoefs$lCI <- allcoefs$Value - 1.96 * allcoefs$Std.Error # lower confidence interval
-allcoefs$uCI <- allcoefs$Value + 1.96 * allcoefs$Std.Error
-allcoefs$y <- c(3, 2, 1) # y-values
+form <- formula('disstrend ~ abs(temptrend) + REALM + (1|STUDY_ID)')
+dispform <- formula('~nspp.sc + REALM + taxa_mod2')
 
-ggplot(subset(allcoefs), aes(x = response, y = Value)) +
-  geom_point() + 
-  geom_errorbar(aes(ymin=lCI, ymax=uCI), width=.1) +
-  labs(y = 'Dissimilarity per |°C change|') + 
-  coord_cartesian(ylim = c(-0.01, 0.05))
+# Jtu
+if(file.exists('temp/modslopeTtrendReJtu3.rds')){
+  modslopeTtrendReJtu3 <- readRDS('temp/modslopeTtrendReJtu3.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 2 & measure == 'Jtu']
+  modslopeTtrendReJtu3 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendReJtu3, file = 'temp/modslopeTtrendReJtu3.rds')
+}
 
+if(file.exists('temp/modslopeTtrendReJtu5.rds')){
+  modslopeTtrendReJtu5 <- readRDS('temp/modslopeTtrendReJtu5.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 4 & measure == 'Jtu']
+  modslopeTtrendReJtu5 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendReJtu5, file = 'temp/modslopeTtrendReJtu5.rds')
+}
 
+if(file.exists('temp/modslopeTtrendReJtu10.rds')){
+  modslopeTtrendReJtu10 <- readRDS('temp/modslopeTtrendReJtu10.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 9 & measure == 'Jtu']
+  modslopeTtrendReJtu10 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendReJtu10, file = 'temp/modslopeTtrendReJtu10.rds')
+}
+
+if(file.exists('temp/modslopeTtrendReJtu20.rds')){
+  modslopeTtrendReJtu20 <- readRDS('temp/modslopeTtrendReJtu20.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 19 & measure == 'Jtu']
+  modslopeTtrendReJtu20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(profile=TRUE))
+  saveRDS(modslopeTtrendReJtu20, file = 'temp/modslopeTtrendReJtu20.rds')
+}
+
+# Jbeta
+if(file.exists('temp/modslopeTtrendReJbeta3.rds')){
+  modslopeTtrendReJbeta3 <- readRDS('temp/modslopeTtrendReJbeta3.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 2 & measure == 'Jbeta']
+  modslopeTtrendReJbeta3 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendReJbeta3, file = 'temp/modslopeTtrendReJbeta3.rds')
+}
+
+if(file.exists('temp/modslopeTtrendReJbeta5.rds')){
+  modslopeTtrendReJbeta5 <- readRDS('temp/modslopeTtrendReJbeta5.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 4 & measure == 'Jbeta']
+  modslopeTtrendReJbeta5 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendReJbeta5, file = 'temp/modslopeTtrendReJbeta5.rds')
+}
+
+if(file.exists('temp/modslopeTtrendReJbeta10.rds')){
+  modslopeTtrendReJbeta10 <- readRDS('temp/modslopeTtrendReJbeta10.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 9 & measure == 'Jbeta']
+  modslopeTtrendReJbeta10 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendReJbeta10, file = 'temp/modslopeTtrendReJbeta10.rds')
+}
+
+if(file.exists('temp/modslopeTtrendReJbeta20.rds')){
+  modslopeTtrendReJbeta20 <- readRDS('temp/modslopeTtrendReJbeta20.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 19 & measure == 'Jbeta']
+  modslopeTtrendReJbeta20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(profile=TRUE))
+  saveRDS(modslopeTtrendReJbeta20, file = 'temp/modslopeTtrendReJbeta20.rds')
+}
+
+# Horn
+if(file.exists('temp/modslopeTtrendReHorn3.rds')){
+  modslopeTtrendReHorn3 <- readRDS('temp/modslopeTtrendReHorn3.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 2 & measure == 'Horn']
+  modslopeTtrendReHorn3 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendReHorn3, file = 'temp/modslopeTtrendReHorn3.rds')
+}
+
+if(file.exists('temp/modslopeTtrendReHorn5.rds')){
+  modslopeTtrendReHorn5 <- readRDS('temp/modslopeTtrendReHorn5.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 4 & measure == 'Horn']
+  modslopeTtrendReHorn5 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendReHorn5, file = 'temp/modslopeTtrendReHorn5.rds')
+}
+
+if(file.exists('temp/modslopeTtrendReHorn10.rds')){
+  modslopeTtrendReHorn10 <- readRDS('temp/modslopeTtrendReHorn10.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 9 & measure == 'Horn']
+  modslopeTtrendReHorn10 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendReHorn10, file = 'temp/modslopeTtrendReHorn10.rds')
+}
+
+if(file.exists('temp/modslopeTtrendReHorn20.rds')){
+  modslopeTtrendReHorn20 <- readRDS('temp/modslopeTtrendReHorn20.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend) & duration == 19 & measure == 'Horn']
+  modslopeTtrendReHorn20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(profile=TRUE))
+  saveRDS(modslopeTtrendReHorn20, file = 'temp/modslopeTtrendReHorn20.rds')
+}
 ```
-CIs are 1.96*SE
 
-## Temperature&duration models
-### Fit/load the models
-```{r LME temperature and duration}
-
-randef <- list(taxa_mod2 = ~ abs(tempchange), STUDY_ID = ~ abs(tempchange), rarefyID = ~abs(tempchange))
-varef <- varPower(-0.5, ~abs(tempchange))
-
-if(file.exists('temp/modTDJtu.rds')){
-  modTDJtu <- readRDS('temp/modTDJtu.rds')
-} else {
-  i <- trends[, complete.cases(Jtu, REALM, tempchange)]
-  modTDJtu <- lme(Jtu ~ abs(tempchange) * duration,
-                   random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modTDJtu, file = 'temp/modTDJtu.rds')
-}
-
-if(file.exists('temp/modTDJbeta.rds')){
-  modTDJbeta <- readRDS('temp/modTDJbeta.rds')
-} else {
-  i <- trends[, complete.cases(Jbeta, REALM, tempchange)]
-  modTDJbeta <- lme(Jbeta ~ abs(tempchange)*duration,
-                   random = randef, weights = varef, data = trends[i,], method = 'REML', 
-                   control=lmeControl(msMaxIter = 100, maxIter = 100))
-  saveRDS(modTDJbeta, file = 'temp/modTDJbeta.rds')
-}
-
-if(file.exists('temp/modTDHorn.rds')){
-  modTDHorn <- readRDS('temp/modTDHorn.rds')
-} else {
-  i <- trends[, complete.cases(Horn, REALM, tempchange)]
-  modTDHorn <- lme(Horn ~ abs(tempchange)*duration,
-                   random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modTDHorn, file = 'temp/modTDHorn.rds')
-}
-
-
-```
-
-### Summary: Slope of dissimilarity
+### Summary
 ```{r summary of TD mods}
-summary(modTDJtu)
-summary(modTDJbeta)
-summary(modTDHorn)
+summary(modslopeTtrendReJtu3)
+summary(modslopeTtrendReJtu5)
+summary(modslopeTtrendReJtu10)
+summary(modslopeTtrendReJtu20)
+
+summary(modslopeTtrendReJbeta3)
+summary(modslopeTtrendReJbeta5)
+summary(modslopeTtrendReJbeta10)
+summary(modslopeTtrendReJbeta20)
+
+summary(modslopeTtrendReHorn3)
+summary(modslopeTtrendReHorn5)
+summary(modslopeTtrendReHorn10)
+#summary(modslopeTtrendReHorn20) # convergence issues
 ```
 
 
-### Plot the temp coefficients from TD models
-```{r modTD coefs}
+## Temperature & realm models
+Includes metabolic temperature, temperature trend, and their interaction
+### Fit the models
+```{r}
 
-coefs1 <- summary(modTDJtu)$tTable
-coefs2 <- summary(modTDJbeta)$tTable
-coefs3 <- summary(modTDHorn)$tTable
+form <- formula('disstrend ~ temptrend_abs.sc * tempave_metab.sc + REALM + (1|STUDY_ID)')
+dispform <- formula('~nspp.sc + REALM + taxa_mod2 + trendse')
 
-varstoplot <- unique(c(rownames(coefs1), rownames(coefs2), rownames(coefs3)))
-varstoplot <- varstoplot[which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot))] # vars to plot
-
-rows1_1 <- which(rownames(coefs1) %in% varstoplot) # rows in coefs
-rows1_2 <- which(rownames(coefs2) %in% varstoplot)
-rows1_3 <- which(rownames(coefs3) %in% varstoplot)
-xlims <- range(c(coefs1[rows1_1,1] - 1.96*coefs1[rows1_1,2], coefs1[rows1_1,1] + 1.96*coefs1[rows1_1,2], 
-                  coefs2[rows1_2,1] - 1.96*coefs2[rows1_2,2], coefs2[rows1_2,1] + 1.96*coefs2[rows1_2,2], 
-                  coefs3[rows1_3,1] - 1.96*coefs3[rows1_3,2], coefs3[rows1_3,1] + 1.96*coefs3[rows1_3,2]))
-
-cols <- brewer.pal(3, 'Dark2') # for Jtu, Jbeta and Horn models
-pchs <- c(16, 16, 16)
-offs <- c(0.1, 0, -0.1) # offset vertically for each model
-
-par(las = 1, mai = c(0.5, 4, 0.1, 0.1))
-
-plot(0,0, col = 'white', xlim = xlims, ylim = c(0.9,length(varstoplot)+0.1), yaxt='n', xlab = '', ylab ='')
-axis(2, at = length(varstoplot):1, labels = varstoplot, cex.axis = 0.7)
-abline(v = 0, col = 'grey', lty = 2)
-abline(h = 1:length(varstoplot), col = 'grey', lty = 3)
-for(i in 1:length(varstoplot)){
-  if(varstoplot[i] %in% rownames(coefs1)){
-    x = coefs1[rownames(coefs1) == varstoplot[i], 1]
-    se = coefs1[rownames(coefs1) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[1], pch = pchs[1], col = cols[1])
-    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[1], length(varstoplot) + 1 - i + offs[1]), col = cols[1])
-  }
-  if(varstoplot[i] %in% rownames(coefs2)){
-    x = coefs2[rownames(coefs2) == varstoplot[i], 1]
-    se = coefs2[rownames(coefs2) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[2], pch = pchs[2], col = cols[2])
-    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[2], length(varstoplot) + 1 - i + offs[2]), col = cols[2])
-  }
-  if(varstoplot[i] %in% rownames(coefs3)){
-    x = coefs3[rownames(coefs3) == varstoplot[i], 1]
-    se = coefs3[rownames(coefs3) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[3], pch = pchs[3], col = cols[3])
-    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[3], length(varstoplot) + 1 - i + offs[3]), col = cols[3])
-  }
+# Jtu
+if(file.exists('temp/modslopeTtrendTaveJtu3.rds')){
+  modslopeTtrendTaveJtu3 <- readRDS('temp/modslopeTtrendTaveJtu3.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend_abs.sc, tempave_metab.sc) & duration == 2 & measure == 'Jtu']
+  modslopeTtrendTaveJtu3 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendTaveJtu3, file = 'temp/modslopeTtrendTaveJtu3.rds')
 }
-legend('bottomright', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Horn'), cex = 0.5)
+
+if(file.exists('temp/modslopeTtrendTaveJtu5.rds')){
+  modslopeTtrendTaveJtu5 <- readRDS('temp/modslopeTtrendTaveJtu5.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend_abs.sc, tempave_metab.sc) & duration == 4 & measure == 'Jtu']
+  modslopeTtrendTaveJtu5 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendTaveJtu5, file = 'temp/modslopeTtrendTaveJtu5.rds')
+}
+
+if(file.exists('temp/modslopeTtrendTaveJtu10.rds')){
+  modslopeTtrendTaveJtu10 <- readRDS('temp/modslopeTtrendTaveJtu10.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend_abs.sc, tempave_metab.sc) & duration == 9 & measure == 'Jtu']
+  modslopeTtrendTaveJtu10 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendTaveJtu10, file = 'temp/modslopeTtrendTaveJtu10.rds')
+}
+
+# if(file.exists('temp/modslopeTtrendTaveJtu20.rds')){
+#   modslopeTtrendTaveJtu20 <- readRDS('temp/modslopeTtrendTaveJtu20.rds')
+# } else {
+#   i <- trends[, complete.cases(disstrend, temptrend_abs.sc, tempave_metab.sc) & duration == 19 & measure == 'Jtu']
+#   modslopeTtrendTaveJtu20 <- glmmTMB(form, disp = dispform, data = trends[i,])
+#   saveRDS(modslopeTtrendTaveJtu20, file = 'temp/modslopeTtrendTaveJtu20.rds')
+# }
+
+# Jbeta
+if(file.exists('temp/modslopeTtrendTaveJbeta3.rds')){
+  modslopeTtrendTaveJbeta3 <- readRDS('temp/modslopeTtrendTaveJbeta3.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend_abs.sc, tempave_metab.sc) & duration == 2 & measure == 'Jbeta']
+  modslopeTtrendTaveJbeta3 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendTaveJbeta3, file = 'temp/modslopeTtrendTaveJbeta3.rds')
+}
+
+if(file.exists('temp/modslopeTtrendTaveJbeta5.rds')){
+  modslopeTtrendTaveJbeta5 <- readRDS('temp/modslopeTtrendTaveJbeta5.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend_abs.sc, tempave_metab.sc) & duration == 4 & measure == 'Jbeta']
+  modslopeTtrendTaveJbeta5 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendTaveJbeta5, file = 'temp/modslopeTtrendTaveJbeta5.rds')
+}
+
+if(file.exists('temp/modslopeTtrendTaveJbeta10.rds')){
+  modslopeTtrendTaveJbeta10 <- readRDS('temp/modslopeTtrendTaveJbeta10.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend_abs.sc, tempave_metab.sc) & duration == 9 & measure == 'Jbeta']
+  modslopeTtrendTaveJbeta10 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendTaveJbeta10, file = 'temp/modslopeTtrendTaveJbeta10.rds')
+}
+
+if(file.exists('temp/modslopeTtrendTaveJbeta20.rds')){
+  modslopeTtrendTaveJbeta20 <- readRDS('temp/modslopeTtrendTaveJbeta20.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend_abs.sc, tempave_metab.sc) & duration == 19 & measure == 'Jbeta']
+  modslopeTtrendTaveJbeta20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(profile=TRUE))
+  saveRDS(modslopeTtrendTaveJbeta20, file = 'temp/modslopeTtrendTaveJbeta20.rds')
+}
+
+# Horn
+if(file.exists('temp/modslopeTtrendTaveHorn3.rds')){
+  modslopeTtrendTaveHorn3 <- readRDS('temp/modslopeTtrendTaveHorn3.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend_abs.sc, tempave_metab.sc) & duration == 2 & measure == 'Horn']
+  modslopeTtrendTaveHorn3 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendTaveHorn3, file = 'temp/modslopeTtrendTaveHorn3.rds')
+}
+
+if(file.exists('temp/modslopeTtrendTaveHorn5.rds')){
+  modslopeTtrendTaveHorn5 <- readRDS('temp/modslopeTtrendTaveHorn5.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend_abs.sc, tempave_metab.sc) & duration == 4 & measure == 'Horn']
+  modslopeTtrendTaveHorn5 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendTaveHorn5, file = 'temp/modslopeTtrendTaveHorn5.rds')
+}
+
+if(file.exists('temp/modslopeTtrendTaveHorn10.rds')){
+  modslopeTtrendTaveHorn10 <- readRDS('temp/modslopeTtrendTaveHorn10.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend_abs.sc, tempave_metab.sc) & duration == 9 & measure == 'Horn']
+  modslopeTtrendTaveHorn10 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeTtrendTaveHorn10, file = 'temp/modslopeTtrendTaveHorn10.rds')
+}
+
+if(file.exists('temp/modslopeTtrendTaveHorn20.rds')){
+  modslopeTtrendTaveHorn20 <- readRDS('temp/modslopeTtrendTaveHorn20.rds')
+} else {
+  i <- trends[, complete.cases(disstrend, temptrend_abs.sc, tempave_metab.sc) & duration == 19 & measure == 'Horn']
+  modslopeTtrendTaveHorn20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(profile=TRUE))
+  saveRDS(modslopeTtrendTaveHorn20, file = 'temp/modslopeTtrendTaveHorn20.rds')
+}
 ```
 
-## Temperature and duration models separated by REALM
-### Fit/load the models
-```{r LME temperature duration realm}
+### Summary
+```{r summary of TchangeTave mods}
+summary(modslopeTtrendTaveJtu3)
+summary(modslopeTtrendTaveJtu5)
+#summary(modslopeTtrendTaveJtu10)
+#summary(modslopeTtrendTaveJtu20)
 
-randef <- list(taxa_mod2 = ~ abs(tempchange), STUDY_ID = ~ abs(tempchange), rarefyID = ~abs(tempchange))
-varef <- varPower(-0.5, ~abs(tempchange))
+summary(modslopeTtrendTaveJbeta3)
+summary(modslopeTtrendTaveJbeta5)
+#summary(modslopeTtrendTaveJbeta10)
+#summary(modslopeTtrendTaveJbeta20)
 
-if(file.exists('temp/modTDrealmJtu.rds')){
-  modTDrealmJtu <- readRDS('temp/modTDrealmJtu.rds')
+summary(modslopeTtrendTaveHorn3)
+summary(modslopeTtrendTaveHorn5)
+summary(modslopeTtrendTaveHorn10)
+#summary(modslopeTtrendTaveHorn20)
+```
+
+
+## Main-effect models
+Try static covariates:
+
+- realm
+- mass
+- average metabolic temperature
+- temperature trend
+- seasonality
+- microclimates
+- thermal bias:tsign
+- NPP
+- human footprint
+
+
+### Fit main effect models
+```{r maineffect models}
+form <- formula('disstrend ~ REALM + temptrend_abs.sc + tempave_metab.sc + seas.sc + microclim.sc + nspp.sc + npp.sc + mass.sc + human_bowler.sc:REALM2 + thermal_bias.sc:tsign + (1|STUDY_ID)')
+dispform <- formula('~taxa_mod2 + REALM + nspp.sc')
+
+completerows <- trends[, complete.cases(REALM, tempave_metab.sc, 
+                                seas.sc, microclim.sc, 
+                                temptrend_abs.sc, mass.sc,
+                                nspp.sc, thermal_bias.sc, npp.sc, 
+                                human_bowler.sc)]
+
+
+# Jtu
+if(file.exists('temp/modslopeMainJtu3.rds')){
+  modslopeMainJtu3 <- readRDS('temp/modslopeMainJtu3.rds')
 } else {
-  i <- trends[, complete.cases(Jtu, REALM, tempchange)]
-  modTDrealmJtu <- lme(Jtu ~ abs(tempchange) * duration + abs(tempchange) * REALM,
-                   random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modTDrealmJtu, file = 'temp/modTDrealmJtu.rds')
+  i <- trends[, complete.cases(disstrend) & duration == 2 & measure == 'Jtu'] & completerows
+  sum(i)
+  modslopeMainJtu3 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeMainJtu3, file = 'temp/modslopeMainJtu3.rds')
 }
 
-if(file.exists('temp/modTDrealmJbeta.rds')){
-  modTDrealmJbeta <- readRDS('temp/modTDrealmJbeta.rds')
+if(file.exists('temp/modslopeMainJtu5.rds')){
+  modslopeMainJtu5 <- readRDS('temp/modslopeMainJtu5.rds')
 } else {
-  i <- trends[, complete.cases(Jbeta, REALM, tempchange)]
-  modTDrealmJbeta <- lme(Jbeta ~ abs(tempchange)*duration + abs(tempchange) * REALM,
-                   random = randef, weights = varef, data = trends[i,], method = 'REML', 
-                   control=lmeControl(msMaxIter = 100, maxIter = 100))
-  saveRDS(modTDrealmJbeta, file = 'temp/modTDrealmJbeta.rds')
+  i <- trends[, complete.cases(disstrend) & duration == 4 & measure == 'Jtu'] & completerows
+  sum(i)
+  modslopeMainJtu5 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeMainJtu5, file = 'temp/modslopeMainJtu5.rds')
 }
 
-if(file.exists('temp/modTDrealmHorn.rds')){
-  modTDrealmHorn <- readRDS('temp/modTDrealmHorn.rds')
+if(file.exists('temp/modslopeMainJtu10.rds')){
+  modslopeMainJtu10 <- readRDS('temp/modslopeMainJtu10.rds')
 } else {
-  i <- trends[, complete.cases(Horn, REALM, tempchange)]
-  modTDrealmHorn <- lme(Horn ~ abs(tempchange)*duration + abs(tempchange) * REALM,
-                   random = randef, weights = varef, data = trends[i,], method = 'REML')
-  saveRDS(modTDrealmHorn, file = 'temp/modTDrealmHorn.rds')
+  i <- trends[, complete.cases(disstrend) & duration == 9 & measure == 'Jtu'] & completerows
+  modslopeMainJtu10 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeMainJtu10, file = 'temp/modslopeMainJtu10.rds')
+}
+
+if(file.exists('temp/modslopeMainJtu20.rds')){
+  modslopeMainJtu20 <- readRDS('temp/modslopeMainJtu20.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 19 & measure == 'Jtu'] & completerows
+  modslopeMainJtu20 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeMainJtu20, file = 'temp/modslopeMainJtu20.rds')
+}
+
+# Jbeta
+if(file.exists('temp/modslopeMainJbeta3.rds')){
+  modslopeMainJbeta3 <- readRDS('temp/modslopeMainJbeta3.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 2 & measure == 'Jbeta'] & completerows
+  sum(i)
+  modslopeMainJbeta3 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeMainJbeta3, file = 'temp/modslopeMainJbeta3.rds')
+}
+
+if(file.exists('temp/modslopeMainJbeta5.rds')){
+  modslopeMainJbeta5 <- readRDS('temp/modslopeMainJbeta5.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 4 & measure == 'Jbeta'] & completerows
+  sum(i)
+  modslopeMainJbeta5 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeMainJbeta5, file = 'temp/modslopeMainJbeta5.rds')
+}
+
+if(file.exists('temp/modslopeMainJbeta10.rds')){
+  modslopeMainJbeta10 <- readRDS('temp/modslopeMainJbeta10.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 9 & measure == 'Jbeta'] & completerows
+  modslopeMainJbeta10 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeMainJbeta10, file = 'temp/modslopeMainJbeta10.rds')
+}
+
+if(file.exists('temp/modslopeMainJbeta20.rds')){
+  modslopeMainJbeta20 <- readRDS('temp/modslopeMainJbeta20.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 19 & measure == 'Jbeta'] & completerows
+  modslopeMainJbeta20 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeMainJbeta20, file = 'temp/modslopeMainJbeta20.rds')
+}
+
+# Horn
+if(file.exists('temp/modslopeMainHorn3.rds')){
+  modslopeMainHorn3 <- readRDS('temp/modslopeMainHorn3.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 2 & measure == 'Horn'] & completerows
+  sum(i)
+  modslopeMainHorn3 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeMainHorn3, file = 'temp/modslopeMainHorn3.rds')
+}
+
+if(file.exists('temp/modslopeMainHorn5.rds')){
+  modslopeMainHorn5 <- readRDS('temp/modslopeMainHorn5.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 4 & measure == 'Horn'] & completerows
+  sum(i)
+  modslopeMainHorn5 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeMainHorn5, file = 'temp/modslopeMainHorn5.rds')
+}
+
+if(file.exists('temp/modslopeMainHorn10.rds')){
+  modslopeMainHorn10 <- readRDS('temp/modslopeMainHorn10.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 9 & measure == 'Horn'] & completerows
+  modslopeMainHorn10 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeMainHorn10, file = 'temp/modslopeMainHorn10.rds')
+}
+
+if(file.exists('temp/modslopeMainHorn20.rds')){
+  modslopeMainHorn20 <- readRDS('temp/modslopeMainHorn20.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 19 & measure == 'Horn'] & completerows
+  modslopeMainHorn20 <- glmmTMB(form, disp = dispform, data = trends[i,])
+  saveRDS(modslopeMainHorn20, file = 'temp/modslopeMainHorn20.rds')
 }
 
 
 ```
 
 ### Summary
-```{r summary of TD mods}
-summary(modTDrealmJtu)
-summary(modTDrealmJbeta)
-summary(modTDrealmHorn)
-```
+```{r summary full}
+summary(modslopeMainJtu3)
+summary(modslopeMainJtu5)
+summary(modslopeMainJtu10)
+summary(modslopeMainJtu20)
 
+summary(modslopeMainJbeta3)
+summary(modslopeMainJbeta5)
+summary(modslopeMainJbeta10)
+summary(modslopeMainJbeta20)
 
-### Plot the temp coefficients from TD realm models
-```{r modTD coefs}
-
-coefs1 <- summary(modTDrealmJtu)$tTable
-coefs2 <- summary(modTDrealmJbeta)$tTable
-coefs3 <- summary(modTDrealmHorn)$tTable
-
-varstoplot <- unique(c(rownames(coefs1), rownames(coefs2), rownames(coefs3)))
-varstoplot <- varstoplot[which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot))] # vars to plot
-
-rows1_1 <- which(rownames(coefs1) %in% varstoplot) # rows in coefs
-rows1_2 <- which(rownames(coefs2) %in% varstoplot)
-rows1_3 <- which(rownames(coefs3) %in% varstoplot)
-xlims <- range(c(coefs1[rows1_1,1] - 1.96*coefs1[rows1_1,2], coefs1[rows1_1,1] + 1.96*coefs1[rows1_1,2], 
-                  coefs2[rows1_2,1] - 1.96*coefs2[rows1_2,2], coefs2[rows1_2,1] + 1.96*coefs2[rows1_2,2], 
-                  coefs3[rows1_3,1] - 1.96*coefs3[rows1_3,2], coefs3[rows1_3,1] + 1.96*coefs3[rows1_3,2]))
-
-cols <- brewer.pal(3, 'Dark2') # for Jtu, Jbeta and Horn models
-pchs <- c(16, 16, 16)
-offs <- c(0.1, 0, -0.1) # offset vertically for each model
-
-par(las = 1, mai = c(0.5, 4, 0.1, 0.1))
-
-plot(0,0, col = 'white', xlim = xlims, ylim = c(1,length(varstoplot)), yaxt='n', xlab = '', ylab ='')
-axis(2, at = length(varstoplot):1, labels = varstoplot, cex.axis = 0.7)
-abline(v = 0, col = 'grey', lty = 2)
-abline(h = 1:length(varstoplot), col = 'grey', lty = 3)
-for(i in 1:length(varstoplot)){
-  if(varstoplot[i] %in% rownames(coefs1)){
-    x = coefs1[rownames(coefs1) == varstoplot[i], 1]
-    se = coefs1[rownames(coefs1) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[1], pch = pchs[1], col = cols[1])
-    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[1], length(varstoplot) + 1 - i + offs[1]), col = cols[1])
-  }
-  if(varstoplot[i] %in% rownames(coefs2)){
-    x = coefs2[rownames(coefs2) == varstoplot[i], 1]
-    se = coefs2[rownames(coefs2) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[2], pch = pchs[2], col = cols[2])
-    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[2], length(varstoplot) + 1 - i + offs[2]), col = cols[2])
-  }
-  if(varstoplot[i] %in% rownames(coefs3)){
-    x = coefs3[rownames(coefs3) == varstoplot[i], 1]
-    se = coefs3[rownames(coefs3) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[3], pch = pchs[3], col = cols[3])
-    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[3], length(varstoplot) + 1 - i + offs[3]), col = cols[3])
-  }
-}
-legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Horn'), cex = 0.5)
-```
-
-
-## Full models
-Try static covariates plus interactions of abs temperature trend with each covariate:
-
-- realm
-- speed
-- mass
-- average metabolic temperature
-- consumer fraction
-- environmental temperature
-- seasonality
-- microclimates
-- thermal bias
-- NPP
-- vegetation
-- duration
-- human footprint
-
-Except for thermal bias: interact with temperature trend (not abs)
-
-### Bowler vs Venter/Halpern human impact
-Bowler has lower AIC.
-```{r LME Jacard turnover temperature full rem0}
-# using Bowler for human impact
-i1 <- trends[, complete.cases(Jtutrendrem0, REALM, tempave_metab.sc, seas.sc, microclim.sc, 
-                             tempchange_abs.sc, mass.sc, speed.sc, 
-                             consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                             veg.sc, duration.sc, human_bowler.sc, human_footprint.sc)]
-
-randef <- list(STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~1)
-varef <- varPower(-0.5, ~nyrBT)
-
-if(file.exists('temp/modTfullbowlerrem0.rds')){
-  modTfullbowlerrem0 <- readRDS('temp/modTfullbowlerrem0.rds')
-} else {
-
-modTfullbowlerrem0 <- lme(Jtutrendrem0 ~ tempchange_abs.sc*REALM +
-                     tempchange_abs.sc*tsign + 
-                     tempchange_abs.sc*tempave_metab.sc + 
-                     tempchange_abs.sc*seas.sc + 
-                     tempchange_abs.sc*microclim.sc + 
-                     tempchange_abs.sc*mass.sc + 
-                     tempchange_abs.sc*speed.sc + 
-                     tempchange_abs.sc*consumerfrac.sc +
-                     tempchange_abs.sc*nspp.sc +
-                     tempchange_abs.sc*thermal_bias.sc:tsign +
-                     tempchange_abs.sc*npp.sc +
-                     tempchange_abs.sc*veg.sc +
-                     tempchange_abs.sc*duration.sc +
-                     tempchange_abs.sc*human_bowler.sc:REALM2,
-                   random = randef, weights = varef, data = trends[i1,], method = 'REML')
-  saveRDS(modTfullbowlerrem0, file = 'temp/modTfullbowlerrem0.rds')
-}
-
-# using Venter/Halpern for human impact
-if(file.exists('temp/modTfullfootprintrem0.rds')){
-  modTfullfootprintrem0 <- readRDS('temp/modTfullfootprintrem0.rds')
-} else {
-modTfullfootprintrem0 <- lme(Jtutrendrem0 ~ tempchange_abs.sc*REALM + 
-                     tempchange_abs.sc*tsign + 
-                     tempchange_abs.sc*tempave_metab.sc + 
-                     tempchange_abs.sc*seas.sc + 
-                     tempchange_abs.sc*microclim.sc + 
-                     tempchange_abs.sc*mass.sc + 
-                     tempchange_abs.sc*speed.sc + 
-                     tempchange_abs.sc*consumerfrac.sc +
-                     tempchange_abs.sc*nspp.sc +
-                     tempchange_abs.sc*thermal_bias.sc:tsign +
-                     tempchange_abs.sc*npp.sc +
-                     tempchange_abs.sc*veg.sc +
-                     tempchange_abs.sc*duration.sc +
-                     tempchange_abs.sc*human_footprint.sc:REALM2,
-                   random = randef, weights = varef, data = trends[i1,], method = 'REML',
-                   control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
-  saveRDS(modTfullfootprintrem0, file = 'temp/modTfullfootprintrem0.rds')
-
-}
-AIC(modTfullbowlerrem0, modTfullfootprintrem0)
+summary(modslopeMainHorn3)
+summary(modslopeMainHorn5)
+summary(modslopeMainHorn10)
+summary(modslopeMainHorn20)
 
 ```
 
-### Fit/load full models
-```{r full models, fig.width=10, fig.height=8}
-randef <- list(STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~1)
-varef <- varPower(-0.5, ~nyrBT)
 
-terms <- c('tempchange_abs.sc*REALM', 
-           'tempchange_abs.sc*tsign',
-           'tempchange_abs.sc*tempave_metab.sc',
-           'tempchange_abs.sc*seas.sc',
-           'tempchange_abs.sc*microclim.sc',
-           'tempchange_abs.sc*mass.sc',
-           'tempchange_abs.sc*speed.sc', 
-           'tempchange_abs.sc*consumerfrac.sc',
-           'tempchange_abs.sc*nspp.sc',
-           'tempchange_abs.sc*thermal_bias.sc:tsign',
-           'tempchange_abs.sc*npp.sc',
-           'tempchange_abs.sc*veg.sc',
-           'tempchange_abs.sc*duration.sc',
-           'tempchange_abs.sc*human_bowler.sc:REALM2')
-
-completerows <- trends[, complete.cases(REALM, tempave_metab.sc, 
-                                seas.sc, microclim.sc, 
-                                tempchange_abs.sc, mass.sc, speed.sc, 
-                                consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                                veg.sc, duration.sc, human_bowler.sc)]
-
-
-# rem0
-if(file.exists('temp/modTfullJturem0.rds')){
-  modTfullJturem0 <- readRDS('temp/modTfullJturem0.rds')
-} else {
-  i <- trends[, complete.cases(Jtutrendrem0)] & completerows
-  thisformula <- as.formula(paste0('Jtutrendrem0 ~ ', paste(terms, collapse = ' + ')))
-  modTfullJturem0 <- eval(bquote(lme(.(thisformula),
-                         random = randef, weights = varef, data = trends[i,], 
-                         method = 'REML')))
-  saveRDS(modTfullJturem0, file = 'temp/modTfullJturem0.rds')
-}
-
-if(file.exists('temp/modTfullJbetarem0.rds')){
-  modTfullJbetarem0 <- readRDS('temp/modTfullJbetarem0.rds')
-} else {
-  i <- trends[, complete.cases(Jbetatrendrem0)] & completerows
-  thisformula <- as.formula(paste0('Jbetatrendrem0 ~ ', paste(terms, collapse = ' + ')))
-  modTfullJbetarem0 <- eval(bquote(lme(.(thisformula),
-                           random = randef, weights = varef, data = trends[i,], 
-                           method = 'REML')))
-  saveRDS(modTfullJbetarem0, file = 'temp/modTfullJbetarem0.rds')
-}
-
-if(file.exists('temp/modTfullHornrem0.rds')){
-  modTfullHornrem0 <- readRDS('temp/modTfullHornrem0.rds')
-} else {
-  i <- trends[, complete.cases(Horntrendrem0)] & completerows
-  thisformula <- as.formula(paste0('Horntrendrem0 ~ ', paste(terms, collapse = ' + ')))
-  modTfullHornrem0 <- eval(bquote(lme(.(thisformula),
-                      random = randef, weights = varef, data = trends[i,], 
-                      method = 'REML')))
-  saveRDS(modTfullHornrem0, file = 'temp/modTfullHornrem0.rds')
-}
-
-```
-
-#### Summary
-```{r summary  full}
-summary(modTfullJturem0)
-summary(modTfullJbetarem0)
-summary(modTfullHornrem0)
-
-rsquared(modTfullJturem0)
-rsquared(modTfullJbetarem0)
-rsquared(modTfullHornrem0)
-
-```
-
-### Plots from the full models
-#### Plot the coefficients
-```{r plot fullTmods, fig.height=8, fig.width=8}
-
-coefs1 <- summary(modTfullJturem0)$tTable
-coefs2 <- summary(modTfullJbetarem0)$tTable
-coefs3 <- summary(modTfullHornrem0)$tTable
-
-varstoplot <- unique(c(rownames(coefs1), rownames(coefs2), rownames(coefs3)))
-varstoplot <- varstoplot[which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot))] # vars to plot
-
-rows1_1 <- which(rownames(coefs1) %in% varstoplot) # rows in coefs
-rows1_2 <- which(rownames(coefs2) %in% varstoplot)
-rows1_3 <- which(rownames(coefs3) %in% varstoplot)
-xlims <- range(c(coefs1[rows1_1,1] - coefs1[rows1_1,2], coefs1[rows1_1,1] + coefs1[rows1_1,2], 
-                  coefs2[rows1_2,1] - coefs2[rows1_2,2], coefs2[rows1_2,1] + coefs2[rows1_2,2], 
-                  coefs3[rows1_3,1] - coefs3[rows1_3,2], coefs3[rows1_3,1] + coefs3[rows1_3,2]))
-
-
-cols <- brewer.pal(3, 'Dark2') # for Jtu, Jbeta and Horn models
-pchs <- c(16, 16, 16)
-offs <- c(0.1, 0, -0.1) # offset vertically for each model
-
-
-par(las = 1, mai = c(0.5, 4, 0.1, 0.1))
-
-plot(0,0, col = 'white', xlim = xlims, ylim = c(1,length(varstoplot)), yaxt='n', xlab = '', ylab ='')
-axis(2, at = length(varstoplot):1, labels = varstoplot, cex.axis = 0.7)
-abline(v = 0, col = 'grey', lty = 2)
-abline(h = 1:length(varstoplot), col = 'grey', lty = 3)
-for(i in 1:length(varstoplot)){
-  if(varstoplot[i] %in% rownames(coefs1)){
-    x = coefs1[rownames(coefs1) == varstoplot[i], 1]
-    se = coefs1[rownames(coefs1) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[1], pch = pchs[1], col = cols[1])
-    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[1], length(varstoplot) + 1 - i + offs[1]), col = cols[1])
-  }
-  if(varstoplot[i] %in% rownames(coefs2)){
-    x = coefs2[rownames(coefs2) == varstoplot[i], 1]
-    se = coefs2[rownames(coefs2) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[2], pch = pchs[2], col = cols[2])
-    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[2], length(varstoplot) + 1 - i + offs[2]), col = cols[2])
-  }
-  if(varstoplot[i] %in% rownames(coefs3)){
-    x = coefs3[rownames(coefs3) == varstoplot[i], 1]
-    se = coefs3[rownames(coefs3) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[3], pch = pchs[3], col = cols[3])
-    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[3], length(varstoplot) + 1 - i + offs[3]), col = cols[3])
-  }
-}
-legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Horn'), cex = 0.5)
-```
-#### Set up function to plot the main effects
-<details>
-<summary>Click to unfold</summary>
-
-```{r function to plot main effects}
+### Plot the main effects
+```{r main effect plots, fig.width=12, fig.height=12, echo = FALSE}
 # mods should be a list of 3 full models
 # returns a list with 2 components: the plots and the dataframe
 plotmaineffects <- function(mods){
   # set up the variables to plot
   # if variable is logged before scaling (see 'center and scale' above), then need to mark it here and express the limits on a log10 scale (even though log transforming is log)
-  vars <- data.frame(vars = c('tempchange_abs', 'tempave_metab', 'seas', 'microclim', 'mass', 'speed', 
-                              'consumerfrac', 'nspp', 'thermal_bias', 'npp', 'veg', 'duration', 
+  vars <- data.frame(vars = c('temptrend_abs', 'tempave_metab', 'seas', 'microclim', 'mass', 
+                              'nspp', 'npp', 'duration', 
                               'human_bowler', 'human_bowler'),
                      min =      c(0,  0,   0.1, -2,  0,   0,   0,   0.3, -10, 1.9, 0,   0.5, 0,   0), 
                      max =      c(0.2,  30,  16,  0.8, 8,   2,   1,   2.6, 10,  3.7, 0.3, 2,   1,   1),
@@ -852,14 +966,7 @@ plotmaineffects <- function(mods){
   }
   out <- list(varplots = varplots, newdat = newdat)
 }
-```
 
-</details>
-
-#### Plot the main effects (rem0)
-```{r main effect plots rem0, fig.width=12, fig.height=12}
-
-#uses function from previous section
 out <- plotmaineffects(mods = list(modTfullJturem0, modTfullJbetarem0, modTfullHornrem0))
 
 grid.arrange(grobs = out$varplots, ncol = 3)
@@ -873,12 +980,159 @@ Red: Jaccard total
 Blue: Horn
 Plots are for Terrestrial, except the marine plot.
 
+## Interaction models
+Try static covariates intersected with temperature-trend:
 
-#### Set up function to plot the interactions
-<details>
-<summary>Click to unfold</summary>
+- realm
+- mass
+- average metabolic temperature
+- seasonality
+- microclimates
+- thermal bias:tsign
+- NPP
+- human footprint
 
-```{r interactions plot function}
+
+### Fit interaction models
+```{r interaction models}
+form <- formula('disstrend ~ temptrend_abs.sc*REALM + temptrend_abs.sc*tempave_metab.sc + temptrend_abs.sc*seas.sc + temptrend_abs.sc*microclim.sc + temptrend_abs.sc*nspp.sc + temptrend_abs.sc*npp.sc + temptrend_abs.sc*mass.sc + temptrend_abs.sc*human_bowler.sc:REALM2 + temptrend_abs.sc*thermal_bias.sc:tsign + (1|STUDY_ID)')
+dispform <- formula('~taxa_mod2 + REALM + nspp.sc + trendse')
+
+completerows <- trends[, complete.cases(REALM, tempave_metab.sc, 
+                                seas.sc, microclim.sc, 
+                                temptrend_abs.sc, mass.sc,
+                                nspp.sc, npp.sc, thermal_bias.sc,
+                                human_bowler.sc)]
+
+# Jtu
+if(file.exists('temp/modslopeIntJtu3.rds')){
+  modslopeIntJtu3 <- readRDS('temp/modslopeIntJtu3.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 2 & measure == 'Jtu'] & completerows
+  sum(i)
+  modslopeIntJtu3 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modslopeIntJtu3, file = 'temp/modslopeIntJtu3.rds')
+}
+
+if(file.exists('temp/modslopeIntJtu5.rds')){
+  modslopeIntJtu5 <- readRDS('temp/modslopeIntJtu5.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 4 & measure == 'Jtu'] & completerows
+  sum(i)
+  modslopeIntJtu5 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modslopeIntJtu5, file = 'temp/modslopeIntJtu5.rds')
+}
+
+if(file.exists('temp/modslopeIntJtu10.rds')){
+  modslopeIntJtu10 <- readRDS('temp/modslopeIntJtu10.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 9 & measure == 'Jtu'] & completerows
+  modslopeIntJtu10 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modslopeIntJtu10, file = 'temp/modslopeIntJtu10.rds')
+}
+
+if(file.exists('temp/modslopeIntJtu20.rds')){
+  modslopeIntJtu20 <- readRDS('temp/modslopeIntJtu20.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 19 & measure == 'Jtu'] & completerows
+  modslopeIntJtu20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modslopeIntJtu20, file = 'temp/modslopeIntJtu20.rds')
+}
+
+# Jbeta
+if(file.exists('temp/modslopeIntJbeta3.rds')){
+  modslopeIntJbeta3 <- readRDS('temp/modslopeIntJbeta3.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 2 & measure == 'Jbeta'] & completerows
+  sum(i)
+  modslopeIntJbeta3 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modslopeIntJbeta3, file = 'temp/modslopeIntJbeta3.rds')
+}
+
+if(file.exists('temp/modslopeIntJbeta5.rds')){
+  modslopeIntJbeta5 <- readRDS('temp/modslopeIntJbeta5.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 4 & measure == 'Jbeta'] & completerows
+  sum(i)
+  modslopeIntJbeta5 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modslopeIntJbeta5, file = 'temp/modslopeIntJbeta5.rds')
+}
+
+if(file.exists('temp/modslopeIntJbeta10.rds')){
+  modslopeIntJbeta10 <- readRDS('temp/modslopeIntJbeta10.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 9 & measure == 'Jbeta'] & completerows
+  modslopeIntJbeta10 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modslopeIntJbeta10, file = 'temp/modslopeIntJbeta10.rds')
+}
+
+if(file.exists('temp/modslopeIntJbeta20.rds')){
+  modslopeIntJbeta20 <- readRDS('temp/modslopeIntJbeta20.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 19 & measure == 'Jbeta'] & completerows
+  modslopeIntJbeta20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modslopeIntJbeta20, file = 'temp/modslopeIntJbeta20.rds')
+}
+
+# Horn
+if(file.exists('temp/modslopeIntHorn3.rds')){
+  modslopeIntHorn3 <- readRDS('temp/modslopeIntHorn3.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 2 & measure == 'Horn'] & completerows
+  sum(i)
+  modslopeIntHorn3 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modslopeIntHorn3, file = 'temp/modslopeIntHorn3.rds')
+}
+
+if(file.exists('temp/modslopeIntHorn5.rds')){
+  modslopeIntHorn5 <- readRDS('temp/modslopeIntHorn5.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 4 & measure == 'Horn'] & completerows
+  sum(i)
+  modslopeIntHorn5 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modslopeIntHorn5, file = 'temp/modslopeIntHorn5.rds')
+}
+
+if(file.exists('temp/modslopeIntHorn10.rds')){
+  modslopeIntHorn10 <- readRDS('temp/modslopeIntHorn10.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 9 & measure == 'Horn'] & completerows
+  modslopeIntHorn10 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modslopeIntHorn10, file = 'temp/modslopeIntHorn10.rds')
+}
+
+if(file.exists('temp/modslopeIntHorn20.rds')){
+  modslopeIntHorn20 <- readRDS('temp/modslopeIntHorn20.rds')
+} else {
+  i <- trends[, complete.cases(disstrend) & duration == 19 & measure == 'Horn'] & completerows
+  modslopeIntHorn20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modslopeIntHorn20, file = 'temp/modslopeIntHorn20.rds')
+}
+
+
+```
+
+### Summary
+```{r summary interaction}
+print('Jtu3'); summary(modslopeIntJtu3)
+print('Jtu5'); summary(modslopeIntJtu5)
+print('Jtu10'); summary(modslopeIntJtu10)
+#summary(modslopeIntJtu20)
+
+print('Jbeta3'); summary(modslopeIntJbeta3)
+print('Jbeta5'); summary(modslopeIntJbeta5)
+#summary(modslopeIntJbeta10)
+#summary(modslopeIntJbeta20)
+
+print('Horn3'); summary(modslopeIntHorn3)
+print('Horn5'); summary(modslopeIntHorn5)
+print('Horn10'); summary(modslopeIntHorn10)
+#summary(modslopeIntHorn20)
+
+```
+
+### Set up function to plot the interactions
+```{r interactions plot function, echo = FALSE}
 # mod should be a full model
 # returns a list with 2 components: the plots and the dataframe
 plotinteractions <- function(mod, ylims = c(-0.05, 0.1)){
@@ -1058,7 +1312,7 @@ plotinteractions <- function(mod, ylims = c(-0.05, 0.1)){
 ```
 
 
-#### Plot interactions (Jaccard turnover rem0)
+### Plot interactions (Jaccard turnover rem0)
 ```{r interaction plots modTfullJturem0, fig.height = 13, fig.width = 9}
 
 out <- plotinteractions(modTfullJturem0, ylims = c(-0.03, 0.03))
@@ -1070,7 +1324,7 @@ write.csv(out$newdat, file = 'temp/interactionsJturem0.csv')
 
 ```
 
-#### Plot interactions (Horn rem0)
+### Plot interactions (Horn rem0)
 ```{r interaction plots modTfullHornrem0, fig.height = 13, fig.width = 9}
 
 out <- plotinteractions(modTfullHornrem0, ylims = c(-0.02, 0.07))
@@ -1083,34 +1337,13 @@ write.csv(out$newdat, file = 'temp/interactionsHornrem0.csv')
 ```
 
 
-#### Plot residuals against each predictor (Jaccard turnover)
-```{r resids modTfull1, fig.height = 10, fig.width=10}
-resids <- resid(modTfullJturem0)
-preds <- getData(modTfullJturem0)
-col = '#00000033'
-cex = 0.5
-par(mfrow = c(5,4))
-boxplot(resids ~ preds$REALM, cex = cex, col = col)
-plot(preds$tempchange_abs.sc, resids, cex = cex, col = col)
-plot(preds$tsign, resids, cex = cex, col = col)
-plot(preds$tempave.sc, resids, cex = cex, col = col)
-plot(preds$tempave_metab.sc, resids, cex = cex, col = col)
-plot(preds$seas.sc, resids, cex = cex, col = col)
-plot(preds$microclim.sc, resids, cex = cex, col = col)
-plot(preds$mass.sc, resids, cex = cex, col = col)
-plot(preds$speed.sc, resids, cex = cex, col = col)
-plot(preds$lifespan.sc, resids, cex = cex, col = col)
-plot(preds$consumerfrac.sc, resids, cex = cex, col = col)
-plot(preds$endothermfrac.sc, resids, cex = cex, col = col)
-plot(preds$nspp.sc, resids, cex = cex, col = col)
-plot(preds$thermal_bias.sc, resids, cex = cex, col = col)
-plot(preds$npp.sc, resids, cex = cex, col = col)
-plot(preds$veg.sc, resids, cex = cex, col = col)
-plot(preds$human_bowler.sc, resids, cex = cex, col = col)
+### DHARMa model evaluation
+```{r, fig.height = 10, fig.width=10}
+
 ```
 
-### Remove each term from the full model
-```{r term deletion from modTfull}
+## Remove each term from the full model
+```{r term deletion from modTfull, eval = FALSE}
 AICnas <- function(x){
   if(class(x) == 'NULL'){
     return(NA)
@@ -1236,7 +1469,7 @@ if(any(torun$run)){
 aicsfromfull
 ```
 
-#### Plot deltaAICs for all models
+### Plot deltaAICs for all models
 ```{r plot dAICs, message = FALSE, warning = FALSE}
 # transform for a plot
 aicsfromfulllong <- reshape(aicsfromfull, direction = 'long',
@@ -1319,7 +1552,8 @@ summary(modTsimpHornrem0)
 
 
 ## Make realm-specific models
-```{r LME Horn models by realm, fig.width=10, fig.height=8}
+Not run now
+```{r LME Horn models by realm, eval = FALSE}
 i1 <- trends[, REALM == 'Terrestrial' & complete.cases(Horntrendrem0, tempave_metab.sc, seas.sc, microclim.sc, 
                              tempchange_abs.sc, mass.sc, speed.sc, 
                              consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
@@ -1413,8 +1647,10 @@ summary(modTfullHornMar)
 ```
 
 ### Plot the realm-specific coefficients
+Not run now
+
 Also uses the full models across all realms
-```{r plot realm mods, fig.height=12, fig.width=9}
+```{r plot realm mods, fig.height=12, fig.width=9, eval = FALSE}
 
 coefs1 <- summary(modTfullHornrem0)$tTable
 coefs2 <- summary(modTfullHornTerr)$tTable

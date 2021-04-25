@@ -208,11 +208,25 @@ if(!file.exists(here('output', 'slope_w_covariates.csv.gz'))){
 
 # Check variable distributions
 ## Response variables
-```{r histograms response, echo=FALSE}
-bt[measure =='Jbeta', summary(disstrend)]
-bt[measure =='Jtu', summary(disstrend)]
-bt[measure =='Horn', summary(disstrend)]
+```{r summaries response}
+bt[measure =='Jbeta' & year2 - year1 == 2, summary(disstrend)]
+bt[measure =='Jtu' & year2 - year1 == 2, summary(disstrend)]
+bt[measure =='Horn' & year2 - year1 == 2, summary(disstrend)]
 
+bt[measure =='Jbeta' & year2 - year1 == 4, summary(disstrend)]
+bt[measure =='Jtu' & year2 - year1 == 4, summary(disstrend)]
+bt[measure =='Horn' & year2 - year1 == 4, summary(disstrend)]
+
+bt[measure =='Jbeta' & year2 - year1 == 9, summary(disstrend)]
+bt[measure =='Jtu' & year2 - year1 == 9, summary(disstrend)]
+bt[measure =='Horn' & year2 - year1 == 9, summary(disstrend)]
+
+bt[measure =='Jbeta' & year2 - year1 == 19, summary(disstrend)]
+bt[measure =='Jtu' & year2 - year1 == 19, summary(disstrend)]
+bt[measure =='Horn' & year2 - year1 == 19, summary(disstrend)]
+```
+
+```{r histograms response, echo = FALSE}
 # histograms for 3-year ts
 invisible(bt[measure =='Jbeta' & year2 - year1 == 2, hist(disstrend, main = 'Jaccard total 3-year slope', breaks = 80)])
 invisible(bt[measure =='Jtu' & year2 - year1 == 2, hist(disstrend, main = 'Jaccard turnover 3-year slope', breaks = 80)])

@@ -112,7 +112,7 @@ ggplot(test, aes(dY, Jtu)) +
 This only recalculates from scratch if temp/trendstemp.rds is not available.
 ## Set up functions
 ```{r assemble trends, warning=FALSE, message=FALSE}
-# function to calc linear trend from last numyears of the time-series
+# function to calc linear trend from last numyrs of the time-series
 calctrendlast <- function(y, year1, year2, numyrs, nm = 'y'){
   yrs <- sort(unique(c(year1, year2)))
   dy <- diff(yrs) # find intervals between years
