@@ -33,59 +33,65 @@ library(performance) # for R2
 # load data ############################
 
 # Turnover and covariates assembled by assemble_turnover_covariates.Rmd
-trends <- fread('output/turnover_w_covariates.csv.gz')
+trends3 <- fread('output/turnover_w_covariates3.csv.gz')
+trends5 <- fread('output/turnover_w_covariates5.csv.gz')
+trends10 <- fread('output/turnover_w_covariates10.csv.gz')
+trends20 <- fread('output/turnover_w_covariates20.csv.gz')
 
 
 # Models ############################
 
 ## Models to compare variance structures ############################
 #fixed <- 'Jtu.sc ~ tempchange_abs.sc*REALM + tempchange_abs.sc*tempave_metab.sc + tempchange_abs.sc*duration.sc'
-fixed <- 'Jtu.sc ~ tempchange_abs.sc*REALM + tempchange_abs.sc*tempave_metab.sc + tempchange_abs.sc*duration.sc + tempchange_abs.sc*mass.sc + tempchange_abs.sc*endothermfrac.sc + tempchange_abs.sc*microclim.sc + tempchange_abs.sc*npp.sc + tempchange_abs.sc*human_bowler.sc:REALM2'
-i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+fixed <- 'Jtu.sc ~ duration.sc, tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + mass.sc:duration.sc + endothermfrac.sc:duration.sc + microclim.sc:duration.sc + npp.sc:duration.sc + human_bowler.sc:REALM2:duration.sc'
+i3 <- trends3[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+i5 <- trends5[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+i10 <- trends10[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+i20 <- trends20[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
 
 if(fitmod == 'modRFgauss'){
-    print(paste(sum(i), 'data points'))
-    modRFgauss <- glmmTMB(formula(fixed), data = trends[i,], family = gaussian(), control = glmmTMBControl(profile=TRUE))
-    summary(modRFgauss)
-    saveRDS(modRFgauss, file = 'temp/modRFgauss.rds')
-    print('saved modRFgauss.rds')
+    print(paste(sum(i3), 'data points'))
+    modRFgauss3 <- glmmTMB(formula(fixed), data = trends3[i3,], family = gaussian(), control = glmmTMBControl(profile=TRUE))
+    summary(modRFgauss3)
+    saveRDS(modRFgauss3, file = 'temp/modRFgauss3.rds')
+    print('saved modRFgauss3.rds')
     print(Sys.time())
-    print(performance::r2(modRFgauss))
+    print(performance::r2(modRFgauss3))
     
     MATCHMOD <- TRUE
 }
 
 if(fitmod == 'modRFbeta'){
-    print(paste(sum(i), 'data points'))
-    modRFbeta <- glmmTMB(formula(fixed), data = trends[i,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add beta errors
-    summary(modRFbeta)
-    saveRDS(modRFbeta, file = 'temp/modRFbeta.rds')
-    print('saved modRFbeta.rds')
+    print(paste(sum(i3), 'data points'))
+    modRFbeta3 <- glmmTMB(formula(fixed), data = trends3[i3,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add beta errors
+    summary(modRFbeta3)
+    saveRDS(modRFbeta3, file = 'temp/modRFbeta3.rds')
+    print('saved modRFbeta3.rds')
     print(Sys.time())
-    print(performance::r2(modRFbeta))
+    print(performance::r2(modRFbeta3))
     
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modRFrID'){
-    print(paste(sum(i), 'data points'))
-    modRFrID <- glmmTMB(formula(paste(fixed, '+(1|rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
+    print(paste(sum(i3), 'data points'))
+    modRFrID3 <- glmmTMB(formula(paste(fixed, '+(1|rarefyID)')), data = trends3[i3,], family = beta_family(link = 'logit'), 
                    control = glmmTMBControl(profile=TRUE)) # add random effects
-    summary(modRFrID)
-    saveRDS(modRFrID, file = 'temp/modRFrID.rds')
-    print('saved modRDrID.rds')
+    summary(modRFrID3)
+    saveRDS(modRFrID3, file = 'temp/modRFrID3.rds')
+    print('saved modRDrID3.rds')
     print(Sys.time())
-    print(performance::r2(modRFrID))
+    print(performance::r2(modRFrID3))
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modRF2lev'){
-    print(paste(sum(i), 'data points'))
-    modRF2lev <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
+    print(paste(sum(i3), 'data points'))
+    modRF2lev3 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends3[i3,], family = beta_family(link = 'logit'), 
                              control = glmmTMBControl(profile=TRUE)) # add nested random effects
-    summary(modRF2lev)
-    saveRDS(modRF2lev, file = 'temp/modRF2lev.rds')
-    print('saved modRF2lev.rds')
+    summary(modRF2lev3)
+    saveRDS(modRF2lev3, file = 'temp/modRF2lev3.rds')
+    print('saved modRF2lev3.rds')
     print(Sys.time())
-    print(performance::r2(modRF2lev))
+    print(performance::r2(modRF2lev3))
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modRFnestedRE'){

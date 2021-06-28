@@ -280,6 +280,19 @@ bt5[, duration := year2 - year1]
 bt10[, duration := year2 - year1]
 bt20[, duration := year2 - year1]
 
+# group Marine invertebrates/plants in with All
+bt3[, taxa_mod2 := taxa_mod]
+bt3[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
+
+bt5[, taxa_mod2 := taxa_mod]
+bt5[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
+
+bt10[, taxa_mod2 := taxa_mod]
+bt10[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
+
+bt20[, taxa_mod2 := taxa_mod]
+bt20[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
+
 #######################
 ## Transformations
 
@@ -434,13 +447,111 @@ scaling20$plus <- 0 # whether anything was added to the variable before logtrans
 scaling20$plus[scaling20$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
 ```
 
+## Dataset sizes
+
+``` r
+bt3[, .N]
+```
+
+    ## [1] 30615
+
+``` r
+bt5[, .N]
+```
+
+    ## [1] 54660
+
+``` r
+bt10[, .N]
+```
+
+    ## [1] 97785
+
+``` r
+bt20[, .N]
+```
+
+    ## [1] 93860
+
+``` r
+bt3[, length(unique(STUDY_ID)), by = REALM]
+```
+
+    ##          REALM V1
+    ## 1:      Marine 95
+    ## 2: Terrestrial 84
+    ## 3:  Freshwater 19
+
+``` r
+bt5[, length(unique(STUDY_ID)), by = REALM]
+```
+
+    ##          REALM V1
+    ## 1:      Marine 74
+    ## 2: Terrestrial 65
+    ## 3:  Freshwater 18
+
+``` r
+bt10[, length(unique(STUDY_ID)), by = REALM]
+```
+
+    ##          REALM V1
+    ## 1:      Marine 44
+    ## 2: Terrestrial 49
+    ## 3:  Freshwater  9
+
+``` r
+bt20[, length(unique(STUDY_ID)), by = REALM]
+```
+
+    ##          REALM V1
+    ## 1:      Marine 12
+    ## 2: Terrestrial 23
+    ## 3:  Freshwater  5
+
+``` r
+bt3[, length(unique(rarefyID)), by = REALM]
+```
+
+    ##          REALM   V1
+    ## 1:      Marine 8709
+    ## 2: Terrestrial 1422
+    ## 3:  Freshwater   74
+
+``` r
+bt5[, length(unique(rarefyID)), by = REALM]
+```
+
+    ##          REALM   V1
+    ## 1:      Marine 4517
+    ## 2: Terrestrial  911
+    ## 3:  Freshwater   38
+
+``` r
+bt10[, length(unique(rarefyID)), by = REALM]
+```
+
+    ##          REALM   V1
+    ## 1:      Marine 1563
+    ## 2: Terrestrial  594
+    ## 3:  Freshwater   16
+
+``` r
+bt20[, length(unique(rarefyID)), by = REALM]
+```
+
+    ##          REALM  V1
+    ## 1:      Marine  94
+    ## 2: Terrestrial 392
+    ## 3:  Freshwater   8
+
 ## Write out
 
 Only if file doesn’t yet exist
 
 ``` r
 if(!file.exists(here('output', 'turnover_w_covariates3.csv.gz'))){
-  write.csv(bt3[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
+  write.csv(bt3[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
                   tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
@@ -450,7 +561,7 @@ if(!file.exists(here('output', 'turnover_w_covariates3.csv.gz'))){
 }
 
 if(!file.exists(here('output', 'turnover_w_covariates5.csv.gz'))){
-  write.csv(bt5[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
+  write.csv(bt5[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
                   tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
@@ -460,7 +571,7 @@ if(!file.exists(here('output', 'turnover_w_covariates5.csv.gz'))){
 }
 
 if(!file.exists(here('output', 'turnover_w_covariates10.csv.gz'))){
-  write.csv(bt10[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
+  write.csv(bt10[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
                   tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
@@ -470,7 +581,7 @@ if(!file.exists(here('output', 'turnover_w_covariates10.csv.gz'))){
 }
 
 if(!file.exists(here('output', 'turnover_w_covariates20.csv.gz'))){
-  write.csv(bt20[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
+  write.csv(bt20[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
                   tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
