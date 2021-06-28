@@ -95,6 +95,7 @@ ggplot(ersstyr[YEAR == 1901,], aes(lon_ersst, lat_ersst, color = ersst)) + geom_
 ```
 
 # Calculate seasonality by year (SD)
+average from the whole time period
 ```{r}
 # CRU TS
 crutsmelt[, mo := as.numeric(substr(time, 5,6))] # extract month
@@ -200,10 +201,11 @@ btallyrsersst <- merge(btallyrsersst, ersstyr, by = c('lat_ersst', 'lon_ersst', 
 ```
 
 ## Average temperature and average metabolic temperature (choose body temperature for endotherms)
+For the time period encompassed by each pair of years, including unsampled years in between
 ```{r ave temp and ave metab temp}
 # CTU TS
 avecruts <- btallyrscruts[, .(ave_cruts = mean(cruts, na.rm = TRUE)), 
-          by = .(rarefyID, year1,  year2)] # calculate ave for each pairwise comparison of years
+          by = .(rarefyID, year1,  year2)] # calculate ave for all years between and including each pairwise comparison of years
 avecruts <- merge(avecruts, endofrac, all.x = TRUE)
 avecruts[, ave_metab_cruts := ave_cruts * ectofrac + 38 * mammfrac + 40 * birdfrac] # average temperature, considering endotherm body temps (latter from McCoy & Gillooly 2008 Ecology Letters)
 
