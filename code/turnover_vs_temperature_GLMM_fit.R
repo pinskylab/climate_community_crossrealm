@@ -43,7 +43,7 @@ trends20 <- fread('output/turnover_w_covariates20.csv.gz')
 
 ## Models to compare variance structures ############################
 #fixed <- 'Jtu.sc ~ tempchange_abs.sc*REALM + tempchange_abs.sc*tempave_metab.sc + tempchange_abs.sc*duration.sc'
-fixed <- 'Jtu.sc ~ duration.sc, tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + mass.sc:duration.sc + endothermfrac.sc:duration.sc + microclim.sc:duration.sc + npp.sc:duration.sc + human_bowler.sc:REALM2:duration.sc'
+fixed <- 'Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + mass.sc:duration.sc + endothermfrac.sc:duration.sc + microclim.sc:duration.sc + npp.sc:duration.sc + human_bowler.sc:REALM2:duration.sc'
 i3 <- trends3[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
 i5 <- trends5[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
 i10 <- trends10[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
@@ -58,6 +58,30 @@ if(fitmod == 'modRFgauss'){
     print(Sys.time())
     print(performance::r2(modRFgauss3))
     
+    print(paste(sum(i5), 'data points'))
+    modRFgauss5 <- glmmTMB(formula(fixed), data = trends5[i5,], family = gaussian(), control = glmmTMBControl(profile=TRUE))
+    summary(modRFgauss5)
+    saveRDS(modRFgauss5, file = 'temp/modRFgauss5.rds')
+    print('saved modRFgauss5.rds')
+    print(Sys.time())
+    print(performance::r2(modRFgauss5))
+    
+    print(paste(sum(i10), 'data points'))
+    modRFgauss10 <- glmmTMB(formula(fixed), data = trends10[i10,], family = gaussian(), control = glmmTMBControl(profile=TRUE))
+    summary(modRFgauss10)
+    saveRDS(modRFgauss10, file = 'temp/modRFgauss10.rds')
+    print('saved modRFgauss10.rds')
+    print(Sys.time())
+    print(performance::r2(modRFgauss10))
+    
+    print(paste(sum(i20), 'data points'))
+    modRFgauss20 <- glmmTMB(formula(fixed), data = trends20[i20,], family = gaussian(), control = glmmTMBControl(profile=TRUE))
+    summary(modRFgauss20)
+    saveRDS(modRFgauss20, file = 'temp/modRFgauss20.rds')
+    print('saved modRFgauss20.rds')
+    print(Sys.time())
+    print(performance::r2(modRFgauss20))
+    
     MATCHMOD <- TRUE
 }
 
@@ -70,6 +94,30 @@ if(fitmod == 'modRFbeta'){
     print(Sys.time())
     print(performance::r2(modRFbeta3))
     
+    print(paste(sum(i5), 'data points'))
+    modRFbeta5 <- glmmTMB(formula(fixed), data = trends5[i5,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add beta errors
+    summary(modRFbeta5)
+    saveRDS(modRFbeta5, file = 'temp/modRFbeta5.rds')
+    print('saved modRFbeta5.rds')
+    print(Sys.time())
+    print(performance::r2(modRFbeta5))
+    
+    print(paste(sum(i10), 'data points'))
+    modRFbeta10 <- glmmTMB(formula(fixed), data = trends10[i10,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add beta errors
+    summary(modRFbeta10)
+    saveRDS(modRFbeta10, file = 'temp/modRFbeta10.rds')
+    print('saved modRFbeta10.rds')
+    print(Sys.time())
+    print(performance::r2(modRFbeta10))
+    
+    print(paste(sum(i20), 'data points'))
+    modRFbeta20 <- glmmTMB(formula(fixed), data = trends20[i20,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add beta errors
+    summary(modRFbeta20)
+    saveRDS(modRFbeta20, file = 'temp/modRFbeta20.rds')
+    print('saved modRFbeta20.rds')
+    print(Sys.time())
+    print(performance::r2(modRFbeta20))
+    
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modRFrID'){
@@ -81,6 +129,34 @@ if(fitmod == 'modRFrID'){
     print('saved modRDrID3.rds')
     print(Sys.time())
     print(performance::r2(modRFrID3))
+
+    print(paste(sum(i5), 'data points'))
+    modRFrID5 <- glmmTMB(formula(paste(fixed, '+(1|rarefyID)')), data = trends5[i5,], family = beta_family(link = 'logit'), 
+                         control = glmmTMBControl(profile=TRUE)) # add random effects
+    summary(modRFrID5)
+    saveRDS(modRFrID5, file = 'temp/modRFrID5.rds')
+    print('saved modRDrID5.rds')
+    print(Sys.time())
+    print(performance::r2(modRFrID5))
+
+    print(paste(sum(i10), 'data points'))
+    modRFrID10 <- glmmTMB(formula(paste(fixed, '+(1|rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
+                         control = glmmTMBControl(profile=TRUE)) # add random effects
+    summary(modRFrID10)
+    saveRDS(modRFrID10, file = 'temp/modRFrID10.rds')
+    print('saved modRDrID10.rds')
+    print(Sys.time())
+    print(performance::r2(modRFrID10))
+
+    print(paste(sum(i20), 'data points'))
+    modRFrID20 <- glmmTMB(formula(paste(fixed, '+(1|rarefyID)')), data = trends20[i20,], family = beta_family(link = 'logit'), 
+                         control = glmmTMBControl(profile=TRUE)) # add random effects
+    summary(modRFrID20)
+    saveRDS(modRFrID20, file = 'temp/modRFrID20.rds')
+    print('saved modRDrID20.rds')
+    print(Sys.time())
+    print(performance::r2(modRFrID20))
+
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modRF2lev'){
@@ -92,105 +168,381 @@ if(fitmod == 'modRF2lev'){
     print('saved modRF2lev3.rds')
     print(Sys.time())
     print(performance::r2(modRF2lev3))
+
+    print(paste(sum(i5), 'data points'))
+    modRF2lev5 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends5[i5,], family = beta_family(link = 'logit'), 
+                          control = glmmTMBControl(profile=TRUE)) # add nested random effects
+    summary(modRF2lev5)
+    saveRDS(modRF2lev5, file = 'temp/modRF2lev5.rds')
+    print('saved modRF2lev5.rds')
+    print(Sys.time())
+    print(performance::r2(modRF2lev5))
+
+    print(paste(sum(i10), 'data points'))
+    modRF2lev10 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
+                          control = glmmTMBControl(profile=TRUE)) # add nested random effects
+    summary(modRF2lev10)
+    saveRDS(modRF2lev10, file = 'temp/modRF2lev10.rds')
+    print('saved modRF2lev10.rds')
+    print(Sys.time())
+    print(performance::r2(modRF2lev10))
+
+    print(paste(sum(i20), 'data points'))
+    modRF2lev20 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends20[i20,], family = beta_family(link = 'logit'), 
+                          control = glmmTMBControl(profile=TRUE)) # add nested random effects
+    summary(modRF2lev20)
+    saveRDS(modRF2lev20, file = 'temp/modRF2lev20.rds')
+    print('saved modRF2lev20.rds')
+    print(Sys.time())
+    print(performance::r2(modRF2lev20))
+
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modRFnestedRE'){
-    print(paste(sum(i), 'data points'))
-    modRFnestedRE <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
+    print(paste(sum(i3), 'data points'))
+    modRFnestedRE3 <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends3[i3,], family = beta_family(link = 'logit'), 
                    control = glmmTMBControl(profile=TRUE)) # add nested random effects
-    summary(modRFnestedRE)
-    saveRDS(modRFnestedRE, file = 'temp/modRFnestedRE.rds')
-    print('saved modRFnestedRE.rds')
+    summary(modRFnestedRE3)
+    saveRDS(modRFnestedRE3, file = 'temp/modRFnestedRE3.rds')
+    print('saved modRFnestedRE3.rds')
     print(Sys.time())
-    print(performance::r2(modRFnestedRE))
+    print(performance::r2(modRFnestedRE3))
+
+    print(paste(sum(i5), 'data points'))
+    modRFnestedRE5 <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends5[i5,], family = beta_family(link = 'logit'), 
+                              control = glmmTMBControl(profile=TRUE)) # add nested random effects
+    summary(modRFnestedRE5)
+    saveRDS(modRFnestedRE5, file = 'temp/modRFnestedRE5.rds')
+    print('saved modRFnestedRE5.rds')
+    print(Sys.time())
+    print(performance::r2(modRFnestedRE5))
+
+    print(paste(sum(i10), 'data points'))
+    modRFnestedRE10 <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
+                              control = glmmTMBControl(profile=TRUE)) # add nested random effects
+    summary(modRFnestedRE10)
+    saveRDS(modRFnestedRE10, file = 'temp/modRFnestedRE10.rds')
+    print('saved modRFnestedRE10.rds')
+    print(Sys.time())
+    print(performance::r2(modRFnestedRE10))
+
+    print(paste(sum(i20), 'data points'))
+    modRFnestedRE20 <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends20[i20,], family = beta_family(link = 'logit'), 
+                              control = glmmTMBControl(profile=TRUE)) # add nested random effects
+    summary(modRFnestedRE20)
+    saveRDS(modRFnestedRE20, file = 'temp/modRFnestedRE20.rds')
+    print('saved modRFnestedRE20.rds')
+    print(Sys.time())
+    print(performance::r2(modRFnestedRE20))
+
     MATCHMOD <- TRUE
 }
 
 if(fitmod == 'modRFslopeRE'){
-    print(paste(sum(i), 'data points'))
-    modRFslopeRE <- glmmTMB(formula(paste(fixed, '+(tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
-                   control = glmmTMBControl(profile=TRUE)) # add random slopes
-    summary(modRFslopeRE)
-    saveRDS(modRFslopeRE, file = 'temp/modRFslopeRE.rds')
-    print('saved modRFslopeRE.rds')
+    # fails to converge
+    # print(paste(sum(i3), 'data points'))
+    # modRFslopeRE3 <- glmmTMB(formula(paste(fixed, '+(duration.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends3[i3,], family = beta_family(link = 'logit'), 
+    #                control = glmmTMBControl(profile=TRUE)) # add random slopes
+    # summary(modRFslopeRE3)
+    # saveRDS(modRFslopeRE3, file = 'temp/modRFslopeRE3.rds')
+    # print('saved modRFslopeRE3.rds')
+    # print(Sys.time())
+    # print(performance::r2(modRFslopeRE3))
+
+    # fails to converge
+    # print(paste(sum(i5), 'data points'))
+    # modRFslopeRE5 <- glmmTMB(formula(paste(fixed, '+(duration.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends5[i5,], family = beta_family(link = 'logit'), 
+    #                          control = glmmTMBControl(profile=TRUE)) # add random slopes
+    # summary(modRFslopeRE5)
+    # saveRDS(modRFslopeRE5, file = 'temp/modRFslopeRE5.rds')
+    # print('saved modRFslopeRE5.rds')
+    # print(Sys.time())
+    # print(performance::r2(modRFslopeRE5))
+
+    print(paste(sum(i10), 'data points'))
+    modRFslopeRE10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
+                             control = glmmTMBControl(profile=TRUE)) # add random slopes
+    summary(modRFslopeRE10)
+    saveRDS(modRFslopeRE10, file = 'temp/modRFslopeRE10.rds')
+    print('saved modRFslopeRE10.rds')
     print(Sys.time())
-    print(performance::r2(modRFslopeRE))
+    print(performance::r2(modRFslopeRE10))
+
+    print(paste(sum(i20), 'data points'))
+    modRFslopeRE20 <- glmmTMB(formula(paste(fixed, '+(duration.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends20[i20,], family = beta_family(link = 'logit'), 
+                             control = glmmTMBControl(profile=TRUE)) # add random slopes
+    summary(modRFslopeRE20)
+    saveRDS(modRFslopeRE20, file = 'temp/modRFslopeRE20.rds')
+    print('saved modRFslopeRE20.rds')
+    print(Sys.time())
+    print(performance::r2(modRFslopeRE20))
+
+        MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modRFslopeRE2lev'){
+    # fails to converge
+    # print(paste(sum(i3), 'data points'))
+    # modRFslopeRE2lev3 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends3[i3,], family = beta_family(link = 'logit'), 
+    #                          control = glmmTMBControl(profile=TRUE)) # add random slopes
+    # summary(modRFslopeRE2lev3)
+    # saveRDS(modRFslopeRE2lev3, file = 'temp/modRFslopeRE2lev3.rds')
+    # print('saved modRFslopeRE2lev3.rds')
+    # print(Sys.time())
+    # print(performance::r2(modRFslopeRE2lev3))
+
+    # fails to converge
+    # print(paste(sum(i5), 'data points'))
+    # modRFslopeRE2lev5 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends5[i5,], family = beta_family(link = 'logit'), 
+    #                              control = glmmTMBControl(profile=TRUE)) # add random slopes
+    # summary(modRFslopeRE2lev5)
+    # saveRDS(modRFslopeRE2lev5, file = 'temp/modRFslopeRE2lev5.rds')
+    # print('saved modRFslopeRE2lev5.rds')
+    # print(Sys.time())
+    # print(performance::r2(modRFslopeRE2lev5))
+
+    print(paste(sum(i10), 'data points'))
+    modRFslopeRE2lev10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
+                                 control = glmmTMBControl(profile=TRUE)) # add random slopes
+    summary(modRFslopeRE2lev10)
+    saveRDS(modRFslopeRE2lev10, file = 'temp/modRFslopeRE2lev10.rds')
+    print('saved modRFslopeRE2lev10.rds')
+    print(Sys.time())
+    print(performance::r2(modRFslopeRE2lev10))
+
+    print(paste(sum(i20), 'data points'))
+    modRFslopeRE2lev20 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends20[i20,], family = beta_family(link = 'logit'), 
+                                 control = glmmTMBControl(profile=TRUE)) # add random slopes
+    summary(modRFslopeRE2lev20)
+    saveRDS(modRFslopeRE2lev20, file = 'temp/modRFslopeRE2lev20.rds')
+    print('saved modRFslopeRE2lev20.rds')
+    print(Sys.time())
+    print(performance::r2(modRFslopeRE2lev20))
+
+        MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modRFdisp'){ # no REs, + dispersion formula
+    print(paste(sum(i3), 'data points'))
+    modRFdisp3 <- glmmTMB(formula(fixed), data = trends3[i3,], family = beta_family(link = 'logit'), 
+                                     dispformula = ~nspp.sc, 
+                                     control = glmmTMBControl(profile=TRUE))
+    summary(modRFdisp3)
+    saveRDS(modRFdisp3, file = 'temp/modRFdisp3.rds')
+    print('saved modRFdisp3.rds')
+    print(Sys.time())
+    print(performance::r2(modRFdisp3))
+
+    print(paste(sum(i5), 'data points'))
+    modRFdisp5 <- glmmTMB(formula(fixed), data = trends5[i5,], family = beta_family(link = 'logit'), 
+                          dispformula = ~nspp.sc, 
+                          control = glmmTMBControl(profile=TRUE))
+    summary(modRFdisp5)
+    saveRDS(modRFdisp5, file = 'temp/modRFdisp5.rds')
+    print('saved modRFdisp5.rds')
+    print(Sys.time())
+    print(performance::r2(modRFdisp5))
+
+    print(paste(sum(i10), 'data points'))
+    modRFdisp10 <- glmmTMB(formula(fixed), data = trends10[i10,], family = beta_family(link = 'logit'), 
+                          dispformula = ~nspp.sc, 
+                          control = glmmTMBControl(profile=TRUE))
+    summary(modRFdisp10)
+    saveRDS(modRFdisp10, file = 'temp/modRFdisp10.rds')
+    print('saved modRFdisp10.rds')
+    print(Sys.time())
+    print(performance::r2(modRFdisp10))
+
+    print(paste(sum(i20), 'data points'))
+    modRFdisp20 <- glmmTMB(formula(fixed), data = trends20[i20,], family = beta_family(link = 'logit'), 
+                          dispformula = ~nspp.sc, 
+                          control = glmmTMBControl(profile=TRUE))
+    summary(modRFdisp20)
+    saveRDS(modRFdisp20, file = 'temp/modRFdisp20.rds')
+    print('saved modRFdisp20.rds')
+    print(Sys.time())
+    print(performance::r2(modRFdisp20))
+
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modRFdisp2lev'){
-    print(paste(sum(i), 'data points'))
-    modRFdisp2lev <- glmmTMB(formula(paste(fixed, '+(tempchange_abs.sc|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
-                         dispformula = ~nspp.sc, 
-                         control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    summary(modRFdisp2lev)
-    saveRDS(modRFdisp2lev, file = 'temp/modRFdisp2lev.rds')
-    print('saved modRFdisp2lev.rds')
+
+if(fitmod == 'modRF2levdisp'){ # 2 level RE, no slope, + dispersion formula
+    print(paste(sum(i3), 'data points'))
+    modRFdisp2levOnlyint3 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends3[i3,], family = beta_family(link = 'logit'), 
+                                     dispformula = ~nspp.sc, 
+                                     control = glmmTMBControl(profile=TRUE))
+    summary(modRFdisp2levOnlyint3)
+    saveRDS(modRFdisp2levOnlyint3, file = 'temp/modRFdisp2levOnlyint3.rds')
+    print('saved modRFdisp2levOnlyint3.rds')
     print(Sys.time())
-    print(performance::r2(modRFdisp2lev))
-    MATCHMOD <- TRUE
+    print(performance::r2(modRFdisp2levOnlyint3))
+
+    print(paste(sum(i5), 'data points'))
+    modRFdisp2levOnlyint5 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends5[i5,], family = beta_family(link = 'logit'), 
+                                     dispformula = ~nspp.sc, 
+                                     control = glmmTMBControl(profile=TRUE))
+    summary(modRFdisp2levOnlyint5)
+    saveRDS(modRFdisp2levOnlyint5, file = 'temp/modRFdisp2levOnlyint5.rds')
+    print('saved modRFdisp2levOnlyint5.rds')
+    print(Sys.time())
+    print(performance::r2(modRFdisp2levOnlyint5))
+
+    print(paste(sum(i10), 'data points'))
+    modRFdisp2levOnlyint10 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
+                                     dispformula = ~nspp.sc, 
+                                     control = glmmTMBControl(profile=TRUE))
+    summary(modRFdisp2levOnlyint10)
+    saveRDS(modRFdisp2levOnlyint10, file = 'temp/modRFdisp2levOnlyint10.rds')
+    print('saved modRFdisp2levOnlyint10.rds')
+    print(Sys.time())
+    print(performance::r2(modRFdisp2levOnlyint10))
+
+    print(paste(sum(i20), 'data points'))
+    modRFdisp2levOnlyint20 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends20[i20,], family = beta_family(link = 'logit'), 
+                                     dispformula = ~nspp.sc, 
+                                     control = glmmTMBControl(profile=TRUE))
+    summary(modRFdisp2levOnlyint20)
+    saveRDS(modRFdisp2levOnlyint20, file = 'temp/modRFdisp2levOnlyint20.rds')
+    print('saved modRFdisp2levOnlyint20.rds')
+    print(Sys.time())
+    print(performance::r2(modRFdisp2levOnlyint20))
+
+        MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modRFdisp'){
-    print(paste(sum(i), 'data points'))
-    modRFdisp <- glmmTMB(formula(paste(fixed, '+(tempchange_abs.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    summary(modRFdisp)
-    saveRDS(modRFdisp, file = 'temp/modRFdisp.rds')
-    print('saved modRFdisp.rds')
+if(fitmod == 'modRFslopeRE2levdisp'){
+    # singular convergence
+    # print(paste(sum(i3), 'data points'))
+    # modRFslopeRE2levdisp3 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends3[i3,], family = beta_family(link = 'logit'), 
+    #                      dispformula = ~nspp.sc, 
+    #                      control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    # summary(modRFslopeRE2levdisp3)
+    # saveRDS(modRFslopeRE2levdisp3, file = 'temp/modRFslopeRE2levdisp3.rds')
+    # print('saved modRFslopeRE2levdisp3.rds')
+    # print(Sys.time())
+    # print(performance::r2(modRFslopeRE2levdisp3))
+
+    # singular convergence
+    # print(paste(sum(i5), 'data points'))
+    # modRFslopeRE2levdisp5 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends5[i5,], family = beta_family(link = 'logit'), 
+    #                                  dispformula = ~nspp.sc, 
+    #                                  control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    # summary(modRFslopeRE2levdisp5)
+    # saveRDS(modRFslopeRE2levdisp5, file = 'temp/modRFslopeRE2levdisp5.rds')
+    # print('saved modRFslopeRE2levdisp5.rds')
+    # print(Sys.time())
+    # print(performance::r2(modRFslopeRE2levdisp))
+
+    print(paste(sum(i10), 'data points'))
+    modRFslopeRE2levdisp10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
+                                     dispformula = ~nspp.sc, 
+                                     control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modRFslopeRE2levdisp10)
+    saveRDS(modRFslopeRE2levdisp10, file = 'temp/modRFslopeRE2levdisp10.rds')
+    print('saved modRFslopeRE2levdisp10.rds')
     print(Sys.time())
-    print(performance::r2(modRFdisp))
-    MATCHMOD <- TRUE
+    print(performance::r2(modRFslopeRE2levdisp10))
+
+    print(paste(sum(i20), 'data points'))
+    modRFslopeRE2levdisp20 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends20[i20,], family = beta_family(link = 'logit'), 
+                                     dispformula = ~nspp.sc, 
+                                     control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modRFslopeRE2levdisp20)
+    saveRDS(modRFslopeRE2levdisp20, file = 'temp/modRFslopeRE2levdisp20.rds')
+    print('saved modRFslopeRE2levdisp20.rds')
+    print(Sys.time())
+    print(performance::r2(modRFslopeRE2levdisp20))
+
+        MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modRFdisp2levOnlyint'){ # 2 level RE, no slope, + dispersion formula
-    print(paste(sum(i), 'data points'))
-    modRFdisp2levOnlyint <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
-                             dispformula = ~nspp.sc, 
-                             control = glmmTMBControl(profile=TRUE))
-    summary(modRFdisp2levOnlyint)
-    saveRDS(modRFdisp2levOnlyint, file = 'temp/modRFdisp2levOnlyint.rds')
-    print('saved modRFdisp2levOnlyint.rds')
+if(fitmod == 'modRFslopeREdisp'){
+    # singular convergence
+    # print(paste(sum(i3), 'data points'))
+    # modRFslopeREdisp3 <- glmmTMB(formula(paste(fixed, '+(duration.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends3[i3,], family = beta_family(link = 'logit'), 
+    #                dispformula = ~nspp.sc, 
+    #                control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    # summary(modRFslopeREdisp3)
+    # saveRDS(modRFslopeREdisp3, file = 'temp/modRFslopeREdisp3.rds')
+    # print('saved modRFslopeREdisp3.rds')
+    # print(Sys.time())
+    # print(performance::r2(modRFslopeREdisp3))
+
+    # singular convergence
+    # print(paste(sum(i5), 'data points'))
+    # modRFslopeREdisp5 <- glmmTMB(formula(paste(fixed, '+(duration.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends5[i5,], family = beta_family(link = 'logit'), 
+    #                                  dispformula = ~nspp.sc, 
+    #                                  control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    # summary(modRFslopeREdisp5)
+    # saveRDS(modRFslopeREdisp5, file = 'temp/modRFslopeREdisp5.rds')
+    # print('saved modRFslopeREdisp5.rds')
+    # print(Sys.time())
+    # print(performance::r2(modRFslopeREdisp5))
+
+    print(paste(sum(i10), 'data points'))
+    modRFslopeREdisp10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
+                                     dispformula = ~nspp.sc, 
+                                     control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modRFslopeREdisp10)
+    saveRDS(modRFslopeREdisp10, file = 'temp/modRFslopeREdisp10.rds')
+    print('saved modRFslopeREdisp10.rds')
     print(Sys.time())
-    print(performance::r2(modRFdisp2levOnlyint))
-    MATCHMOD <- TRUE
+    print(performance::r2(modRFslopeREdisp10))
+
+    print(paste(sum(i20), 'data points'))
+    modRFslopeREdisp20 <- glmmTMB(formula(paste(fixed, '+(duration.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends20[i20,], family = beta_family(link = 'logit'), 
+                                     dispformula = ~nspp.sc, 
+                                     control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modRFslopeREdisp20)
+    saveRDS(modRFslopeREdisp20, file = 'temp/modRFslopeREdisp20.rds')
+    print('saved modRFslopeREdisp20.rds')
+    print(Sys.time())
+    print(performance::r2(modRFslopeREdisp20))
+
+        MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modRFdurslope2lev'){ # 2 level RE, slope vs. duration
-    print(paste(sum(i), 'data points'))
-    modRFdurslope2lev <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
-                             control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    summary(modRFdurslope2lev)
-    saveRDS(modRFdurslope2lev, file = 'temp/modRFdurslope2lev.rds')
-    print('saved modRFdurslope2lev.rds')
-    print(Sys.time())
-    print(performance::r2(modRFdurslope2lev))
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'modRFdurslope2levdisp'){ # 2 level RE, slope vs. duration, disp formula
-    print(paste(sum(i), 'data points'))
-    modRFdurslope2levdisp <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
-                             dispformula = ~nspp.sc, 
-                             control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    summary(modRFdurslope2levdisp)
-    saveRDS(modRFdurslope2levdisp, file = 'temp/modRFdurslope2levdisp.rds')
-    print('saved modRFdurslope2levdisp.rds')
-    print(Sys.time())
-    print(performance::r2(modRFdurslope2levdisp))
-    MATCHMOD <- TRUE
-}
-
-if(fitmod == 'modRFdurslope2levdisprealm'){ # 2 level RE, slope vs. duration, disp formula by realm
-    print(paste(sum(i), 'data points'))
-    modRFdurslope2levdisprealm <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends[i,], family = beta_family(link = 'logit'), 
+if(fitmod == 'modRFslopeRE2levdisprealm'){ # 2 level RE, slope vs. duration, disp formula by realm
+    print(paste(sum(i3), 'data points'))
+    modRFslopeRE2levdisprealm3 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends3[i3,], family = beta_family(link = 'logit'), 
                                      dispformula = ~nspp.sc+REALM, 
                                      control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    summary(modRFdurslope2levdisprealm)
-    saveRDS(modRFdurslope2levdisprealm, file = 'temp/modRFdurslope2levdisprealm.rds')
-    print('saved modRFdurslope2levdisprealm.rds')
+    summary(modRFslopeRE2levdisprealm3)
+    saveRDS(modRFslopeRE2levdisprealm3, file = 'temp/modRFslopeRE2levdisprealm3.rds')
+    print('saved modRFslopeRE2levdisprealm3.rds')
     print(Sys.time())
-    print(performance::r2(modRFdurslope2levdisprealm))
+    print(performance::r2(modRFslopeRE2levdisprealm3))
+    
+    print(paste(sum(i5), 'data points'))
+    modRFslopeRE2levdisprealm5 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends5[i5,], family = beta_family(link = 'logit'), 
+                                        dispformula = ~nspp.sc+REALM, 
+                                        control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modRFslopeRE2levdisprealm5)
+    saveRDS(modRFslopeRE2levdisprealm5, file = 'temp/modRFslopeRE2levdisprealm5.rds')
+    print('saved modRFslopeRE2levdisprealm5.rds')
+    print(Sys.time())
+    print(performance::r2(modRFslopeRE2levdisprealm5))
+    
+    print(paste(sum(i10), 'data points'))
+    modRFslopeRE2levdisprealm10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
+                                        dispformula = ~nspp.sc+REALM, 
+                                        control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modRFslopeRE2levdisprealm10)
+    saveRDS(modRFslopeRE2levdisprealm10, file = 'temp/modRFslopeRE2levdisprealm10.rds')
+    print('saved modRFslopeRE2levdisprealm10.rds')
+    print(Sys.time())
+    print(performance::r2(modRFslopeRE2levdisprealm10))
+    
+    print(paste(sum(i20), 'data points'))
+    modRFslopeRE2levdisprealm20 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends20[i20,], family = beta_family(link = 'logit'), 
+                                        dispformula = ~nspp.sc+REALM, 
+                                        control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    summary(modRFslopeRE2levdisprealm20)
+    saveRDS(modRFslopeRE2levdisprealm20, file = 'temp/modRFslopeRE2levdisprealm20.rds')
+    print('saved modRFslopeRE2levdisprealm20.rds')
+    print(Sys.time())
+    print(performance::r2(modRFslopeRE2levdisprealm20))
     MATCHMOD <- TRUE
 }
 
