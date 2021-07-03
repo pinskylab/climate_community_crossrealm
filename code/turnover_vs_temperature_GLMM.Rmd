@@ -32,6 +32,9 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 
 # Turnover and covariates assembled by turnover_vs_temperature_prep.Rmd
 trends3 <- fread(here('output', 'turnover_w_covariates3.csv.gz'))
+trends5 <- fread(here('output', 'turnover_w_covariates5.csv.gz'))
+trends10 <- fread(here('output', 'turnover_w_covariates10.csv.gz'))
+trends20 <- fread(here('output', 'turnover_w_covariates20.csv.gz'))
 
 ```
 
@@ -39,27 +42,58 @@ trends3 <- fread(here('output', 'turnover_w_covariates3.csv.gz'))
 # Summary stats
 ## Examine how many data points are available
 ### Just turnover and non-zero tempchange
+#### 3-years
 ```{r sample size all}
-cat('Overall # dissimilarities: ', nrow(trends), '\n')
-cat('# studies: ', trends[, length(unique(STUDY_ID))], '\n')
-cat('# timeseries: ', trends[, length(unique(rarefyID))], '\n')
-trends[!duplicated(rarefyID), table(REALM)]
-trends[!duplicated(rarefyID), table(taxa_mod)]
-trends[!duplicated(rarefyID), table(taxa_mod, REALM)]
+cat('Overall # dissimilarities: ', nrow(trends3), '\n')
+cat('# studies: ', trends3[, length(unique(STUDY_ID))], '\n')
+cat('# timeseries: ', trends3[, length(unique(rarefyID))], '\n')
+trends3[!duplicated(rarefyID), table(REALM)]
+trends3[!duplicated(rarefyID), table(taxa_mod)]
+trends3[!duplicated(rarefyID), table(taxa_mod, REALM)]
+```
+#### 5-years
+```{r sample size all}
+cat('Overall # dissimilarities: ', nrow(trends5), '\n')
+cat('# studies: ', trends5[, length(unique(STUDY_ID))], '\n')
+cat('# timeseries: ', trends5[, length(unique(rarefyID))], '\n')
+trends5[!duplicated(rarefyID), table(REALM)]
+trends5[!duplicated(rarefyID), table(taxa_mod)]
+trends5[!duplicated(rarefyID), table(taxa_mod, REALM)]
+```
+
+#### 10-years
+```{r sample size all}
+cat('Overall # dissimilarities: ', nrow(trends10), '\n')
+cat('# studies: ', trends10[, length(unique(STUDY_ID))], '\n')
+cat('# timeseries: ', trends10[, length(unique(rarefyID))], '\n')
+trends10[!duplicated(rarefyID), table(REALM)]
+trends10[!duplicated(rarefyID), table(taxa_mod)]
+trends10[!duplicated(rarefyID), table(taxa_mod, REALM)]
+```
+
+#### 20-years
+```{r sample size all}
+cat('Overall # dissimilarities: ', nrow(trends20), '\n')
+cat('# studies: ', trends20[, length(unique(STUDY_ID))], '\n')
+cat('# timeseries: ', trends20[, length(unique(rarefyID))], '\n')
+trends20[!duplicated(rarefyID), table(REALM)]
+trends20[!duplicated(rarefyID), table(taxa_mod)]
+trends20[!duplicated(rarefyID), table(taxa_mod, REALM)]
 ```
 
 ### With all covariates
 Use Bowler for human impact
+#### 3-year
 ```{r sample size Jtu covariates}
 # the cases we can compare
-apply(trends[, .(Jtu.sc, REALM, tempave_metab.sc, seas.sc, microclim.sc, tempchange.sc, mass.sc, speed.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
-i <- trends[, complete.cases(Jtu.sc, tempave_metab.sc, seas.sc, microclim.sc, tempchange.sc, mass.sc, speed.sc, consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
+apply(trends3[, .(Jtu.sc, REALM, tempave_metab.sc, seas.sc, microclim.sc, tempchange.sc, mass.sc, speed.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
+i <- trends3[, complete.cases(Jtu.sc, tempave_metab.sc, seas.sc, microclim.sc, tempchange.sc, mass.sc, speed.sc, consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
 cat('Overall # dissimilarities: ', sum(i), '\n')
-cat('# studies: ', trends[i, length(unique(STUDY_ID))], '\n')
-cat('# timeseries: ', trends[i, length(unique(rarefyID))], '\n')
-trends[i & !duplicated(rarefyID), table(REALM)]
-trends[i & !duplicated(rarefyID), table(taxa_mod)]
-trends[i & !duplicated(rarefyID), table(taxa_mod, REALM)]
+cat('# studies: ', trends3[i, length(unique(STUDY_ID))], '\n')
+cat('# timeseries: ', trends3[i, length(unique(rarefyID))], '\n')
+trends3[i & !duplicated(rarefyID), table(REALM)]
+trends3[i & !duplicated(rarefyID), table(taxa_mod)]
+trends3[i & !duplicated(rarefyID), table(taxa_mod, REALM)]
 ```
 
 # Models
@@ -77,7 +111,7 @@ Many of the 3- and 5-year models with random slopes had singular convergence iss
 
 ### 3-years
 This chooses beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp + realm.
-We haven't dealt with potential testing on the boundary issues here.
+We haven't dealt with potential testing on the boundary issues here. Note that the models with random slopes did not converge.
 ```{r choose variance structure, echo=FALSE}
 mods3 <- vector('list', length = 12)
 i = 1
@@ -92,6 +126,7 @@ if(file.exists(here('temp', 'modRFdisp3.rds'))){ mods3[[i]] <- readRDS(here('tem
 if(file.exists(here('temp', 'modRF2levdisp3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRF2levdisp3.rds')); names(mods3)[i] <- 'modRF2levdisp3'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeRE2levdisp3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisp3.rds')); names(mods3)[i] <- 'modRFslopeRE2levdisp3'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeREdisp3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFslopeREdisp3.rds')); names(mods3)[i] <- 'modRFslopeREdisp3'; i = i+1}
+if(file.exists(here('temp', 'modRF2levdisprealm3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRF2levdisprealm3.rds')); names(mods3)[i] <- 'modRF2levdisprealm3'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeRE2levdisprealm3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisprealm3.rds')); names(mods3)[i] <- 'modRFslopeRE2levdisprealm3'; i = i+1}
 
 modes <- sapply(X = mods3, FUN = mode)
@@ -101,7 +136,7 @@ aics - min(aics)
 
 ### 5-years
 This chooses beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp + realm.
-We haven't dealt with potential testing on the boundary issues here.
+We haven't dealt with potential testing on the boundary issues here. Note that the models with random slopes did not converge.
 ```{r choose variance structure, echo=FALSE}
 mods5 <- vector('list', length = 12)
 i = 1
@@ -116,6 +151,7 @@ if(file.exists(here('temp', 'modRFdisp5.rds'))){ mods5[[i]] <- readRDS(here('tem
 if(file.exists(here('temp', 'modRF2levdisp5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRF2levdisp5.rds')); names(mods5)[i] <- 'modRF2levdisp5'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeRE2levdisp5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisp5.rds')); names(mods5)[i] <- 'modRFslopeRE2levdisp5'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeREdisp5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFslopeREdisp5.rds')); names(mods5)[i] <- 'modRFslopeREdisp5'; i = i+1}
+if(file.exists(here('temp', 'modRF2levdisprealm5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRF2levdisprealm5.rds')); names(mods5)[i] <- 'modRF2levdisprealm5'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeRE2levdisprealm5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisprealm5.rds')); names(mods5)[i] <- 'modRFslopeRE2levdisprealm5'; i = i+1}
 
 modes <- sapply(X = mods5, FUN = mode)
@@ -140,6 +176,7 @@ if(file.exists(here('temp', 'modRFdisp10.rds'))){ mods10[[i]] <- readRDS(here('t
 if(file.exists(here('temp', 'modRF2levdisp10.rds'))){ mods10[[i]] <- readRDS(here('temp', 'modRF2levdisp10.rds')); names(mods10)[i] <- 'modRF2levdisp10'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeRE2levdisp10.rds'))){ mods10[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisp10.rds')); names(mods10)[i] <- 'modRFslopeRE2levdisp10'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeREdisp10.rds'))){ mods10[[i]] <- readRDS(here('temp', 'modRFslopeREdisp10.rds')); names(mods10)[i] <- 'modRFslopeREdisp10'; i = i+1}
+if(file.exists(here('temp', 'modRF2levdisprealm10.rds'))){ mods10[[i]] <- readRDS(here('temp', 'modRF2levdisprealm10.rds')); names(mods10)[i] <- 'modRF2levdisprealm10'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeRE2levdisprealm10.rds'))){ mods10[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisprealm10.rds')); names(mods10)[i] <- 'modRFslopeRE2levdisprealm10'; i = i+1}
 
 modes <- sapply(X = mods10, FUN = mode)
@@ -164,6 +201,7 @@ if(file.exists(here('temp', 'modRFdisp20.rds'))){ mods20[[i]] <- readRDS(here('t
 if(file.exists(here('temp', 'modRF2levdisp20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRF2levdisp20.rds')); names(mods20)[i] <- 'modRF2levdisp20'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeRE2levdisp20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisp20.rds')); names(mods20)[i] <- 'modRFslopeRE2levdisp20'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeREdisp20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFslopeREdisp20.rds')); names(mods20)[i] <- 'modRFslopeREdisp20'; i = i+1}
+if(file.exists(here('temp', 'modRF2levdisprealm20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRF2levdisprealm20.rds')); names(mods20)[i] <- 'modRF2levdisprealm20'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeRE2levdisprealm20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisprealm20.rds')); names(mods20)[i] <- 'modRFslopeRE2levdisprealm20'; i = i+1}
 
 modes <- sapply(X = mods20, FUN = mode)
@@ -172,48 +210,63 @@ aics - min(aics)
 ```
 
 ### Summary of the chosen model
+### 3 years
 ```{r, echo=FALSE}
-summary(modRFdurslope2levdisprealm)
+summary(mods3[[which(names(mods3)=='modRF2levdisprealm3')]])
+```
+
+### 5 years
+```{r, echo=FALSE}
+summary(mods5[[which(names(mods5)=='modRFslopeRE2levdisprealm5')]])
+```
+
+### 10 years
+```{r, echo=FALSE}
+summary(mods10[[which(names(mods10)=='modRFslopeRE2levdisprealm10')]])
+```
+
+### 20 years
+```{r, echo=FALSE}
+summary(mods20[[which(names(mods20)=='modRFslopeRE2levdisprealm20')]])
 ```
 
 ### Plot random effects
 No clear discontinuities. Looks ok.
 ```{r, echo=FALSE}
-lme4:::dotplot.ranef.mer(ranef(modRFdurslope2levdisprealm)$cond)
+lme4:::dotplot.ranef.mer(ranef(mods10[[which(names(mods10)=='modRFslopeRE2levdisprealm10')]])$cond)
 ```
 
 ### DHARMa model evaluation
-Need to re-run this with newly trimmed dataset (2021-04-05)
 ```{r, echo=FALSE, eval=FALSE}
 ## run the top part by hand if needed. takes ~3 hrs
 if(FALSE) {
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, 
-                               endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+  i10 <- trends10[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, 
+                                   endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+
+  res_RFslopeRE2levdisprealm10 <- simulateResiduals(mods10[[which(names(mods10)=='modRFslopeRE2levdisprealm10')]], n = 250)
   
-  res_RFdurslope2levdisprealm <- simulateResiduals(modRFdurslope2levdisprealm, n = 250)
-  
-  saveRDS(res_RFdurslope2levdisprealm, file = 'temp/res_RFdurslope2levdisprealm.rds')
+  saveRDS(res_RFslopeRE2levdisprealm10, file = 'temp/res_RFslopeRE2levdisprealm10.rds')
 } else {
-  if(file.exists('temp/res_RFdurslope2levdisprealm.rds')) res_RFdurslope2levdisprealm <- readRDS('temp/res_RFdurslope2levdisprealm.rds')
+  if(file.exists('temp/res_RFslopeRE2levdisprealm10.rds')) res_RFslopeRE2levdisprealm10 <- readRDS('temp/res_res_RFslopeRE2levdisprealm10.rds')
+  i10 <- trends10[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, 
+                                   endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
 }
 ```
 
 #### Plot residuals for model fit to all data
 There are many outliers and signs of underdispersion, but this is probably ok.
 ```{r, echo=FALSE, eval=FALSE}
-if(exists('res_RFdurslope2levdisprealm')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                               microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
-  plot(res_RFdurslope2levdisprealm)
-  plotResiduals(res_RFdurslope2levdisprealm, form=trends$tempchange_abs.sc[i], xlab = 'tempchange_abs.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, form=trends$REALM[i], xlab = 'REALM', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$duration.sc[i], xlab = 'duration.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$mass.sc[i], xlab = 'mass.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$endothermfrac.sc[i], xlab = 'endothermfrac.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, trends$npp.sc[i], xlab = 'npp.sc', main = '')
-  plotResiduals(res_RFdurslope2levdisprealm, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
+if(exists('res_RFslopeRE2levdisprealm10')){
+  plot(res_RFslopeRE2levdisprealm10)
+  plotResiduals(res_RFslopeRE2levdisprealm10, form=trends10$tempchange_abs.sc[i10], xlab = 'tempchange_abs.sc', main = '')
+  plotResiduals(res_RFslopeRE2levdisprealm10, form=trends10$REALM[i10], xlab = 'REALM', main = '')
+  plotResiduals(res_RFslopeRE2levdisprealm10, trends10$tempave_metab.sc[i10], xlab = 'tempave_metab.sc', main = '')
+  plotResiduals(res_RFslopeRE2levdisprealm10, trends10$duration.sc[i10], xlab = 'duration.sc', main = '')
+  plotResiduals(res_RFslopeRE2levdisprealm10, trends10$mass.sc[i10], xlab = 'mass.sc', main = '')
+  plotResiduals(res_RFslopeRE2levdisprealm10, trends10$endothermfrac.sc[i10], xlab = 'endothermfrac.sc', main = '')
+  plotResiduals(res_RFslopeRE2levdisprealm10, trends10$microclim.sc[i10], xlab = 'microclim.sc', main = '')
+  plotResiduals(res_RFslopeRE2levdisprealm10, trends10$npp.sc[i10], xlab = 'npp.sc', main = '')
+  plotResiduals(res_RFslopeRE2levdisprealm10, form=trends10$human_bowler.sc[i10], xlab = 'human_bowler.sc', main = '')
 }
 ```
 
@@ -221,9 +274,7 @@ if(exists('res_RFdurslope2levdisprealm')){
 #### Overdispersion
 There is underdispersion.
 ```{r, echo=FALSE, eval=FALSE}
-i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
-testDispersion(res_RFdurslope2levdisprealm)
+testDispersion(res_RFslopeRE2levdisprealm10)
 
 ```
 
@@ -233,9 +284,7 @@ testDispersion(res_RFdurslope2levdisprealm)
 Near-zero values are not inflated.
 ```{r, eval=FALSE}
 countNearZero <- function(x) sum(x < 0.0001)
-i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
-testGeneric(res_RFdurslope2levdisprealm, summary = countNearZero, alternative = 'greater')
+testGeneric(res_RFslopeRE2levdisprealm10, summary = countNearZero, alternative = 'greater')
 
 ```
 
@@ -243,114 +292,32 @@ testGeneric(res_RFdurslope2levdisprealm, summary = countNearZero, alternative = 
 Near-one values are not inflated.
 ```{r, eval=FALSE}
 countNearOne <- function(x) sum(x > 0.9999)
-i <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, endothermfrac.sc,
-                             microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
-testGeneric(res_RFdurslope2levdisprealm, summary = countNearOne, alternative = 'greater')
+testGeneric(res_RFslopeRE2levdisprealm10, summary = countNearOne, alternative = 'greater')
 
 ```
 
 
-
-## Temperature-change-only models
-Not run right now
-
+## Temperature, temperature slope & duration models
 ### Load the models
-```{r temperature only, eval=FALSE, echo=FALSE}
+```{r temperature, temp slope and duration, eval=FALSE, echo=FALSE}
 # all years
-modonlyTchangeJtu <- readRDS('temp/modonlyTchangeJtu.rds')
-modonlyTchangeJbeta <- readRDS('temp/modonlyTchangeJbeta.rds')
-modonlyTchangeHorn <- readRDS('temp/modonlyTchangeHorn.rds')
-
-# 1 year
-modonlyTchange1yrJtu <- readRDS('temp/modonlyTchange1yrJtu.rds')
-modonlyTchange1yrJbeta <- readRDS('temp/modonlyTchange1yrJbeta.rds')
-modonlyTchange1yrHorn <- readRDS('temp/modonlyTchange1yrHorn.rds')
-
-# 10 year
-modonlyTchange10yrJtu <- readRDS('temp/modonlyTchange10yrJtu.rds')
-modonlyTchange10yrJbeta <- readRDS('temp/modonlyTchange10yrJbeta.rds')
-modonlyTchange10yrHorn <- readRDS('temp/modonlyTchange10yrHorn.rds')
-
-```
-
-### Summary (all years)
-```{r summary onlyTchange, eval=FALSE, echo=FALSE}
-summary(modonlyTchangeJtu)
-summary(modonlyTchangeJbeta)
-summary(modonlyTchangeHorn)
-```
-
-### Summary (1 year)
-```{r summary onlyTchange1yr, eval=FALSE, echo=FALSE}
-summary(modonlyTchange1yrJtu)
-summary(modonlyTchange1yrJbeta)
-summary(modonlyTchange1yrHorn)
-```
-### Summary (10 year)
-```{r summary onlyTchange10yr, eval=FALSE, echo=FALSE}
-summary(modonlyTchange10yrJtu)
-summary(modonlyTchange10yrJbeta)
-summary(modonlyTchange10yrHorn)
-```
-### Plot the temp-only coefficients
-```{r modonlyT coefs, eval=FALSE, echo=FALSE}
-# make table of coefficients
-coefs1 <- as.data.frame(summary(modonlyTchangeJtu)$coefficients$cond)
-coefs2 <- as.data.frame(summary(modonlyTchangeJbeta)$coefficients$cond)
-coefs3 <- as.data.frame(summary(modonlyTchangeHorn)$coefficients$cond)
-coefs4 <- as.data.frame(summary(modonlyTchange1yrJtu)$coefficients$cond)
-coefs5 <- as.data.frame(summary(modonlyTchange1yrJbeta)$coefficients$cond)
-coefs6 <- as.data.frame(summary(modonlyTchange1yrHorn)$coefficients$cond)
-coefs7 <- as.data.frame(summary(modonlyTchange10yrJtu)$coefficients$cond)
-coefs8 <- as.data.frame(summary(modonlyTchange10yrJbeta)$coefficients$cond)
-coefs9 <- as.data.frame(summary(modonlyTchange10yrHorn)$coefficients$cond)
-coefs1$response <- coefs4$response <- coefs7$response <- 'Jtu'
-coefs2$response <- coefs5$response <- coefs8$response <- 'Jbeta'
-coefs3$response <- coefs6$response <- coefs9$response <- 'Horn'
-coefs1$fit <- coefs2$fit <- coefs3$fit <- 'all'
-coefs4$fit <- coefs5$fit <- coefs6$fit <- '1yr'
-coefs7$fit <- coefs8$fit <- coefs9$fit <- '10yr'
-rows1 <- which(grepl('tempchange', rownames(coefs1))) # extract temperature effect
-cols <- c('Estimate', 'Std. Error', 'response', 'fit')
-allcoefs <- rbind(coefs1[rows1, cols], coefs2[rows1, cols], coefs3[rows1, cols],
-                  coefs4[rows1, cols], coefs5[rows1, cols], coefs6[rows1, cols],
-                  coefs7[rows1, cols], coefs8[rows1, cols], coefs9[rows1, cols])
-
-allcoefs$lCI <- allcoefs$Estimate - 1.96 * allcoefs$`Std. Error` # lower confidence interval
-allcoefs$uCI <- allcoefs$Estimate + 1.96 * allcoefs$`Std. Error`
-allcoefs$y <- c(3, 2, 1) + rep(c(0, -0.1, -0.2), c(3, 3, 3)) # y-values
-allcoefs$group <- paste0(allcoefs$response, allcoefs$fit)
-
-pd <- position_dodge(width = 0.5)
-ggplot(allcoefs, aes(x = response, y = Estimate, color = fit, group = group)) +
-  geom_point(position = pd) + 
-  geom_errorbar(aes(ymin=lCI, ymax=uCI), width=.1, position = pd) +
-  labs(y = 'Dissimilarity per |°C change|') #+ 
-  #coord_cartesian(ylim = c(-0.01, 0.05))
-```
-CIs are 1.96*SE
-
-## Temperature-change&duration models
-Not run right now
-
-### Load the models
-```{r temperature and duration, eval=FALSE, echo=FALSE}
-# all years
-modTDJtu <- readRDS('temp/modTDJtu.rds')
-modTDJbeta <- readRDS('temp/modTDJbeta.rds')
-modTDHorn <- readRDS('temp/modTDHorn.rds')
+# modTdT3 <- readRDS('temp/modTdT3.rds')
+modTdT5 <- readRDS('temp/modTdT5.rds')
+modTdT10 <- readRDS('temp/modTdT10.rds')
+modTdT20 <- readRDS('temp/modTdT20.rds')
 ```
 
 ### Summary
 ```{r summary of TD mods, eval=FALSE, echo=FALSE}
-summary(modTDJtu)
-summary(modTDJbeta)
-summary(modTDHorn)
+summary(modTdT5)
+summary(modTdT10)
+summary(modTdT20)
 ```
 
 
 
 ### Plot the coefficients
+Not used
 ```{r modTD coefs, eval=FALSE, echo=FALSE}
 
 coefs1 <- summary(modTDJtu)$coefficients$cond
@@ -404,6 +371,7 @@ abs(tempchange) is in degC
 duration is in years
 
 ### Plot the response
+Not used
 ```{r plot TD response, eval=FALSE, echo=FALSE}
 if(!file.exists('temp/modTDJtu_preds.rds')) {
   newdat <- expand.grid(duration = c(1, 50), tempchange = seq(0.01, 5, length.out = 5), 
@@ -431,167 +399,20 @@ ggplot(newdat, aes(tempchange, Jtu, color = durationfac, group = durationfac)) +
   geom_ribbon(aes(ymin=Jtu - 1.96*Jtu.se, ymax=Jtu + 1.96*Jtu.se), alpha = 0.1, linetype = 'blank')
 ```
 
-## Temperature-change and duration by REALM
-Not run. These don't seem the most informative right now, since they lack many of the other factors that are likely important, like average temperature.
-
+## Temperature*temperature slope & duration models
 ### Load the models
-```{r temperature duration realm, echo=FALSE, eval=FALSE}
-# all years
-if(file.exists('temp/modTDrealmJtu.rds')) modTDrealmJtu <- readRDS('temp/modTDrealmJtu.rds')
-if(file.exists('temp/modTDrealmJbeta.rds')) modTDrealmJbeta <- readRDS('temp/modTDrealmJbeta.rds')
-if(file.exists('temp/modTDrealmHorn.rds')) modTDrealmHorn <- readRDS('temp/modTDrealmHorn.rds')
-
-# 1 year
-if(file.exists('temp/modTrealm1yrJtu.rds')) modTrealm1yrJtu <- readRDS('temp/modTrealm1yrJtu.rds')
-if(file.exists('temp/modTrealm1yrJbeta.rds')) modTrealm1yrJbeta <- readRDS('temp/modTrealm1yrJbeta.rds')
-if(file.exists('temp/modTrealm1yrHorn.rds')) modTrealm1yrHorn <- readRDS('temp/modTrealm1yrHorn.rds')
-
-# 10 year
-if(file.exists('temp/modTrealm10yrJtu.rds')) modTrealm10yrJtu <- readRDS('temp/modTrealm10yrJtu.rds')
-if(file.exists('temp/modTrealm10yrJbeta.rds')) modTrealm10yrJbeta <- readRDS('temp/modTrealm10yrJbeta.rds')
-if(file.exists('temp/modTrealm10yrHorn.rds')) modTrealm10yrHorn <- readRDS('temp/modTrealm10yrHorn.rds')
-
+```{r temperature by temp slope and duration, eval=FALSE, echo=FALSE}
+# modTdT3 <- readRDS('temp/modTdT3.rds')
+modTdTT5 <- readRDS('temp/modTdTT5.rds')
+modTdTT10 <- readRDS('temp/modTdTT10.rds')
+modTdTT20 <- readRDS('temp/modTdTT20.rds')
 ```
 
 ### Summary
-```{r summary of TDrealm mods, echo=FALSE, eval=FALSE}
-if(exists('modTDrealmJtu')) summary(modTDrealmJtu)
-if(exists('modTDrealmJbeta')) summary(modTDrealmJbeta)
-if(exists('modTDrealmHorn')) summary(modTDrealmHorn)
-```
-
-### Summary (1 yr)
-```{r summary of Trealm1yr mods, echo=FALSE, eval=FALSE}
-if(exists('modTrealm1yrJtu')) summary(modTrealm1yrJtu)
-if(exists('modTrealm1yrJbeta')) summary(modTrealm1yrJbeta)
-if(exists('modTrealm1yrHorn')) summary(modTrealm1yrHorn)
-```
-
-### Summary (10 yr)
-```{r summary of Trealm10yr mods, echo=FALSE, eval=FALSE}
-if(exists('modTrealm10yrJtu')) summary(modTrealm10yrJtu)
-if(exists('modTrealm10yrJbeta')) summary(modTrealm10yrJbeta)
-if(exists('modTrealm10yrHorn')) summary(modTrealm10yrHorn)
-```
-
-### DHARMa model evaluation
-Need to re-run this with newly trimmed dataset (2021-04-05)
-
-#### Simulate residuals
-```{r, echo=FALSE, eval=FALSE}
-if(FALSE) {
-  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, duration.sc, nspp.sc)] # needed because model fit with trends[i,]
-  res_modTDrealmJtu <- simulateResiduals(modTDrealmJtu, n = 250)
-  saveRDS(res_modTDrealmJtu, file = 'temp/res_modTDrealmJtu.rds')
-} else {
-  if(file.exists('temp/res_modTDrealmJtu.rds')) res_modTDrealmJtu <- readRDS('temp/res_modTDrealmJtu.rds')
-}
-
-if(FALSE) {
-  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
-                duration == 1] # needed because model fit with trends[i,]
-  res_modTrealm1yrJtu <- simulateResiduals(modTrealm1yrJtu, n = 250)
-  saveRDS(res_modTrealm1yrJtu, file = 'temp/res_modTrealm1yrJtu.rds')
-} else {
-  if(file.exists('temp/res_modTrealm1yrJtu.rds')) res_modTrealm1yrJtu <- readRDS('temp/res_modTrealm1yrJtu.rds')
-}
-
-
-if(FALSE) {
-  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
-                duration == 10] # needed because model fit with trends[i,]
-  res_modTrealm10yrJtu <- simulateResiduals(modTrealm10yrJtu, n = 250)
-  saveRDS(res_modTrealm10yrJtu, file = 'temp/res_modTrealm10yrJtu.rds')
-} else {
-  if(file.exists('temp/res_modTrealm10yrJtu.rds')) res_modTrealm10yrJtu <- readRDS('temp/res_modTrealm10yrJtu.rds')
-}
-```
-
-#### Plot residuals
-All data
-```{r, echo=FALSE, eval=FALSE}
-if(exists('res_modTDrealmJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, duration.sc, nspp.sc)] # needed because model fit with trends[i,]
-  plot(res_modTDrealmJtu)
-  plotResiduals(res_modTDrealmJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
-  plotResiduals(res_modTDrealmJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
-  plotResiduals(res_modTDrealmJtu, trends$duration[i], xlab = 'duration', main = '')
-}
-```
-
-
-1yr data
-```{r, echo=FALSE, eval=FALSE}
-if(exists('res_modTDrealm1yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
-              duration == 1] # needed because model fit with trends[i,]
-  plot(res_modTrealm1yrJtu)
-  plotResiduals(res_modTrealm1yrJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
-  plotResiduals(res_modTrealm1yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
-}
-```
-
-10yr data
-```{r, echo=FALSE, eval=FALSE}
-if(exists('res_modTDrealm10yrJtu')){
-  i <- trends[, complete.cases(Jtu.sc, tempchange, REALM, nspp.sc) &
-              duration == 10]
-  plot(res_modTrealm10yrJtu)
-  plotResiduals(res_modTrealm10yrJtu, form=trends$tempchange[i], xlab = 'tempchange', main = '')
-  plotResiduals(res_modTrealm10yrJtu, form=as.factor(trends$REALM[i]), xlab = 'REALM', main = '') # Freshwater, Marine, Terrestrial
-}
-```
-
-
-### Plot the temp coefficients from TD realm models
-```{r modTD realm coefs, echo=FALSE, eval=FALSE}
-if(exists('modTDrealmJtu') & exists('modTDrealmJbeta') & exists('modTDrealmHorn')){
-  coefs1 <- summary(modTDrealmJtu)$coefficients$cond
-  coefs2 <- summary(modTDrealmJbeta)$coefficients$cond
-  coefs3 <- summary(modTDrealmHorn)$coefficients$cond
-  
-  varstoplot <- unique(c(rownames(coefs1), rownames(coefs2), rownames(coefs3)))
-  varstoplot <- varstoplot[which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot))] # vars to plot
-  
-  rows1_1 <- which(rownames(coefs1) %in% varstoplot) # rows in coefs
-  rows1_2 <- which(rownames(coefs2) %in% varstoplot)
-  rows1_3 <- which(rownames(coefs3) %in% varstoplot)
-  xlims <- range(c(coefs1[rows1_1,1] - 1.96*coefs1[rows1_1,2], coefs1[rows1_1,1] + 1.96*coefs1[rows1_1,2], 
-                   coefs2[rows1_2,1] - 1.96*coefs2[rows1_2,2], coefs2[rows1_2,1] + 1.96*coefs2[rows1_2,2], 
-                   coefs3[rows1_3,1] - 1.96*coefs3[rows1_3,2], coefs3[rows1_3,1] + 1.96*coefs3[rows1_3,2]))
-  
-  cols <- brewer.pal(3, 'Dark2') # for Jtu, Jbeta and Horn models
-  pchs <- c(16, 16, 16)
-  offs <- c(0.1, 0, -0.1) # offset vertically for each model
-  
-  par(las = 1, mai = c(0.5, 4, 0.1, 0.1))
-  
-  plot(0,0, col = 'white', xlim = xlims, ylim = c(1,length(varstoplot)), yaxt='n', xlab = '', ylab ='')
-  axis(2, at = length(varstoplot):1, labels = varstoplot, cex.axis = 0.7)
-  abline(v = 0, col = 'grey', lty = 2)
-  abline(h = 1:length(varstoplot), col = 'grey', lty = 3)
-  for(i in 1:length(varstoplot)){
-    if(varstoplot[i] %in% rownames(coefs1)){
-      x = coefs1[rownames(coefs1) == varstoplot[i], 1]
-      se = coefs1[rownames(coefs1) == varstoplot[i], 2]
-      points(x, length(varstoplot) + 1 - i + offs[1], pch = pchs[1], col = cols[1])
-      lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[1], length(varstoplot) + 1 - i + offs[1]), col = cols[1])
-    }
-    if(varstoplot[i] %in% rownames(coefs2)){
-      x = coefs2[rownames(coefs2) == varstoplot[i], 1]
-      se = coefs2[rownames(coefs2) == varstoplot[i], 2]
-      points(x, length(varstoplot) + 1 - i + offs[2], pch = pchs[2], col = cols[2])
-      lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[2], length(varstoplot) + 1 - i + offs[2]), col = cols[2])
-    }
-    if(varstoplot[i] %in% rownames(coefs3)){
-      x = coefs3[rownames(coefs3) == varstoplot[i], 1]
-      se = coefs3[rownames(coefs3) == varstoplot[i], 2]
-      points(x, length(varstoplot) + 1 - i + offs[3], pch = pchs[3], col = cols[3])
-      lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[3], length(varstoplot) + 1 - i + offs[3]), col = cols[3])
-    }
-  }
-  legend('topleft', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Horn'), cex = 0.5)
-}
+```{r summary of TD mods, eval=FALSE, echo=FALSE}
+summary(modTdTT5)
+summary(modTdTT10)
+summary(modTdTT20)
 ```
 
 ## Full models w/ only main effects
