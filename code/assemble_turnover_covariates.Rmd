@@ -412,7 +412,7 @@ if(!file.exists(here('output', 'turnover_w_covariates3.csv.gz'))){
                   tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
-                  duration.sc, human_bowler.sc, REALM2)], 
+                  duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
             gzfile(here('output', 'turnover_w_covariates3.csv.gz')), row.names = FALSE)
   write.csv(scaling3, here('output','turnover_w_covariates_scaling3.csv'), row.names = FALSE)
 }
@@ -422,7 +422,7 @@ if(!file.exists(here('output', 'turnover_w_covariates5.csv.gz'))){
                   tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
-                  duration.sc, human_bowler.sc, REALM2)], 
+                  duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
             gzfile(here('output', 'turnover_w_covariates5.csv.gz')), row.names = FALSE)
   write.csv(scaling5, here('output','turnover_w_covariates_scaling5.csv'), row.names = FALSE)
 }
@@ -432,7 +432,7 @@ if(!file.exists(here('output', 'turnover_w_covariates10.csv.gz'))){
                   tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
-                  duration.sc, human_bowler.sc, REALM2)], 
+                  duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
             gzfile(here('output', 'turnover_w_covariates10.csv.gz')), row.names = FALSE)
   write.csv(scaling10, here('output','turnover_w_covariates_scaling10.csv'), row.names = FALSE)
 }
@@ -442,7 +442,7 @@ if(!file.exists(here('output', 'turnover_w_covariates20.csv.gz'))){
                   tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
-                  duration.sc, human_bowler.sc, REALM2)], 
+                  duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
             gzfile(here('output', 'turnover_w_covariates20.csv.gz')), row.names = FALSE)
   write.csv(scaling20, here('output','turnover_w_covariates_scaling20.csv'), row.names = FALSE)
 }

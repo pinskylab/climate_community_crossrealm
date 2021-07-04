@@ -110,10 +110,11 @@ Use a full set of fixed effects and choose the RE with lowest AIC.
 Many of the 3- and 5-year models with random slopes had singular convergence issues.
 
 ### 3-years
-This chooses beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp + realm.
-We haven't dealt with potential testing on the boundary issues here. Note that the models with random slopes did not converge.
+Best is beta errors, durationlog.sc, intercepts for STUDY_ID and rarefyID, variance scaled to nspp + realm.
+3rd best is same as 10- and 20-years: beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp + realm.
+We haven't dealt with potential testing on the boundary issues here. Note that a number of models with random slopes did not converge.
 ```{r choose variance structure, echo=FALSE}
-mods3 <- vector('list', length = 12)
+mods3 <- vector('list', length = 17)
 i = 1
 if(file.exists(here('temp', 'modRFgauss3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFgauss3.rds')); names(mods3)[i] <- 'modRFgauss3'; i = i+1}
 if(file.exists(here('temp', 'modRFbeta3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFbeta3.rds')); names(mods3)[i] <- 'modRFbeta3'; i = i+1}
@@ -129,14 +130,23 @@ if(file.exists(here('temp', 'modRFslopeREdisp3.rds'))){ mods3[[i]] <- readRDS(he
 if(file.exists(here('temp', 'modRF2levdisprealm3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRF2levdisprealm3.rds')); names(mods3)[i] <- 'modRF2levdisprealm3'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeRE2levdisprealm3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisprealm3.rds')); names(mods3)[i] <- 'modRFslopeRE2levdisprealm3'; i = i+1}
 
+# with log duration
+if(file.exists(here('temp', 'modRFdurlog2levdisp3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFdurlog2levdisp3.rds')); names(mods3)[i] <- 'modRFdurlog2levdisp3'; i = i+1}
+# if(file.exists(here('temp', 'modRFdurlogslopeRE2levdisp3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFdurlogslopeRE2levdisp3.rds')); names(mods3)[i] <- 'modRFdurlogslopeRE2levdisp3'; i = i+1} # convergence error
+# if(file.exists(here('temp', 'modRFdurlogslopeREdisp3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFdurlogslopeREdisp3.rds')); names(mods3)[i] <- 'modRFdurlogslopeREdisp3'; i = i+1} # convergence error
+if(file.exists(here('temp', 'modRFdurlog2levdisprealm3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFdurlog2levdisprealm3.rds')); names(mods3)[i] <- 'modRFdurlog2levdisprealm3'; i = i+1}
+# if(file.exists(here('temp', 'modRFdurlogslopeRE2levdisprealm3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFdurlogslopeRE2levdisprealm3.rds')); names(mods3)[i] <- 'modRFdurlogslopeRE2levdisprealm3'; i = i+1} # convergence error
+
+
 modes <- sapply(X = mods3, FUN = mode)
 aics <- sapply(X = mods3[modes == 'list'], FUN = AIC)
 aics - min(aics)
 ```
 
 ### 5-years
-This chooses beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp + realm.
-We haven't dealt with potential testing on the boundary issues here. Note that the models with random slopes did not converge.
+Best is beta errors, durationlog.sc, intercepts for STUDY_ID and rarefyID, variance scaled to nspp + realm.
+Next best is same as 10- and 20-years: beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp + realm.
+We haven't dealt with potential testing on the boundary issues here. Note that a number of models with random slopes did not converge.
 ```{r choose variance structure, echo=FALSE}
 mods5 <- vector('list', length = 12)
 i = 1
@@ -154,6 +164,13 @@ if(file.exists(here('temp', 'modRFslopeREdisp5.rds'))){ mods5[[i]] <- readRDS(he
 if(file.exists(here('temp', 'modRF2levdisprealm5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRF2levdisprealm5.rds')); names(mods5)[i] <- 'modRF2levdisprealm5'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeRE2levdisprealm5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisprealm5.rds')); names(mods5)[i] <- 'modRFslopeRE2levdisprealm5'; i = i+1}
 
+# with log duration
+if(file.exists(here('temp', 'modRFdurlog2levdisp5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFdurlog2levdisp5.rds')); names(mods5)[i] <- 'modRFdurlog2levdisp5'; i = i+1}
+# if(file.exists(here('temp', 'modRFdurlogslopeRE2levdisp5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFdurlogslopeRE2levdisp5.rds')); names(mods5)[i] <- 'modRFdurlogslopeRE2levdisp5'; i = i+1} # convergence error
+# if(file.exists(here('temp', 'modRFdurlogslopeREdisp5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFdurlogslopeREdisp5.rds')); names(mods5)[i] <- 'modRFdurlogslopeREdisp5'; i = i+1} # convergence error
+if(file.exists(here('temp', 'modRFdurlog2levdisprealm5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFdurlog2levdisprealm5.rds')); names(mods5)[i] <- 'modRFdurlog2levdisprealm5'; i = i+1}
+# if(file.exists(here('temp', 'modRFdurlogslopeRE2levdisprealm5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFdurlogslopeRE2levdisprealm5.rds')); names(mods5)[i] <- 'modRFdurlogslopeRE2levdisprealm5'; i = i+1} # convergence error
+
 modes <- sapply(X = mods5, FUN = mode)
 aics <- sapply(X = mods5[modes == 'list'], FUN = AIC)
 aics - min(aics)
@@ -163,7 +180,7 @@ aics - min(aics)
 This chooses beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp + realm.
 We haven't dealt with potential testing on the boundary issues here.
 ```{r choose variance structure, echo=FALSE}
-mods10 <- vector('list', length = 12)
+mods10 <- vector('list', length = 17)
 i = 1
 if(file.exists(here('temp', 'modRFgauss10.rds'))){ mods10[[i]] <- readRDS(here('temp', 'modRFgauss10.rds')); names(mods10)[i] <- 'modRFgauss10'; i = i+1}
 if(file.exists(here('temp', 'modRFbeta10.rds'))){ mods10[[i]] <- readRDS(here('temp', 'modRFbeta10.rds')); names(mods10)[i] <- 'modRFbeta10'; i = i+1}
@@ -179,6 +196,13 @@ if(file.exists(here('temp', 'modRFslopeREdisp10.rds'))){ mods10[[i]] <- readRDS(
 if(file.exists(here('temp', 'modRF2levdisprealm10.rds'))){ mods10[[i]] <- readRDS(here('temp', 'modRF2levdisprealm10.rds')); names(mods10)[i] <- 'modRF2levdisprealm10'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeRE2levdisprealm10.rds'))){ mods10[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisprealm10.rds')); names(mods10)[i] <- 'modRFslopeRE2levdisprealm10'; i = i+1}
 
+# with log duration
+if(file.exists(here('temp', 'modRFdurlog2levdisp10.rds'))){ mods10[[i]] <- readRDS(here('temp', 'modRFdurlog2levdisp10.rds')); names(mods10)[i] <- 'modRFdurlog2levdisp10'; i = i+1}
+if(file.exists(here('temp', 'modRFdurlogslopeRE2levdisp10.rds'))){ mods10[[i]] <- readRDS(here('temp', 'modRFdurlogslopeRE2levdisp10.rds')); names(mods10)[i] <- 'modRFdurlogslopeRE2levdisp10'; i = i+1}
+# if(file.exists(here('temp', 'modRFdurlogslopeREdisp10.rds'))){ mods10[[i]] <- readRDS(here('temp', 'modRFdurlogslopeREdisp10.rds')); names(mods10)[i] <- 'modRFdurlogslopeREdisp10'; i = i+1} # convergence error
+if(file.exists(here('temp', 'modRFdurlog2levdisprealm10.rds'))){ mods10[[i]] <- readRDS(here('temp', 'modRFdurlog2levdisprealm10.rds')); names(mods10)[i] <- 'modRFdurlog2levdisprealm10'; i = i+1}
+if(file.exists(here('temp', 'modRFdurlogslopeRE2levdisprealm10.rds'))){ mods10[[i]] <- readRDS(here('temp', 'modRFdurlogslopeRE2levdisprealm10.rds')); names(mods10)[i] <- 'modRFdurlogslopeRE2levdisprealm10'; i = i+1}
+
 modes <- sapply(X = mods10, FUN = mode)
 aics <- sapply(X = mods10[modes == 'list'], FUN = AIC)
 aics - min(aics)
@@ -188,7 +212,7 @@ aics - min(aics)
 This chooses beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp + realm.
 We haven't dealt with potential testing on the boundary issues here.
 ```{r choose variance structure, echo=FALSE}
-mods20 <- vector('list', length = 12)
+mods20 <- vector('list', length = 17)
 i = 1
 if(file.exists(here('temp', 'modRFgauss20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFgauss20.rds')); names(mods20)[i] <- 'modRFgauss20'; i = i+1}
 if(file.exists(here('temp', 'modRFbeta20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFbeta20.rds')); names(mods20)[i] <- 'modRFbeta20'; i = i+1}
@@ -203,6 +227,13 @@ if(file.exists(here('temp', 'modRFslopeRE2levdisp20.rds'))){ mods20[[i]] <- read
 if(file.exists(here('temp', 'modRFslopeREdisp20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFslopeREdisp20.rds')); names(mods20)[i] <- 'modRFslopeREdisp20'; i = i+1}
 if(file.exists(here('temp', 'modRF2levdisprealm20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRF2levdisprealm20.rds')); names(mods20)[i] <- 'modRF2levdisprealm20'; i = i+1}
 if(file.exists(here('temp', 'modRFslopeRE2levdisprealm20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisprealm20.rds')); names(mods20)[i] <- 'modRFslopeRE2levdisprealm20'; i = i+1}
+
+# with log duration
+if(file.exists(here('temp', 'modRFdurlog2levdisp20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFdurlog2levdisp20.rds')); names(mods20)[i] <- 'modRFdurlog2levdisp20'; i = i+1}
+if(file.exists(here('temp', 'modRFdurlogslopeRE2levdisp20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFdurlogslopeRE2levdisp20.rds')); names(mods20)[i] <- 'modRFdurlogslopeRE2levdisp20'; i = i+1}
+# if(file.exists(here('temp', 'modRFdurlogslopeREdisp20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFdurlogslopeREdisp20.rds')); names(mods20)[i] <- 'modRFdurlogslopeREdisp20'; i = i+1} # convergence error
+if(file.exists(here('temp', 'modRFdurlog2levdisprealm20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFdurlog2levdisprealm20.rds')); names(mods20)[i] <- 'modRFdurlog2levdisprealm20'; i = i+1}
+if(file.exists(here('temp', 'modRFdurlogslopeRE2levdisprealm20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFdurlogslopeRE2levdisprealm20.rds')); names(mods20)[i] <- 'modRFdurlogslopeRE2levdisprealm20'; i = i+1}
 
 modes <- sapply(X = mods20, FUN = mode)
 aics <- sapply(X = mods20[modes == 'list'], FUN = AIC)
@@ -410,6 +441,7 @@ modTdTT20 <- readRDS('temp/modTdTT20.rds')
 
 ### Summary
 ```{r summary of TD mods, eval=FALSE, echo=FALSE}
+#summary(modTdTT3)
 summary(modTdTT5)
 summary(modTdTT10)
 summary(modTdTT20)
