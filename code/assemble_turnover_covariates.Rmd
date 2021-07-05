@@ -237,10 +237,14 @@ bt20[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
 # transformation for 2 categories. Eq. 1 in Douma & Weedon 2019 MEE
 transform01 <- function(x) (x * (length(x) - 1) + 0.5) / (length(x))
 
-bt3[, ':='(Jtu.sc = transform01(Jtu), Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
-bt5[, ':='(Jtu.sc = transform01(Jtu), Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
-bt10[, ':='(Jtu.sc = transform01(Jtu), Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
-bt20[, ':='(Jtu.sc = transform01(Jtu), Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
+bt3[, ':='(Jtu.sc = transform01(Jtu), Jne.sc = transform01(Jne), 
+           Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
+bt5[, ':='(Jtu.sc = transform01(Jtu), Jne.sc = transform01(Jne), 
+           Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
+bt10[, ':='(Jtu.sc = transform01(Jtu), Jne.sc = transform01(Jne), 
+            Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
+bt20[, ':='(Jtu.sc = transform01(Jtu), Jne.sc = transform01(Jne), 
+            Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
 
 
 ### Log-transform some variables, then center and scale. 
@@ -408,41 +412,49 @@ bt20[, length(unique(rarefyID)), by = REALM]
 Only if file doesn't yet exist
 ```{r write out}
 if(!file.exists(here('output', 'turnover_w_covariates3.csv.gz'))){
-  write.csv(bt3[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
-                  tempave.sc, tempave_metab.sc, seas.sc, 
-                  microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
-                  mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
-                  duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
+  write.csv(bt3[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
+                   Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
+                   tempave.sc, tempave_metab.sc, seas.sc, 
+                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
+                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, 
+                   nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
+                   duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
             gzfile(here('output', 'turnover_w_covariates3.csv.gz')), row.names = FALSE)
   write.csv(scaling3, here('output','turnover_w_covariates_scaling3.csv'), row.names = FALSE)
 }
 
 if(!file.exists(here('output', 'turnover_w_covariates5.csv.gz'))){
-  write.csv(bt5[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
-                  tempave.sc, tempave_metab.sc, seas.sc, 
-                  microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
-                  mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
-                  duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
+  write.csv(bt5[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
+                   Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
+                   tempave.sc, tempave_metab.sc, seas.sc, 
+                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
+                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, 
+                   nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
+                   duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
             gzfile(here('output', 'turnover_w_covariates5.csv.gz')), row.names = FALSE)
   write.csv(scaling5, here('output','turnover_w_covariates_scaling5.csv'), row.names = FALSE)
 }
 
 if(!file.exists(here('output', 'turnover_w_covariates10.csv.gz'))){
-  write.csv(bt10[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
-                  tempave.sc, tempave_metab.sc, seas.sc, 
-                  microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
-                  mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
-                  duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
+  write.csv(bt10[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
+                    Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
+                    tempave.sc, tempave_metab.sc, seas.sc, 
+                    microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
+                    mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, 
+                    nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
+                    duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
             gzfile(here('output', 'turnover_w_covariates10.csv.gz')), row.names = FALSE)
   write.csv(scaling10, here('output','turnover_w_covariates_scaling10.csv'), row.names = FALSE)
 }
 
 if(!file.exists(here('output', 'turnover_w_covariates20.csv.gz'))){
-  write.csv(bt20[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
-                  tempave.sc, tempave_metab.sc, seas.sc, 
-                  microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
-                  mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
-                  duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
+  write.csv(bt20[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
+                    Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
+                    tempave.sc, tempave_metab.sc, seas.sc, 
+                    microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
+                    mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, 
+                    nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
+                    duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
             gzfile(here('output', 'turnover_w_covariates20.csv.gz')), row.names = FALSE)
   write.csv(scaling20, here('output','turnover_w_covariates_scaling20.csv'), row.names = FALSE)
 }
