@@ -353,24 +353,24 @@ scaling3$center[vapply(scaling3$center, is.null, TRUE)] <- NA # turn null to NA
 scaling3$center <- vapply(scaling3$center, paste, collapse = ", ", character(1L)) # flatten list to character. not sure why it's a list.
 scaling3$scale <- vapply(scaling3$scale, paste, collapse = ", ", character(1L))
 
-scaling5 <- data.frame(center = t(t(sapply(bt3, attr, 'scaled:center'))),
-                 scale = t(t(sapply(bt3, attr, 'scaled:scale'))))
+scaling5 <- data.frame(center = t(t(sapply(bt5, attr, 'scaled:center'))),
+                 scale = t(t(sapply(bt5, attr, 'scaled:scale'))))
 scaling5$var <- rownames(scaling5)
 scaling5 <- scaling5[!vapply(scaling5$center, is.null, TRUE) | !vapply(scaling5$scale, is.null, TRUE),]
 scaling5$center[vapply(scaling5$center, is.null, TRUE)] <- NA # turn null to NA
 scaling5$center <- vapply(scaling5$center, paste, collapse = ", ", character(1L)) # flatten list to character. not sure why it's a list.
 scaling5$scale <- vapply(scaling5$scale, paste, collapse = ", ", character(1L))
 
-scaling10 <- data.frame(center = t(t(sapply(bt3, attr, 'scaled:center'))),
-                 scale = t(t(sapply(bt3, attr, 'scaled:scale'))))
+scaling10 <- data.frame(center = t(t(sapply(bt10, attr, 'scaled:center'))),
+                 scale = t(t(sapply(bt10, attr, 'scaled:scale'))))
 scaling10$var <- rownames(scaling10)
 scaling10 <- scaling10[!vapply(scaling10$center, is.null, TRUE) | !vapply(scaling10$scale, is.null, TRUE),]
 scaling10$center[vapply(scaling10$center, is.null, TRUE)] <- NA # turn null to NA
 scaling10$center <- vapply(scaling10$center, paste, collapse = ", ", character(1L)) # flatten list to character. not sure why it's a list.
 scaling10$scale <- vapply(scaling10$scale, paste, collapse = ", ", character(1L))
 
-scaling20 <- data.frame(center = t(t(sapply(bt3, attr, 'scaled:center'))),
-                 scale = t(t(sapply(bt3, attr, 'scaled:scale'))))
+scaling20 <- data.frame(center = t(t(sapply(bt20, attr, 'scaled:center'))),
+                 scale = t(t(sapply(bt20, attr, 'scaled:scale'))))
 scaling20$var <- rownames(scaling20)
 scaling20 <- scaling20[!vapply(scaling20$center, is.null, TRUE) | !vapply(scaling20$scale, is.null, TRUE),]
 scaling20$center[vapply(scaling20$center, is.null, TRUE)] <- NA # turn null to NA
