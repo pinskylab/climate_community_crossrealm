@@ -230,6 +230,17 @@ bt10[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
 bt20[, taxa_mod2 := taxa_mod]
 bt20[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
 
+# sign of temperature change
+signneg11 <- function(x){ # assign 0 a sign of 1 so that there are only 2 levels
+  out <- sign(x)
+  out[out == 0] <- 1
+  return(out)
+}
+bt3[, tsign := signneg11(tempchange)]
+bt5[, tsign := signneg11(tempchange)]
+bt10[, tsign := signneg11(tempchange)]
+bt20[, tsign := signneg11(tempchange)]
+
 #######################
 ## Transformations
 
@@ -252,8 +263,8 @@ bt3[, ':='(tempave.sc = scale(tempave),
            tempave_metab.sc = scale(tempave_metab),
            seas.sc = scale(seas),
            microclim.sc = scale(log(microclim)),
-           tempchange.sc = scale(tempchange, center = TRUE), # do not center
-           tempchange_abs.sc = scale(abs(tempchange), center = TRUE), # do not center, so that 0 is still 0 temperature change
+           tempchange.sc = scale(tempchange, center = TRUE), 
+           tempchange_abs.sc = scale(abs(tempchange), center = TRUE),
            mass.sc = scale(log(mass_mean_weight)),
            speed.sc = scale(log(speed_mean_weight+1)),
            lifespan.sc = scale(log(lifespan_mean_weight)),
@@ -273,8 +284,8 @@ bt5[, ':='(tempave.sc = scale(tempave),
            tempave_metab.sc = scale(tempave_metab),
            seas.sc = scale(seas),
            microclim.sc = scale(log(microclim)),
-           tempchange.sc = scale(tempchange, center = TRUE), # do not center
-           tempchange_abs.sc = scale(abs(tempchange), center = TRUE), # do not center, so that 0 is still 0 temperature change
+           tempchange.sc = scale(tempchange, center = TRUE), 
+           tempchange_abs.sc = scale(abs(tempchange), center = TRUE), 
            mass.sc = scale(log(mass_mean_weight)),
            speed.sc = scale(log(speed_mean_weight+1)),
            lifespan.sc = scale(log(lifespan_mean_weight)),
@@ -294,8 +305,8 @@ bt10[, ':='(tempave.sc = scale(tempave),
            tempave_metab.sc = scale(tempave_metab),
            seas.sc = scale(seas),
            microclim.sc = scale(log(microclim)),
-           tempchange.sc = scale(tempchange, center = TRUE), # do not center
-           tempchange_abs.sc = scale(abs(tempchange), center = TRUE), # do not center, so that 0 is still 0 temperature change
+           tempchange.sc = scale(tempchange, center = TRUE), 
+           tempchange_abs.sc = scale(abs(tempchange), center = TRUE), 
            mass.sc = scale(log(mass_mean_weight)),
            speed.sc = scale(log(speed_mean_weight+1)),
            lifespan.sc = scale(log(lifespan_mean_weight)),
@@ -315,8 +326,8 @@ bt20[, ':='(tempave.sc = scale(tempave),
            tempave_metab.sc = scale(tempave_metab),
            seas.sc = scale(seas),
            microclim.sc = scale(log(microclim)),
-           tempchange.sc = scale(tempchange, center = TRUE), # do not center
-           tempchange_abs.sc = scale(abs(tempchange), center = TRUE), # do not center, so that 0 is still 0 temperature change
+           tempchange.sc = scale(tempchange, center = TRUE), 
+           tempchange_abs.sc = scale(abs(tempchange), center = TRUE), 
            mass.sc = scale(log(mass_mean_weight)),
            speed.sc = scale(log(speed_mean_weight+1)),
            lifespan.sc = scale(log(lifespan_mean_weight)),
@@ -368,22 +379,22 @@ scaling20$scale <- vapply(scaling20$scale, paste, collapse = ", ", character(1L)
 
 ## save the transformations just entered above
 scaling3$log <- FALSE # whether variable was log-transformed before scaling
-scaling3$log[scaling3$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'duration.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
+scaling3$log[scaling3$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
 scaling3$plus <- 0 # whether anything was added to the variable before logtransforming
 scaling3$plus[scaling3$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
 
 scaling5$log <- FALSE # whether variable was log-transformed before scaling
-scaling5$log[scaling5$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'duration.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
+scaling5$log[scaling5$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
 scaling5$plus <- 0 # whether anything was added to the variable before logtransforming
 scaling5$plus[scaling5$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
 
 scaling10$log <- FALSE # whether variable was log-transformed before scaling
-scaling10$log[scaling10$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'duration.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
+scaling10$log[scaling10$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
 scaling10$plus <- 0 # whether anything was added to the variable before logtransforming
 scaling10$plus[scaling10$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
 
 scaling20$log <- FALSE # whether variable was log-transformed before scaling
-scaling20$log[scaling20$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'duration.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
+scaling20$log[scaling20$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
 scaling20$plus <- 0 # whether anything was added to the variable before logtransforming
 scaling20$plus[scaling20$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
 
@@ -415,7 +426,7 @@ if(!file.exists(here('output', 'turnover_w_covariates3.csv.gz'))){
   write.csv(bt3[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
                    Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
                    tempave.sc, tempave_metab.sc, seas.sc, 
-                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
+                   microclim.sc, tempchange, tsign, tempchange.sc, tempchange_abs.sc,
                    mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, 
                    nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
                    duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
@@ -427,7 +438,7 @@ if(!file.exists(here('output', 'turnover_w_covariates5.csv.gz'))){
   write.csv(bt5[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
                    Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
                    tempave.sc, tempave_metab.sc, seas.sc, 
-                   microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
+                   microclim.sc, tempchange, tsign, tempchange.sc, tempchange_abs.sc,
                    mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, 
                    nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
                    duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
@@ -439,7 +450,7 @@ if(!file.exists(here('output', 'turnover_w_covariates10.csv.gz'))){
   write.csv(bt10[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
                     Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
                     tempave.sc, tempave_metab.sc, seas.sc, 
-                    microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
+                    microclim.sc, tempchange, tsign, tempchange.sc, tempchange_abs.sc,
                     mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, 
                     nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
                     duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
@@ -451,7 +462,7 @@ if(!file.exists(here('output', 'turnover_w_covariates20.csv.gz'))){
   write.csv(bt20[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
                     Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
                     tempave.sc, tempave_metab.sc, seas.sc, 
-                    microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
+                    microclim.sc, tempchange, tsign, tempchange.sc, tempchange_abs.sc,
                     mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, 
                     nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
                     duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 

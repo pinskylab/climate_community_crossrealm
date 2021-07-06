@@ -1026,6 +1026,63 @@ if(fitmod == 'modTdTT20'){
     MATCHMOD <- TRUE
 }
 
+if(fitmod == 'modTdTT3Jne'){
+    i3 <- trends3[, complete.cases(Jne.sc, tempchange_abs.sc, tempave_metab.sc, duration.sc, REALM, nspp.sc)]
+    print(paste(sum(i3), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends3[i3,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTT3Jne.rds')
+    print('saved modTdTT3Jne.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTT5Jne'){
+    i5 <- trends5[, complete.cases(Jne.sc, tempchange_abs.sc, tempave_metab.sc, duration.sc, REALM, nspp.sc)]
+    print(paste(sum(i5), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTT5Jne.rds')
+    print('saved modTdTT5Jne.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTT10Jne'){
+    i10 <- trends10[, complete.cases(Jne.sc, tempchange_abs.sc, tempave_metab.sc, duration.sc, REALM, nspp.sc)]
+    print(paste(sum(i10), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTT10Jne.rds')
+    print('saved modTdTT10Jne.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTT20Jne'){
+    i20 <- trends20[, complete.cases(Jne.sc, tempchange_abs.sc, tempave_metab.sc, duration.sc, REALM, nspp.sc)]
+    print(paste(sum(i20), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTT20Jne.rds')
+    print('saved modTdTT20Jne.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+
 if(fitmod == 'modTdTT3Horn'){
     i3 <- trends3[, complete.cases(Horn.sc, tempchange_abs.sc, tempave_metab.sc, duration.sc, REALM, nspp.sc)]
     print(paste(sum(i3), 'data points'))
@@ -1085,15 +1142,191 @@ if(fitmod == 'modTdTT20Horn'){
 
 # temp:tempchange:REALM with duration interaction #########################
 
-# try on Antao et al. 2020-style dataset
-if(fitmod == 'modAntaoTdTTRealm5'){ # trims out freshwater and >60 or <23.5 deg lat, like Antao et al. 2020
-    i5 <- trends5[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                      complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+if(fitmod == 'modTdTTRealm5'){
+    i5 <- trends5[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
     print(paste(sum(i5), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        tempave_metab.sc:tempchange_abs.sc:duration.sc + 
                        REALM:duration.sc +
                        tempchange_abs.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTRealm5.rds')
+    print('saved modTdTTRealm5.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTRealm10'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    i10 <- trends10[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i10), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTRealm10.rds')
+    print('saved modTdTTRealm10.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTRealm20'){
+    i20 <- trends20[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i20), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTRealm20.rds')
+    print('saved modTdTTRealm20.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modTdTTRealm5Jne'){
+    i5 <- trends5[, complete.cases(Jne.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i5), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTRealm5Jne.rds')
+    print('saved modTdTTRealm5Jne.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTRealm10Jne'){
+    i10 <- trends10[, complete.cases(Jne.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i10), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTRealm10Jne.rds')
+    print('saved modTdTTRealm10Jne.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTRealm20Jne'){
+    i20 <- trends20[, complete.cases(Jne.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i20), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTRealm20Jne.rds')
+    print('saved modTdTTRealm20Jne.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modTdTTRealm5Horn'){ # Horn
+    i5 <- trends5[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i5), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTRealm5Horn.rds')
+    print('saved modTdTTRealm5Horn.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTRealm10Horn'){
+    i10 <- trends10[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i10), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTRealm10Horn.rds')
+    print('saved modTdTTRealm10Horn.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTRealm20Horn'){
+    i20 <- trends20[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i20), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTRealm20Horn.rds')
+    print('saved modTdTTRealm20Horn.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+
+
+# try on Antao et al. 2020-style dataset
+# use tempchange, not tempchange_abs
+if(fitmod == 'modAntaoTdTTRealm5'){ # trims out freshwater and >60 or <23.5 deg lat, like Antao et al. 2020
+    i5 <- trends5[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                      complete.cases(Jtu.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i5), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange.sc:REALM:duration.sc + 
                        tempave_metab.sc:REALM:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5,], family = beta_family(link = 'logit'), 
@@ -1107,11 +1340,13 @@ if(fitmod == 'modAntaoTdTTRealm5'){ # trims out freshwater and >60 or <23.5 deg 
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modAntaoTdTTRealm10'){ # trims out freshwater and >60 or <23.5 deg lat, like Antao et al. 2020
+    i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                      complete.cases(Jtu.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
     print(paste(sum(i10), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
                        REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempchange.sc:REALM:duration.sc + 
                        tempave_metab.sc:REALM:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10,], family = beta_family(link = 'logit'), 
@@ -1125,11 +1360,13 @@ if(fitmod == 'modAntaoTdTTRealm10'){ # trims out freshwater and >60 or <23.5 deg
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modAntaoTdTTRealm20'){ # trims out freshwater and >60 or <23.5 deg lat, like Antao et al. 2020
+    i20 <- trends20[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                      complete.cases(Jtu.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
     print(paste(sum(i20), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
                        REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempchange.sc:REALM:duration.sc + 
                        tempave_metab.sc:REALM:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends20[i20,], family = beta_family(link = 'logit'), 
@@ -1145,12 +1382,12 @@ if(fitmod == 'modAntaoTdTTRealm20'){ # trims out freshwater and >60 or <23.5 deg
 
 if(fitmod == 'modAntaoTdTTRealm5Jne'){ # Jne, like gains/losses of Antao et al. 2020
     i5 <- trends5[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                      complete.cases(Jne.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+                      complete.cases(Jne.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
     print(paste(sum(i5), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
                        REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempchange.sc:REALM:duration.sc + 
                        tempave_metab.sc:REALM:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5,], family = beta_family(link = 'logit'), 
@@ -1164,11 +1401,13 @@ if(fitmod == 'modAntaoTdTTRealm5Jne'){ # Jne, like gains/losses of Antao et al. 
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modAntaoTdTTRealm10Jne'){
+    i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                      complete.cases(Jne.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
     print(paste(sum(i10), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
                        REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempchange.sc:REALM:duration.sc + 
                        tempave_metab.sc:REALM:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10,], family = beta_family(link = 'logit'), 
@@ -1182,11 +1421,13 @@ if(fitmod == 'modAntaoTdTTRealm10Jne'){
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modAntaoTdTTRealm20Jne'){
+    i20 <- trends20[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                        complete.cases(Jne.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
     print(paste(sum(i20), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
                        REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempchange.sc:REALM:duration.sc + 
                        tempave_metab.sc:REALM:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends20[i20,], family = beta_family(link = 'logit'), 
@@ -1202,12 +1443,12 @@ if(fitmod == 'modAntaoTdTTRealm20Jne'){
 
 if(fitmod == 'modAntaoTdTTRealm5Horn'){ # Horn
     i5 <- trends5[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                      complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+                      complete.cases(Horn.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
     print(paste(sum(i5), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
                        REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempchange.sc:REALM:duration.sc + 
                        tempave_metab.sc:REALM:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5,], family = beta_family(link = 'logit'), 
@@ -1221,11 +1462,13 @@ if(fitmod == 'modAntaoTdTTRealm5Horn'){ # Horn
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modAntaoTdTTRealm10Horn'){
+    i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                        complete.cases(Horn.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
     print(paste(sum(i10), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
                        REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempchange.sc:REALM:duration.sc + 
                        tempave_metab.sc:REALM:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10,], family = beta_family(link = 'logit'), 
@@ -1239,11 +1482,13 @@ if(fitmod == 'modAntaoTdTTRealm10Horn'){
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modAntaoTdTTRealm20Horn'){
+    i20 <- trends20[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                        complete.cases(Horn.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
     print(paste(sum(i20), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
                        REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
+                       tempchange.sc:REALM:duration.sc + 
                        tempave_metab.sc:REALM:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends20[i20,], family = beta_family(link = 'logit'), 
@@ -1252,6 +1497,332 @@ if(fitmod == 'modAntaoTdTTRealm20Horn'){
     print(summary(mod))
     saveRDS(mod, file = 'temp/modAntaoTdTTRealm20Horn.rds')
     print('saved modAntaoTdTTRealm20Horn.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+
+# temp:tempchange:tsign with duration interaction #########################
+
+if(fitmod == 'modTdTTtsign5'){
+    i5 <- trends5[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i5), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc + 
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTtsign5.rds')
+    print('saved modTdTTtsign5.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTtsign10'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    i10 <- trends10[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i10), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTtsign10.rds')
+    print('saved modTdTTtsign10.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTtsign20'){
+    i20 <- trends20[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i20), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTtsign20.rds')
+    print('saved modTdTTtsign20.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modTdTTtsign5Jne'){
+    i5 <- trends5[, complete.cases(Jne.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i5), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTtsign5Jne.rds')
+    print('saved modTdTTtsign5Jne.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTtsign10Jne'){
+    i10 <- trends10[, complete.cases(Jne.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i10), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTtsign10Jne.rds')
+    print('saved modTdTTtsign10Jne.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTtsign20Jne'){
+    i20 <- trends20[, complete.cases(Jne.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i20), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTtsign20Jne.rds')
+    print('saved modTdTTtsign20Jne.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modTdTTtsign5Horn'){ # Horn
+    i5 <- trends5[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i5), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTtsign5Horn.rds')
+    print('saved modTdTTtsign5Horn.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTtsign10Horn'){
+    i10 <- trends10[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i10), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTtsign10Horn.rds')
+    print('saved modTdTTtsign10Horn.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTtsign20Horn'){
+    i20 <- trends20[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i20), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTtsign20Horn.rds')
+    print('saved modTdTTtsign20Horn.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+
+
+# temp:tempchange +mass with duration interaction #########################
+
+if(fitmod == 'modTdTTmass5'){
+    i5 <- trends5[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i5), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       mass.sc:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTmass5.rds')
+    print('saved modTdTTmass5.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTmass10'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    i10 <- trends10[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i10), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       mass.sc:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTmass10.rds')
+    print('saved modTdTTmass10.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTmass20'){
+    i20 <- trends20[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i20), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       mass.sc:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTmass20.rds')
+    print('saved modTdTTmass20.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modTdTTmass5Jne'){
+    i5 <- trends5[, complete.cases(Jne.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i5), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       mass.sc:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTmass5Jne.rds')
+    print('saved modTdTTmass5Jne.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTmass10Jne'){
+    i10 <- trends10[, complete.cases(Jne.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i10), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       mass.sc:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTmass10Jne.rds')
+    print('saved modTdTTmass10Jne.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTmass20Jne'){
+    i20 <- trends20[, complete.cases(Jne.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i20), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       mass.sc:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTmass20Jne.rds')
+    print('saved modTdTTmass20Jne.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modTdTTmass5Horn'){ # Horn
+    i5 <- trends5[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i5), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       mass.sc:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTmass5Horn.rds')
+    print('saved modTdTTmass5Horn.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTmass10Horn'){
+    i10 <- trends10[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i10), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       mass.sc:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTmass10Horn.rds')
+    print('saved modTdTTmass10Horn.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTTmass20Horn'){
+    i20 <- trends20[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i20), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange_abs.sc:duration.sc + 
+                       mass.sc:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modTdTTmass20Horn.rds')
+    print('saved modTdTTmass20Horn.rds')
     print(Sys.time())
     print(performance::r2(mod))
     MATCHMOD <- TRUE
