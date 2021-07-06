@@ -447,7 +447,12 @@ modTdTT20Horn <- readRDS('temp/modTdTT20Horn.rds')
 #### Set up and write to file
 Only run this once.
 ```{r, eval=FALSE, echo=FALSE}
-scaling <- fread('output/turnover_w_covariates_scaling.csv') # the scalings
+scaling5 <- fread('output/turnover_w_covariates_scaling5.csv') # the scalings
+scaling10 <- fread('output/turnover_w_covariates_scaling10.csv') # the scalings
+scaling20 <- fread('output/turnover_w_covariates_scaling20.csv') # the scalings
+
+# find a study in all 3 datasets to use as the random effect
+# ranef(modTdT20Horn))
 
 # set up the variables to plot
 vars <- data.frame(vars = c('tempchange_abs', 'tempave_metab'),
@@ -456,83 +461,128 @@ vars <- data.frame(vars = c('tempchange_abs', 'tempave_metab'),
                    len =      c(100,  100),
                    discrete = c(F,    F),
                    stringsAsFactors = FALSE)
-basetab5 <- trends5[, .(type = 'all', 
-                      nspp.sc = 0,
-                      REALM = 'Terrestrial')] # for dispersion
+basetab5 <- data.table(expand.grid(start = 1:4, end = 2:5, nspp.sc = 0, REALM = 'Terrestrial', STUDY_ID = 195L, rarefyID = '195_289043', tempchange_abs.sc = 0, tempave_metab.sc = 0)) # the base case
+basetab5[, duration := end - start]
+if(scaling5[var == 'duration.sc', log]) basetab5[, duration.sc := (log(duration) - scaling5[var == 'duration.sc', center])/scaling5[var == 'duration.sc', scale]]
+if(!scaling5[var == 'duration.sc', log]) basetab5[, duration.sc := (duration - scaling5[var == 'duration.sc', center])/scaling5[var == 'duration.sc', scale]]
+basetab5 <- basetab5[duration > 0, ]
 
-basetab[, ':='(duration.sc = 0, nyrBT = 20, STUDY_ID = 127L, rarefyID = '127_504467')]
+basetab10 <- data.table(expand.grid(start = 1:9, end = 2:10, nspp.sc = 0, REALM = 'Terrestrial', STUDY_ID = 195L, rarefyID = '195_289043', tempchange_abs.sc = 0, tempave_metab.sc = 0)) # the base case
+basetab10[, duration := end - start]
+if(scaling10[var == 'duration.sc', log]) basetab10[, duration.sc := (log(duration) - scaling10[var == 'duration.sc', center])/scaling10[var == 'duration.sc', scale]]
+if(!scaling10[var == 'duration.sc', log]) basetab10[, duration.sc := (duration - scaling10[var == 'duration.sc', center])/scaling10[var == 'duration.sc', scale]]
+basetab10 <- basetab10[duration > 0, ]
+
+basetab20 <- data.table(expand.grid(start = 1:19, end = 2:20, nspp.sc = 0, REALM = 'Terrestrial', STUDY_ID = 195L, rarefyID = '195_289043', tempchange_abs.sc = 0, tempave_metab.sc = 0)) # the base case
+basetab20[, duration := end - start]
+if(scaling20[var == 'duration.sc', log]) basetab20[, duration.sc := (log(duration) - scaling20[var == 'duration.sc', center])/scaling20[var == 'duration.sc', scale]]
+if(!scaling20[var == 'duration.sc', log]) basetab20[, duration.sc := (duration - scaling20[var == 'duration.sc', center])/scaling20[var == 'duration.sc', scale]]
+basetab20 <- basetab20[duration > 0, ]
 
 # make the data frames for each interaction to plot                
 for(j in 1:nrow(vars)){
     # set up the main effects
-    if(vars$log[j]){
-        thisdat <- data.frame(new = 10^seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
+    if(scaling5[var == paste0(vars$vars[j], '.sc'), log]){
+        thisdat <- data.frame(new = 10^seq(log10(vars$min[j]), log10(vars$max[j]), length.out = vars$len[j]),
                               var = vars$vars[j], stringsAsFactors = FALSE)
     } 
-    if(!vars$log[j]){
+    if(!scaling5[var == paste0(vars$vars[j], '.sc'), log]){
         thisdat <- data.frame(new = seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
                               var = vars$vars[j], stringsAsFactors = FALSE)
     }
     names(thisdat) <- c(vars$vars[j], 'var')
     
     # scale the variable
-    cent <- scaling$center[scaling$var == paste0(vars$vars[j], '.sc')]
-    scl <- scaling$scale[scaling$var == paste0(vars$vars[j], '.sc')]
+    cent <- scaling5[var == paste0(vars$vars[j], '.sc'), center]
+    scl <- scaling5[var == paste0(vars$vars[j], '.sc'), scale]
+    lg <- scaling5[var == paste0(vars$vars[j], '.sc'), log]
+    plus <- scaling5[var == paste0(vars$vars[j], '.sc'), plus]
     if(is.null(cent)) cent <- 0
     if(!is.null(cent) & !is.null(scl)){
-        if(vars$log[j]) thisdat[[paste0(vars$var[j], '.sc')]] <- (log(thisdat[[vars$vars[j]]] + vars$plus[j]) - cent)/scl
-        if(!vars$log[j]) thisdat[[paste0(vars$var[j], '.sc')]] <- (thisdat[[vars$var[j]]] - cent)/scl
+        if(lg) thisdat[[paste0(vars$var[j], '.sc')]] <- (log(thisdat[[vars$vars[j]]] + plus) - cent)/scl
+        if(!lg) thisdat[[paste0(vars$var[j], '.sc')]] <- (thisdat[[vars$var[j]]] - cent)/scl
     }
     
     # merge with the rest of the columns
-    # use realm-specific averages for human impacts
-    colnamestouse <- setdiff(colnames(basetab), paste0(vars$vars[j], '.sc'))
-    if(vars$vars[j] != 'human_bowler'){
-        thisdat <- cbind(thisdat, basetab[type == 'all', ..colnamestouse])
-    }
-    if(vars$vars[j] == 'human_bowler' & vars$REALM[j] == 'Terrestrial'){
-        thisdat <- cbind(thisdat, basetab[type == 'Terrestrial', ..colnamestouse])
-    }
-    if(vars$vars[j] == 'human_bowler' & vars$REALM[j] == 'Marine'){
-        thisdat <- cbind(thisdat, basetab[type == 'Marine', ..colnamestouse])
-    }
-    
-    # add realm
-    thisdat$REALM <- vars$REALM[j]
-    thisdat$REALM2 <- vars$REALM2[j]
+    expand.grid.df <- function(...) Reduce(function(...) merge(..., by=NULL), list(...)) # https://stackoverflow.com/questions/11693599/alternative-to-expand-grid-for-data-frames
+    colnamestouse <- setdiff(colnames(basetab5), paste0(vars$vars[j], '.sc'))
+    thisdat5 <- expand.grid.df(thisdat, basetab5[, ..colnamestouse])
+    thisdat10 <- expand.grid.df(thisdat, basetab10[, ..colnamestouse])
+    thisdat20 <- expand.grid.df(thisdat, basetab20[, ..colnamestouse])
     
     # merge with the previous iterations
-    if(j == 1) newdat <- thisdat
+    if(j == 1){
+      newdat5 <- thisdat5
+      newdat10 <- thisdat10
+      newdat20 <- thisdat20
+    }
     if(j > 1){
-        colstoadd <- setdiff(colnames(thisdat), colnames(newdat))
+        colstoadd <- setdiff(colnames(thisdat5), colnames(newdat5))
         for(toadd in colstoadd){
-            newdat[[toadd]] <- NA
+            newdat5[[toadd]] <- NA
+            newdat10[[toadd]] <- NA
+            newdat20[[toadd]] <- NA
         }
         
-        colstoadd2 <- setdiff(colnames(newdat), colnames(thisdat))
+        colstoadd2 <- setdiff(colnames(newdat5), colnames(thisdat5))
         for(toadd in colstoadd2){
-            thisdat[[toadd]] <- NA
+            thisdat5[[toadd]] <- NA
+            thisdat10[[toadd]] <- NA
+            thisdat20[[toadd]] <- NA
         }
         
-        newdat <- rbind(newdat, thisdat)
+        newdat5 <- rbind(newdat5, thisdat5)
+        newdat10 <- rbind(newdat10, thisdat10)
+        newdat20 <- rbind(newdat20, thisdat20)
     } 
 }
 
-# character so that new levels can be added
-newdat$REALM <- as.character(newdat$REALM)
-newdat$REALM2 <- as.character(newdat$REALM2)
+# predict (takes a few minutes on Annotate)
+preds5 <- predict(modTdTT5Horn, newdat = newdat5, type = 'response', se.fit = TRUE, re.form = NA)
+preds10 <- predict(modTdTT10Horn, newdat = newdat10, type = 'response', se.fit = TRUE, re.form = NA)
+preds20 <- predict(modTdTT20Horn, newdat = newdat20, type = 'response', se.fit = TRUE, re.form = NA)
 
-# add extra rows so that all factor levels are represented (for predict.lme to work)
-newdat <- rbind(newdat[1:6, ], newdat)
-newdat$REALM[1:6] <- c('Marine', 'Marine', 'Freshwater', 'Freshwater', 'Terrestrial', 'Terrestrial')
-newdat$REALM2[1:6] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh', 'TerrFresh', 'TerrFresh')
-newdat$tempchange_abs.sc[1:6] <- rep(0.0001, 6)
-newdat$tempchange[1:6] <- rep(c(0.0001, -0.0001), 3)
-newdat$var[1:6] <- 'test'
+newdat5$Horn.sc <- preds5$fit
+newdat5$Horn.sc.se <- preds5$se.fit
+newdat10$Horn.sc <- preds10$fit
+newdat10$Horn.sc.se <- preds10$se.fit
+newdat20$Horn.sc <- preds20$fit
+newdat20$Horn.sc.se <- preds20$se.fit
 
 # write out
-write.csv(newdat, 'temp/newdata_main_only.csv', row.names = FALSE)
+write.csv(newdat5, 'temp/modTdTT5_preds.csv', row.names = FALSE)
+write.csv(newdat10, 'temp/modTdTT10_preds.csv', row.names = FALSE)
+write.csv(newdat20, 'temp/modTdTT20_preds.csv', row.names = FALSE)
 
+```
+
+#### Plot
+```{r}
+# load predictions
+newdat5 <- fread('temp/modTdTT5_preds.csv')
+newdat10 <- fread('temp/modTdTT10_preds.csv')
+newdat20 <- fread('temp/modTdTT20_preds.csv')
+
+# calc duration slope per temp:tempchange level
+slope <- function(duration, Horn.sc){
+  mod <- lm(Horn.sc ~ duration)
+  return(coef(mod)[2])
+}
+slopese <- function(duration, Horn.sc){
+  mod <- lm(Horn.sc ~ duration)
+  return(sqrt(diag(vcov(mod))))
+}
+slope5 <- newdat5[, .(Hornslope = slope(duration, Horn.sc), 
+                      Hornslopese = slopese(duration, Horn.sc)), by = .(tempchange_abs, tempave_metab)]
+
+p1 <- ggplot(slope5, aes(x=tempchange_abs, y=Hornslope, ymin=Hornslope-Hornslopese, ymax=Hornslope+Hornslopese)) +
+  geom_line() + 
+  geom_ribbon(alpha=0.5)
+  
+p2 <- ggplot(slope5, aes(tempave_metab, Hornslope)) +
+  geom_line()
+
+grid.arrange(p1, p2, ncol = 2)
 ```
 
 ## Full models w/ only main effects
