@@ -538,16 +538,56 @@ for(j in 1:nrow(vars)){
 }
 
 # predict (takes a few minutes on Annotate)
-preds5 <- predict(modTdTT5Horn, newdat = newdat5, type = 'response', se.fit = TRUE, re.form = NA)
-preds10 <- predict(modTdTT10Horn, newdat = newdat10, type = 'response', se.fit = TRUE, re.form = NA)
-preds20 <- predict(modTdTT20Horn, newdat = newdat20, type = 'response', se.fit = TRUE, re.form = NA)
+logit <- function(p) return(log(p/(1-p)))
+invlogit <- function(x) return(1/(1+exp(-x)))
 
-newdat5$Horn.sc <- preds5$fit
-newdat5$Horn.sc.se <- preds5$se.fit
-newdat10$Horn.sc <- preds10$fit
-newdat10$Horn.sc.se <- preds10$se.fit
-newdat20$Horn.sc <- preds20$fit
-newdat20$Horn.sc.se <- preds20$se.fit
+coefs5 <- (summary(modTdTT5Horn)$coefficients) # get the model coefficients
+coefs10 <- (summary(modTdTT10Horn)$coefficients)
+coefs20 <- (summary(modTdTT20Horn)$coefficients)
+
+newdat5$Horn.sc <- predict(modTdTT5Horn, newdat = newdat5, type = 'response', se.fit = FALSE, re.form = NA) # make the predictions
+newdat10$Horn.sc <- predict(modTdTT10Horn, newdat = newdat10, type = 'response', se.fit = FALSE, re.form = NA)
+newdat20$Horn.sc <- predict(modTdTT20Horn, newdat = newdat20, type = 'response', se.fit = FALSE, re.form = NA)
+
+newdat5$Horn.sc.dTu <- invlogit(logit(newdat5$Horn.sc) + 
+                                  newdat5$tempchange_abs.sc * newdat5$duration.sc *
+                                  coefs5$cond[3,2]) # upper bound on tempchange coef
+newdat5$Horn.sc.dTl <- invlogit(logit(newdat5$Horn.sc) - 
+                                  newdat5$tempchange_abs.sc * newdat5$duration.sc *
+                                  coefs5$cond[3,2]) # lower bound on tempchange coef
+newdat5$Horn.sc.Tu <- invlogit(logit(newdat5$Horn.sc) + 
+                                 newdat5$tempave_metab.sc * newdat5$duration.sc *
+                                 coefs5$cond[4,2]) # upper bound on tempchange coef
+newdat5$Horn.sc.Tl <- invlogit(logit(newdat5$Horn.sc) - 
+                                 newdat5$tempave_metab.sc * newdat5$duration.sc *
+                                 coefs5$cond[4,2]) # lower bound on tempchange coef
+
+newdat10$Horn.sc.dTu <- invlogit(logit(newdat10$Horn.sc) + 
+                                  newdat10$tempchange_abs.sc * newdat10$duration.sc *
+                                  coefs10$cond[3,2]) # upper bound on tempchange coef
+newdat10$Horn.sc.dTl <- invlogit(logit(newdat10$Horn.sc) - 
+                                  newdat10$tempchange_abs.sc * newdat10$duration.sc *
+                                  coefs10$cond[3,2]) # lower bound on tempchange coef
+newdat10$Horn.sc.Tu <- invlogit(logit(newdat10$Horn.sc) + 
+                                 newdat10$tempave_metab.sc * newdat10$duration.sc *
+                                 coefs10$cond[4,2]) # upper bound on tempchange coef
+newdat10$Horn.sc.Tl <- invlogit(logit(newdat10$Horn.sc) - 
+                                 newdat10$tempave_metab.sc * newdat10$duration.sc *
+                                 coefs10$cond[4,2]) # lower bound on tempchange coef
+
+newdat20$Horn.sc.dTu <- invlogit(logit(newdat20$Horn.sc) + 
+                                  newdat20$tempchange_abs.sc * newdat20$duration.sc *
+                                  coefs20$cond[3,2]) # upper bound on tempchange coef
+newdat20$Horn.sc.dTl <- invlogit(logit(newdat20$Horn.sc) - 
+                                  newdat20$tempchange_abs.sc * newdat20$duration.sc *
+                                  coefs20$cond[3,2]) # lower bound on tempchange coef
+newdat20$Horn.sc.Tu <- invlogit(logit(newdat20$Horn.sc) + 
+                                 newdat20$tempave_metab.sc * newdat20$duration.sc *
+                                 coefs20$cond[4,2]) # upper bound on tempchange coef
+newdat20$Horn.sc.Tl <- invlogit(logit(newdat20$Horn.sc) - 
+                                 newdat20$tempave_metab.sc * newdat20$duration.sc *
+                                 coefs20$cond[4,2]) # lower bound on tempchange coef
+
 
 # write out
 write.csv(newdat5, 'temp/modTdTT5_preds.csv', row.names = FALSE)
@@ -568,21 +608,50 @@ slope <- function(duration, Horn.sc){
   mod <- lm(Horn.sc ~ duration)
   return(coef(mod)[2])
 }
-slopese <- function(duration, Horn.sc){
-  mod <- lm(Horn.sc ~ duration)
-  return(sqrt(diag(vcov(mod))))
-}
 slope5 <- newdat5[, .(Hornslope = slope(duration, Horn.sc), 
-                      Hornslopese = slopese(duration, Horn.sc)), by = .(tempchange_abs, tempave_metab)]
+                      HornslopedTu = slope(duration, Horn.sc.dTu),
+                      HornslopedTl = slope(duration, Horn.sc.dTl), 
+                      HornslopeTu = slope(duration, Horn.sc.Tu),
+                      HornslopeTl = slope(duration, Horn.sc.Tl)), 
+                  by = .(tempchange_abs, tempave_metab)]
+slope10 <- newdat10[, .(Hornslope = slope(duration, Horn.sc), 
+                      HornslopedTu = slope(duration, Horn.sc.dTu),
+                      HornslopedTl = slope(duration, Horn.sc.dTl), 
+                      HornslopeTu = slope(duration, Horn.sc.Tu),
+                      HornslopeTl = slope(duration, Horn.sc.Tl)), 
+                  by = .(tempchange_abs, tempave_metab)]
+slope20 <- newdat20[, .(Hornslope = slope(duration, Horn.sc), 
+                      HornslopedTu = slope(duration, Horn.sc.dTu),
+                      HornslopedTl = slope(duration, Horn.sc.dTl), 
+                      HornslopeTu = slope(duration, Horn.sc.Tu),
+                      HornslopeTl = slope(duration, Horn.sc.Tl)), 
+                  by = .(tempchange_abs, tempave_metab)]
 
-p1 <- ggplot(slope5, aes(x=tempchange_abs, y=Hornslope, ymin=Hornslope-Hornslopese, ymax=Hornslope+Hornslopese)) +
+p1 <- ggplot(slope5, aes(x=tempchange_abs, y=Hornslope, ymin=HornslopedTu, ymax=HornslopedTl)) +
   geom_line() + 
-  geom_ribbon(alpha=0.5)
+  geom_ribbon(alpha=0.2)
   
-p2 <- ggplot(slope5, aes(tempave_metab, Hornslope)) +
-  geom_line()
+p2 <- ggplot(slope5, aes(x=tempave_metab, y=Hornslope, ymin=HornslopeTu, ymax=HornslopeTl)) +
+  geom_line() +
+  geom_ribbon(alpha=0.2)
 
-grid.arrange(p1, p2, ncol = 2)
+p3 <- ggplot(slope10, aes(x=tempchange_abs, y=Hornslope, ymin=HornslopedTu, ymax=HornslopedTl)) +
+  geom_line() + 
+  geom_ribbon(alpha=0.2)
+  
+p4 <- ggplot(slope10, aes(x=tempave_metab, y=Hornslope, ymin=HornslopeTu, ymax=HornslopeTl)) +
+  geom_line() +
+  geom_ribbon(alpha=0.2)
+
+p5 <- ggplot(slope20, aes(x=tempchange_abs, y=Hornslope, ymin=HornslopedTu, ymax=HornslopedTl)) +
+  geom_line() + 
+  geom_ribbon(alpha=0.2)
+  
+p6 <- ggplot(slope20, aes(x=tempave_metab, y=Hornslope, ymin=HornslopeTu, ymax=HornslopeTl)) +
+  geom_line() +
+  geom_ribbon(alpha=0.2)
+
+grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 2)
 ```
 
 ## Full models w/ only main effects
