@@ -241,22 +241,22 @@ aics - min(aics)
 ```
 
 ### Summary of the chosen model
-### 3 years
+#### 3 years
 ```{r, echo=FALSE}
 summary(mods3[[which(names(mods3)=='modRF2levdisprealm3')]])
 ```
 
-### 5 years
+#### 5 years
 ```{r, echo=FALSE}
 summary(mods5[[which(names(mods5)=='modRFslopeRE2levdisprealm5')]])
 ```
 
-### 10 years
+#### 10 years
 ```{r, echo=FALSE}
 summary(mods10[[which(names(mods10)=='modRFslopeRE2levdisprealm10')]])
 ```
 
-### 20 years
+#### 20 years
 ```{r, echo=FALSE}
 summary(mods20[[which(names(mods20)=='modRFslopeRE2levdisprealm20')]])
 ```
@@ -654,58 +654,134 @@ p6 <- ggplot(slope20, aes(x=tempave_metab, y=Hornslope, ymin=HornslopeTu, ymax=H
 grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 2)
 ```
 
-## Full models w/ only main effects
-These are a main focus right now, though the dissimilarities have not been corrected for alpha & gamma diversity as in Chase et al Ecosphere.
+## Compare models
 
 ### Load the models
 ```{r, echo=FALSE}
-# all years
-if(file.exists('temp/modMainTdTSeMiNPNspMaHuJtu.rds')) modMainJtu <- readRDS('temp/modMainTdTSeMiNPNspMaHuJtu.rds') # mass, endoecto, microclimate, NPP, humans
-if(file.exists('temp/modMainTdTSeMiNPNspMaHu1yrJtu.rds')) modMain1yrJtu <- readRDS('temp/modMainTdTSeMiNPNspMaHu1yrJtu.rds')
-if(file.exists('temp/modMainTdTSeMiNPNspMaHu5yrJtu.rds')) modMain5yrJtu <- readRDS('temp/modMainTdTSeMiNPNspMaHu5yrJtu.rds')
-if(file.exists('temp/modMainTdTSeMiNPNspMaHu10yrJtu.rds')) modMain10yrJtu <- readRDS('temp/modMainTdTSeMiNPNspMaHu10yrJtu.rds')
+modnames <- c('modNull', 'modRealm', 'modT', 'moddT', 'modmass', 'modnpp', 'modseas', 'modmicroclim', 'modhuman', 'modTdT', 'modTmicroclim', 'moddTmicroclim', 'modTdTmicroclim', 'modTdTT', 'modTdTTRealm', 'modTdTTtsign', 'modTdTTmass', 'modTdTTnpp', 'modTdTTseas', 'modTdTTmicroclim', 'modTdTThuman')
 
-if(file.exists('temp/modMainTdTSeMiNPNspMaHuJbeta.rds')) modMainJbeta <- readRDS('temp/modMainTdTSeMiNPNspMaHuJbeta.rds')
-if(file.exists('temp/modMainTdTSeMiNPNspMaHu1yrJbeta.rds')) modMain1yrJbeta <- readRDS('temp/modMainTdTSeMiNPNspMaHu1yrJbeta.rds')
-if(file.exists('temp/modMainTdTSeMiNPNspMaHu10yrJbeta.rds')) modMain10yrJbeta <- readRDS('temp/modMainTdTSeMiNPNspMaHu10yrJbeta.rds')
+# 5 yrs Jtu
+mods5Jtu <- vector('list', length = length(modnames))
+names(mods5Jtu) <- paste0(modnames, '5Jtu')
+for(i in 1:length(mods5Jtu)){
+  if(file.exists(here('temp', paste0(names(mods5Jtu)[i], '.rds')))){ 
+    mods5Jtu[[i]] <- readRDS(here('temp', paste0(names(mods5Jtu)[i], '.rds')))
+  }
+}
 
-if(file.exists('temp/modMainTdTSeMiNPNspMaHuHorn.rds')) modMainHorn <- readRDS('temp/modMainTdTSeMiNPNspMaHuHorn.rds')
-if(file.exists('temp/modMainTdTSeMiNPNspMaHu1yrHorn.rds')) modMain1yrHorn <- readRDS('temp/modMainTdTSeMiNPNspMaHu1yrHorn.rds')
-if(file.exists('temp/modMainTdTSeMiNPNspMaHu10yrHorn.rds')) modMain10yrHorn <- readRDS('temp/modMainTdTSeMiNPNspMaHu10yrHorn.rds')
+# 5 yrs Jne
 
+# 5 yrs Horn
+mods5Horn <- vector('list', length = length(modnames))
+names(mods5Horn) <- paste0(modnames, '5Horn')
+for(i in 1:length(mods5Horn)){
+  if(file.exists(here('temp', paste0(names(mods5Horn)[i], '.rds')))){ 
+    mods5Horn[[i]] <- readRDS(here('temp', paste0(names(mods5Horn)[i], '.rds')))
+  }
+}
+
+# 10 yrs Jtu
+mods10Jtu <- vector('list', length = length(modnames))
+names(mods10Jtu) <- paste0(modnames, '10Jtu')
+for(i in 1:length(mods10Jtu)){
+  if(file.exists(here('temp', paste0(names(mods10Jtu)[i], '.rds')))){ 
+    mods10Jtu[[i]] <- readRDS(here('temp', paste0(names(mods10Jtu)[i], '.rds')))
+  }
+}
+
+# 10 yrs Jne
+
+
+# 10 yrs Horn
+mods10Horn <- vector('list', length = length(modnames))
+names(mods10Horn) <- paste0(modnames, '10Horn')
+for(i in 1:length(mods10Horn)){
+  if(file.exists(here('temp', paste0(names(mods10Horn)[i], '.rds')))){ 
+    mods10Horn[[i]] <- readRDS(here('temp', paste0(names(mods10Horn)[i], '.rds')))
+  }
+}
+# 20 yrs Jtu
+mods20Jtu <- vector('list', length = length(modnames))
+names(mods20Jtu) <- paste0(modnames, '20Jtu')
+for(i in 1:length(mods20Jtu)){
+  if(file.exists(here('temp', paste0(names(mods20Jtu)[i], '.rds')))){ 
+    mods20Jtu[[i]] <- readRDS(here('temp', paste0(names(mods20Jtu)[i], '.rds')))
+  }
+}
+
+# 20 yrs Horn
+mods20Horn <- vector('list', length = length(modnames))
+names(mods20Horn) <- paste0(modnames, '20Horn')
+for(i in 1:length(mods20Horn)){
+  if(file.exists(here('temp', paste0(names(mods20Horn)[i], '.rds')))){ 
+    mods20Horn[[i]] <- readRDS(here('temp', paste0(names(mods20Horn)[i], '.rds')))
+  }
+}
 ```
 
-### Summary
+### AIC
 #### Jtu
-##### All
+##### 5 years
 ```{r, echo=FALSE}
-if(exists('modMainJtu')) summary(modMainJtu)
+nobs <- sapply(mods5Jtu, FUN = function(x) x$modelInfo$nobs)
+print(nobs)
+modes <- sapply(X = mods5Jtu, FUN = mode)
+if(!all(unlist(nobs[modes == 'list']) == nobs[modes == 'list'][1])) print('NOT ALL THE SAME! AIC is meaningless')
+aics <- sapply(X = mods5Jtu[modes == 'list'], FUN = AIC)
+t(t(aics - min(aics)))
 ```
 
-##### 1 yr
+##### 10 years
 ```{r, echo=FALSE}
-if(exists('modMain1yrJtu')) summary(modMain1yrJtu)
+nobs <- sapply(mods10Jtu, FUN = function(x) x$modelInfo$nobs)
+print(nobs)
+modes <- sapply(X = mods10Jtu, FUN = mode)
+if(!all(unlist(nobs[modes == 'list']) == nobs[modes == 'list'][1])) print('NOT ALL THE SAME! AIC is meaningless')
+modes <- sapply(X = mods10Jtu, FUN = mode)
+aics <- sapply(X = mods10Jtu[modes == 'list'], FUN = AIC)
+t(t(aics - min(aics)))
 ```
 
-##### 10 yr
+##### 20 years
 ```{r, echo=FALSE}
-if(exists('modMain10yrJtu'))  summary(modMain10yrJtu)
+nobs <- sapply(mods20Jtu, FUN = function(x) x$modelInfo$nobs)
+print(nobs)
+modes <- sapply(X = mods20Jtu, FUN = mode)
+if(!all(unlist(nobs[modes == 'list']) == nobs[modes == 'list'][1])) print('NOT ALL THE SAME! AIC is meaningless')
+aics <- sapply(X = mods20Jtu[modes == 'list'], FUN = AIC)
+t(t(aics - min(aics)))
+
 ```
 
 #### Horn
-##### All
+##### 5 years
 ```{r, echo=FALSE}
-if(exists('modMainHorn')) summary(modMainHorn)
+nobs <- sapply(mods5Horn, FUN = function(x) x$modelInfo$nobs)
+print(nobs)
+if(!all(nobs == nobs[1])) print('NOT ALL THE SAME! AIC is meaningless')
+modes <- sapply(X = mods5Horn, FUN = mode)
+aics <- sapply(X = mods5Horn[modes == 'list'], FUN = AIC)
+t(t(aics - min(aics)))
 ```
 
-##### 1 yr
+##### 10 years
 ```{r, echo=FALSE}
-if(exists('modMain1yrHorn')) summary(modMain1yrHorn)
+nobs <- sapply(mods10Horn, FUN = function(x) x$modelInfo$nobs)
+print(nobs)
+if(!all(nobs == nobs[1])) print('NOT ALL THE SAME! AIC is meaningless')
+modes <- sapply(X = mods10Horn, FUN = mode)
+aics <- sapply(X = mods10Horn[modes == 'list'], FUN = AIC)
+t(t(aics - min(aics)))
 ```
 
-##### 10 yr
+##### 20 years
 ```{r, echo=FALSE}
-if(exists('modMain10yrHorn'))summary(modMain10yrHorn)
+nobs <- sapply(mods20Horn, FUN = function(x) x$modelInfo$nobs)
+print(nobs)
+if(!all(nobs == nobs[1])) print('NOT ALL THE SAME! AIC is meaningless')
+modes <- sapply(X = mods20Horn, FUN = mode)
+aics <- sapply(X = mods20Horn[modes == 'list'], FUN = AIC)
+t(t(aics - min(aics)))
 ```
 
 
