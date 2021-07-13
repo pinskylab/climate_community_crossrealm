@@ -56,6 +56,9 @@ i5Horn <- trends5[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_me
 i10Horn <- trends10[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
 i20Horn <- trends20[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
 
+trends5Jtu <- trends5[i5Jtu,]
+trends5Horn <- trends5[i5Horn,]
+
 ## Compare variance structures with duration.sc ############################
 #fixed <- 'Jtu.sc ~ tempchange_abs.sc*REALM + tempchange_abs.sc*tempave_metab.sc + tempchange_abs.sc*duration.sc'
 fixed <- 'Jtu.sc ~ duration.sc + REALM:duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + mass.sc:duration.sc + nspp.sc:duration.sc + seas.sc:duration.sc + microclim.sc:duration.sc + npp.sc:duration.sc + human_bowler.sc:REALM2:duration.sc'
@@ -763,6 +766,7 @@ if(fitmod == 'modRealm20Horn'){
     MATCHMOD <- TRUE
 }
 
+# SINGLE FACTORS ############################
 # T:duration ############################
 
 if(fitmod == 'modT5Jtu'){
@@ -1223,6 +1227,60 @@ if(fitmod == 'modhuman20Horn'){
 }
 
 
+# T+SINGLE FACTORS ############################
+# T+REALM:duration ############################
+
+if(fitmod == 'modTRealm5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTRealm10Jtu'){
+    print(paste(sum(i10Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTRealm20Jtu'){
+    print(paste(sum(i20Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+
+if(fitmod == 'modTRealm5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTRealm10Horn'){
+    print(paste(sum(i10Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTRealm20Horn'){
+    print(paste(sum(i20Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
 # T+dT:duration ############################
 
 if(fitmod == 'modTdT5Jtu'){
@@ -1276,27 +1334,29 @@ if(fitmod == 'modTdT20Horn'){
     MATCHMOD <- TRUE
 }
 
-# T+REALM:duration ############################
 
-if(fitmod == 'modTRealm5Jtu'){
+# T+mass:duration ############################
+
+if(fitmod == 'modTmass5Jtu'){
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       (duration.sc||STUDY_ID/rarefyID), 
                    data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
-if(fitmod == 'modTRealm10Jtu'){
+if(fitmod == 'modTmass10Jtu'){
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
-if(fitmod == 'modTRealm20Jtu'){
+if(fitmod == 'modTmass20Jtu'){
     print(paste(sum(i20Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
@@ -1304,25 +1364,133 @@ if(fitmod == 'modTRealm20Jtu'){
 }
 
 
-if(fitmod == 'modTRealm5Horn'){
+if(fitmod == 'modTmass5Horn'){
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
-if(fitmod == 'modTRealm10Horn'){
+if(fitmod == 'modTmass10Horn'){
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
-if(fitmod == 'modTRealm20Horn'){
+if(fitmod == 'modTmass20Horn'){
     print(paste(sum(i20Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# T+npp:duration ############################
+
+if(fitmod == 'modTnpp5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       (duration.sc||STUDY_ID/rarefyID), 
+                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTnpp10Jtu'){
+    print(paste(sum(i10Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTnpp20Jtu'){
+    print(paste(sum(i20Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+
+if(fitmod == 'modTnpp5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTnpp10Horn'){
+    print(paste(sum(i10Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTnpp20Horn'){
+    print(paste(sum(i20Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# T+seas:duration ############################
+
+if(fitmod == 'modTseas5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       (duration.sc||STUDY_ID/rarefyID), 
+                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTseas10Jtu'){
+    print(paste(sum(i10Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTseas20Jtu'){
+    print(paste(sum(i20Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+
+if(fitmod == 'modTseas5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTseas10Horn'){
+    print(paste(sum(i10Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTseas20Horn'){
+    print(paste(sum(i20Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
@@ -1383,6 +1551,62 @@ if(fitmod == 'modTmicroclim20Horn'){
 }
 
 
+
+
+# T+human:duration ############################
+
+if(fitmod == 'modThuman5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modThuman10Jtu'){
+    print(paste(sum(i10Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modThuman20Jtu'){
+    print(paste(sum(i20Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+
+if(fitmod == 'modThuman5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modThuman10Horn'){
+    print(paste(sum(i10Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modThuman20Horn'){
+    print(paste(sum(i20Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# dT+SINGLE FACTORS ############################
 # dT+REALM:duration ############################
 
 if(fitmod == 'moddTRealm5Jtu'){
@@ -1430,6 +1654,164 @@ if(fitmod == 'moddTRealm10Horn'){
 if(fitmod == 'moddTRealm20Horn'){
     print(paste(sum(i20Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# dT+mass:duration ############################
+
+if(fitmod == 'moddTmass5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTmass10Jtu'){
+    print(paste(sum(i10Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTmass20Jtu'){
+    print(paste(sum(i20Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'moddTmass5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTmass10Horn'){
+    print(paste(sum(i10Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTmass20Horn'){
+    print(paste(sum(i20Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# dT+npp:duration ############################
+
+if(fitmod == 'moddTnpp5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + 
+                       (duration.sc||STUDY_ID/rarefyID), 
+                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTnpp10Jtu'){
+    print(paste(sum(i10Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTnpp20Jtu'){
+    print(paste(sum(i20Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+
+if(fitmod == 'moddTnpp5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTnpp10Horn'){
+    print(paste(sum(i10Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTnpp20Horn'){
+    print(paste(sum(i20Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# dT+seas:duration ############################
+
+if(fitmod == 'moddTseas5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTseas10Jtu'){
+    print(paste(sum(i10Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTseas20Jtu'){
+    print(paste(sum(i20Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'moddTseas5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTseas10Horn'){
+    print(paste(sum(i10Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTseas20Horn'){
+    print(paste(sum(i20Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
@@ -1489,196 +1871,68 @@ if(fitmod == 'moddTmicroclim20Horn'){
     MATCHMOD <- TRUE
 }
 
-# T:REALM:duration ############################
+# dT+human:duration ############################
 
-if(fitmod == 'modTxRealm5Jtu'){
+if(fitmod == 'moddThuman5Jtu'){
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
-if(fitmod == 'modTxRealm10Jtu'){
+if(fitmod == 'moddThuman10Jtu'){
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
-if(fitmod == 'modTxRealm20Jtu'){
+if(fitmod == 'moddThuman20Jtu'){
     print(paste(sum(i20Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-
-if(fitmod == 'modTxRealm5Horn'){
+if(fitmod == 'moddThuman5Horn'){
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
-if(fitmod == 'modTxRealm10Horn'){
+if(fitmod == 'moddThuman10Horn'){
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
-if(fitmod == 'modTxRealm20Horn'){
+if(fitmod == 'moddThuman20Horn'){
     print(paste(sum(i20Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-# dT:REALM:duration ############################
-
-if(fitmod == 'moddTxRealm5Jtu'){
-    print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'moddTxRealm10Jtu'){
-    print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'moddTxRealm20Jtu'){
-    print(paste(sum(i20Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
 
 
-if(fitmod == 'moddTxRealm5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'moddTxRealm10Horn'){
-    print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'moddTxRealm20Horn'){
-    print(paste(sum(i20Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-
-# T:dT:duration ############################
-
-if(fitmod == 'modTdTT5Jtu'){
-    print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                       data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                       dispformula = ~nspp.sc+REALM, 
-                       control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'modTdTT10Jtu'){
-    print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                        data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                        dispformula = ~nspp.sc+REALM, 
-                        control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'modTdTT20Jtu'){
-    print(paste(sum(i20Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                        data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
-                        dispformula = ~nspp.sc+REALM, 
-                        control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-
-if(fitmod == 'modTdTT5Jne'){
-    print(paste(sum(i5Jne), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Jne,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'modTdTT10Jne'){
-    print(paste(sum(i10Jne), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jne,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'modTdTT20Jne'){
-    print(paste(sum(i20Jne), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends20[i20Jne,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
-    MATCHMOD <- TRUE
-}
-
-if(fitmod == 'modTdTT5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                        data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                        dispformula = ~nspp.sc+REALM, 
-                        control = glmmTMBControl(profile=TRUE))
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'modTdTT10Horn'){
-    print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                         data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                         dispformula = ~nspp.sc+REALM, 
-                         control = glmmTMBControl(profile=TRUE))
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'modTdTT20Horn'){
-    print(paste(sum(i20Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                         data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
-                         dispformula = ~nspp.sc+REALM, 
-                         control = glmmTMBControl(profile=TRUE))
-    MATCHMOD <- TRUE
-}
-
-# T+dT:REALM:duration #########################
+# TdT+SINGLE FACTORS ############################
+# T+dT+REALM:duration #########################
 
 if(fitmod == 'modTdTRealm5Jtu'){
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
+                       tempchange_abs.sc:duration.sc + 
+                       tempave_metab.sc:duration.sc +
                        (duration.sc||STUDY_ID/rarefyID), 
                    data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1689,8 +1943,8 @@ if(fitmod == 'modTdTRealm5Jtu'){
 if(fitmod == 'modTdTRealm10Jtu'){ 
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
+                       tempchange_abs.sc:duration.sc + 
+                       tempave_metab.sc:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1700,8 +1954,8 @@ if(fitmod == 'modTdTRealm10Jtu'){
 if(fitmod == 'modTdTRealm20Jtu'){
     print(paste(sum(i20Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
+                       tempchange_abs.sc:duration.sc + 
+                       tempave_metab.sc:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1712,8 +1966,8 @@ if(fitmod == 'modTdTRealm20Jtu'){
 if(fitmod == 'modTdTRealm5Jne'){
     print(paste(sum(i5Jne), 'data points'))
     mod <- glmmTMB(Jne.sc ~ REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
+                       tempchange_abs.sc:duration.sc + 
+                       tempave_metab.sc:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Jne,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1723,8 +1977,8 @@ if(fitmod == 'modTdTRealm5Jne'){
 if(fitmod == 'modTdTRealm10Jne'){
     print(paste(sum(i10Jne), 'data points'))
     mod <- glmmTMB(Jne.sc ~ REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
+                       tempchange_abs.sc:duration.sc + 
+                       tempave_metab.sc:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jne,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1734,8 +1988,8 @@ if(fitmod == 'modTdTRealm10Jne'){
 if(fitmod == 'modTdTRealm20Jne'){
     print(paste(sum(i20Jne), 'data points'))
     mod <- glmmTMB(Jne.sc ~ REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
+                       tempchange_abs.sc:duration.sc + 
+                       tempave_metab.sc:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends20[i20Jne,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1746,8 +2000,8 @@ if(fitmod == 'modTdTRealm20Jne'){
 if(fitmod == 'modTdTRealm5Horn'){ # Horn
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
+                       tempchange_abs.sc:duration.sc + 
+                       tempave_metab.sc:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1758,8 +2012,8 @@ if(fitmod == 'modTdTRealm5Horn'){ # Horn
 if(fitmod == 'modTdTRealm10Horn'){ 
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
+                       tempchange_abs.sc:duration.sc + 
+                       tempave_metab.sc:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1769,8 +2023,8 @@ if(fitmod == 'modTdTRealm10Horn'){
 if(fitmod == 'modTdTRealm20Horn'){
     print(paste(sum(i20Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ REALM:duration.sc +
-                       tempchange_abs.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
+                       tempchange_abs.sc:duration.sc + 
+                       tempave_metab.sc:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1778,151 +2032,6 @@ if(fitmod == 'modTdTRealm20Horn'){
     MATCHMOD <- TRUE
 }
 
-
-# try on Antao et al. 2020-style dataset
-# use tempchange, not tempchange_abs
-if(fitmod == 'modAntaoTdTTRealm5'){ # trims out freshwater and >60 or <23.5 deg lat, like Antao et al. 2020
-    i5 <- trends5[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                      complete.cases(Jtu.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    print(paste(sum(i5), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange.sc:duration.sc + 
-                       REALM:duration.sc +
-                       tempchange.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'modAntaoTdTTRealm10'){ # trims out freshwater and >60 or <23.5 deg lat, like Antao et al. 2020
-    i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                      complete.cases(Jtu.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    print(paste(sum(i10), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange.sc:duration.sc + 
-                       REALM:duration.sc +
-                       tempchange.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-   MATCHMOD <- TRUE
-}
-if(fitmod == 'modAntaoTdTTRealm20'){ # trims out freshwater and >60 or <23.5 deg lat, like Antao et al. 2020
-    i20 <- trends20[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                      complete.cases(Jtu.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    print(paste(sum(i20), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange.sc:duration.sc + 
-                       REALM:duration.sc +
-                       tempchange.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends20[i20,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    print(summary(mod))
-    saveRDS(mod, file = 'temp/modAntaoTdTTRealm20.rds')
-    print('saved modAntaoTdTTRealm20.rds')
-    print(Sys.time())
-    print(performance::r2(mod))
-    MATCHMOD <- TRUE
-}
-
-if(fitmod == 'modAntaoTdTTRealm5Jne'){ # Jne, like gains/losses of Antao et al. 2020
-    i5 <- trends5[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                      complete.cases(Jne.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    print(paste(sum(i5), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange.sc:duration.sc + 
-                       REALM:duration.sc +
-                       tempchange.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'modAntaoTdTTRealm10Jne'){
-    i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                      complete.cases(Jne.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    print(paste(sum(i10), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange.sc:duration.sc + 
-                       REALM:duration.sc +
-                       tempchange.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'modAntaoTdTTRealm20Jne'){
-    i20 <- trends20[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                        complete.cases(Jne.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    print(paste(sum(i20), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange.sc:duration.sc + 
-                       REALM:duration.sc +
-                       tempchange.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends20[i20,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-
-if(fitmod == 'modAntaoTdTTRealm5Horn'){ # Horn
-    i5 <- trends5[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                      complete.cases(Horn.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    print(paste(sum(i5), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange.sc:duration.sc + 
-                       REALM:duration.sc +
-                       tempchange.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'modAntaoTdTTRealm10Horn'){
-    i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                        complete.cases(Horn.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    print(paste(sum(i10), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange.sc:duration.sc + 
-                       REALM:duration.sc +
-                       tempchange.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-if(fitmod == 'modAntaoTdTTRealm20Horn'){
-    i20 <- trends20[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                        complete.cases(Horn.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    print(paste(sum(i20), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange.sc:duration.sc + 
-                       REALM:duration.sc +
-                       tempchange.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends20[i20,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
 
 # T+dT:tsign:duration #########################
 
@@ -2188,7 +2297,7 @@ if(fitmod == 'modTdTnpp20Horn'){
     MATCHMOD <- TRUE
 }
 
-# T:dT+seas:duration #########################
+# T+dT+seas:duration #########################
 
 if(fitmod == 'modTdTseas5Jtu'){
     print(paste(sum(i5Jtu), 'data points'))
@@ -2253,7 +2362,7 @@ if(fitmod == 'modTdTseas20Horn'){
 }
 
 
-# T:dT+microclim:duration #########################
+# T+dT+microclim:duration #########################
 
 if(fitmod == 'modTdTmicroclim5Jtu'){
     print(paste(sum(i5Jtu), 'data points'))
@@ -2318,7 +2427,7 @@ if(fitmod == 'modTdTmicroclim20Horn'){
     MATCHMOD <- TRUE
 }
 
-# T:dT+human:duration #########################
+# T+dT+human:duration #########################
 
 if(fitmod == 'modTdThuman5Jtu'){
     print(paste(sum(i5Jtu), 'data points'))
@@ -2382,6 +2491,624 @@ if(fitmod == 'modTdThuman20Horn'){
     MATCHMOD <- TRUE
 }
 
+# T INTERACTION WITH SINGLE FACTORS ############################
+# T:REALM:duration ############################
+
+if(fitmod == 'modTxRealm5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
+                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTxRealm10Jtu'){
+    print(paste(sum(i10Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTxRealm20Jtu'){
+    print(paste(sum(i20Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+
+if(fitmod == 'modTxRealm5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTxRealm10Horn'){
+    print(paste(sum(i10Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTxRealm20Horn'){
+    print(paste(sum(i20Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# T:dT:duration ############################
+
+if(fitmod == 'modTdTT5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTT10Jtu'){
+    print(paste(sum(i10Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTT20Jtu'){
+    print(paste(sum(i20Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modTdTT5Jne'){
+    print(paste(sum(i5Jne), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Jne,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTT10Jne'){
+    print(paste(sum(i10Jne), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Jne,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTT20Jne'){
+    print(paste(sum(i20Jne), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Jne,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modTdTT5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTT10Horn'){
+    print(paste(sum(i10Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modTdTT20Horn'){
+    print(paste(sum(i20Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+# T:mass:duration ############################
+if(fitmod == 'modTxmass5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Jtu, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modTxmass5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Horn, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+# T:npp:duration ############################
+if(fitmod == 'modTxnpp5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:npp.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Jtu, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modTxnpp5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:npp.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Horn, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+# T:seas:duration ############################
+if(fitmod == 'modTxseas5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:seas.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Jtu, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modTxseas5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:seas.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Horn, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+# T:microclim:duration ############################
+if(fitmod == 'modTxmicroclim5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Jtu, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modTxmicroclim5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Horn, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+# T:human:duration ############################
+if(fitmod == 'modTxhuman5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Jtu, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modTxhuman5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Horn, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+# dT INTERACTION WITH SINGLE FACTORS ############################
+# dT:REALM:duration ############################
+
+if(fitmod == 'moddTxRealm5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTxRealm10Jtu'){
+    print(paste(sum(i10Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTxRealm20Jtu'){
+    print(paste(sum(i20Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+
+if(fitmod == 'moddTxRealm5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTxRealm10Horn'){
+    print(paste(sum(i10Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTxRealm20Horn'){
+    print(paste(sum(i20Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# dT:tsign:duration #########################
+
+if(fitmod == 'moddTtsign5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc + 
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTtsign10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    print(paste(sum(i10Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTtsign20Jtu'){
+    print(paste(sum(i20Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Jtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'moddTtsign5Jne'){
+    print(paste(sum(i5Jne), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Jne,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTtsign10Jne'){
+    print(paste(sum(i10Jne), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Jne,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTtsign20Jne'){
+    print(paste(sum(i20Jne), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Jne,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'moddTtsign5Horn'){ # Horn
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTtsign10Horn'){
+    print(paste(sum(i10Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'moddTtsign20Horn'){
+    print(paste(sum(i20Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ tsign:duration.sc +
+                       tempchange_abs.sc:tsign:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# dT:mass:duration ############################
+if(fitmod == 'moddTxmass5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Jtu, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'moddTxmass5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Horn, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+# dT:npp:duration ############################
+if(fitmod == 'moddTxnpp5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:npp.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Jtu, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'moddTxnpp5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:npp.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Horn, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+# dT:seas:duration ############################
+if(fitmod == 'moddTxseas5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:seas.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Jtu, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'moddTxseas5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:seas.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Horn, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+# dT:microclim:duration ############################
+if(fitmod == 'moddTxmicroclim5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Jtu, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'moddTxmicroclim5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Horn, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+# dT:human:duration ############################
+if(fitmod == 'moddTxhuman5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Jtu, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'moddTxhuman5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Horn, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+
+
+# T+dT:REALM:duration Antao-style dataset #########################
+
+# try on Antao et al. 2020-style dataset
+# use tempchange, not tempchange_abs
+if(fitmod == 'modAntaoTdTTRealm5'){ # trims out freshwater and >60 or <23.5 deg lat, like Antao et al. 2020
+    i5 <- trends5[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                      complete.cases(Jtu.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i5), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modAntaoTdTTRealm10'){ # trims out freshwater and >60 or <23.5 deg lat, like Antao et al. 2020
+    i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                        complete.cases(Jtu.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i10), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modAntaoTdTTRealm20'){ # trims out freshwater and >60 or <23.5 deg lat, like Antao et al. 2020
+    i20 <- trends20[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                        complete.cases(Jtu.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i20), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(mod))
+    saveRDS(mod, file = 'temp/modAntaoTdTTRealm20.rds')
+    print('saved modAntaoTdTTRealm20.rds')
+    print(Sys.time())
+    print(performance::r2(mod))
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modAntaoTdTTRealm5Jne'){ # Jne, like gains/losses of Antao et al. 2020
+    i5 <- trends5[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                      complete.cases(Jne.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i5), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modAntaoTdTTRealm10Jne'){
+    i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                        complete.cases(Jne.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i10), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modAntaoTdTTRealm20Jne'){
+    i20 <- trends20[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                        complete.cases(Jne.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i20), 'data points'))
+    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modAntaoTdTTRealm5Horn'){ # Horn
+    i5 <- trends5[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                      complete.cases(Horn.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i5), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5[i5,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modAntaoTdTTRealm10Horn'){
+    i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                        complete.cases(Horn.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i10), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends10[i10,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+if(fitmod == 'modAntaoTdTTRealm20Horn'){
+    i20 <- trends20[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                        complete.cases(Horn.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
+    print(paste(sum(i20), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:tempchange.sc:duration.sc + 
+                       REALM:duration.sc +
+                       tempchange.sc:REALM:duration.sc + 
+                       tempave_metab.sc:REALM:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends20[i20,], family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
 
 # Null models ############################
 

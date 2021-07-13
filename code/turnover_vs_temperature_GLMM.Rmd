@@ -638,7 +638,151 @@ p2 <- ggplot(slope5, aes(x=tempave_metab, y=Hornslope, ymin=HornslopeTu, ymax=Ho
 grid.arrange(p1, p2, ncol = 2)
 ```
 
-## Temperature+temperature slope:REALM & duration models
+## Temperature+REALM : duration models
+### Load the models
+```{r, eval=FALSE, echo=FALSE}
+modTRealm5Jtu <- readRDS('temp/modTRealm5Jtu.rds')
+modTRealm5Horn <- readRDS('temp/modTRealm5Horn.rds')
+```
+
+### Plot the response
+#### Set up and write to file
+Only run this once.
+```{r, eval=FALSE, echo=FALSE}
+scaling5 <- fread('output/turnover_w_covariates_scaling5.csv') # the scalings
+
+# find a study in all 3 datasets to use as the random effect
+# ranef(modTdTTRealm5Horn))
+
+# set up the variables to plot
+vars <- data.frame(vars = c('tempave_metab'),
+                   min =      c(-10), 
+                   max =      c(40),
+                   len =      c(100),
+                   discrete = c(F),
+                   stringsAsFactors = FALSE)
+basetab5 <- data.table(expand.grid(start = 1:4, end = 2:5, nspp.sc = 0, REALM = c('Terrestrial', 'Freshwater', 'Marine'), STUDY_ID = 195L, rarefyID = '195_289043', tempchange_abs.sc = 0, tempave_metab.sc = 0)) # the base case
+basetab5[, duration := end - start]
+if(scaling5[var == 'duration.sc', log]) basetab5[, duration.sc := (log(duration) - scaling5[var == 'duration.sc', center])/scaling5[var == 'duration.sc', scale]]
+if(!scaling5[var == 'duration.sc', log]) basetab5[, duration.sc := (duration - scaling5[var == 'duration.sc', center])/scaling5[var == 'duration.sc', scale]]
+basetab5 <- basetab5[duration > 0, ]
+
+# make the data frames for each interaction to plot                
+for(j in 1:nrow(vars)){
+    # set up the main effects
+    if(scaling5[var == paste0(vars$vars[j], '.sc'), log]){
+        thisdat <- data.frame(new = 10^seq(log10(vars$min[j]), log10(vars$max[j]), length.out = vars$len[j]),
+                              var = vars$vars[j], stringsAsFactors = FALSE)
+    } 
+    if(!scaling5[var == paste0(vars$vars[j], '.sc'), log]){
+        thisdat <- data.frame(new = seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
+                              var = vars$vars[j], stringsAsFactors = FALSE)
+    }
+    names(thisdat) <- c(vars$vars[j], 'var')
+    
+    # scale the variable
+    cent <- scaling5[var == paste0(vars$vars[j], '.sc'), center]
+    scl <- scaling5[var == paste0(vars$vars[j], '.sc'), scale]
+    lg <- scaling5[var == paste0(vars$vars[j], '.sc'), log]
+    plus <- scaling5[var == paste0(vars$vars[j], '.sc'), plus]
+    if(is.null(cent)) cent <- 0
+    if(!is.null(cent) & !is.null(scl)){
+        if(lg) thisdat[[paste0(vars$var[j], '.sc')]] <- (log(thisdat[[vars$vars[j]]] + plus) - cent)/scl
+        if(!lg) thisdat[[paste0(vars$var[j], '.sc')]] <- (thisdat[[vars$var[j]]] - cent)/scl
+    }
+    
+    # merge with the rest of the columns
+    expand.grid.df <- function(...) Reduce(function(...) merge(..., by=NULL), list(...)) # https://stackoverflow.com/questions/11693599/alternative-to-expand-grid-for-data-frames
+    colnamestouse <- setdiff(colnames(basetab5), paste0(vars$vars[j], '.sc'))
+    thisdat5 <- expand.grid.df(thisdat, basetab5[, ..colnamestouse])
+    
+    # merge with the previous iterations
+    if(j == 1){
+      newdat5 <- thisdat5
+    }
+    if(j > 1){
+        colstoadd <- setdiff(colnames(thisdat5), colnames(newdat5))
+        for(toadd in colstoadd){
+            newdat5[[toadd]] <- NA
+        }
+        
+        colstoadd2 <- setdiff(colnames(newdat5), colnames(thisdat5))
+        for(toadd in colstoadd2){
+            thisdat5[[toadd]] <- NA
+        }
+        
+        newdat5 <- rbind(newdat5, thisdat5)
+    } 
+}
+newdat5 <- as.data.table(newdat5)
+
+# predict (takes a few minutes on Annotate)
+logit <- function(p) return(log(p/(1-p)))
+invlogit <- function(x) return(1/(1+exp(-x)))
+
+coefs5Jtu <- summary(modTdTRealm5Jtu)$coefficients$cond # get the model coefficients and SE
+terms5Jtu <- rownames(coefs5Jtu)
+
+newdat5[, Jtu.sc := predict(modTdTRealm5Jtu, newdat = newdat5, type = 'response', 
+                            se.fit = FALSE, re.form = NA)] # make the predictions
+
+newdat5[, Jtu.sc.Tu := invlogit(logit(Jtu.sc) + 
+                                 tempave_metab.sc * duration.sc *
+                                 coefs5Jtu[terms5Jtu == 'duration.sc:tempave_metab.sc',2])] # upper bound on T coef
+newdat5[, Jtu.sc.Tl := invlogit(logit(Jtu.sc) - 
+                                 tempave_metab.sc * duration.sc *
+                                 coefs5Jtu[terms5Jtu == 'duration.sc:tempave_metab.sc',2])]
+
+## Horn
+coefs5Horn <- summary(modTdTRealm5Horn)$coefficients$cond # get the model coefficients and SE
+terms5Horn <- rownames(coefs5Horn)
+
+newdat5[, Horn.sc := predict(modTdTRealm5Horn, newdat = newdat5, type = 'response', 
+                             se.fit = FALSE, re.form = NA)] # make the predictions
+
+newdat5[, Horn.sc.Tu := invlogit(logit(Horn.sc) + 
+                                 tempave_metab.sc * duration.sc *
+                                 coefs5Horn[terms5Horn == 'duration.sc:tempave_metab.sc',2])] # upper bound on T coef
+newdat5[, Horn.sc.Tl := invlogit(logit(Horn.sc) - 
+                                 tempave_metab.sc * duration.sc *
+                                 coefs5Horn[terms5Horn == 'duration.sc:tempave_metab.sc',2])]
+
+
+# write out
+write.csv(newdat5, 'temp/modTRealm5_preds.csv', row.names = FALSE)
+
+```
+
+#### Plot
+```{r}
+# load predictions
+newdat5 <- fread('temp/modTRealm5_preds.csv')
+
+# calc duration slope per temp:tempchange level
+slope <- function(duration, diss){
+  mod <- lm(diss ~ duration)
+  return(coef(mod)[2])
+}
+slope5 <- newdat5[, .(Jtuslope = slope(duration, Jtu.sc), 
+                      JtuslopeTu = slope(duration, Jtu.sc.Tu),
+                      JtuslopeTl = slope(duration, Jtu.sc.Tl),
+                      Hornslope = slope(duration, Horn.sc), 
+                      HornslopeTu = slope(duration, Horn.sc.Tu),
+                      HornslopeTl = slope(duration, Horn.sc.Tl)), 
+                  by = .(tempave_metab)]
+
+p1 <- ggplot(slope5, aes(x=tempave_metab, y=Jtuslope, ymin=JtuslopeTu, ymax=JtuslopeTl)) +
+  geom_line() +
+  geom_ribbon(alpha=0.2)
+
+p2 <- ggplot(slope5, aes(x=tempave_metab, y=Hornslope, ymin=HornslopeTu, ymax=HornslopeTl)) +
+  geom_line() +
+  geom_ribbon(alpha=0.2)
+
+grid.arrange(p1, p2, ncol = 2)
+```
+
+## Temperature+temperature slope+REALM : duration models
 ### Load the models
 ```{r, eval=FALSE, echo=FALSE}
 modTdTRealm5Jtu <- readRDS('temp/modTdTRealm5Jtu.rds')
@@ -723,98 +867,98 @@ invlogit <- function(x) return(1/(1+exp(-x)))
 coefs5Jtu <- summary(modTdTRealm5Jtu)$coefficients$cond # get the model coefficients and SE
 terms5Jtu <- rownames(coefs5Jtu)
 
-newdat5$Jtu.sc <- predict(modTdTRealm5Jtu, newdat = newdat5, type = 'response', se.fit = FALSE, re.form = NA) # make the predictions
+newdat5[, Jtu.sc := predict(modTdTRealm5Jtu, newdat = newdat5, type = 'response', 
+                            se.fit = FALSE, re.form = NA)] # make the predictions
 
-newdat5[REALM == 'Freshwater', Jtu.sc.FreshdTu := invlogit(logit(Jtu.sc) + 
+newdat5[, Jtu.sc.dTu := invlogit(logit(Jtu.sc) + 
+                                      tempchange_abs.sc * duration.sc *
+                                      coefs5Jtu[terms5Jtu == 
+                                                  'duration.sc:tempchange_abs.sc',2])] # upper bound on dT coef
+newdat5[, Jtu.sc.dTl := invlogit(logit(Jtu.sc) - 
                                   tempchange_abs.sc * duration.sc *
-                                  coefs5Jtu[terms5Jtu == 'REALMFreshwater:duration.sc:tempchange_abs.sc',2]) # upper bound on dT coef freshwater
-newdat5[REALM == 'Freshwater', Jtu.sc.FreshdTl <- invlogit(logit(Jtu.sc) - 
-                                  tempchange_abs.sc * duration.sc *
-                                  coefs5Jtu[terms5Jtu == 'REALMFreshwater:duration.sc:tempchange_abs.sc',2]) # lower bound
-newdat5[REALM == 'Marine', Jtu.sc.MardTu <- invlogit(logit(Jtu.sc) + 
-                                  tempchange_abs.sc * duration.sc *
-                                  coefs5Jtu[terms5Jtu == 'REALMMarine:duration.sc:tempchange_abs.sc',2])
-newdat5[REALM == 'Marine', Jtu.sc.MardTl <- invlogit(logit(Jtu.sc) - 
-                                  tempchange_abs.sc * duration.sc *
-                                  coefs5Jtu[terms5Jtu == 'REALMMarine:duration.sc:tempchange_abs.sc',2])
-newdat5[REALM == 'Terrestrial', Jtu.sc.TerrdTu <- invlogit(logit(Jtu.sc) + 
-                                  tempchange_abs.sc * duration.sc *
-                                  coefs5Jtu[terms5Jtu == 'REALMTerrestrial:duration.sc:tempchange_abs.sc',2])
-newdat5[REALM == 'Terrestrial', Jtu.sc.TerrdTl <- invlogit(logit(Jtu.sc) - 
-                                  tempchange_abs.sc * duration.sc *
-                                  coefs5Jtu[terms5Jtu == 'REALMTerrestrial:duration.sc:tempchange_abs.sc',2])
+                                  coefs5Jtu[terms5Jtu == 'duration.sc:tempchange_abs.sc',2])] # lower bound
 
-newdat5[REALM == 'Freshwater', Jtu.sc.FreshTu <- invlogit(logit(Jtu.sc) + 
+newdat5[, Jtu.sc.Tu := invlogit(logit(Jtu.sc) + 
                                  tempave_metab.sc * duration.sc *
-                                 coefs5Jtu[terms5Jtu == 'REALMFreshwater:duration.sc:tempave_metab.sc',2]) # upper bound on T coef
-newdat5[REALM == 'Freshwater', Jtu.sc.FreshTl <- invlogit(logit(Jtu.sc) - 
+                                 coefs5Jtu[terms5Jtu == 'duration.sc:tempave_metab.sc',2])] # upper bound on T coef
+newdat5[, Jtu.sc.Tl := invlogit(logit(Jtu.sc) - 
                                  tempave_metab.sc * duration.sc *
-                                 coefs5Jtu[terms5Jtu == 'REALMFreshwater:duration.sc:tempave_metab.sc',2]) # lower bound
-newdat5[REALM == 'Marine', Jtu.sc.MarTu <- invlogit(logit(Jtu.sc) + 
+                                 coefs5Jtu[terms5Jtu == 'duration.sc:tempave_metab.sc',2])]
+
+## Horn
+coefs5Horn <- summary(modTdTRealm5Horn)$coefficients$cond # get the model coefficients and SE
+terms5Horn <- rownames(coefs5Horn)
+
+newdat5[, Horn.sc := predict(modTdTRealm5Horn, newdat = newdat5, type = 'response', 
+                             se.fit = FALSE, re.form = NA)] # make the predictions
+
+newdat5[, Horn.sc.dTu := invlogit(logit(Horn.sc) + 
+                                      tempchange_abs.sc * duration.sc *
+                                      coefs5Horn[terms5Horn == 
+                                                  'duration.sc:tempchange_abs.sc',2])] # upper bound on dT coef
+newdat5[, Horn.sc.dTl := invlogit(logit(Horn.sc) - 
+                                  tempchange_abs.sc * duration.sc *
+                                  coefs5Horn[terms5Horn == 'duration.sc:tempchange_abs.sc',2])] # lower bound
+
+newdat5[, Horn.sc.Tu := invlogit(logit(Horn.sc) + 
                                  tempave_metab.sc * duration.sc *
-                                 coefs5Jtu[terms5Jtu == 'REALMMarine:duration.sc:tempave_metab.sc',2])
-newdat5[REALM == 'Marine', Jtu.sc.MarTl <- invlogit(logit(Jtu.sc) - 
+                                 coefs5Horn[terms5Horn == 'duration.sc:tempave_metab.sc',2])] # upper bound on T coef
+newdat5[, Horn.sc.Tl := invlogit(logit(Horn.sc) - 
                                  tempave_metab.sc * duration.sc *
-                                 coefs5Jtu[terms5Jtu == 'REALMMarine:duration.sc:tempave_metab.sc',2])
-newdat5[REALM == 'Terrestrial', Jtu.sc.TerrTu <- invlogit(logit(Jtu.sc) + 
-                                 tempave_metab.sc * duration.sc *
-                                 coefs5Jtu[terms5Jtu == 'REALMTerrestrial:duration.sc:tempave_metab.sc',2])
-newdat5[REALM == 'Terrestrial', Jtu.sc.TerrTl <- invlogit(logit(Jtu.sc) - 
-                                 tempave_metab.sc * duration.sc *
-                                 coefs5Jtu[terms5Jtu == 'REALMTerrestrial:duration.sc:tempave_metab.sc',2])
+                                 coefs5Horn[terms5Horn == 'duration.sc:tempave_metab.sc',2])]
+
 
 # write out
-write.csv(newdat5, 'temp/modTdTTRealm5_preds.csv', row.names = FALSE)
+write.csv(newdat5, 'temp/modTdTRealm5_preds.csv', row.names = FALSE)
 
 ```
 
 #### Plot
 ```{r}
 # load predictions
-newdat5 <- fread('temp/modTdTT5_preds.csv')
-newdat10 <- fread('temp/modTdTT10_preds.csv')
-newdat20 <- fread('temp/modTdTT20_preds.csv')
+newdat5 <- fread('temp/modTdTRealm5_preds.csv')
 
 # calc duration slope per temp:tempchange level
-slope <- function(duration, Horn.sc){
-  mod <- lm(Horn.sc ~ duration)
+slope <- function(duration, diss){
+  mod <- lm(diss ~ duration)
   return(coef(mod)[2])
 }
-slope5 <- newdat5[, .(Hornslope = slope(duration, Horn.sc), 
-                      HornslopedTu = slope(duration, Horn.sc.dTu),
-                      HornslopedTl = slope(duration, Horn.sc.dTl), 
-                      HornslopeTu = slope(duration, Horn.sc.Tu),
-                      HornslopeTl = slope(duration, Horn.sc.Tl)), 
-                  by = .(tempchange_abs, tempave_metab)]
-slope10 <- newdat10[, .(Hornslope = slope(duration, Horn.sc), 
-                      HornslopedTu = slope(duration, Horn.sc.dTu),
-                      HornslopedTl = slope(duration, Horn.sc.dTl), 
-                      HornslopeTu = slope(duration, Horn.sc.Tu),
-                      HornslopeTl = slope(duration, Horn.sc.Tl)), 
-                  by = .(tempchange_abs, tempave_metab)]
-slope20 <- newdat20[, .(Hornslope = slope(duration, Horn.sc), 
+slope5 <- newdat5[, .(Jtuslope = slope(duration, Jtu.sc), 
+                      JtuslopedTu = slope(duration, Jtu.sc.dTu),
+                      JtuslopedTl = slope(duration, Jtu.sc.dTl), 
+                      JtuslopeTu = slope(duration, Jtu.sc.Tu),
+                      JtuslopeTl = slope(duration, Jtu.sc.Tl),
+                      Hornslope = slope(duration, Horn.sc), 
                       HornslopedTu = slope(duration, Horn.sc.dTu),
                       HornslopedTl = slope(duration, Horn.sc.dTl), 
                       HornslopeTu = slope(duration, Horn.sc.Tu),
                       HornslopeTl = slope(duration, Horn.sc.Tl)), 
                   by = .(tempchange_abs, tempave_metab)]
 
-p1 <- ggplot(slope5, aes(x=tempchange_abs, y=Hornslope, ymin=HornslopedTu, ymax=HornslopedTl)) +
+p1 <- ggplot(slope5, aes(x=tempchange_abs, y=Jtuslope, ymin=JtuslopedTu, ymax=JtuslopedTl)) +
   geom_line() + 
   geom_ribbon(alpha=0.2)
   
-p2 <- ggplot(slope5, aes(x=tempave_metab, y=Hornslope, ymin=HornslopeTu, ymax=HornslopeTl)) +
+p2 <- ggplot(slope5, aes(x=tempave_metab, y=Jtuslope, ymin=JtuslopeTu, ymax=JtuslopeTl)) +
   geom_line() +
   geom_ribbon(alpha=0.2)
 
-grid.arrange(p1, p2, ncol = 2)
+p3 <- ggplot(slope5, aes(x=tempchange_abs, y=Hornslope, ymin=HornslopedTu, ymax=HornslopedTl)) +
+  geom_line() + 
+  geom_ribbon(alpha=0.2)
+  
+p4 <- ggplot(slope5, aes(x=tempave_metab, y=Hornslope, ymin=HornslopeTu, ymax=HornslopeTl)) +
+  geom_line() +
+  geom_ribbon(alpha=0.2)
+
+grid.arrange(p1, p2, p3, p4, ncol = 2)
 ```
 
 ## Compare models
 
 ### Load the models
 ```{r, echo=FALSE}
-modnames <- c('modNull', 'modRealm', 'modT', 'moddT', 'modmass', 'modnpp', 'modseas', 'modmicroclim', 'modhuman', 'modTdT', 'modTRealm', 'modTmicroclim', 'moddTRealm', 'moddTmicroclim', 'modTxRealm', 'moddTxRealm', 'modTdTRealm', 'modTdTtsign', 'modTdTmass', 'modTdTnpp', 'modTdTseas', 'modTdTmicroclim', 'modTdThuman', 'modTdTT')
+modnames <- c('modNull', 'modRealm', 'modT', 'moddT', 'modmass', 'modnpp', 'modseas', 'modmicroclim', 'modhuman', 'modTdT', 'modTRealm', 'modTmass', 'modTnpp', 'modTseas', 'modTmicroclim', 'modThuman', 'moddTRealm', 'moddTtsign', 'moddTmass', 'moddTnpp', 'moddTseas', 'moddTmicroclim', 'moddThuman', 'modTdTRealm', 'modTdTtsign', 'modTdTmass', 'modTdTnpp', 'modTdTseas', 'modTdTmicroclim', 'modTdThuman', 'modTdTT')
 
 # 5 yrs Jtu
 mods5Jtu <- vector('list', length = length(modnames))
@@ -889,7 +1033,8 @@ if(sum(conv==0) != length(conv)){
 }
 if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
 aics <- sapply(X = mods5Jtu[good], FUN = AIC)
-t(t(aics - min(aics)))
+daics <- data.frame(num=1:length(aics), daic=aics - min(aics))
+daics[daics[,2] < 4 | grepl('Null', rownames(daics)), ] # print null and dAIC<4
 ```
 
 ##### 10 years
@@ -904,7 +1049,7 @@ if(sum(conv==0) != length(conv)){
 }
 if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
 aics <- sapply(X = mods10Jtu[good], FUN = AIC)
-t(t(aics - min(aics)))
+cbind(1:length(aics), aics - min(aics))
 ```
 
 ##### 20 years
@@ -919,7 +1064,7 @@ if(sum(conv==0) != length(conv)){
 }
 if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
 aics <- sapply(X = mods20Jtu[good], FUN = AIC)
-t(t(aics - min(aics)))
+cbind(1:length(aics), aics - min(aics))
 ```
 
 #### Horn
@@ -935,7 +1080,8 @@ if(sum(conv==0) != length(conv)){
 }
 if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
 aics <- sapply(X = mods5Horn[good], FUN = AIC)
-t(t(aics - min(aics)))
+daics <- data.frame(num=1:length(aics), daic=aics - min(aics))
+daics[daics[,2] < 4 | grepl('Null', rownames(daics)), ] # print null and dAIC<4
 ```
 
 ##### 10 years
