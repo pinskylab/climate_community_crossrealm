@@ -814,7 +814,7 @@ grid.arrange(p1, p2, ncol = 2)
 
 ### Load the models
 ```{r, echo=FALSE}
-modnames <- c('modNull', 'modRealm', 'modT', 'moddT', 'modmass', 'modnpp', 'modseas', 'modmicroclim', 'modhuman', 'modTdT', 'modTmicroclim', 'moddTmicroclim', 'modTdTmicroclim', 'modTdTT', 'modTdTRealm', 'modTdTtsign', 'modTdTmass', 'modTdTnpp', 'modTdTseas', 'modTdTmicroclim', 'modTdThuman')
+modnames <- c('modNull', 'modRealm', 'modT', 'moddT', 'modmass', 'modnpp', 'modseas', 'modmicroclim', 'modhuman', 'modTdT', 'modTRealm', 'modTmicroclim', 'moddTRealm', 'moddTmicroclim', 'modTxRealm', 'moddTxRealm', 'modTdTRealm', 'modTdTtsign', 'modTdTmass', 'modTdTnpp', 'modTdTseas', 'modTdTmicroclim', 'modTdThuman', 'modTdTT')
 
 # 5 yrs Jtu
 mods5Jtu <- vector('list', length = length(modnames))
@@ -836,43 +836,43 @@ for(i in 1:length(mods5Horn)){
   }
 }
 
-# 10 yrs Jtu
-mods10Jtu <- vector('list', length = length(modnames))
-names(mods10Jtu) <- paste0(modnames, '10Jtu')
-for(i in 1:length(mods10Jtu)){
-  if(file.exists(here('temp', paste0(names(mods10Jtu)[i], '.rds')))){ 
-    mods10Jtu[[i]] <- readRDS(here('temp', paste0(names(mods10Jtu)[i], '.rds')))
-  }
-}
-
-# 10 yrs Jne
-
-
-# 10 yrs Horn
-mods10Horn <- vector('list', length = length(modnames))
-names(mods10Horn) <- paste0(modnames, '10Horn')
-for(i in 1:length(mods10Horn)){
-  if(file.exists(here('temp', paste0(names(mods10Horn)[i], '.rds')))){ 
-    mods10Horn[[i]] <- readRDS(here('temp', paste0(names(mods10Horn)[i], '.rds')))
-  }
-}
-# 20 yrs Jtu
-mods20Jtu <- vector('list', length = length(modnames))
-names(mods20Jtu) <- paste0(modnames, '20Jtu')
-for(i in 1:length(mods20Jtu)){
-  if(file.exists(here('temp', paste0(names(mods20Jtu)[i], '.rds')))){ 
-    mods20Jtu[[i]] <- readRDS(here('temp', paste0(names(mods20Jtu)[i], '.rds')))
-  }
-}
-
-# 20 yrs Horn
-mods20Horn <- vector('list', length = length(modnames))
-names(mods20Horn) <- paste0(modnames, '20Horn')
-for(i in 1:length(mods20Horn)){
-  if(file.exists(here('temp', paste0(names(mods20Horn)[i], '.rds')))){ 
-    mods20Horn[[i]] <- readRDS(here('temp', paste0(names(mods20Horn)[i], '.rds')))
-  }
-}
+# # 10 yrs Jtu
+# mods10Jtu <- vector('list', length = length(modnames))
+# names(mods10Jtu) <- paste0(modnames, '10Jtu')
+# for(i in 1:length(mods10Jtu)){
+#   if(file.exists(here('temp', paste0(names(mods10Jtu)[i], '.rds')))){ 
+#     mods10Jtu[[i]] <- readRDS(here('temp', paste0(names(mods10Jtu)[i], '.rds')))
+#   }
+# }
+# 
+# # 10 yrs Jne
+# 
+# 
+# # 10 yrs Horn
+# mods10Horn <- vector('list', length = length(modnames))
+# names(mods10Horn) <- paste0(modnames, '10Horn')
+# for(i in 1:length(mods10Horn)){
+#   if(file.exists(here('temp', paste0(names(mods10Horn)[i], '.rds')))){ 
+#     mods10Horn[[i]] <- readRDS(here('temp', paste0(names(mods10Horn)[i], '.rds')))
+#   }
+# }
+# # 20 yrs Jtu
+# mods20Jtu <- vector('list', length = length(modnames))
+# names(mods20Jtu) <- paste0(modnames, '20Jtu')
+# for(i in 1:length(mods20Jtu)){
+#   if(file.exists(here('temp', paste0(names(mods20Jtu)[i], '.rds')))){ 
+#     mods20Jtu[[i]] <- readRDS(here('temp', paste0(names(mods20Jtu)[i], '.rds')))
+#   }
+# }
+# 
+# # 20 yrs Horn
+# mods20Horn <- vector('list', length = length(modnames))
+# names(mods20Horn) <- paste0(modnames, '20Horn')
+# for(i in 1:length(mods20Horn)){
+#   if(file.exists(here('temp', paste0(names(mods20Horn)[i], '.rds')))){ 
+#     mods20Horn[[i]] <- readRDS(here('temp', paste0(names(mods20Horn)[i], '.rds')))
+#   }
+# }
 ```
 
 ### AIC
