@@ -712,7 +712,7 @@ if(fitmod == 'modRFdurlogslopeRE2levdisprealm20'){
 }
 
 
-
+# SINGLE FACTORS ############################
 # Realm:duration ############################
 
 if(fitmod == 'modRealm5Jtu'){
@@ -766,7 +766,6 @@ if(fitmod == 'modRealm20Horn'){
     MATCHMOD <- TRUE
 }
 
-# SINGLE FACTORS ############################
 # T:duration ############################
 
 if(fitmod == 'modT5Jtu'){
@@ -870,6 +869,27 @@ if(fitmod == 'moddT20Horn'){
                    data = trends20[i20Horn,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# sdT:duration ############################
+
+if(fitmod == 'modsdT5Jtu'){
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Jtu, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if(fitmod == 'modsdT5Horn'){
+    print(paste(sum(i5Horn), 'data points'))
+    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trends5Horn, family = beta_family(link = 'logit'), 
+                   dispformula = ~nspp.sc+REALM, 
+                   control = glmmTMBControl(profile=TRUE))
     MATCHMOD <- TRUE
 }
 
@@ -2624,8 +2644,9 @@ if(fitmod == 'modTdTT20Horn'){
 
 # T:mass:duration ############################
 if(fitmod == 'modTxmass5Jtu'){
-    print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    print(paste(nrow(trends5Jtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
@@ -2633,7 +2654,7 @@ if(fitmod == 'modTxmass5Jtu'){
 }
 
 if(fitmod == 'modTxmass5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
+    print(paste(nrow(trends5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -2644,7 +2665,8 @@ if(fitmod == 'modTxmass5Horn'){
 # T:npp:duration ############################
 if(fitmod == 'modTxnpp5Jtu'){
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:npp.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:npp.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
@@ -2663,7 +2685,8 @@ if(fitmod == 'modTxnpp5Horn'){
 # T:seas:duration ############################
 if(fitmod == 'modTxseas5Jtu'){
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:seas.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + 
+                       tempave_metab.sc:seas.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
@@ -2888,7 +2911,8 @@ if(fitmod == 'moddTxmass5Horn'){
 # dT:npp:duration ############################
 if(fitmod == 'moddTxnpp5Jtu'){
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:npp.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
+    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + 
+                       tempchange_abs.sc:npp.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
@@ -3110,6 +3134,23 @@ if(fitmod == 'modAntaoTdTTRealm20Horn'){
     MATCHMOD <- TRUE
 }
 
+# DREDGE FULL MODELS #########################
+if(fitmod == 'dredge5Jtu'){
+    print(paste(nrow(trends5Jtu), 'data points'))
+    modfull <- glmmTMB(formula(paste(fixed, '+(duration.sc||STUDY_ID/rarefyID)')), 
+                       data = trends5Jtu, 
+                       family = beta_family(link = 'logit'), 
+                       dispformula = ~nspp.sc+REALM, 
+                       control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    print(summary(modfull))
+    print(Sys.time())
+    print('Starting dredge')
+    mod <- lapply(dredge(modfull, fixed = c('disp(nspp.sc)', 'disp(REALM)'),
+                  rank = 'AIC',
+                  evaluate = FALSE), eval)
+    MATCHMOD <- TRUE
+}
+
 # Null models ############################
 
 if(fitmod == 'modNull5Jtu'){
@@ -3185,7 +3226,9 @@ if(MATCHMOD){
     saveRDS(mod, file = paste0('temp/', fitmod, '.rds'))
     print(paste0('saved ', fitmod, '.rds'))
     print(Sys.time())
-    print(performance::r2(mod))
+    if(!grepl('dredge', fitmod)){
+        print(performance::r2(mod)) # run if not a dredge object
+    }
 }
 
 print(warnings())

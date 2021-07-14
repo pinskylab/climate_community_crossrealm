@@ -958,7 +958,7 @@ grid.arrange(p1, p2, p3, p4, ncol = 2)
 
 ### Load the models
 ```{r, echo=FALSE}
-modnames <- c('modNull', 'modRealm', 'modT', 'moddT', 'modmass', 'modnpp', 'modseas', 'modmicroclim', 'modhuman', 'modTdT', 'modTRealm', 'modTmass', 'modTnpp', 'modTseas', 'modTmicroclim', 'modThuman', 'moddTRealm', 'moddTtsign', 'moddTmass', 'moddTnpp', 'moddTseas', 'moddTmicroclim', 'moddThuman', 'modTdTRealm', 'modTdTtsign', 'modTdTmass', 'modTdTnpp', 'modTdTseas', 'modTdTmicroclim', 'modTdThuman', 'modTdTT')
+modnames <- c('modNull', 'modRealm', 'modT', 'moddT', 'modmass', 'modnpp', 'modseas', 'modmicroclim', 'modhuman', 'modTdT', 'modTRealm', 'modTmass', 'modTnpp', 'modTseas', 'modTmicroclim', 'modThuman', 'moddTRealm', 'moddTtsign', 'moddTmass', 'moddTnpp', 'moddTseas', 'moddTmicroclim', 'moddThuman', 'modTdTRealm', 'modTdTtsign', 'modTdTmass', 'modTdTnpp', 'modTdTseas', 'modTdTmicroclim', 'modTdThuman', 'modTdTT', 'modTxRealm', 'modTxmass', 'modTxnpp', 'modTxseas', 'modTxmicroclim', 'modTxhuman', 'moddTxRealm', 'moddTxmass', 'moddTxnpp', 'moddTxseas', 'moddTxmicroclim', 'moddTxhuman')
 
 # 5 yrs Jtu
 mods5Jtu <- vector('list', length = length(modnames))
@@ -1023,18 +1023,27 @@ for(i in 1:length(mods5Horn)){
 #### Jtu
 ##### 5 years
 ```{r, echo=FALSE}
+checkconv <- function(x){
+  if(is.null(x)){
+    return(-1)
+  } else {
+    return(x$fit$convergence)
+  }
+}
 nobs <- sapply(mods5Jtu, FUN = function(x) x$modelInfo$nobs)
-modes <- sapply(X = mods5Jtu, FUN = mode)
-conv <- sapply(mods5Jtu, FUN = function(x) return(x$fit$convergence))
-good <- modes == 'list' & conv == 0
-if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
+nulls <- sapply(X = mods5Jtu, FUN = is.null)
+conv <- sapply(mods5Jtu, FUN = checkconv)
+good <- !nulls & conv == 0
+if(sum(nulls) >0){
+  print(paste0('Did not fit: ', paste0(names(mods5Jtu)[nulls], collapse = ', ')))
+}
 if(sum(conv==0) != length(conv)){
-  print(paste0('Did not converge: ', paste0(names(mods5Jtu)[conv != 0], collapse = ', ')))
+  print(paste0('Did not converge: ', paste0(names(mods5Jtu)[conv > 0], collapse = ', ')))
 }
 if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
 aics <- sapply(X = mods5Jtu[good], FUN = AIC)
 daics <- data.frame(num=1:length(aics), daic=aics - min(aics))
-daics[daics[,2] < 4 | grepl('Null', rownames(daics)), ] # print null and dAIC<4
+daics[daics[,2] < 10 | grepl('Null', rownames(daics)), ] # print null and dAIC<4
 ```
 
 ##### 10 years
@@ -1070,18 +1079,27 @@ cbind(1:length(aics), aics - min(aics))
 #### Horn
 ##### 5 years
 ```{r, echo=FALSE}
+checkconv <- function(x){
+  if(is.null(x)){
+    return(-1)
+  } else {
+    return(x$fit$convergence)
+  }
+}
 nobs <- sapply(mods5Horn, FUN = function(x) x$modelInfo$nobs)
-modes <- sapply(X = mods5Horn, FUN = mode)
-conv <- sapply(mods5Horn, FUN = function(x) return(x$fit$convergence))
-good <- modes == 'list' & conv == 0
-if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
+nulls <- sapply(X = mods5Horn, FUN = is.null)
+conv <- sapply(mods5Horn, FUN = checkconv)
+good <- !nulls & conv == 0
+if(sum(nulls) >0){
+  print(paste0('Did not fit: ', paste0(names(mods5Horn)[nulls], collapse = ', ')))
+}
 if(sum(conv==0) != length(conv)){
-  print(paste0('Did not converge: ', paste0(names(mods5Horn)[conv != 0], collapse = ', ')))
+  print(paste0('Did not converge: ', paste0(names(mods5Horn)[conv > 0], collapse = ', ')))
 }
 if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
 aics <- sapply(X = mods5Horn[good], FUN = AIC)
 daics <- data.frame(num=1:length(aics), daic=aics - min(aics))
-daics[daics[,2] < 4 | grepl('Null', rownames(daics)), ] # print null and dAIC<4
+daics[daics[,2] < 5 | grepl('Null', rownames(daics)), ] # print null and dAIC<4
 ```
 
 ##### 10 years
