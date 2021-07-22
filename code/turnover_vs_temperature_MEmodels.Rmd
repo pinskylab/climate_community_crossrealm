@@ -17,6 +17,9 @@ library(MASS) # for stepAIC
 library(DHARMa) # for model evaluation
 library(performance) # for r2() for nlme models
 library(scales) # for defining custom scales in ggplot
+library(here) # for finding local files
+library(MuMIn) # for model averaging
+library(parallel) # for mclapply()
 
 options(width=500) # turn off most text wrapping
 
@@ -27,17 +30,12 @@ signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, invers
 
 # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
-```
 
-
-```{r load data}
 # Dissimilarity slope and covariates assembled by assemble_slope_covariates.Rmd
-trends <- fread('output/slope_w_covariates.csv.gz')
-scaling <- fread('output/slope_w_covariates_scaling.csv')
+trends <- fread(here('output', 'slope_w_covariates.csv.gz'))
+scaling <- fread(here('output', 'slope_w_covariates_scaling.csv'))
 scaling$center <- as.numeric(scaling$center)
-```
 
-```{r set up useful vars}
 # set realm order
 trends[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
 trends[, tsign := sign(temptrend)]
@@ -245,127 +243,129 @@ testDispersion(res_bestVar)
 
 ## Temperature-trend-only models
 ### Fit the models
+20-year models commented out because don't converge.
 ```{r LME temperature only}
 
 form <- formula('disstrend ~ abs(temptrend) + (1|STUDY_ID)')
 dispform <- formula('~nspp.sc + REALM + taxa_mod2 + trendse')
 
 # Jtu
-if(file.exists('temp/modslopeTtrendJtu3.rds')){
-  modslopeTtrendJtu3 <- readRDS('temp/modslopeTtrendJtu3.rds')
+if(file.exists(here('temp', 'modslopeTtrendJtu3.rds'))){
+  modslopeTtrendJtu3 <- readRDS(here('temp','modslopeTtrendJtu3.rds'))
 } else {
   i <- trends[, complete.cases(disstrend, temptrend) & duration == 2 & measure == 'Jtu']
   modslopeTtrendJtu3 <- glmmTMB(form, disp = dispform, data = trends[i,])
-  saveRDS(modslopeTtrendJtu3, file = 'temp/modslopeTtrendJtu3.rds')
+  saveRDS(modslopeTtrendJtu3, file = here('temp','modslopeTtrendJtu3.rds'))
 }
 
-if(file.exists('temp/modslopeTtrendJtu5.rds')){
-  modslopeTtrendJtu5 <- readRDS('temp/modslopeTtrendJtu5.rds')
+if(file.exists(here('temp', 'modslopeTtrendJtu5.rds'))){
+  modslopeTtrendJtu5 <- readRDS(here('temp', 'modslopeTtrendJtu5.rds'))
 } else {
   i <- trends[, complete.cases(disstrend, temptrend) & duration == 4 & measure == 'Jtu']
   modslopeTtrendJtu5 <- glmmTMB(form, disp = dispform, data = trends[i,])
-  saveRDS(modslopeTtrendJtu5, file = 'temp/modslopeTtrendJtu5.rds')
+  saveRDS(modslopeTtrendJtu5, file = here('temp', 'modslopeTtrendJtu5.rds'))
 }
 
-if(file.exists('temp/modslopeTtrendJtu10.rds')){
-  modslopeTtrendJtu10 <- readRDS('temp/modslopeTtrendJtu10.rds')
+if(file.exists(here('temp', 'modslopeTtrendJtu10.rds'))){
+  modslopeTtrendJtu10 <- readRDS(here('temp', 'modslopeTtrendJtu10.rds'))
 } else {
   i <- trends[, complete.cases(disstrend, temptrend) & duration == 9 & measure == 'Jtu']
   modslopeTtrendJtu10 <- glmmTMB(form, disp = dispform, data = trends[i,])
-  saveRDS(modslopeTtrendJtu10, file = 'temp/modslopeTtrendJtu10.rds')
+  saveRDS(modslopeTtrendJtu10, file = here('temp', 'modslopeTtrendJtu10.rds'))
 }
 
-if(file.exists('temp/modslopeTtrendJtu20.rds')){
-  modslopeTtrendJtu20 <- readRDS('temp/modslopeTtrendJtu20.rds')
-} else {
-  i <- trends[, complete.cases(disstrend, temptrend) & duration == 19 & measure == 'Jtu']
-  modslopeTtrendJtu20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(profile=TRUE))
-  saveRDS(modslopeTtrendJtu20, file = 'temp/modslopeTtrendJtu20.rds')
-}
+# if(file.exists(here('temp', 'modslopeTtrendJtu20.rds'))){
+#   modslopeTtrendJtu20 <- readRDS(here('temp', 'modslopeTtrendJtu20.rds'))
+# } else {
+#   i <- trends[, complete.cases(disstrend, temptrend) & duration == 19 & measure == 'Jtu']
+#   modslopeTtrendJtu20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(profile=TRUE))
+#   saveRDS(modslopeTtrendJtu20, file = here('temp', 'modslopeTtrendJtu20.rds'))
+# }
 
 # Jbeta
-if(file.exists('temp/modslopeTtrendJbeta3.rds')){
-  modslopeTtrendJbeta3 <- readRDS('temp/modslopeTtrendJbeta3.rds')
+if(file.exists(here('temp', 'modslopeTtrendJbeta3.rds'))){
+  modslopeTtrendJbeta3 <- readRDS(here('temp', 'modslopeTtrendJbeta3.rds'))
 } else {
   i <- trends[, complete.cases(disstrend, temptrend) & duration == 2 & measure == 'Jbeta']
   modslopeTtrendJbeta3 <- glmmTMB(form, disp = dispform, data = trends[i,])
-  saveRDS(modslopeTtrendJbeta3, file = 'temp/modslopeTtrendJbeta3.rds')
+  saveRDS(modslopeTtrendJbeta3, file = here('temp', 'modslopeTtrendJbeta3.rds'))
 }
 
-if(file.exists('temp/modslopeTtrendJbeta5.rds')){
-  modslopeTtrendJbeta5 <- readRDS('temp/modslopeTtrendJbeta5.rds')
+if(file.exists(here('temp', 'modslopeTtrendJbeta5.rds'))){
+  modslopeTtrendJbeta5 <- readRDS(here('temp', 'modslopeTtrendJbeta5.rds'))
 } else {
   i <- trends[, complete.cases(disstrend, temptrend) & duration == 4 & measure == 'Jbeta']
   modslopeTtrendJbeta5 <- glmmTMB(form, disp = dispform, data = trends[i,])
-  saveRDS(modslopeTtrendJbeta5, file = 'temp/modslopeTtrendJbeta5.rds')
+  saveRDS(modslopeTtrendJbeta5, file = here('temp', 'modslopeTtrendJbeta5.rds'))
 }
 
-if(file.exists('temp/modslopeTtrendJbeta10.rds')){
-  modslopeTtrendJbeta10 <- readRDS('temp/modslopeTtrendJbeta10.rds')
+if(file.exists(here('temp', 'modslopeTtrendJbeta10.rds'))){
+  modslopeTtrendJbeta10 <- readRDS(here('temp', 'modslopeTtrendJbeta10.rds'))
 } else {
   i <- trends[, complete.cases(disstrend, temptrend) & duration == 9 & measure == 'Jbeta']
   modslopeTtrendJbeta10 <- glmmTMB(form, disp = dispform, data = trends[i,])
-  saveRDS(modslopeTtrendJbeta10, file = 'temp/modslopeTtrendJbeta10.rds')
+  saveRDS(modslopeTtrendJbeta10, file = here('temp', 'modslopeTtrendJbeta10.rds'))
 }
-
-if(file.exists('temp/modslopeTtrendJbeta20.rds')){
-  modslopeTtrendJbeta20 <- readRDS('temp/modslopeTtrendJbeta20.rds')
-} else {
-  i <- trends[, complete.cases(disstrend, temptrend) & duration == 19 & measure == 'Jbeta']
-  modslopeTtrendJbeta20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(profile=TRUE))
-  saveRDS(modslopeTtrendJbeta20, file = 'temp/modslopeTtrendJbeta20.rds')
-}
+# 
+# if(file.exists(here('temp', 'modslopeTtrendJbeta20.rds'))){
+#   modslopeTtrendJbeta20 <- readRDS(here('temp', 'modslopeTtrendJbeta20.rds'))
+# } else {
+#   i <- trends[, complete.cases(disstrend, temptrend) & duration == 19 & measure == 'Jbeta']
+#   modslopeTtrendJbeta20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(profile=TRUE))
+#   saveRDS(modslopeTtrendJbeta20, file = here('temp', 'modslopeTtrendJbeta20.rds'))
+# }
 
 # Horn
-if(file.exists('temp/modslopeTtrendHorn3.rds')){
-  modslopeTtrendHorn3 <- readRDS('temp/modslopeTtrendHorn3.rds')
+if(file.exists(here('temp', 'modslopeTtrendHorn3.rds'))){
+  modslopeTtrendHorn3 <- readRDS(here('temp', 'modslopeTtrendHorn3.rds'))
 } else {
   i <- trends[, complete.cases(disstrend, temptrend) & duration == 2 & measure == 'Horn']
   modslopeTtrendHorn3 <- glmmTMB(form, disp = dispform, data = trends[i,])
-  saveRDS(modslopeTtrendHorn3, file = 'temp/modslopeTtrendHorn3.rds')
+  saveRDS(modslopeTtrendHorn3, file = here('temp', 'modslopeTtrendHorn3.rds'))
 }
 
-if(file.exists('temp/modslopeTtrendHorn5.rds')){
-  modslopeTtrendHorn5 <- readRDS('temp/modslopeTtrendHorn5.rds')
+if(file.exists(here('temp', 'modslopeTtrendHorn5.rds'))){
+  modslopeTtrendHorn5 <- readRDS(here('temp', 'modslopeTtrendHorn5.rds'))
 } else {
   i <- trends[, complete.cases(disstrend, temptrend) & duration == 4 & measure == 'Horn']
   modslopeTtrendHorn5 <- glmmTMB(form, disp = dispform, data = trends[i,])
-  saveRDS(modslopeTtrendHorn5, file = 'temp/modslopeTtrendHorn5.rds')
+  saveRDS(modslopeTtrendHorn5, file = here('temp', 'modslopeTtrendHorn5.rds'))
 }
 
-if(file.exists('temp/modslopeTtrendHorn10.rds')){
-  modslopeTtrendHorn10 <- readRDS('temp/modslopeTtrendHorn10.rds')
+if(file.exists(here('temp', 'modslopeTtrendHorn10.rds'))){
+  modslopeTtrendHorn10 <- readRDS(here('temp', 'modslopeTtrendHorn10.rds'))
 } else {
   i <- trends[, complete.cases(disstrend, temptrend) & duration == 9 & measure == 'Horn']
   modslopeTtrendHorn10 <- glmmTMB(form, disp = dispform, data = trends[i,])
-  saveRDS(modslopeTtrendHorn10, file = 'temp/modslopeTtrendHorn10.rds')
+  saveRDS(modslopeTtrendHorn10, file = here('temp', 'modslopeTtrendHorn10.rds'))
 }
 
-if(file.exists('temp/modslopeTtrendHorn20.rds')){
-  modslopeTtrendHorn20 <- readRDS('temp/modslopeTtrendHorn20.rds')
-} else {
-  i <- trends[, complete.cases(disstrend, temptrend) & duration == 19 & measure == 'Horn']
-  modslopeTtrendHorn20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(profile=TRUE))
-  saveRDS(modslopeTtrendHorn20, file = 'temp/modslopeTtrendHorn20.rds')
-}
+# if(file.exists(here('temp', 'modslopeTtrendHorn20.rds'))){
+#   modslopeTtrendHorn20 <- readRDS(here('temp', 'modslopeTtrendHorn20.rds'))
+# } else {
+#   i <- trends[, complete.cases(disstrend, temptrend) & duration == 19 & measure == 'Horn']
+#   modslopeTtrendHorn20 <- glmmTMB(form, disp = dispform, data = trends[i,], control = glmmTMBControl(profile=TRUE))
+#   saveRDS(modslopeTtrendHorn20, file = here('temp', 'modslopeTtrendHorn20.rds'))
+# }
 ```
 
 ### Summary
 ```{r summary of Tchangeonly mods}
-summary(modslopeTtrendJtu3)
-summary(modslopeTtrendJtu5)
-summary(modslopeTtrendJtu10)
-#summary(modslopeTtrendJtu20)
+rbind(cbind(summary(modslopeTtrendJtu3)$coefficients$cond, 'Jtu3'),
+cbind(summary(modslopeTtrendJtu5)$coefficients$cond, 'Jtu5'),
+#cbind(summary(modslopeTtrendJtu10)$coefficients$cond, 'Jtu10'),
+#cbind(summary(modslopeTtrendJtu20)$coefficients$cond, 'Jtu20'),
 
-summary(modslopeTtrendJbeta3)
-summary(modslopeTtrendJbeta5)
-summary(modslopeTtrendJbeta10)
-#summary(modslopeTtrendJbeta20)
+#cbind(summary(modslopeTtrendJbeta3)$coefficients$cond, 'Jbeta3'),
+#cbind(summary(modslopeTtrendJbeta5)$coefficients$cond, 'Jbeta5'),
+#cbind(summary(modslopeTtrendJbeta10)$coefficients$cond, 'Jbeta10'),
+#cbind(summary(modslopeTtrendJbeta20)$coefficients$cond, 'Jbeta20'),
 
-summary(modslopeTtrendHorn3)
-summary(modslopeTtrendHorn5)
-summary(modslopeTtrendHorn10)
-#summary(modslopeTtrendHorn20)
+cbind(summary(modslopeTtrendHorn3)$coefficients$cond, 'Horn3'),
+cbind(summary(modslopeTtrendHorn5)$coefficients$cond, 'Horn5')
+#cbind(summary(modslopeTtrendHorn10)$coefficients$cond, 'Horn10'),
+#cbind(summary(modslopeTtrendHorn20)$coefficients$cond, 'Horn20'),
+)
 ```
 
 ## Temperature-trend models with REALM
@@ -1496,56 +1496,71 @@ Clear that removing temperature trend makes the model quite a bit worse.
 This takes a couple days on a laptop to run if temp/ files not available.
 Not run when knitting
 ```{r simplify the full models, eval = FALSE}
-randef <- list(STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~1)
-varef <- varPower(-0.5, ~nyrBT)
+randef <- '+(1|STUDY_ID)'
+disp <- '~trendse'
+cont <- glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3))
+#fixed <- 'disstrend ~ temptrend_abs.sc*REALM + temptrend_abs.sc*tempave_metab.sc + temptrend_abs.sc*seas.sc + temptrend_abs.sc*microclim.sc + temptrend_abs.sc*nspp.sc + temptrend_abs.sc*npp.sc + temptrend_abs.sc*mass.sc + temptrend_abs.sc*human_bowler.sc:REALM2 + temptrend_abs.sc*thermal_bias.sc:tsign'
+fixed <- 'disstrend ~ temptrend_abs.sc*REALM + tempave_metab.sc + temptrend_abs.sc:tempave_metab.sc + mass.sc + temptrend_abs.sc:mass.sc + human_bowler.sc:REALM2 + temptrend_abs.sc:human_bowler.sc:REALM2'
+fixed <- 'disstrend ~ temptrend_abs.sc*REALM + tempave_metab.sc + temptrend_abs.sc:tempave_metab.sc + mass.sc + human_bowler.sc:REALM2'
+trends5Jtu <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
+                                    mass.sc, human_bowler.sc) & measure == 'Jtu' & duration == 4, ]
+trends5Horn <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
+                                    mass.sc, human_bowler.sc) & measure == 'Horn' & duration == 4, ]
 
-terms <- ' ~ tempchange_abs.sc*REALM + tempchange_abs.sc*tsign + tempchange_abs.sc*tempave_metab.sc + tempchange_abs.sc*seas.sc + tempchange_abs.sc*microclim.sc + tempchange_abs.sc*mass.sc + tempchange_abs.sc*speed.sc + tempchange_abs.sc*consumerfrac.sc + tempchange_abs.sc*nspp.sc + tempchange_abs.sc*thermal_bias.sc:tsign + tempchange_abs.sc*npp.sc + tempchange_abs.sc*veg.sc + tempchange_abs.sc*duration.sc + tempchange_abs.sc*human_bowler.sc:REALM2'
+fixed <- 'disstrend ~ temptrend_abs.sc + tempave_metab.sc + temptrend_abs.sc:tempave_metab.sc + mass.sc + human_bowler.sc'
+# trends5Jtu <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
+#                                     mass.sc, human_bowler.sc) & measure == 'Jtu' & duration == 4 & REALM == 'Terrestrial', ]
+# trends5Horn <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
+#                                     mass.sc, human_bowler.sc) & measure == 'Horn' & duration == 4 & REALM == 'Terrestrial', ]
+# trends5Jtu <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
+#                                     mass.sc, human_bowler.sc) & measure == 'Jtu' & duration == 4 & REALM == 'Marine', ]
+# trends5Horn <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
+#                                     mass.sc, human_bowler.sc) & measure == 'Horn' & duration == 4 & REALM == 'Marine', ]
 
-completerows <- trends[, complete.cases(REALM, tempave_metab.sc, 
-                                        seas.sc, microclim.sc, 
-                                        tempchange_abs.sc, mass.sc, speed.sc, 
-                                        consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                                        veg.sc, duration.sc, human_bowler.sc)]
+fixed <- 'disstrend ~ temptrend_abs.sc*REALM + temptrend_abs.sc*tempave_metab.sc + temptrend_abs.sc*seas.sc + temptrend_abs.sc*microclim.sc +  temptrend_abs.sc*npp.sc'
+trends5Jtu <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
+                                    seas.sc, microclim.sc, npp.sc) & measure == 'Jtu' & duration == 4, ]
+trends5Horn <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
+                                    seas.sc, microclim.sc, npp.sc) & measure == 'Horn' & duration == 4, ]
+
 
 # rem0
-if(file.exists('temp/modTsimpJturem0.rds')){
-  modTsimpJturem0 <- readRDS('temp/modTsimpJturem0.rds')
+if(file.exists(here('temp', 'modsdredge5Jtu.rds'))){
+  modTsimpJturem0 <- readRDS(here('temp', 'modsdredge5Jtu.rds'))
 } else {
-  i <- !is.na(trends$Jtutrendrem0) & completerows
+  modfull5Jtu <- glmmTMB(formula(paste(fixed, randef)),
+                           data = trends5Jtu, disp = formula(disp),
+                         control = cont)
+  modevals5Jtu <- dredge(modfull5Jtu, evaluate = FALSE) # get the model calls
+  length(modevals5Jtu) # how many to fit?
+  mods5Jtu <- mclapply(modevals5Jtu, eval, mc.cores = 25) # call in parallel
+  #saveRDS(mods5Jtu, file = here('temp', 'modsdredge5Jtu.rds'))
   
-  modTfullJturem0ML <- lme(formula(paste0('Jtutrendrem0', terms)),
-                           random = randef, weights = varef, data = trends[i,], method = 'ML',
-                           control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500, opt = 'optim'))
-  modTsimpJturem0 <- stepAIC(modTfullJturem0ML, direction = 'backward')
-  saveRDS(modTsimpJturem0, file = 'temp/modTsimpJturem0.rds')
+  #modsel5Jtu <- model.sel(mods5Jtu, rank = 'AIC', fit = FALSE)
+  #head(modsel5Jtu)
+  modavg5Jtu <- model.avg(mods5Jtu)
+  summary(modavg5Jtu)
+  confint(modavg5Jtu, full = TRUE)
 }
 
-if(file.exists('temp/modTsimpJbetarem0.rds')){
-  modTsimpJbetarem0 <- readRDS('temp/modTsimpJbetarem0.rds')
+if(file.exists(here('temp', 'modsdredge5Horn.rds'))){
+  modTsimpHornrem0 <- readRDS('temp/modsdredge5Horn.rds')
 } else {
-  i <- !is.na(trends$Jbetatrendrem0) & completerows
-  modTfullJbetarem0ML <- lme(formula(paste0('Jbetatrendrem0', terms)),
-                       random = randef, weights = varef, data = trends[i,], method = 'ML',
-                       control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500, opt = 'optim'))
-  modTsimpJbetarem0 <- stepAIC(modTfullJbetarem0ML, direction = 'backward')
-  saveRDS(modTsimpJbetarem0, file = 'temp/modTsimpJbetarem0.rds')
+  modfull5Horn <- glmmTMB(formula(paste(fixed, randef)),
+                           data = trends5Horn, disp = formula(disp),
+                         control = cont)
+  modevals5Horn <- dredge(modfull5Horn, evaluate = FALSE) # get the model calls
+  length(modevals5Horn) # how many to fit?
+  mods5Horn <- mclapply(modevals5Horn, eval, mc.cores = 20) # call in parallel
+  #saveRDS(mods5Horn, file = here('temp', 'modsdredge5Horn.rds'))
+  
+  #modsel5Horn <- model.sel(mods5Horn, rank = 'AIC', fit = FALSE)
+  #head(modsel5Horn)
+  modavg5Horn <- model.avg(mods5Horn)
+  summary(modavg5Horn)
+  confint(modavg5Horn, full = TRUE)
 }
 
-if(file.exists('temp/modTsimpHornrem0.rds')){
-  modTsimpHornrem0 <- readRDS('temp/modTsimpHornrem0.rds')
-} else {
-  i <- !is.na(trends$Horntrendrem0) & completerows
-  modTfullHornrem0ML <- lme(formula(paste0('Horntrendrem0', terms)),
-                            random = randef, weights = varef, data = trends[i,], method = 'ML',
-                            control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500, opt = 'optim'))
-  modTsimpHornrem0 <- stepAIC(modTfullHornrem0ML, direction = 'backward')
-  saveRDS(modTsimpHornrem0, file = 'temp/modTsimpHornrem0.rds')
-}
-
-
-summary(modTsimpJturem0)
-summary(modTsimpJbetarem0)
-summary(modTsimpHornrem0)
 
 
 ```
