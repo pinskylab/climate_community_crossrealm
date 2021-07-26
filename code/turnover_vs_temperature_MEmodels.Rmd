@@ -1493,35 +1493,27 @@ Clear that removing temperature trend makes the model quite a bit worse.
 
 
 ## Simplify the full models
-This takes a couple days on a laptop to run if temp/ files not available.
-Not run when knitting
+This takes a couple minutes when run on 30 cores of Annotate.
 ```{r simplify the full models, eval = FALSE}
-randef <- '+(1|STUDY_ID)'
+randef <- '+(1|taxa_mod/STUDY_ID)'
 disp <- '~trendse'
 cont <- glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3))
-#fixed <- 'disstrend ~ temptrend_abs.sc*REALM + temptrend_abs.sc*tempave_metab.sc + temptrend_abs.sc*seas.sc + temptrend_abs.sc*microclim.sc + temptrend_abs.sc*nspp.sc + temptrend_abs.sc*npp.sc + temptrend_abs.sc*mass.sc + temptrend_abs.sc*human_bowler.sc:REALM2 + temptrend_abs.sc*thermal_bias.sc:tsign'
-fixed <- 'disstrend ~ temptrend_abs.sc*REALM + tempave_metab.sc + temptrend_abs.sc:tempave_metab.sc + mass.sc + temptrend_abs.sc:mass.sc + human_bowler.sc:REALM2 + temptrend_abs.sc:human_bowler.sc:REALM2'
-fixed <- 'disstrend ~ temptrend_abs.sc*REALM + tempave_metab.sc + temptrend_abs.sc:tempave_metab.sc + mass.sc + human_bowler.sc:REALM2'
+
+# temp, temptrend_abs, temptrend, mass human
+fixed <- 'disstrend ~ temptrend_abs.sc*REALM + tempave_metab.sc + temptrend_abs.sc:tempave_metab.sc + mass.sc + temptrend_abs.sc:mass.sc + human_bowler.sc:REALM2 + temptrend_abs.sc:human_bowler.sc:REALM2 + temptrend.sc*REALM + temptrend.sc:tempave_metab.sc + temptrend.sc:mass.sc + temptrend.sc:human_bowler.sc:REALM2'
 trends5Jtu <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
                                     mass.sc, human_bowler.sc) & measure == 'Jtu' & duration == 4, ]
 trends5Horn <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
                                     mass.sc, human_bowler.sc) & measure == 'Horn' & duration == 4, ]
+subsetstr = '!(temptrend.sc && temptrend_abs.sc)'
 
-fixed <- 'disstrend ~ temptrend_abs.sc + tempave_metab.sc + temptrend_abs.sc:tempave_metab.sc + mass.sc + human_bowler.sc'
-# trends5Jtu <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
-#                                     mass.sc, human_bowler.sc) & measure == 'Jtu' & duration == 4 & REALM == 'Terrestrial', ]
-# trends5Horn <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
-#                                     mass.sc, human_bowler.sc) & measure == 'Horn' & duration == 4 & REALM == 'Terrestrial', ]
-# trends5Jtu <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
-#                                     mass.sc, human_bowler.sc) & measure == 'Jtu' & duration == 4 & REALM == 'Marine', ]
-# trends5Horn <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
-#                                     mass.sc, human_bowler.sc) & measure == 'Horn' & duration == 4 & REALM == 'Marine', ]
 
-fixed <- 'disstrend ~ temptrend_abs.sc*REALM + temptrend_abs.sc*tempave_metab.sc + temptrend_abs.sc*seas.sc + temptrend_abs.sc*microclim.sc +  temptrend_abs.sc*npp.sc'
-trends5Jtu <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
-                                    seas.sc, microclim.sc, npp.sc) & measure == 'Jtu' & duration == 4, ]
-trends5Horn <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
-                                    seas.sc, microclim.sc, npp.sc) & measure == 'Horn' & duration == 4, ]
+# temptrend, tempave, seas
+#fixed <- 'disstrend ~ temptrend_abs.sc*REALM + temptrend_abs.sc*tempave_metab.sc + temptrend_abs.sc*seas.sc + temptrend_abs.sc*microclim.sc +  temptrend_abs.sc*npp.sc'
+#trends5Jtu <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
+#                                   seas.sc, microclim.sc, npp.sc) & measure == 'Jtu' & duration == 4, ]
+#trends5Horn <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
+#                                    seas.sc, microclim.sc, npp.sc) & measure == 'Horn' & duration == 4, ]
 
 
 # rem0
@@ -1533,14 +1525,22 @@ if(file.exists(here('temp', 'modsdredge5Jtu.rds'))){
                          control = cont)
   modevals5Jtu <- dredge(modfull5Jtu, evaluate = FALSE) # get the model calls
   length(modevals5Jtu) # how many to fit?
+  modevals5Jtu <- modevals5Jtu[!(grepl('temptrend.sc', modevals5Jtu) & grepl('temptrend_abs.sc', modevals5Jtu))]
+  length(modevals5Jtu) # how many to fit?
   mods5Jtu <- mclapply(modevals5Jtu, eval, mc.cores = 25) # call in parallel
   #saveRDS(mods5Jtu, file = here('temp', 'modsdredge5Jtu.rds'))
   
-  #modsel5Jtu <- model.sel(mods5Jtu, rank = 'AIC', fit = FALSE)
-  #head(modsel5Jtu)
-  modavg5Jtu <- model.avg(mods5Jtu)
+  ll <- sapply(mods5Jtu, logLik)
+  sum(is.na(ll)) # number that didn't converge
+  keep <- !is.na(ll) # find models that converged (non-NA logLik)
+  modsel5Jtu <- model.sel(mods5Jtu[which(keep)], rank = 'AIC', fit = FALSE)
+  modsel5Jtu[modsel5Jtu$delta < 4,]
+  modavg5Jtu <- model.avg(mods5Jtu[which(keep)])
   summary(modavg5Jtu)
   confint(modavg5Jtu, full = TRUE)
+  coefTable(modsel5Jtu[1,]) # coefficients from the top model
+  importance(modavg5Jtu) # relative variable importance
+
 }
 
 if(file.exists(here('temp', 'modsdredge5Horn.rds'))){
@@ -1551,14 +1551,21 @@ if(file.exists(here('temp', 'modsdredge5Horn.rds'))){
                          control = cont)
   modevals5Horn <- dredge(modfull5Horn, evaluate = FALSE) # get the model calls
   length(modevals5Horn) # how many to fit?
-  mods5Horn <- mclapply(modevals5Horn, eval, mc.cores = 20) # call in parallel
+  modevals5Horn <- modevals5Horn[!(grepl('temptrend.sc', modevals5Horn) & grepl('temptrend_abs.sc', modevals5Horn))]
+  length(modevals5Horn) # how many to fit?
+  mods5Horn <- mclapply(modevals5Horn, eval, mc.cores = 30) # call in parallel
   #saveRDS(mods5Horn, file = here('temp', 'modsdredge5Horn.rds'))
   
-  #modsel5Horn <- model.sel(mods5Horn, rank = 'AIC', fit = FALSE)
-  #head(modsel5Horn)
-  modavg5Horn <- model.avg(mods5Horn)
+  ll <- sapply(mods5Horn, logLik)
+  keep <- !is.na(ll) # find models that converged (non-NA logLik)
+  sum(keep); length(keep) # number that converged vs. total number
+  modsel5Horn <- model.sel(mods5Horn[which(keep)], rank = 'AIC', fit = FALSE)
+  modsel5Horn[modsel5Horn$delta < 4,]
+  modavg5Horn <- model.avg(mods5Horn[which(keep)])
   summary(modavg5Horn)
   confint(modavg5Horn, full = TRUE)
+  coefTable(modsel5Horn[1,]) # coefficients from the top model
+  importance(modavg5Horn) # relative variable importance
 }
 
 
@@ -1569,160 +1576,71 @@ if(file.exists(here('temp', 'modsdredge5Horn.rds'))){
 ## Make realm-specific models
 Not run now
 ```{r LME Horn models by realm, eval = FALSE}
-i1 <- trends[, REALM == 'Terrestrial' & complete.cases(Horntrendrem0, tempave_metab.sc, seas.sc, microclim.sc, 
-                             tempchange_abs.sc, mass.sc, speed.sc, 
-                             consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                             veg.sc, duration.sc, human_bowler.sc)]
-i2 <- trends[, REALM == 'Freshwater' & complete.cases(Horntrendrem0, tempave_metab.sc, seas.sc, microclim.sc, 
-                             tempchange_abs.sc, mass.sc, speed.sc, 
-                             nspp.sc, thermal_bias.sc, npp.sc, 
-                             veg.sc, duration.sc, human_bowler.sc)] # no consumerfrac
-i3 <- trends[, REALM == 'Marine' & complete.cases(Horntrendrem0, tempave_metab.sc, seas.sc, microclim.sc, 
-                             tempchange_abs.sc, mass.sc, speed.sc, 
-                             consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, 
-                             duration.sc, human_bowler.sc)] # no veg
 
-print(paste('Terrestrial', sum(i1)))
-print(paste('Freshwater', sum(i2)))
-print(paste('Marine', sum(i3)))
+fixed <- 'disstrend ~ temptrend_abs.sc + tempave_metab.sc + temptrend_abs.sc:tempave_metab.sc + mass.sc + temptrend_abs.sc:mass.sc + human_bowler.sc + temptrend_abs.sc:human_bowler.sc + temptrend.sc + temptrend.sc:tempave_metab.sc + temptrend.sc:mass.sc + temptrend.sc:human_bowler.sc'
+trends5Jtu <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
+                                     mass.sc, human_bowler.sc) & measure == 'Jtu' & duration == 4 & REALM == 'Terrestrial', ] # only terrestrial
+trends5Horn <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
+                                     mass.sc, human_bowler.sc) & measure == 'Horn' & duration == 4 & REALM == 'Terrestrial', ]
+trends5Jtu <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
+                                    mass.sc, human_bowler.sc) & measure == 'Jtu' & duration == 4 & REALM == 'Marine', ] # only marine
+trends5Horn <- trends[complete.cases(disstrend, temptrend_abs.sc, REALM, tempave_metab.sc,
+                                    mass.sc, human_bowler.sc) & measure == 'Horn' & duration == 4 & REALM == 'Marine', ]
 
-randef <- list(STUDY_ID = ~ tempchange_abs.sc, rarefyID = ~1)
-varef <- varPower(-0.5, ~nyrBT)
 
-# land
-if(file.exists('temp/modTfullHornTerr.rds')){
-  modTfullHornTerr <- readRDS('temp/modTfullHornTerr.rds')
+
+# rem0
+if(file.exists(here('temp', 'modsdredge5Jtu.rds'))){
+  modTsimpJturem0 <- readRDS(here('temp', 'modsdredge5Jtu.rds'))
 } else {
-  modTfullHornTerr <- lme(Horntrendrem0 ~ 
-                         tempchange_abs.sc*tsign +
-                         tempchange_abs.sc*tempave_metab.sc + 
-                         tempchange_abs.sc*seas.sc + 
-                         tempchange_abs.sc*microclim.sc + 
-                         tempchange_abs.sc*mass.sc + 
-                         tempchange_abs.sc*speed.sc + 
-                         tempchange_abs.sc*consumerfrac.sc +
-                         tempchange_abs.sc*nspp.sc +
-                         tempchange_abs.sc*thermal_bias.sc:tsign +
-                         tempchange_abs.sc*npp.sc +
-                         tempchange_abs.sc*veg.sc +
-                         tempchange_abs.sc*duration.sc +
-                         tempchange_abs.sc*human_bowler.sc,
-                       random = randef, weights = varef, data = trends[i1,], method = 'REML',
-                       control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
-  saveRDS(modTfullHornTerr, file = 'temp/modTfullHornTerr.rds')
+  modfull5Jtu <- glmmTMB(formula(paste(fixed, randef)),
+                           data = trends5Jtu, disp = formula(disp),
+                         control = cont)
+  modevals5Jtu <- dredge(modfull5Jtu, evaluate = FALSE) # get the model calls
+  length(modevals5Jtu) # how many to fit?
+  modevals5Jtu <- modevals5Jtu[!(grepl('temptrend.sc', modevals5Jtu) & grepl('temptrend_abs.sc', modevals5Jtu))]
+  length(modevals5Jtu) # how many to fit?
+  mods5Jtu <- mclapply(modevals5Jtu, eval, mc.cores = 25) # call in parallel
+  #saveRDS(mods5Jtu, file = here('temp', 'modsdredge5Jtu.rds'))
+  
+  ll <- sapply(mods5Jtu, logLik)
+  sum(is.na(ll)) # number that didn't converge
+  keep <- !is.na(ll) # find models that converged (non-NA logLik)
+  modsel5Jtu <- model.sel(mods5Jtu[which(keep)], rank = 'AIC', fit = FALSE)
+  modsel5Jtu[modsel5Jtu$delta < 4,]
+  modavg5Jtu <- model.avg(mods5Jtu[which(keep)])
+  summary(modavg5Jtu)
+  confint(modavg5Jtu, full = TRUE)
+  coefTable(modsel5Jtu[1,]) # coefficients from the top model
+  importance(modavg5Jtu) # relative variable importance
+
 }
 
-# freshwater
-if(file.exists('temp/modTfullHornFresh.rds')){
-  modTfullHornFresh <- readRDS('temp/modTfullHornFresh.rds')
+if(file.exists(here('temp', 'modsdredge5Horn.rds'))){
+  modTsimpHornrem0 <- readRDS('temp/modsdredge5Horn.rds')
 } else {
-  modTfullHornFresh <- lme(Horntrendrem0 ~ 
-                         tempchange_abs.sc*tsign +
-                         tempchange_abs.sc*tempave_metab.sc + 
-                         tempchange_abs.sc*seas.sc + 
-                         tempchange_abs.sc*microclim.sc + 
-                         tempchange_abs.sc*mass.sc + 
-                         tempchange_abs.sc*speed.sc + 
-                         tempchange_abs.sc*nspp.sc +
-                         tempchange_abs.sc*thermal_bias.sc:tsign +
-                         tempchange_abs.sc*npp.sc +
-                         tempchange_abs.sc*veg.sc +
-                         tempchange_abs.sc*duration.sc +
-                         tempchange_abs.sc*human_bowler.sc,
-                       random = randef, weights = varef, data = trends[i2,], method = 'REML',
-                       control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
-  saveRDS(modTfullHornFresh, file = 'temp/modTfullHornFresh.rds')
+  modfull5Horn <- glmmTMB(formula(paste(fixed, randef)),
+                           data = trends5Horn, disp = formula(disp),
+                         control = cont)
+  modevals5Horn <- dredge(modfull5Horn, evaluate = FALSE) # get the model calls
+  length(modevals5Horn) # how many to fit?
+  modevals5Horn <- modevals5Horn[!(grepl('temptrend.sc', modevals5Horn) & grepl('temptrend_abs.sc', modevals5Horn))]
+  length(modevals5Horn) # how many to fit?
+  mods5Horn <- mclapply(modevals5Horn, eval, mc.cores = 30) # call in parallel
+  #saveRDS(mods5Horn, file = here('temp', 'modsdredge5Horn.rds'))
+  
+  ll <- sapply(mods5Horn, logLik)
+  keep <- !is.na(ll) # find models that converged (non-NA logLik)
+  sum(keep); length(keep) # number that converged vs. total number
+  modsel5Horn <- model.sel(mods5Horn[which(keep)], rank = 'AIC', fit = FALSE)
+  modsel5Horn[modsel5Horn$delta < 4,]
+  modavg5Horn <- model.avg(mods5Horn[which(keep)])
+  summary(modavg5Horn)
+  confint(modavg5Horn, full = TRUE)
+  coefTable(modsel5Horn[1,]) # coefficients from the top model
+  importance(modavg5Horn) # relative variable importance
 }
 
-# marine
-if(file.exists('temp/modTfullHornMar.rds')){
-  modTfullHornMar <- readRDS('temp/modTfullHornMar.rds')
-} else {
-  modTfullHornMar <- lme(Horntrendrem0 ~ 
-                         tempchange_abs.sc*tsign +
-                         tempchange_abs.sc*tempave_metab.sc + 
-                         tempchange_abs.sc*seas.sc + 
-                         tempchange_abs.sc*microclim.sc + 
-                         tempchange_abs.sc*mass.sc + 
-                         tempchange_abs.sc*speed.sc + 
-                         tempchange_abs.sc*consumerfrac.sc +
-                         tempchange_abs.sc*nspp.sc +
-                         tempchange_abs.sc*thermal_bias.sc:tsign +
-                         tempchange_abs.sc*npp.sc +
-                         tempchange_abs.sc*duration.sc +
-                         tempchange_abs.sc*human_bowler.sc,
-                       random = randef, weights = varef, data = trends[i3,], method = 'REML',
-                       control = lmeControl(maxIter = 100, msMaxIter = 100, niterEM = 50, msMaxEval = 500))
-  saveRDS(modTfullHornMar, file = 'temp/modTfullHornMar.rds')
-}
 
-summary(modTfullHornTerr)
-summary(modTfullHornFresh)
-summary(modTfullHornMar)
 ```
 
-### Plot the realm-specific coefficients
-Not run now
-
-Also uses the full models across all realms
-```{r plot realm mods, fig.height=12, fig.width=9, eval = FALSE}
-
-coefs1 <- summary(modTfullHornrem0)$tTable
-coefs2 <- summary(modTfullHornTerr)$tTable
-coefs3 <- summary(modTfullHornFresh)$tTable
-coefs4 <- summary(modTfullHornMar)$tTable
-
-varstoplot <- unique(c(rownames(coefs1), rownames(coefs2), rownames(coefs3), rownames(coefs4)))
-varstoplot <- varstoplot[which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot))] # vars to plot
-
-rows1_1 <- which(rownames(coefs1) %in% varstoplot) # rows in coefs
-rows1_2 <- which(rownames(coefs2) %in% varstoplot)
-rows1_3 <- which(rownames(coefs3) %in% varstoplot)
-rows1_4 <- which(rownames(coefs4) %in% varstoplot)
-xlims <- range(c(coefs1[rows1_1,1] - coefs1[rows1_1,2], coefs1[rows1_1,1] + coefs1[rows1_1,2], 
-                 coefs2[rows1_2,1] - coefs2[rows1_2,2], coefs2[rows1_2,1] + coefs2[rows1_2,2], 
-                 coefs3[rows1_3,1] - coefs3[rows1_3,2], coefs3[rows1_3,1] + coefs3[rows1_3,2],
-                 coefs4[rows1_4,1] - coefs4[rows1_4,2], coefs4[rows1_4,1] + coefs4[rows1_4,2]))
-
-
-cols <- brewer.pal(4, 'Dark2') # for full, terr, fresh, mar
-pchs <- c(1, 16, 16, 16)
-offs <- c(0.1, 0, -0.1, -0.2) # offset vertically for each model
-
-
-par(las = 1, mai = c(0.5, 4, 0.1, 0.1))
-
-plot(0,0, col = 'white', xlim = xlims, ylim = c(1,length(varstoplot)), yaxt='n', xlab = '', ylab ='')
-axis(2, at = length(varstoplot):1, labels = varstoplot, cex.axis = 0.7)
-abline(v = 0, col = 'grey', lty = 2)
-abline(h = 1:length(varstoplot), col = 'grey', lty = 3)
-for(i in 1:length(varstoplot)){
-  if(varstoplot[i] %in% rownames(coefs1)){
-    x = coefs1[rownames(coefs1) == varstoplot[i], 1]
-    se = coefs1[rownames(coefs1) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[1], pch = pchs[1], col = cols[1])
-    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[1], length(varstoplot) + 1 - i + offs[1]), col = cols[1])
-  }
-  if(varstoplot[i] %in% rownames(coefs2)){
-    x = coefs2[rownames(coefs2) == varstoplot[i], 1]
-    se = coefs2[rownames(coefs2) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[2], pch = pchs[2], col = cols[2])
-    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[2], length(varstoplot) + 1 - i + offs[2]), col = cols[2])
-  }
-  if(varstoplot[i] %in% rownames(coefs3)){
-    x = coefs3[rownames(coefs3) == varstoplot[i], 1]
-    se = coefs3[rownames(coefs3) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[3], pch = pchs[3], col = cols[3])
-    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[3], length(varstoplot) + 1 - i + offs[3]), col = cols[3])
-  }
-  if(varstoplot[i] %in% rownames(coefs4)){
-    x = coefs4[rownames(coefs4) == varstoplot[i], 1]
-    se = coefs4[rownames(coefs4) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[4], pch = pchs[4], col = cols[4])
-    lines(x = c(x-se, x+se), y = c(length(varstoplot) + 1 - i + offs[4], length(varstoplot) + 1 - i + offs[4]), col = cols[4])
-  }
-}
-legend('bottomleft', col = cols, pch = pchs, lwd = 1, legend = c('All', 'Terestrial', 'Freshwater', 'Marine'))
-```
-
-[End text in hopes this helps the last figure show up when knitted]
