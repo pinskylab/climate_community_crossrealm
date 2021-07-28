@@ -16,9 +16,9 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStu
 # Read in BioTime and temperature data
 Using average daily temperature by month from CRU TS
 Using average temperature by month from ERSST. NOAA_ERSST_V5 data provided by the NOAA/OAR/ESRL PSD, Boulder, Colorado, USA, from their Web site at https://www.esrl.noaa.gov/psd/
-```{r}
+```{r read in data}
 # biotime community similarity data
-bt <- readRDS(here('temp', 'trendstemp.rds'))
+bttrend <- readRDS(here('temp', 'trendstemp.rds'))
 
 # convert biotime to long format
 btlong <- melt(bttrend, id.vars = c('rarefyID', 'REALM', 'Biome', 'taxa_mod', 'STUDY_ID', 'rarefyID_x', 'rarefyID_y'),
@@ -47,7 +47,7 @@ btlong <- btlong[!duplicated(cbind(rarefyID, year1, year2)), ] # trim out duplic
 # biotime species lists
 load('data/biotime_blowes/bt_grid_spp_list.Rdata') # loads bt_grid_spp_list. this has some studies not in bt.
 btspp <- data.table(bt_grid_spp_list); rm(bt_grid_spp_list) # rename to btspp
-btspp <- merge(btspp, bt[, .(rarefyID, taxa_mod)], by = 'rarefyID') # add taxa_mod to spp list
+btspp <- merge(btspp, bttrend[, .(rarefyID, taxa_mod)], by = 'rarefyID') # add taxa_mod to spp list
 
 btspp[, length(unique(Species))] # 16315 species
 
@@ -157,8 +157,7 @@ tslopes <- merge(tslopes_cruts, tslopes_ersst, all = TRUE)
 ```
 
 
-# Calculations by rarefyID
-Find fraction ectotherm vs. mammal vs. bird by rarefyID
+# Find fraction ectotherm vs. mammal vs. bird by rarefyID
 ```{r endotherm fractions}
 # summarize by rarefyID
 endofrac <- endo[, .(mammfrac = sum(metab == 'mamm')/.N, birdfrac = sum(metab == 'bird')/.N, ectofrac = sum(metab == 'ecto')/.N),

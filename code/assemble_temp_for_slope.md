@@ -41,23 +41,28 @@ NOAA/OAR/ESRL PSD, Boulder, Colorado, USA, from their Web site at
 
 ``` r
 # biotime community similarity data
-bt <- readRDS(here('temp', 'trendstemp.rds'))
+bttrend <- readRDS(here('temp', 'trendstemp.rds'))
 
 # convert biotime to long format
-btlong <- melt(bt, id.vars = c('rarefyID', 'REALM', 'Biome', 'taxa_mod', 'STUDY_ID', 'rarefyID_x', 'rarefyID_y'),
+btlong <- melt(bttrend, id.vars = c('rarefyID', 'REALM', 'Biome', 'taxa_mod', 'STUDY_ID', 'rarefyID_x', 'rarefyID_y'),
                measure.vars = list(c('Jtutrend3', 'Jbetatrend3', 'Horntrend3', 'Jtutrend5', 'Jbetatrend5', 'Horntrend5', 
-                                     'Jtutrend10', 'Jbetatrend10', 'Horntrend10', 'Jtutrend20', 'Jbetatrend20', 'Horntrend20'),
-                                     c('Jtutrend3_se', 'Jbetatrend3_se', 'Horntrend3_se', 'Jtutrend5_se', 'Jbetatrend5_se',
-                                       'Horntrend5_se', 'Jtutrend10_se', 'Jbetatrend10_se', 'Horntrend10_se', 'Jtutrend20_se',
-                                       'Jbetatrend20_se', 'Horntrend20_se'),
-                                     c('Jtutrend3_y1', 'Jbetatrend3_y1', 'Horntrend3_y1', 'Jtutrend5_y1', 'Jbetatrend5_y1',
-                                       'Horntrend5_y1', 'Jtutrend10_y1', 'Jbetatrend10_y1', 'Horntrend10_y1', 'Jtutrend20_y1',
-                                       'Jbetatrend20_y1', 'Horntrend20_y1'),
-                                     c('Jtutrend3_y2', 'Jbetatrend3_y2', 'Horntrend3_y2', 'Jtutrend5_y2', 'Jbetatrend5_y2',
-                                       'Horntrend5_y2', 'Jtutrend10_y2', 'Jbetatrend10_y2', 'Horntrend10_y2', 'Jtutrend20_y2',
-                                       'Jbetatrend20_y2','Horntrend20_y2')),
-                                value.name = c('disstrend', 'trendse', 'year1', 'year2'))
-btlong[, measure := rep(c('Jtu', 'Jbeta', 'Horn'), 4)[variable]] # extract Jtu, Jbeta, or Horn
+                                     'Jtutrend10', 'Jbetatrend10', 'Horntrend10', 'Jtutrend20', 'Jbetatrend20', 'Horntrend20',
+                                     'JtutrendAll', 'JbetatrendAll', 'HorntrendAll'),
+                                   c('Jtutrend3_se', 'Jbetatrend3_se', 'Horntrend3_se', 'Jtutrend5_se', 'Jbetatrend5_se',
+                                     'Horntrend5_se', 'Jtutrend10_se', 'Jbetatrend10_se', 'Horntrend10_se', 'Jtutrend20_se',
+                                     'Jbetatrend20_se', 'Horntrend20_se',
+                                     'JtutrendAll_se', 'JbetatrendAll_se', 'HorntrendAll_se'),
+                                   c('Jtutrend3_y1', 'Jbetatrend3_y1', 'Horntrend3_y1', 'Jtutrend5_y1', 'Jbetatrend5_y1',
+                                     'Horntrend5_y1', 'Jtutrend10_y1', 'Jbetatrend10_y1', 'Horntrend10_y1', 'Jtutrend20_y1',
+                                     'Jbetatrend20_y1', 'Horntrend20_y1',
+                                     'JtutrendAll_y1', 'JbetatrendAll_y1', 'HorntrendAll_y1'),
+                                   c('Jtutrend3_y2', 'Jbetatrend3_y2', 'Horntrend3_y2', 'Jtutrend5_y2', 'Jbetatrend5_y2',
+                                     'Horntrend5_y2', 'Jtutrend10_y2', 'Jbetatrend10_y2', 'Horntrend10_y2', 'Jtutrend20_y2',
+                                     'Jbetatrend20_y2','Horntrend20_y2',
+                                     'JtutrendAll_y2', 'JbetatrendAll_y2', 'HorntrendAll_y2')),
+               value.name = c('disstrend', 'trendse', 'year1', 'year2'))
+btlong[, measure := rep(c('Jtu', 'Jbeta', 'Horn'), 5)[variable]] # add Jtu, Jbeta, or Horn
+btlong[, duration_group := rep(c('3', '5', '10', '20', 'All'), rep(3,5))[variable]] # add 3,5,10,20,all (duration)
 btlong[, variable := NULL]
 btlong <- btlong[!is.na(year1) & !is.na(year2) & !is.na(disstrend), ] # trim out missing
 btlong <- btlong[!duplicated(cbind(rarefyID, year1, year2)), ] # trim out duplicated lat/lon/years
@@ -65,7 +70,7 @@ btlong <- btlong[!duplicated(cbind(rarefyID, year1, year2)), ] # trim out duplic
 # biotime species lists
 load('data/biotime_blowes/bt_grid_spp_list.Rdata') # loads bt_grid_spp_list. this has some studies not in bt.
 btspp <- data.table(bt_grid_spp_list); rm(bt_grid_spp_list) # rename to btspp
-btspp <- merge(btspp, bt[, .(rarefyID, taxa_mod)], by = 'rarefyID') # add taxa_mod to spp list
+btspp <- merge(btspp, bttrend[, .(rarefyID, taxa_mod)], by = 'rarefyID') # add taxa_mod to spp list
 
 btspp[, length(unique(Species))] # 16315 species
 ```
@@ -154,16 +159,16 @@ ersstyr[lon_ersst > 180, lon_ersst := lon_ersst - 360] # convert to -180 to 180
 ggplot(crutsyr[YEAR == 1901,], aes(lon_cruts, lat_cruts, color = cruts)) + geom_point(size = 0.1)
 ```
 
-![](assemble_temp_for_slope_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](assemble_temp_for_slope_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 \#\# Plot ERSST to make sure it worked
 
 ``` r
 ggplot(ersstyr[YEAR == 1901,], aes(lon_ersst, lat_ersst, color = ersst)) + geom_point(size = 1) # plot to make sure it worked
 ```
 
-![](assemble_temp_for_slope_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](assemble_temp_for_slope_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
-# Calculate seasonality by year (SD)
+# Calculate seasonality as SD across average months (SD)
 
 ``` r
 # CRU TS
@@ -184,14 +189,14 @@ ersstseas <- ersstmo[, .(seas_ersst = sd(ersst, na.rm = TRUE)), by = .(lat_ersst
 ggplot(crutsseas, aes(lon_cruts, lat_cruts, color = seas_cruts)) + geom_point(size = 0.1) # plot to make sure it worked
 ```
 
-![](assemble_temp_for_slope_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](assemble_temp_for_slope_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 \#\# Plot ERSST to make sure seasonality worked
 
 ``` r
 ggplot(ersstseas, aes(lon_ersst, lat_ersst, color = seas_ersst)) + geom_point(size = 1) # plot to make sure it worked
 ```
 
-![](assemble_temp_for_slope_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](assemble_temp_for_slope_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 # Calculate temperature change slope based on biotime year pair/lat/lon
 
@@ -214,9 +219,7 @@ tslopes_ersst <- btlongallyrs[!is.na(ersst), .(trend_ersst = coef(lm(ersst ~ yea
 tslopes <- merge(tslopes_cruts, tslopes_ersst, all = TRUE)
 ```
 
-# Calculations by rarefyID
-
-Find fraction ectotherm vs. mammal vs. bird by rarefyID
+# Find fraction ectotherm vs. mammal vs. bird by rarefyID
 
 ``` r
 # summarize by rarefyID
@@ -307,9 +310,9 @@ ggplot(btsum, aes(trend_cruts, trend_ersst)) + # ERSST more muted at fastest rat
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Removed 14490 rows containing non-finite values (stat_smooth).
+    ## Warning: Removed 22914 rows containing non-finite values (stat_smooth).
 
-    ## Warning: Removed 14490 rows containing missing values (geom_point).
+    ## Warning: Removed 22914 rows containing missing values (geom_point).
 
 ![](assemble_temp_for_slope_files/figure-gfm/basic%20graphs%20of%20temperatures-1.png)<!-- -->
 
@@ -322,9 +325,9 @@ ggplot(btsum, aes(ave_cruts, ave_ersst, color = lat_cruts)) + # ERSST more muted
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Removed 14490 rows containing non-finite values (stat_smooth).
+    ## Warning: Removed 22914 rows containing non-finite values (stat_smooth).
     
-    ## Warning: Removed 14490 rows containing missing values (geom_point).
+    ## Warning: Removed 22914 rows containing missing values (geom_point).
 
 ![](assemble_temp_for_slope_files/figure-gfm/basic%20graphs%20of%20temperatures-2.png)<!-- -->
 
@@ -337,9 +340,9 @@ ggplot(btsum, aes(seas_cruts, seas_ersst, color = lat_cruts)) + # ERSST more mut
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
-    ## Warning: Removed 14490 rows containing non-finite values (stat_smooth).
+    ## Warning: Removed 22914 rows containing non-finite values (stat_smooth).
     
-    ## Warning: Removed 14490 rows containing missing values (geom_point).
+    ## Warning: Removed 22914 rows containing missing values (geom_point).
 
 ![](assemble_temp_for_slope_files/figure-gfm/basic%20graphs%20of%20temperatures-3.png)<!-- -->
 
@@ -376,30 +379,30 @@ out <- out[!duplicated(out), ]
 dim(btlong)
 ```
 
-    ## [1] 19025    16
+    ## [1] 29810    17
 
 ``` r
 dim(out)
 ```
 
-    ## [1] 19025     7
+    ## [1] 29810     7
 
 ``` r
 out
 ```
 
     ##          rarefyID year1 year2   tempave tempave_metab   temptrend     seas
-    ##     1: 100_606491  1992  2011 12.306673      12.30667  0.02737355 3.076098
-    ##     2: 100_606491  2002  2011 12.462563      12.46256 -0.03539498 3.076098
-    ##     3: 100_606491  2007  2011 12.404275      12.40427 -0.20098979 3.076098
-    ##     4: 100_606491  2009  2011 12.186802      12.18680 -0.09047373 3.076098
-    ##     5: 101_606491  1992  2011 12.306673      12.30667  0.02737355 3.076098
+    ##     1: 100_606491  1981  2011 12.051350      12.05135  0.04112933 3.076098
+    ##     2: 100_606491  1992  2011 12.306673      12.30667  0.02737355 3.076098
+    ##     3: 100_606491  2002  2011 12.462563      12.46256 -0.03539498 3.076098
+    ##     4: 100_606491  2007  2011 12.404275      12.40427 -0.20098979 3.076098
+    ##     5: 100_606491  2009  2011 12.186802      12.18680 -0.09047373 3.076098
     ##    ---                                                                    
-    ## 19021: 91_1619799  1995  1999  8.901419      40.00000  0.17698372 5.740345
-    ## 19022: 91_1619799  1997  1999  9.147174      40.00000  0.17531361 5.740345
-    ## 19023: 91_1620530  1993  1995  8.722970      40.00000  0.27726352 5.740345
-    ## 19024: 91_1620531  1993  1995  8.722970      40.00000  0.27726352 5.740345
-    ## 19025: 91_1624191  1993  1995  8.278022      40.00000  0.24033413 5.753974
+    ## 29806: 91_1620530  1993  1995  8.722970      40.00000  0.27726352 5.740345
+    ## 29807: 91_1620531  1992  1999  8.867484      40.00000  0.04852091 5.740345
+    ## 29808: 91_1620531  1993  1995  8.722970      40.00000  0.27726352 5.740345
+    ## 29809: 91_1624191  1992  1995  8.388049      40.00000 -0.03589849 5.753974
+    ## 29810: 91_1624191  1993  1995  8.278022      40.00000  0.24033413 5.753974
 
 # Checking missing
 
