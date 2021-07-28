@@ -112,7 +112,24 @@ ggplot(test, aes(dY, Jtu)) +
 This only recalculates from scratch if temp/trendstemp.rds is not available.
 ## Set up functions
 ```{r assemble trends, warning=FALSE, message=FALSE}
-# function to calc linear trend from last numyrs of the time-series
+# function to calc linear trend from all years of the time-series
+calctrend <- function(y, year1, year2, nm = 'y'){
+  dy <- year2 - year1
+  if(length(dy)>1){
+    mod <- lm(y ~ dy) # fit line
+    out <- list(y = coef(mod)[2], # coef for the slope
+                y_se = sqrt(diag(vcov(mod)))[2],
+                year1 = min(year1), 
+                year2 = max(year2))
+    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+    return(out)
+  } else{
+    out <- list(y = NA_real_, y_se = NA_real_, year1 = NA_real_, year2 = NA_real_)
+    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+    return(out)
+  }
+}
+
 calctrendlast <- function(y, year1, year2, numyrs, nm = 'y'){
   yrs <- sort(unique(c(year1, year2)))
   dy <- diff(yrs) # find intervals between years
@@ -174,10 +191,10 @@ if(file.exists('temp/trendstemp.rds')){
   # 3-year trends
   trends1 <- bt[, calctrendlast(Jtu, year1, year2, 3, 'Jtutrend3'), 
                 by = .(REALM, Biome, taxa_mod, STUDY_ID, 
-                       rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover without first year
+                       rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover
   trends2 <- bt[, calctrendlast(Jbeta, year1, year2, 3, 'Jbetatrend3'),
                 by = .(rarefyID)]
-  trends3 <- bt[!is.na(Horn), calctrendlast(1-Horn, year1, year2, 3, 'Horntrend3'),
+  trends3 <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, 3, 'Horntrend3'),
                 by = .(rarefyID)]
   
   # 5 year
@@ -185,7 +202,7 @@ if(file.exists('temp/trendstemp.rds')){
                 by = .(rarefyID)]
   trends5 <- bt[, calctrendlast(Jbeta, year1, year2, 5, 'Jbetatrend5'),
                 by = .(rarefyID)]
-  trends6 <- bt[!is.na(Horn), calctrendlast(1-Horn, year1, year2, 5, 'Horntrend5'),
+  trends6 <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, 5, 'Horntrend5'),
                 by = .(rarefyID)]
 
 
@@ -194,7 +211,7 @@ if(file.exists('temp/trendstemp.rds')){
                 by = .(rarefyID)]
   trends8 <- bt[, calctrendlast(Jbeta, year1, year2, 10, 'Jbetatrend10'),
                 by = .(rarefyID)]
-  trends9 <- bt[!is.na(Horn), calctrendlast(1-Horn, year1, year2, 10, 'Horntrend10'),
+  trends9 <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, 10, 'Horntrend10'),
                 by = .(rarefyID)]
   
   # 20 year
@@ -202,8 +219,13 @@ if(file.exists('temp/trendstemp.rds')){
                 by = .(rarefyID)]
   trends11 <- bt[, calctrendlast(Jbeta, year1, year2, 20, 'Jbetatrend20'),
                 by = .(rarefyID)]
-  trends12 <- bt[!is.na(Horn), calctrendlast(1-Horn, year1, year2, 20, 'Horntrend20'),
+  trends12 <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, 20, 'Horntrend20'),
                 by = .(rarefyID)]
+  
+  # All years available
+  trends13 <- bt[, calctrend(Jtu, year1, year2, 'JtutrendAll'), by = .(rarefyID)]
+  trends14 <- bt[, calctrend(Jbeta, year1, year2, 'JbetatrendAll'), by = .(rarefyID)]
+  trends15 <- bt[!is.na(Horn), calctrend(Horn, year1, year2, 'HorntrendAll'), by = .(rarefyID)]
   
   trends <- merge(trends1, trends2, all = TRUE)
   trends <- merge(trends, trends3, all = TRUE)
@@ -216,6 +238,9 @@ if(file.exists('temp/trendstemp.rds')){
   trends <- merge(trends, trends10, all = TRUE)
   trends <- merge(trends, trends11, all = TRUE)
   trends <- merge(trends, trends12, all = TRUE)
+  trends <- merge(trends, trends13, all = TRUE)
+  trends <- merge(trends, trends14, all = TRUE)
+  trends <- merge(trends, trends15, all = TRUE)
   
   trends2 <- trends[!is.na(Jtutrend3) | !is.na(Jbetatrend3) | !is.na(Horntrend3), ]
 
@@ -290,7 +315,8 @@ dev.off()
 apply(trends2[, .(Jtutrend3, Jbetatrend3, Horntrend3,
                  Jtutrend5, Jbetatrend5, Horntrend5,
                 Jtutrend10, Jbetatrend10, Horntrend10,
-                Jtutrend20, Jbetatrend20, Horntrend20)], MARGIN = 2, 
+                Jtutrend20, Jbetatrend20, Horntrend20,
+                JtutrendAll, JbetatrendAll, HorntrendAll)], MARGIN = 2, 
       function(x) sum(!is.na(x)))
 ```
 
@@ -324,6 +350,10 @@ x <- trends2[, hist(Jtutrend20)]
 x <- trends2[, hist(Jbetatrend20)]
 x <- trends2[, hist(Horntrend20)]
 
+x <- trends2[, hist(JtutrendAll)]
+x <- trends2[, hist(JbetatrendAll)]
+x <- trends2[, hist(HorntrendAll)]
+
 ```
 
 ## Turnover calculations are correlated, though less so for Horn
@@ -341,7 +371,8 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 pairs(formula = ~ Jtutrend3 + Jbetatrend3 + Horntrend3 +
         Jtutrend5 + Jbetatrend5 + Horntrend5 +
         Jtutrend10 + Jbetatrend10 + Horntrend10 +
-        Jtutrend20 + Jbetatrend20 + Horntrend20, 
+        Jtutrend20 + Jbetatrend20 + Horntrend20 +
+        JtutrendAll + JbetatrendAll + HorntrendAll, 
       data = trends2, gap = 1/10, cex = 0.2, col = '#00000022', 
       lower.panel = panel.cor,
       upper.panel = panel.smooth)
@@ -352,7 +383,7 @@ pairs(formula = ~ Jtutrend3 + Jbetatrend3 + Horntrend3 +
 
 # Change compared to time-series characteristics
 ## Number of species
-```{r change vs. num spp, fig.height =12}
+```{r change vs. num spp, fig.height =12, echo=FALSE}
 par(mfrow=c(4,3))
 trends2[, plot(Nspp, Jtutrend3, log = 'x', col = '#00000033')]; abline(h=0)
 trends2[, plot(Nspp, Jbetatrend3, log = 'x', col = '#00000033')]; abline(h=0)
@@ -370,6 +401,10 @@ trends2[, plot(Nspp, Jtutrend20, log = 'x', col = '#00000033')]; abline(h=0)
 trends2[, plot(Nspp, Jbetatrend20, log = 'x', col = '#00000033')]; abline(h=0)
 trends2[, plot(Nspp, Horntrend20, log = 'x', col = '#00000033')]; abline(h=0)
 
+trends2[, plot(Nspp, JtutrendAll, log = 'x', col = '#00000033')]; abline(h=0)
+trends2[, plot(Nspp, JbetatrendAll, log = 'x', col = '#00000033')]; abline(h=0)
+trends2[, plot(Nspp, HorntrendAll, log = 'x', col = '#00000033')]; abline(h=0)
+
 
 ```
 
@@ -377,21 +412,24 @@ trends2[, plot(Nspp, Horntrend20, log = 'x', col = '#00000033')]; abline(h=0)
 ```{r ave change vs. num spp, message = FALSE}
 # number of species
 ggplot(trends2, aes(Nspp, Jtutrend3, color = 'Jtu trend3')) +
-    geom_smooth() +
-    geom_smooth(aes(y = Jbetatrend3, color = 'Jbeta trend3')) +
-    geom_smooth(aes(y = Horntrend3, color = 'Horn trend3')) +
-    geom_smooth(aes(y = Jtutrend5, color = 'Jtu trend5')) +
-    geom_smooth(aes(y = Jbetatrend5, color = 'Jbeta trend5')) +
-    geom_smooth(aes(y = Horntrend5, color = 'Horn trend5')) +
+  geom_smooth() +
+  geom_smooth(aes(y = Jbetatrend3, color = 'Jbeta trend3')) +
+  geom_smooth(aes(y = Horntrend3, color = 'Horn trend3')) +
+  geom_smooth(aes(y = Jtutrend5, color = 'Jtu trend5')) +
+  geom_smooth(aes(y = Jbetatrend5, color = 'Jbeta trend5')) +
+  geom_smooth(aes(y = Horntrend5, color = 'Horn trend5')) +
   geom_smooth(aes(y = Jtutrend10, color = 'Jtu trend10')) +
-    geom_smooth(aes(y = Jbetatrend10, color = 'Jbeta trend10')) +
-    geom_smooth(aes(y = Horntrend10, color = 'Horn trend10')) +
+  geom_smooth(aes(y = Jbetatrend10, color = 'Jbeta trend10')) +
+  geom_smooth(aes(y = Horntrend10, color = 'Horn trend10')) +
   geom_smooth(aes(y = Jtutrend20, color = 'Jtu trend20')) +
-    geom_smooth(aes(y = Jbetatrend20, color = 'Jbeta trend20')) +
-    geom_smooth(aes(y = Horntrend20, color = 'Horn trend20')) +
-    scale_x_log10() +
-    labs(y = 'Slope') +
-    geom_abline(intercept = 0, slope = 0)
+  geom_smooth(aes(y = Jbetatrend20, color = 'Jbeta trend20')) +
+  geom_smooth(aes(y = Horntrend20, color = 'Horn trend20')) +
+  geom_smooth(aes(y = JtutrendAll, color = 'Jtu trendAll')) +
+  geom_smooth(aes(y = JbetatrendAll, color = 'Jbeta trendAll')) +
+  geom_smooth(aes(y = HorntrendAll, color = 'Horn trendAll')) +
+  scale_x_log10() +
+  labs(y = 'Slope') +
+  geom_abline(intercept = 0, slope = 0)
 
 
 ```

@@ -21,20 +21,25 @@ Using average temperature by month from ERSST. NOAA_ERSST_V5 data provided by th
 bt <- readRDS(here('temp', 'trendstemp.rds'))
 
 # convert biotime to long format
-btlong <- melt(bt, id.vars = c('rarefyID', 'REALM', 'Biome', 'taxa_mod', 'STUDY_ID', 'rarefyID_x', 'rarefyID_y'),
+btlong <- melt(bttrend, id.vars = c('rarefyID', 'REALM', 'Biome', 'taxa_mod', 'STUDY_ID', 'rarefyID_x', 'rarefyID_y'),
                measure.vars = list(c('Jtutrend3', 'Jbetatrend3', 'Horntrend3', 'Jtutrend5', 'Jbetatrend5', 'Horntrend5', 
-                                     'Jtutrend10', 'Jbetatrend10', 'Horntrend10', 'Jtutrend20', 'Jbetatrend20', 'Horntrend20'),
-                                     c('Jtutrend3_se', 'Jbetatrend3_se', 'Horntrend3_se', 'Jtutrend5_se', 'Jbetatrend5_se',
-                                       'Horntrend5_se', 'Jtutrend10_se', 'Jbetatrend10_se', 'Horntrend10_se', 'Jtutrend20_se',
-                                       'Jbetatrend20_se', 'Horntrend20_se'),
-                                     c('Jtutrend3_y1', 'Jbetatrend3_y1', 'Horntrend3_y1', 'Jtutrend5_y1', 'Jbetatrend5_y1',
-                                       'Horntrend5_y1', 'Jtutrend10_y1', 'Jbetatrend10_y1', 'Horntrend10_y1', 'Jtutrend20_y1',
-                                       'Jbetatrend20_y1', 'Horntrend20_y1'),
-                                     c('Jtutrend3_y2', 'Jbetatrend3_y2', 'Horntrend3_y2', 'Jtutrend5_y2', 'Jbetatrend5_y2',
-                                       'Horntrend5_y2', 'Jtutrend10_y2', 'Jbetatrend10_y2', 'Horntrend10_y2', 'Jtutrend20_y2',
-                                       'Jbetatrend20_y2','Horntrend20_y2')),
-                                value.name = c('disstrend', 'trendse', 'year1', 'year2'))
-btlong[, measure := rep(c('Jtu', 'Jbeta', 'Horn'), 4)[variable]] # extract Jtu, Jbeta, or Horn
+                                     'Jtutrend10', 'Jbetatrend10', 'Horntrend10', 'Jtutrend20', 'Jbetatrend20', 'Horntrend20',
+                                     'JtutrendAll', 'JbetatrendAll', 'HorntrendAll'),
+                                   c('Jtutrend3_se', 'Jbetatrend3_se', 'Horntrend3_se', 'Jtutrend5_se', 'Jbetatrend5_se',
+                                     'Horntrend5_se', 'Jtutrend10_se', 'Jbetatrend10_se', 'Horntrend10_se', 'Jtutrend20_se',
+                                     'Jbetatrend20_se', 'Horntrend20_se',
+                                     'JtutrendAll_se', 'JbetatrendAll_se', 'HorntrendAll_se'),
+                                   c('Jtutrend3_y1', 'Jbetatrend3_y1', 'Horntrend3_y1', 'Jtutrend5_y1', 'Jbetatrend5_y1',
+                                     'Horntrend5_y1', 'Jtutrend10_y1', 'Jbetatrend10_y1', 'Horntrend10_y1', 'Jtutrend20_y1',
+                                     'Jbetatrend20_y1', 'Horntrend20_y1',
+                                     'JtutrendAll_y1', 'JbetatrendAll_y1', 'HorntrendAll_y1'),
+                                   c('Jtutrend3_y2', 'Jbetatrend3_y2', 'Horntrend3_y2', 'Jtutrend5_y2', 'Jbetatrend5_y2',
+                                     'Horntrend5_y2', 'Jtutrend10_y2', 'Jbetatrend10_y2', 'Horntrend10_y2', 'Jtutrend20_y2',
+                                     'Jbetatrend20_y2','Horntrend20_y2',
+                                     'JtutrendAll_y2', 'JbetatrendAll_y2', 'HorntrendAll_y2')),
+               value.name = c('disstrend', 'trendse', 'year1', 'year2'))
+btlong[, measure := rep(c('Jtu', 'Jbeta', 'Horn'), 5)[variable]] # add Jtu, Jbeta, or Horn
+btlong[, duration_group := rep(c('3', '5', '10', '20', 'All'), rep(3,5))[variable]] # add 3,5,10,20,all (duration)
 btlong[, variable := NULL]
 btlong <- btlong[!is.na(year1) & !is.na(year2) & !is.na(disstrend), ] # trim out missing
 btlong <- btlong[!duplicated(cbind(rarefyID, year1, year2)), ] # trim out duplicated lat/lon/years
@@ -105,7 +110,7 @@ ggplot(crutsyr[YEAR == 1901,], aes(lon_cruts, lat_cruts, color = cruts)) + geom_
 ggplot(ersstyr[YEAR == 1901,], aes(lon_ersst, lat_ersst, color = ersst)) + geom_point(size = 1) # plot to make sure it worked
 ```
 
-# Calculate seasonality by year (SD)
+# Calculate seasonality as SD across average months (SD)
 ```{r}
 # CRU TS
 crutsmelt[, mo := as.numeric(substr(time, 5,6))] # extract month
