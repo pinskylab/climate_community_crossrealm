@@ -202,7 +202,7 @@ scaling$plus[scaling$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
 Only if file doesn't yet exist
 ```{r write out, echo=FALSE}
 if(!file.exists(here('output', 'slope_w_covariates.csv.gz'))){
-  write.csv(bt[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration_group, duration, 
+  write.csv(bt[,.(STUDY_ID, rarefyID, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration_group, duration, 
                   disstrend, trendse, measure, 
                   tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, temptrend, temptrend.sc, temptrend_abs.sc,
