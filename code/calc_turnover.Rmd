@@ -112,11 +112,34 @@ ggplot(test, aes(dY, Jtu)) +
 This only recalculates from scratch if temp/trendstemp.rds is not available.
 ## Set up functions
 ```{r assemble trends, warning=FALSE, message=FALSE}
-# function to calc linear trend from all years of the time-series
+# function to calc linear trend from all year pairs of the time-series
 calctrend <- function(y, year1, year2, nm = 'y'){
   dy <- year2 - year1
   if(length(dy)>1){
     mod <- lm(y ~ dy) # fit line
+    out <- list(y = coef(mod)[2], # coef for the slope
+                y_se = sqrt(diag(vcov(mod)))[2],
+                year1 = min(year1), 
+                year2 = max(year2))
+    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+    return(out)
+  } else{
+    out <- list(y = NA_real_, y_se = NA_real_, year1 = NA_real_, year2 = NA_real_)
+    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+    return(out)
+  }
+}
+
+# function to calc linear trend from all years of the time-series
+# only comparing back to the first year
+calctrendy1 <- function(y, year1, year2, nm = 'y'){
+  startyear = min(year1)
+  dy <- year2 - year1
+  keep = year1 == startyear
+  if(sum(keep)>1){
+    y2 <- y[keep]
+    dy2 <- dy[keep]
+    mod <- lm(y2 ~ dy2) # fit line
     out <- list(y = coef(mod)[2], # coef for the slope
                 y_se = sqrt(diag(vcov(mod)))[2],
                 year1 = min(year1), 
@@ -222,10 +245,15 @@ if(file.exists('temp/trendstemp.rds')){
   trends12 <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, 20, 'Horntrend20'),
                 by = .(rarefyID)]
   
-  # All years available
+  # All years available using all year pairs
   trends13 <- bt[, calctrend(Jtu, year1, year2, 'JtutrendAll'), by = .(rarefyID)]
   trends14 <- bt[, calctrend(Jbeta, year1, year2, 'JbetatrendAll'), by = .(rarefyID)]
   trends15 <- bt[!is.na(Horn), calctrend(Horn, year1, year2, 'HorntrendAll'), by = .(rarefyID)]
+
+  # All years available using first year comparisons
+  trends16 <- bt[, calctrendy1(Jtu, year1, year2, 'JtutrendAlly1'), by = .(rarefyID)]
+  trends17 <- bt[, calctrendy1(Jbeta, year1, year2, 'JbetatrendAlly1'), by = .(rarefyID)]
+  trends18 <- bt[!is.na(Horn), calctrendy1(Horn, year1, year2, 'HorntrendAlly1'), by = .(rarefyID)]
   
   trends <- merge(trends1, trends2, all = TRUE)
   trends <- merge(trends, trends3, all = TRUE)
@@ -241,6 +269,9 @@ if(file.exists('temp/trendstemp.rds')){
   trends <- merge(trends, trends13, all = TRUE)
   trends <- merge(trends, trends14, all = TRUE)
   trends <- merge(trends, trends15, all = TRUE)
+  trends <- merge(trends, trends16, all = TRUE)
+  trends <- merge(trends, trends17, all = TRUE)
+  trends <- merge(trends, trends18, all = TRUE)
   
   trends2 <- trends[!is.na(Jtutrend3) | !is.na(Jbetatrend3) | !is.na(Horntrend3), ]
 
@@ -372,7 +403,8 @@ pairs(formula = ~ Jtutrend3 + Jbetatrend3 + Horntrend3 +
         Jtutrend5 + Jbetatrend5 + Horntrend5 +
         Jtutrend10 + Jbetatrend10 + Horntrend10 +
         Jtutrend20 + Jbetatrend20 + Horntrend20 +
-        JtutrendAll + JbetatrendAll + HorntrendAll, 
+        JtutrendAll + JbetatrendAll + HorntrendAll +
+        JtutrendAlly1 + JbetatrendAlly1 + HorntrendAlly1, 
       data = trends2, gap = 1/10, cex = 0.2, col = '#00000022', 
       lower.panel = panel.cor,
       upper.panel = panel.smooth)

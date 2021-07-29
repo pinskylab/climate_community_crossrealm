@@ -130,11 +130,34 @@ This only recalculates from scratch if temp/trendstemp.rds is not
 available. \#\# Set up functions
 
 ``` r
-# function to calc linear trend from all years of the time-series
+# function to calc linear trend from all year pairs of the time-series
 calctrend <- function(y, year1, year2, nm = 'y'){
   dy <- year2 - year1
   if(length(dy)>1){
     mod <- lm(y ~ dy) # fit line
+    out <- list(y = coef(mod)[2], # coef for the slope
+                y_se = sqrt(diag(vcov(mod)))[2],
+                year1 = min(year1), 
+                year2 = max(year2))
+    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+    return(out)
+  } else{
+    out <- list(y = NA_real_, y_se = NA_real_, year1 = NA_real_, year2 = NA_real_)
+    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+    return(out)
+  }
+}
+
+# function to calc linear trend from all years of the time-series
+# only comparing back to the first year
+calctrendy1 <- function(y, year1, year2, nm = 'y'){
+  startyear = min(year1)
+  dy <- year2 - year1
+  keep = year1 == startyear
+  if(sum(keep)>1){
+    y2 <- y[keep]
+    dy2 <- dy[keep]
+    mod <- lm(y2 ~ dy2) # fit line
     out <- list(y = coef(mod)[2], # coef for the slope
                 y_se = sqrt(diag(vcov(mod)))[2],
                 year1 = min(year1), 
@@ -241,10 +264,15 @@ if(file.exists('temp/trendstemp.rds')){
   trends12 <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, 20, 'Horntrend20'),
                 by = .(rarefyID)]
   
-  # All years available
+  # All years available using all year pairs
   trends13 <- bt[, calctrend(Jtu, year1, year2, 'JtutrendAll'), by = .(rarefyID)]
   trends14 <- bt[, calctrend(Jbeta, year1, year2, 'JbetatrendAll'), by = .(rarefyID)]
   trends15 <- bt[!is.na(Horn), calctrend(Horn, year1, year2, 'HorntrendAll'), by = .(rarefyID)]
+
+  # All years available using first year comparisons
+  trends16 <- bt[, calctrendy1(Jtu, year1, year2, 'JtutrendAlly1'), by = .(rarefyID)]
+  trends17 <- bt[, calctrendy1(Jbeta, year1, year2, 'JbetatrendAlly1'), by = .(rarefyID)]
+  trends18 <- bt[!is.na(Horn), calctrendy1(Horn, year1, year2, 'HorntrendAlly1'), by = .(rarefyID)]
   
   trends <- merge(trends1, trends2, all = TRUE)
   trends <- merge(trends, trends3, all = TRUE)
@@ -260,6 +288,9 @@ if(file.exists('temp/trendstemp.rds')){
   trends <- merge(trends, trends13, all = TRUE)
   trends <- merge(trends, trends14, all = TRUE)
   trends <- merge(trends, trends15, all = TRUE)
+  trends <- merge(trends, trends16, all = TRUE)
+  trends <- merge(trends, trends17, all = TRUE)
+  trends <- merge(trends, trends18, all = TRUE)
   
   trends2 <- trends[!is.na(Jtutrend3) | !is.na(Jbetatrend3) | !is.na(Horntrend3), ]
 
@@ -268,7 +299,7 @@ if(file.exists('temp/trendstemp.rds')){
 }
 ```
 
-    ## [1] "Calculating from scratch"
+    ## [1] "File already exists. Will not do calculations"
 
 ``` r
 nrow(trends2)
@@ -517,18 +548,66 @@ trends2
     ## 10783:   0.052660237      0.021213411             1992             1999
     ## 10784:   0.009932716      0.019876409             1992             1999
     ## 10785:   0.108571429      0.121741194             1992             1995
-    ##         HorntrendAll HorntrendAll_se HorntrendAll_y1 HorntrendAll_y2 Nspp
-    ##     1:  0.0044639799    0.0008210369            1981            2011   83
-    ##     2: -0.0004329909    0.0003722616            1981            2011   15
-    ##     3: -0.0485170937    0.0217421003            1990            2002   15
-    ##     4:  0.2889130783    0.2069851260            1993            1996    7
-    ##     5:  0.2483119073    0.1713067801            1994            1997   12
-    ##    ---                                                                   
-    ## 10781:  0.0754701872    0.0444102580            1993            1999   16
-    ## 10782: -0.0069010373    0.0348588399            1992            1999   25
-    ## 10783:  0.0386443798    0.0510251318            1992            1999   18
-    ## 10784:  0.0059745794    0.0356418670            1992            1999   17
-    ## 10785:  0.3345072230    0.1439054702            1992            1995    8
+    ##         HorntrendAll HorntrendAll_se HorntrendAll_y1 HorntrendAll_y2
+    ##     1:  0.0044639799    0.0008210369            1981            2011
+    ##     2: -0.0004329909    0.0003722616            1981            2011
+    ##     3: -0.0485170937    0.0217421003            1990            2002
+    ##     4:  0.2889130783    0.2069851260            1993            1996
+    ##     5:  0.2483119073    0.1713067801            1994            1997
+    ##    ---                                                              
+    ## 10781:  0.0754701872    0.0444102580            1993            1999
+    ## 10782: -0.0069010373    0.0348588399            1992            1999
+    ## 10783:  0.0386443798    0.0510251318            1992            1999
+    ## 10784:  0.0059745794    0.0356418670            1992            1999
+    ## 10785:  0.3345072230    0.1439054702            1992            1995
+    ##        JtutrendAlly1 JtutrendAlly1_se JtutrendAlly1_y1 JtutrendAlly1_y2
+    ##     1:  2.976230e-03      0.001309059             1981             2011
+    ##     2:  0.000000e+00      0.000000000             1981             2011
+    ##     3:  5.028571e-02      0.035949742             1990             2002
+    ##     4:  5.000000e-01      0.173205081             1993             1996
+    ##     5: -7.850462e-17      0.384900179             1994             1997
+    ##    ---                                                                 
+    ## 10781:  7.662338e-02      0.114379758             1993             1999
+    ## 10782: -3.053765e-02      0.046307206             1992             1999
+    ## 10783: -4.973475e-04      0.019106424             1992             1999
+    ## 10784: -5.583900e-02      0.050492580             1992             1999
+    ## 10785:  1.666667e-01      0.481125224             1992             1995
+    ##        JbetatrendAlly1 JbetatrendAlly1_se JbetatrendAlly1_y1 JbetatrendAlly1_y2
+    ##     1:     0.002587992       0.0009975709               1981               2011
+    ##     2:     0.002208307       0.0009103225               1981               2011
+    ##     3:     0.016076146       0.0187855714               1990               2002
+    ##     4:     0.200000000       0.0329914440               1993               1996
+    ##     5:     0.045454545       0.1355898359               1994               1997
+    ##    ---                                                                         
+    ## 10781:     0.009276438       0.0386134627               1993               1999
+    ## 10782:     0.012096088       0.0152655074               1992               1999
+    ## 10783:     0.011252541       0.0158858317               1992               1999
+    ## 10784:    -0.024196042       0.0267409270               1992               1999
+    ## 10785:     0.142857143       0.2474358297               1992               1995
+    ##        HorntrendAlly1 HorntrendAlly1_se HorntrendAlly1_y1 HorntrendAlly1_y2
+    ##     1:   0.0023147105      0.0016045472              1981              2011
+    ##     2:   0.0001735803      0.0009087936              1981              2011
+    ##     3:  -0.0320142666      0.0361522930              1990              2002
+    ##     4:   0.2225705826      0.1279420717              1993              1996
+    ##     5:   0.4285751955      0.2259227471              1994              1997
+    ##    ---                                                                     
+    ## 10781:   0.0887774433      0.1016192710              1993              1999
+    ## 10782:   0.0524156726      0.0544320927              1992              1999
+    ## 10783:   0.0699873264      0.0326755341              1992              1999
+    ## 10784:  -0.0226161165      0.0337895033              1992              1999
+    ## 10785:   0.4269255389      0.0934529733              1992              1995
+    ##        Nspp
+    ##     1:   83
+    ##     2:   15
+    ##     3:   15
+    ##     4:    7
+    ##     5:   12
+    ##    ---     
+    ## 10781:   16
+    ## 10782:   25
+    ## 10783:   18
+    ## 10784:   17
+    ## 10785:    8
 
 ``` r
 summary(trends2$Jtutrend3)
@@ -662,7 +741,8 @@ pairs(formula = ~ Jtutrend3 + Jbetatrend3 + Horntrend3 +
         Jtutrend5 + Jbetatrend5 + Horntrend5 +
         Jtutrend10 + Jbetatrend10 + Horntrend10 +
         Jtutrend20 + Jbetatrend20 + Horntrend20 +
-        JtutrendAll + JbetatrendAll + HorntrendAll, 
+        JtutrendAll + JbetatrendAll + HorntrendAll +
+        JtutrendAlly1 + JbetatrendAlly1 + HorntrendAlly1, 
       data = trends2, gap = 1/10, cex = 0.2, col = '#00000022', 
       lower.panel = panel.cor,
       upper.panel = panel.smooth)

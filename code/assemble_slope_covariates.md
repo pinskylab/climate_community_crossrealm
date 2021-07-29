@@ -52,7 +52,7 @@ signedsqrt_trans <- function() trans_new('signedsqrt',
 norig <- nrow(bt); norig
 ```
 
-    ## [1] 88592
+    ## [1] 120654
 
 ``` r
 # trim out timeseries with too few species
@@ -68,7 +68,7 @@ bt <- bt[Nspp > 2, ]
 bt[Nave < 10, .N]
 ```
 
-    ## [1] 2244
+    ## [1] 3297
 
 ``` r
 bt <- bt[Nave >= 10 | is.na(Nave), ]
@@ -77,13 +77,13 @@ bt <- bt[Nave >= 10 | is.na(Nave), ]
 nrow(bt)
 ```
 
-    ## [1] 86348
+    ## [1] 117357
 
 ``` r
 nrow(bt)/norig
 ```
 
-    ## [1] 0.9746704
+    ## [1] 0.9726739
 
 ``` r
 bt[, length(unique(STUDY_ID))]
