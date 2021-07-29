@@ -1,0 +1,36 @@
+---
+title: "Replicate and extend analyses from Antao et al. 2020"
+output: 
+    github_document: default
+---
+
+# Load data
+```{r setup, echo=FALSE}
+library(glmmTMB)
+library(data.table)
+
+
+load(url('https://github.com/lauraantao/Temp_Biodiv_Change/raw/master/R/lm_slopes_meta_temperature3.Rdata')) # load Antao data
+dat <- data.table(lm_slopes_meta_temperature3)
+
+datRichMar <- droplevels(dat[model_id == 'logS_lm' & REALM=='Marine',])
+datRichTerr <- droplevels(dat[model_id == 'logS_lm' & REALM=='Terrestrial',])
+```
+
+# Fit model
+```{r}
+mod0 <- glmmTMB(slope ~ 0 + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+                +(0 + TempGAMCoef|REALM/taxa_mod1) +(1|REALM/taxa_mod1/STUDY_ID), 
+                disp = ~std.error*REALM,
+                data = dat[model_id == 'logS_lm',])
+
+
+mod0Mar <- glmmTMB(slope ~ 0 + TempGAMCoef+new_sTempYear +TempGAMCoef:new_sTempYear +(0 + TempGAMCoef|taxa_mod1) +(1|taxa_mod1/STUDY_ID), 
+                disp = ~std.error,
+                data = datRichMar)
+
+mod0Terr <- glmmTMB(slope ~ 0 + TempGAMCoef+new_sTempYear +TempGAMCoef:new_sTempYear +(0 + TempGAMCoef|taxa_mod1) +(1|taxa_mod1/STUDY_ID), 
+                disp = ~std.error,
+                data = datRichTerr)
+
+```
