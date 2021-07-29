@@ -35,18 +35,23 @@ bttrend <- readRDS(here('temp', 'trendstemp.rds'))
 # convert biotime to long format
 btlong <- melt(bttrend, id.vars = c('rarefyID', 'REALM', 'Biome', 'taxa_mod', 'STUDY_ID', 'rarefyID_x', 'rarefyID_y'),
                measure.vars = list(c('Jtutrend3', 'Jbetatrend3', 'Horntrend3', 'Jtutrend5', 'Jbetatrend5', 'Horntrend5', 
-                                     'Jtutrend10', 'Jbetatrend10', 'Horntrend10', 'Jtutrend20', 'Jbetatrend20', 'Horntrend20'),
-                                     c('Jtutrend3_se', 'Jbetatrend3_se', 'Horntrend3_se', 'Jtutrend5_se', 'Jbetatrend5_se',
-                                       'Horntrend5_se', 'Jtutrend10_se', 'Jbetatrend10_se', 'Horntrend10_se', 'Jtutrend20_se',
-                                       'Jbetatrend20_se', 'Horntrend20_se'),
-                                     c('Jtutrend3_y1', 'Jbetatrend3_y1', 'Horntrend3_y1', 'Jtutrend5_y1', 'Jbetatrend5_y1',
-                                       'Horntrend5_y1', 'Jtutrend10_y1', 'Jbetatrend10_y1', 'Horntrend10_y1', 'Jtutrend20_y1',
-                                       'Jbetatrend20_y1', 'Horntrend20_y1'),
-                                     c('Jtutrend3_y2', 'Jbetatrend3_y2', 'Horntrend3_y2', 'Jtutrend5_y2', 'Jbetatrend5_y2',
-                                       'Horntrend5_y2', 'Jtutrend10_y2', 'Jbetatrend10_y2', 'Horntrend10_y2', 'Jtutrend20_y2',
-                                       'Jbetatrend20_y2','Horntrend20_y2')),
-                                value.name = c('disstrend', 'trendse', 'year1', 'year2'))
-btlong[, measure := rep(c('Jtu', 'Jbeta', 'Horn'), 4)[variable]] # add Jtu, Jbeta, or Horn
+                                     'Jtutrend10', 'Jbetatrend10', 'Horntrend10', 'Jtutrend20', 'Jbetatrend20', 'Horntrend20',
+                                     'JtutrendAll', 'JbetatrendAll', 'HorntrendAll'),
+                                   c('Jtutrend3_se', 'Jbetatrend3_se', 'Horntrend3_se', 'Jtutrend5_se', 'Jbetatrend5_se',
+                                     'Horntrend5_se', 'Jtutrend10_se', 'Jbetatrend10_se', 'Horntrend10_se', 'Jtutrend20_se',
+                                     'Jbetatrend20_se', 'Horntrend20_se',
+                                     'JtutrendAll_se', 'JbetatrendAll_se', 'HorntrendAll_se'),
+                                   c('Jtutrend3_y1', 'Jbetatrend3_y1', 'Horntrend3_y1', 'Jtutrend5_y1', 'Jbetatrend5_y1',
+                                     'Horntrend5_y1', 'Jtutrend10_y1', 'Jbetatrend10_y1', 'Horntrend10_y1', 'Jtutrend20_y1',
+                                     'Jbetatrend20_y1', 'Horntrend20_y1',
+                                     'JtutrendAll_y1', 'JbetatrendAll_y1', 'HorntrendAll_y1'),
+                                   c('Jtutrend3_y2', 'Jbetatrend3_y2', 'Horntrend3_y2', 'Jtutrend5_y2', 'Jbetatrend5_y2',
+                                     'Horntrend5_y2', 'Jtutrend10_y2', 'Jbetatrend10_y2', 'Horntrend10_y2', 'Jtutrend20_y2',
+                                     'Jbetatrend20_y2','Horntrend20_y2',
+                                     'JtutrendAll_y2', 'JbetatrendAll_y2', 'HorntrendAll_y2')),
+               value.name = c('disstrend', 'trendse', 'year1', 'year2'))
+btlong[, measure := rep(c('Jtu', 'Jbeta', 'Horn'), 5)[variable]] # add Jtu, Jbeta, or Horn
+btlong[, duration_group := rep(c('3', '5', '10', '20', 'All'), rep(3,5))[variable]] # add 3,5,10,20,all (duration)
 btlong[, variable := NULL]
 btlong <- btlong[!is.na(year1) & !is.na(year2) & !is.na(disstrend), ] # trim out missing
 
@@ -149,6 +154,10 @@ bt[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
 # calculate duration
 bt[, duration := year2 - year1]
 
+
+# set duration group order
+bt[, duration_group := factor(duration_group, levels = c('3', '5', '10', '20', 'All'), ordered = FALSE)]
+
 #add a comparison id
 bt[, compID := paste0(rarefyID, '_', year1, '_', year2)]
 
@@ -193,7 +202,8 @@ scaling$plus[scaling$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
 Only if file doesn't yet exist
 ```{r write out, echo=FALSE}
 if(!file.exists(here('output', 'slope_w_covariates.csv.gz'))){
-  write.csv(bt[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, disstrend, trendse, measure, 
+  write.csv(bt[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration_group, duration, 
+                  disstrend, trendse, measure, 
                   tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, temptrend, temptrend.sc, temptrend_abs.sc,
                   mass.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc,
@@ -209,44 +219,53 @@ if(!file.exists(here('output', 'slope_w_covariates.csv.gz'))){
 # Check variable distributions
 ## Response variables
 ```{r summaries response}
-bt[measure =='Jbeta' & year2 - year1 == 2, summary(disstrend)]
-bt[measure =='Jtu' & year2 - year1 == 2, summary(disstrend)]
-bt[measure =='Horn' & year2 - year1 == 2, summary(disstrend)]
+bt[measure =='Jbeta' & duration_group == '3', summary(disstrend)]
+bt[measure =='Jtu' & duration_group == '3', summary(disstrend)]
+bt[measure =='Horn' & duration_group == '3', summary(disstrend)]
 
-bt[measure =='Jbeta' & year2 - year1 == 4, summary(disstrend)]
-bt[measure =='Jtu' & year2 - year1 == 4, summary(disstrend)]
-bt[measure =='Horn' & year2 - year1 == 4, summary(disstrend)]
+bt[measure =='Jbeta' & duration_group == '5', summary(disstrend)]
+bt[measure =='Jtu' & duration_group == '5', summary(disstrend)]
+bt[measure =='Horn' & duration_group == '5', summary(disstrend)]
 
-bt[measure =='Jbeta' & year2 - year1 == 9, summary(disstrend)]
-bt[measure =='Jtu' & year2 - year1 == 9, summary(disstrend)]
-bt[measure =='Horn' & year2 - year1 == 9, summary(disstrend)]
+bt[measure =='Jbeta' & duration_group == '10', summary(disstrend)]
+bt[measure =='Jtu' & duration_group == '10', summary(disstrend)]
+bt[measure =='Horn' & duration_group == '10', summary(disstrend)]
 
-bt[measure =='Jbeta' & year2 - year1 == 19, summary(disstrend)]
-bt[measure =='Jtu' & year2 - year1 == 19, summary(disstrend)]
-bt[measure =='Horn' & year2 - year1 == 19, summary(disstrend)]
+bt[measure =='Jbeta' & duration_group == '20', summary(disstrend)]
+bt[measure =='Jtu' & duration_group == '20', summary(disstrend)]
+bt[measure =='Horn' & duration_group == '20', summary(disstrend)]
+
+bt[measure =='Jbeta' & duration_group == 'All', summary(disstrend)]
+bt[measure =='Jtu' & duration_group == 'All', summary(disstrend)]
+bt[measure =='Horn' & duration_group == 'All', summary(disstrend)]
+
 ```
 
 ```{r histograms response, echo = FALSE}
 # histograms for 3-year ts
-invisible(bt[measure =='Jbeta' & year2 - year1 == 2, hist(disstrend, main = 'Jaccard total 3-year slope', breaks = 80)])
-invisible(bt[measure =='Jtu' & year2 - year1 == 2, hist(disstrend, main = 'Jaccard turnover 3-year slope', breaks = 80)])
-invisible(bt[measure =='Horn' & year2 - year1 == 2, hist(disstrend, main = 'Morisita-Horn 3-year slope', breaks = 80)])
+invisible(bt[measure =='Jbeta' & duration_group == '3', hist(disstrend, main = 'Jaccard total 3-year slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & duration_group == '3', hist(disstrend, main = 'Jaccard turnover 3-year slope', breaks = 80)])
+invisible(bt[measure =='Horn' & duration_group == '3', hist(disstrend, main = 'Morisita-Horn 3-year slope', breaks = 80)])
 
 # histograms for 5-year ts
-invisible(bt[measure =='Jbeta' & year2 - year1 == 4, hist(disstrend, main = 'Jaccard total 5-year slope', breaks = 80)])
-invisible(bt[measure =='Jtu' & year2 - year1 == 4, hist(disstrend, main = 'Jaccard turnover 5-year slope', breaks = 80)])
-invisible(bt[measure =='Horn' & year2 - year1 == 4, hist(disstrend, main = 'Morisita-Horn 5-year slope', breaks = 80)])
+invisible(bt[measure =='Jbeta' & duration_group == '5', hist(disstrend, main = 'Jaccard total 5-year slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & duration_group == '5', hist(disstrend, main = 'Jaccard turnover 5-year slope', breaks = 80)])
+invisible(bt[measure =='Horn' & duration_group == '5', hist(disstrend, main = 'Morisita-Horn 5-year slope', breaks = 80)])
 
 # histograms for 10-year ts
-invisible(bt[measure =='Jbeta' & year2 - year1 == 9, hist(disstrend, main = 'Jaccard total 10-year slope', breaks = 80)])
-invisible(bt[measure =='Jtu' & year2 - year1 == 9, hist(disstrend, main = 'Jaccard turnover 10-year slope', breaks = 80)])
-invisible(bt[measure =='Horn' & year2 - year1 == 9, hist(disstrend, main = 'Morisita-Horn 10-year slope', breaks = 80)])
+invisible(bt[measure =='Jbeta' & duration_group == '10', hist(disstrend, main = 'Jaccard total 10-year slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & duration_group == '10', hist(disstrend, main = 'Jaccard turnover 10-year slope', breaks = 80)])
+invisible(bt[measure =='Horn' & duration_group == '10', hist(disstrend, main = 'Morisita-Horn 10-year slope', breaks = 80)])
 
 # histograms for 20-year ts
-invisible(bt[measure =='Jbeta' & year2 - year1 == 19, hist(disstrend, main = 'Jaccard total 20-year slope', breaks = 80)])
-invisible(bt[measure =='Jtu' & year2 - year1 == 19, hist(disstrend, main = 'Jaccard turnover 20-year slope', breaks = 80)])
-invisible(bt[measure =='Horn' & year2 - year1 == 19, hist(disstrend, main = 'Morisita-Horn 20-year slope', breaks = 80)])
+invisible(bt[measure =='Jbeta' & duration_group == '20', hist(disstrend, main = 'Jaccard total 20-year slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & duration_group == '20', hist(disstrend, main = 'Jaccard turnover 20-year slope', breaks = 80)])
+invisible(bt[measure =='Horn' & duration_group == '20', hist(disstrend, main = 'Morisita-Horn 20-year slope', breaks = 80)])
 
+# histograms for all ts
+invisible(bt[measure =='Jbeta' & duration_group == 'All', hist(disstrend, main = 'Jaccard total 20-year slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & duration_group == 'All', hist(disstrend, main = 'Jaccard turnover 20-year slope', breaks = 80)])
+invisible(bt[measure =='Horn' & duration_group == 'All', hist(disstrend, main = 'Morisita-Horn 20-year slope', breaks = 80)])
 
 ```
 
@@ -256,7 +275,7 @@ invisible(bt[measure =='Horn' & year2 - year1 == 19, hist(disstrend, main = 'Mor
 cexmain = 0.6
 par(mfrow = c(5,4))
 invisible(bt[, hist(year1, main = 'Start year', cex.main = cexmain)])
-invisible(bt[, hist(year2 - year1, main = 'Duration (years)', cex.main = cexmain)])
+invisible(bt[, hist(duration, main = 'Duration (years)', cex.main = cexmain)])
 invisible(bt[, hist(mass, main = 'Mass (g)', cex.main = cexmain)])
 invisible(bt[, hist(tempave_metab, main = 'Metabolic temperature (°C)', cex.main = cexmain)])
 invisible(bt[, hist(endofrac, main = 'Endotherms (fraction)', cex.main = cexmain)])
@@ -294,7 +313,7 @@ invisible(bt[, hist(human_bowler.sc, main = 'log Human impact score (Bowler)', c
 
 # Response variable SE
 ```{r response SE, fig.width=9, fig.height=9}
-ggplot(bt, aes(disstrend, trendse)) + geom_point() + facet_wrap(vars(year2 - year1 + 1, measure), scales = 'free', ncol = 3)
+ggplot(bt, aes(disstrend, trendse)) + geom_point() + facet_wrap(vars(duration_group, measure), scales = 'free', ncol = 3)
 ```
 
 # Check correlations among variables 
@@ -310,14 +329,14 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
     if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
     text(0.5, 0.5, txt) #, cex = cex.cor * r)
 }
-pairs(formula = ~ tempave.sc + tempave_metab.sc + seas.sc + microclim.sc + temptrend.sc + temptrend_abs.sc + mass.sc + endothermfrac.sc + nspp.sc + thermal_bias.sc + npp.sc + human_bowler.sc, data = bt[measure == 'Jtu' & year2 - year1 == 2], gap = 1/10, cex = 0.2, col = '#00000022', lower.panel = panel.cor)
+pairs(formula = ~ tempave.sc + tempave_metab.sc + seas.sc + microclim.sc + temptrend.sc + temptrend_abs.sc + mass.sc + endothermfrac.sc + nspp.sc + thermal_bias.sc + npp.sc + human_bowler.sc, data = bt[measure == 'Jtu' & duration_group == 'All'], gap = 1/10, cex = 0.2, col = '#00000022', lower.panel = panel.cor)
 
 ```
 
 
 # Compare covariates across realms
 ```{r compare across realms, fig.height=12, fig.width=9, echo=FALSE}
-i <- bt[, !duplicated(rarefyID)]; sum(i)
+i <- bt[, !duplicated(rarefyID) & duration_group == 'All']; sum(i)
 par(mfrow=c(5,3))
 beanplot(rarefyID_y ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Latitude (degN)', ll = 0.05)
 beanplot(tempave ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature (degC)', ll = 0.05)
@@ -339,38 +358,39 @@ beanplot(npp ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A
 
 
 # Plot slope vs. duration
+Use the slopes with unstandardized durations
 ```{r plot slope vs duration, echo=FALSE, fig.height = 6, fig.width = 11}
-p1 <- ggplot(bt[measure == 'Jtu',], aes(year2 - year1, disstrend, group = REALM, color = REALM)) +
+p1 <- ggplot(bt[measure == 'Jtu' & duration_group == 'All',], aes(duration, disstrend, group = REALM, color = REALM)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'lm', na.rm = TRUE) +
+  geom_smooth(na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Years', y = 'Jaccard turnover slope')
 
-p2 <- ggplot(bt[measure == 'Jbeta',], aes(year2 - year1, disstrend, group = REALM, color = REALM)) +
+p2 <- ggplot(bt[measure == 'Jbeta' & duration_group == 'All',], aes(duration, disstrend, group = REALM, color = REALM)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'lm', na.rm = TRUE) +
+  geom_smooth(na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Years', y = 'Jaccard total slope')
 
-p3 <- ggplot(bt[measure == 'Horn',], aes(year2 - year1, disstrend, group = REALM, color = REALM)) +
+p3 <- ggplot(bt[measure == 'Horn' & duration_group == 'All',], aes(duration, disstrend, group = REALM, color = REALM)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'lm', na.rm = TRUE) +
+  geom_smooth(na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Years', y = 'Morisita-Horn slope')
 
 # without points
-p4 <- ggplot(bt[measure == 'Jtu',], aes(year2 - year1, disstrend, group = REALM, color = REALM)) +
-  geom_smooth(method = 'lm', na.rm = TRUE) +
+p4 <- ggplot(bt[measure == 'Jtu' & duration_group == 'All',], aes(duration, disstrend, group = REALM, color = REALM)) +
+  geom_smooth(na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Years', y = 'Jaccard turnover slope')
 
-p5 <- ggplot(bt[measure == 'Jbeta',], aes(year2 - year1, disstrend, group = REALM, color = REALM)) +
-  geom_smooth(method = 'lm', na.rm = TRUE) +
+p5 <- ggplot(bt[measure == 'Jbeta' & duration_group == 'All',], aes(duration, disstrend, group = REALM, color = REALM)) +
+  geom_smooth(na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Years', y = 'Jaccard total slope')
 
-p6 <- ggplot(bt[measure == 'Horn',], aes(year2 - year1, disstrend, group = REALM, color = REALM)) +
-  geom_smooth(method = 'lm', na.rm = TRUE) +
+p6 <- ggplot(bt[measure == 'Horn' & duration_group == 'All',], aes(duration, disstrend, group = REALM, color = REALM)) +
+  geom_smooth(na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Years', y = 'Morisita-Horn slope')
 
@@ -380,14 +400,16 @@ grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 3)
 ```
 
 # Plot dissimilarity vs. explanatory variables
+
 Lines are ggplot smoother fits
+
 ## Jtu
 ### Realm
 ```{r, echo=FALSE, warning = FALSE, message = FALSE}
 ggplot(bt[measure == 'Jtu'], aes(REALM, disstrend)) +
   geom_boxplot(na.rm = TRUE) + 
   labs(x = 'Realm', y = 'Jaccard turnover slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 ```
 
 ### Temperature trend
@@ -397,7 +419,7 @@ ggplot(bt[measure == 'Jtu'], aes(temptrend, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard turnover slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 ```
 
 ### abs(Temperature trend)
@@ -407,7 +429,7 @@ ggplot(bt[measure == 'Jtu'], aes(abs(temptrend), disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'abs(Temperature trend) (°C/yr)', y = 'Jaccard turnover slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 ```
 
 ### Temperature
@@ -417,7 +439,7 @@ ggplot(bt[measure == 'Jtu'], aes(tempave, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Temperature (°C)', y = 'Jaccard turnover slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -428,7 +450,7 @@ ggplot(bt[measure == 'Jtu'], aes(tempave_metab, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Metabolic temperature (°C)', y = 'Jaccard turnover slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -439,7 +461,7 @@ ggplot(bt[measure == 'Jtu'], aes(seas, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Seasonality (°C)', y = 'Jaccard turnover slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -451,7 +473,7 @@ ggplot(bt[measure == 'Jtu'], aes(microclim, disstrend)) +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Microclimate availability (°C)', y = 'Jaccard turnover slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -463,7 +485,7 @@ ggplot(bt[measure == 'Jtu'], aes(mass, disstrend)) +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Mass (g))', y = 'Jaccard turnover slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -474,7 +496,7 @@ ggplot(bt[measure == 'Jtu'], aes(endofrac, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 3), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Fraction endotherms', y = 'Jaccard turnover slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -486,7 +508,7 @@ ggplot(bt[measure == 'Jtu'], aes(Nspp, disstrend)) +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Number of species', y = 'Jaccard turnover slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -497,7 +519,7 @@ ggplot(bt[measure == 'Jtu'], aes(thermal_bias, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Thermal bias (°C)', y = 'Jaccard turnover slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -509,7 +531,7 @@ ggplot(bt[measure == 'Jtu'], aes(npp, disstrend)) +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Net primary productivity (mg C / m2 / day)', y = 'Jaccard turnover slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -520,7 +542,7 @@ ggplot(bt[measure == 'Jtu'], aes(human_bowler, disstrend, color = REALM)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Bowler human impact score', y = 'Jaccard turnover slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 ```
 
 
@@ -533,7 +555,7 @@ ggplot(bt[measure == 'Jtu'], aes(human_bowler, disstrend, color = REALM)) +
 ggplot(bt[measure == 'Jbeta'], aes(REALM, disstrend)) +
   geom_boxplot(na.rm = TRUE) + 
   labs(x = 'Realm', y = 'Jaccard total slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 ```
 
 ### Temperature trend
@@ -543,7 +565,7 @@ ggplot(bt[measure == 'Jbeta'], aes(temptrend, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Temperature trend (°C/yr)', y = 'Jaccard total slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -554,7 +576,7 @@ ggplot(bt[measure == 'Jbeta'], aes(abs(temptrend), disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'abs(Temperature trend) (°C/yr)', y = 'Jaccard total slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -565,7 +587,7 @@ ggplot(bt[measure == 'Jbeta'], aes(tempave, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Temperature (°C)', y = 'Jaccard total slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -576,7 +598,7 @@ ggplot(bt[measure == 'Jbeta'], aes(tempave_metab, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Metabolic temperature (°C)', y = 'Jaccard total slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -587,7 +609,7 @@ ggplot(bt[measure == 'Jbeta'], aes(seas, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Seasonality (°C)', y = 'Jaccard total slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -599,7 +621,7 @@ ggplot(bt[measure == 'Jbeta'], aes(microclim, disstrend)) +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Microclimate availability (°C)', y = 'Jaccard total slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -611,7 +633,7 @@ ggplot(bt[measure == 'Jbeta'], aes(mass, disstrend)) +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Mass (g))', y = 'Jaccard total slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -622,7 +644,7 @@ ggplot(bt[measure == 'Jbeta'], aes(endofrac, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 3), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Fraction endotherms', y = 'Jaccard total slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -634,7 +656,7 @@ ggplot(bt[measure == 'Jbeta'], aes(Nspp, disstrend)) +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Number of species', y = 'Jaccard total slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -645,7 +667,7 @@ ggplot(bt[measure == 'Jbeta'], aes(thermal_bias, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Thermal bias (°C)', y = 'Jaccard total slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -657,7 +679,7 @@ ggplot(bt[measure == 'Jbeta'], aes(npp, disstrend)) +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Net primary productivity (mg C / m2 / day)', y = 'Jaccard total slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -668,7 +690,7 @@ ggplot(bt[measure == 'Jbeta'], aes(human_bowler, disstrend, color = REALM)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Bowler human impact score', y = 'Jaccard total slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 ```
 
 
@@ -678,7 +700,7 @@ ggplot(bt[measure == 'Jbeta'], aes(human_bowler, disstrend, color = REALM)) +
 ggplot(bt[measure == 'Horn'], aes(REALM, disstrend)) +
   geom_boxplot(na.rm = TRUE) + 
   labs(x = 'Realm', y = 'Horn slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -689,7 +711,7 @@ ggplot(bt[measure == 'Horn'], aes(temptrend, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Temperature trend (°C/yr)', y = 'Horn slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -700,7 +722,7 @@ ggplot(bt[measure == 'Horn'], aes(abs(temptrend), disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'abs(Temperature trend) (°C/yr)', y = 'Horn slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -711,7 +733,7 @@ ggplot(bt[measure == 'Horn'], aes(tempave, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Temperature (°C)', y = 'Horn slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -722,7 +744,7 @@ ggplot(bt[measure == 'Horn'], aes(tempave_metab, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Metabolic temperature (°C)', y = 'Horn slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -733,7 +755,7 @@ ggplot(bt[measure == 'Horn'], aes(seas, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Seasonality (°C)', y = 'Horn slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -745,7 +767,7 @@ ggplot(bt[measure == 'Horn'], aes(microclim, disstrend)) +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Microclimate availability (°C)', y = 'Horn slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -757,7 +779,7 @@ ggplot(bt[measure == 'Horn'], aes(mass, disstrend)) +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Mass (g))', y = 'Horn slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -768,7 +790,7 @@ ggplot(bt[measure == 'Horn'], aes(endofrac, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 3), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Fraction endotherms', y = 'Horn slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -780,7 +802,7 @@ ggplot(bt[measure == 'Horn'], aes(Nspp, disstrend)) +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Number of species', y = 'Horn slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -791,7 +813,7 @@ ggplot(bt[measure == 'Horn'], aes(thermal_bias, disstrend)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Thermal bias (°C)', y = 'Horn slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -803,7 +825,7 @@ ggplot(bt[measure == 'Horn'], aes(npp, disstrend)) +
   scale_color_brewer(palette="Set1") + 
   scale_x_log10() +
   labs(x = 'Net primary productivity (mg C / m2 / day)', y = 'Horn slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 
 ```
 
@@ -814,6 +836,6 @@ ggplot(bt[measure == 'Horn'], aes(human_bowler, disstrend, color = REALM)) +
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Bowler human impact score', y = 'Horn slope') +
-  facet_wrap(vars(duration), scales = 'free')
+  facet_wrap(vars(duration_group), scales = 'free')
 ```
 

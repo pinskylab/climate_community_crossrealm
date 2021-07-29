@@ -52,7 +52,7 @@ signedsqrt_trans <- function() trans_new('signedsqrt',
 norig <- nrow(bt); norig
 ```
 
-    ## [1] 56530
+    ## [1] 88592
 
 ``` r
 # trim out timeseries with too few species
@@ -68,7 +68,7 @@ bt <- bt[Nspp > 2, ]
 bt[Nave < 10, .N]
 ```
 
-    ## [1] 1191
+    ## [1] 2244
 
 ``` r
 bt <- bt[Nave >= 10 | is.na(Nave), ]
@@ -77,13 +77,13 @@ bt <- bt[Nave >= 10 | is.na(Nave), ]
 nrow(bt)
 ```
 
-    ## [1] 55339
+    ## [1] 86348
 
 ``` r
 nrow(bt)/norig
 ```
 
-    ## [1] 0.9789315
+    ## [1] 0.9746704
 
 ``` r
 bt[, length(unique(STUDY_ID))]
@@ -108,90 +108,111 @@ Only if file doesn’t yet exist
 ## Response variables
 
 ``` r
-bt[measure =='Jbeta' & year2 - year1 == 2, summary(disstrend)]
+bt[measure =='Jbeta' & duration_group == '3', summary(disstrend)]
 ```
 
     ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
     ## -1.00000 -0.05417  0.01868  0.01601  0.12500  0.65233
 
 ``` r
-bt[measure =='Jtu' & year2 - year1 == 2, summary(disstrend)]
+bt[measure =='Jtu' & duration_group == '3', summary(disstrend)]
 ```
 
     ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
     ## -1.000000 -0.095238  0.000000  0.009226  0.125000  1.000000
 
 ``` r
-bt[measure =='Horn' & year2 - year1 == 2, summary(disstrend)]
+bt[measure =='Horn' & duration_group == '3', summary(disstrend)]
 ```
 
     ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-    ## -0.999840 -0.145991 -0.009088 -0.013092  0.056011  1.000000
+    ## -1.000000 -0.056011  0.009088  0.013092  0.145991  0.999840
 
 ``` r
-bt[measure =='Jbeta' & year2 - year1 == 4, summary(disstrend)]
+bt[measure =='Jbeta' & duration_group == '5', summary(disstrend)]
 ```
 
     ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
     ## -0.18000 -0.01237  0.00966  0.01168  0.03961  0.22500
 
 ``` r
-bt[measure =='Jtu' & year2 - year1 == 4, summary(disstrend)]
+bt[measure =='Jtu' & duration_group == '5', summary(disstrend)]
 ```
 
     ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
     ## -0.285000 -0.025749  0.001921  0.008775  0.043333  0.321702
 
 ``` r
-bt[measure =='Horn' & year2 - year1 == 4, summary(disstrend)]
+bt[measure =='Horn' & duration_group == '5', summary(disstrend)]
 ```
 
     ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-    ## -0.289490 -0.044560 -0.003126 -0.012460  0.022781  0.299190
+    ## -0.299190 -0.022781  0.003126  0.012460  0.044560  0.289490
 
 ``` r
-bt[measure =='Jbeta' & year2 - year1 == 9, summary(disstrend)]
+bt[measure =='Jbeta' & duration_group == '10', summary(disstrend)]
 ```
 
     ##       Min.    1st Qu.     Median       Mean    3rd Qu.       Max. 
     ## -0.0318462  0.0002491  0.0061082  0.0080168  0.0142269  0.0958410
 
 ``` r
-bt[measure =='Jtu' & year2 - year1 == 9, summary(disstrend)]
+bt[measure =='Jtu' & duration_group == '10', summary(disstrend)]
 ```
 
     ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
     ## -0.106219 -0.003782  0.003558  0.004162  0.013034  0.097424
 
 ``` r
-bt[measure =='Horn' & year2 - year1 == 9, summary(disstrend)]
+bt[measure =='Horn' & duration_group == '10', summary(disstrend)]
 ```
 
     ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-    ## -0.140489 -0.017285 -0.005531 -0.009390  0.001275  0.050177
+    ## -0.050177 -0.001275  0.005531  0.009390  0.017285  0.140489
 
 ``` r
-bt[measure =='Jbeta' & year2 - year1 == 19, summary(disstrend)]
+bt[measure =='Jbeta' & duration_group == '20', summary(disstrend)]
 ```
 
     ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
     ## -0.005446  0.002775  0.003934  0.004658  0.005762  0.028083
 
 ``` r
-bt[measure =='Jtu' & year2 - year1 == 19, summary(disstrend)]
+bt[measure =='Jtu' & duration_group == '20', summary(disstrend)]
 ```
 
     ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
     ## -0.019038  0.001050  0.002657  0.002810  0.004431  0.031571
 
 ``` r
-bt[measure =='Horn' & year2 - year1 == 19, summary(disstrend)]
+bt[measure =='Horn' & duration_group == '20', summary(disstrend)]
 ```
 
     ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-    ## -0.033522 -0.008285 -0.004881 -0.006182 -0.002772  0.007307
+    ## -0.007307  0.002772  0.004881  0.006182  0.008285  0.033522
 
-![](assemble_slope_covariates_files/figure-gfm/histograms%20response-1.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-2.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-3.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-4.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-5.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-6.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-7.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-8.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-9.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-10.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-11.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-12.png)<!-- -->
+``` r
+bt[measure =='Jbeta' & duration_group == 'All', summary(disstrend)]
+```
+
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+    ## -0.366667  0.000000  0.005893  0.008879  0.015689  0.250000
+
+``` r
+bt[measure =='Jtu' & duration_group == 'All', summary(disstrend)]
+```
+
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+    ## -0.420000 -0.003611  0.003987  0.006832  0.015914  0.433333
+
+``` r
+bt[measure =='Horn' & duration_group == 'All', summary(disstrend)]
+```
+
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+    ## -0.397921 -0.001918  0.005509  0.011275  0.020494  0.383642
+
+![](assemble_slope_covariates_files/figure-gfm/histograms%20response-1.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-2.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-3.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-4.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-5.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-6.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-7.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-8.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-9.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-10.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-11.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-12.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-13.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-14.png)<!-- -->![](assemble_slope_covariates_files/figure-gfm/histograms%20response-15.png)<!-- -->
 
 ## Unscaled covariates
 
@@ -204,7 +225,7 @@ bt[measure =='Horn' & year2 - year1 == 19, summary(disstrend)]
 # Response variable SE
 
 ``` r
-ggplot(bt, aes(disstrend, trendse)) + geom_point() + facet_wrap(vars(year2 - year1 + 1, measure), scales = 'free', ncol = 3)
+ggplot(bt, aes(disstrend, trendse)) + geom_point() + facet_wrap(vars(duration_group, measure), scales = 'free', ncol = 3)
 ```
 
 ![](assemble_slope_covariates_files/figure-gfm/response%20SE-1.png)<!-- -->
@@ -232,18 +253,25 @@ Pearson’s r is in the lower triangle
 
 # Plot slope vs. duration
 
-    ## `geom_smooth()` using formula 'y ~ x'
-    ## `geom_smooth()` using formula 'y ~ x'
-    ## `geom_smooth()` using formula 'y ~ x'
-    ## `geom_smooth()` using formula 'y ~ x'
-    ## `geom_smooth()` using formula 'y ~ x'
-    ## `geom_smooth()` using formula 'y ~ x'
+Use the slopes with unstandardized durations
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
 ![](assemble_slope_covariates_files/figure-gfm/plot%20slope%20vs%20duration-1.png)<!-- -->
 
 # Plot dissimilarity vs. explanatory variables
 
-Lines are ggplot smoother fits \#\# Jtu \#\#\# Realm
+Lines are ggplot smoother fits
+
+## Jtu
+
+### Realm
+
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
 ### Temperature trend
