@@ -8,13 +8,18 @@ output:
 ```{r setup, echo=FALSE}
 library(glmmTMB)
 library(data.table)
+library(here)
 
-
+# Antao data
 load(url('https://github.com/lauraantao/Temp_Biodiv_Change/raw/master/R/lm_slopes_meta_temperature3.Rdata')) # load Antao data
 dat <- data.table(lm_slopes_meta_temperature3)
 
 datRichMar <- droplevels(dat[model_id == 'logS_lm' & REALM=='Marine',])
 datRichTerr <- droplevels(dat[model_id == 'logS_lm' & REALM=='Terrestrial',])
+
+# my data
+trends <- fread(here('output', 'slope_w_covariates.csv.gz'))
+
 ```
 
 # Fit model
@@ -25,12 +30,40 @@ mod0 <- glmmTMB(slope ~ 0 + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoe
                 data = dat[model_id == 'logS_lm',])
 
 
-mod0Mar <- glmmTMB(slope ~ 0 + TempGAMCoef+new_sTempYear +TempGAMCoef:new_sTempYear +(0 + TempGAMCoef|taxa_mod1) +(1|taxa_mod1/STUDY_ID), 
-                disp = ~std.error,
-                data = datRichMar)
+#mod0Mar <- glmmTMB(slope ~ 0 + TempGAMCoef+new_sTempYear +TempGAMCoef:new_sTempYear +(0 + TempGAMCoef|taxa_mod1) +(1|taxa_mod1/STUDY_ID), 
+#                disp = ~std.error,
+#                data = datRichMar)
 
-mod0Terr <- glmmTMB(slope ~ 0 + TempGAMCoef+new_sTempYear +TempGAMCoef:new_sTempYear +(0 + TempGAMCoef|taxa_mod1) +(1|taxa_mod1/STUDY_ID), 
-                disp = ~std.error,
-                data = datRichTerr)
+#mod0Terr <- glmmTMB(slope ~ 0 + TempGAMCoef+new_sTempYear +TempGAMCoef:new_sTempYear +(0 + TempGAMCoef|taxa_mod1) +(1|taxa_mod1/STUDY_ID), 
+ #               disp = ~std.error,
+ #               data = datRichTerr)
+
+summary(mod0)
+```
+
+# Compare datasets
+```{r}
+# merge
+comb <- merge(dat, trends[duration_group == 'Ally1', ], by = c('STUDY_ID', 'rarefyID', 'REALM', 'rarefyID_y'))
+
+# compare
+comb[, plot(startYear, year1)]
+comb[, plot(endYear, year2)]
+comb[, plot(TempGAMCoef, temptrend)]; abline(0,1)
+comb[, plot(new_sTempYear, tempave.sc, col = c('green', 'blue')[(REALM=='Marine')+1])]; abline(0,1)
+comb[model_id == 'logS_lm' & measure == 'Jtu', plot(slope, disstrend, xlab = 'logS slope', ylab = 'Jtu slope')]
+comb[model_id == 'Gains_lm' & measure == 'Jtu', plot(slope, disstrend, xlab = 'Gains slope', ylab = 'Jtu slope')]
+comb[model_id == 'Losses_lm' & measure == 'Jtu', plot(slope, disstrend, xlab = 'Losses slope', ylab = 'Jtu slope')]
+
+comb[model_id == 'logS_lm' & measure == 'Jbeta', plot(slope, disstrend, xlab = 'logS slope', ylab = 'Jbeta slope')]
+comb[model_id == 'Gains_lm' & measure == 'Jbeta', plot(slope, disstrend, xlab = 'Gains slope', ylab = 'Jbeta slope')]
+comb[model_id == 'Losses_lm' & measure == 'Jbeta', plot(slope, disstrend, xlab = 'Losses slope', ylab = 'Jbeta slope')]
+
+comb[model_id == 'logS_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'logS slope', ylab = 'Horn slope')]
+comb[model_id == 'logN_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'logN slope', ylab = 'Horn slope')]
+comb[model_id == 'Gains_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'Gains slope', ylab = 'Horn slope')]
+comb[model_id == 'Losses_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'Losses slope', ylab = 'Horn slope')]
 
 ```
+
+
