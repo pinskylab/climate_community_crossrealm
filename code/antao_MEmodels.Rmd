@@ -22,23 +22,38 @@ trends <- fread(here('output', 'slope_w_covariates.csv.gz'))
 
 ```
 
-# Fit model
+# Fit richness model
+The richness (logS) model matches the published results if the error and RE terms are realm-specific.
 ```{r}
+# published model
 mod0 <- glmmTMB(slope ~ 0 + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
                 +(0 + TempGAMCoef|REALM/taxa_mod1) +(1|REALM/taxa_mod1/STUDY_ID), 
                 disp = ~std.error*REALM,
                 data = dat[model_id == 'logS_lm',])
 
-
-#mod0Mar <- glmmTMB(slope ~ 0 + TempGAMCoef+new_sTempYear +TempGAMCoef:new_sTempYear +(0 + TempGAMCoef|taxa_mod1) +(1|taxa_mod1/STUDY_ID), 
-#                disp = ~std.error,
-#                data = datRichMar)
-
-#mod0Terr <- glmmTMB(slope ~ 0 + TempGAMCoef+new_sTempYear +TempGAMCoef:new_sTempYear +(0 + TempGAMCoef|taxa_mod1) +(1|taxa_mod1/STUDY_ID), 
- #               disp = ~std.error,
- #               data = datRichTerr)
-
 summary(mod0)
+```
+
+Adding an intercept to allow turnover at 0 temperature change doesn't alter the results
+```{r}
+# add an intercept to allow some turnover at 0 temperature change and ave temp. wouldn't converge with realm-specific intercept.
+mod1 <- glmmTMB(slope ~ 1 + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+                +(0 + TempGAMCoef|REALM/taxa_mod1) +(1|REALM/taxa_mod1/STUDY_ID), 
+                disp = ~std.error*REALM,
+                data = dat[model_id == 'logS_lm',])
+summary(mod1)
+```
+
+Another approach to adding an intercept: realm-specific, but with simpler REs. REALM-specific RE intercepts won't converge.
+```{r}
+# realm-specific intercept. Simplify REs that were near zero.
+mod2 <- glmmTMB(slope ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+                +(0 + TempGAMCoef|REALM/taxa_mod1) +(1|taxa_mod1/STUDY_ID), 
+                disp = ~std.error*REALM,
+                data = dat[model_id == 'logS_lm',])
+
+
+summary(mod2)
 ```
 
 # Compare datasets
