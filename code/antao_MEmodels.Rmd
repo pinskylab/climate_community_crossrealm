@@ -9,6 +9,8 @@ output:
 library(glmmTMB)
 library(data.table)
 library(here)
+library(MuMIn)
+library(parallel) # for mclapply()
 
 # Antao data
 load(url('https://github.com/lauraantao/Temp_Biodiv_Change/raw/master/R/lm_slopes_meta_temperature3.Rdata')) # load Antao data
@@ -20,6 +22,84 @@ datRichTerr <- droplevels(dat[model_id == 'logS_lm' & REALM=='Terrestrial',])
 # my data
 trends <- fread(here('output', 'slope_w_covariates.csv.gz'))
 
+# original dataset from Shane
+load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians, which has all pairwise dissimilarities
+bt <- data.table(rarefied_beta_medians); rm(rarefied_beta_medians)
+
+# richness
+rich <- fread(here('output','richness_by_rarefyID.csv.gz')) # number of species
+
+
+# merge
+comb <- merge(dat, trends[duration_group == 'Ally1', !c("rarefyID_y" ,"duration", 'REALM')], by = c('STUDY_ID', 'rarefyID'), all = TRUE, allow.cartesian = TRUE)
+
+# data subsets
+datS <- dat[model_id == 'logS_lm',]
+combMHlogS <- comb[model_id == 'logS_lm' & !is.na(human_bowler.sc) & !is.na(mass.sc), ]
+
+```
+
+# Compare datasets
+## Trends included
+```{r}
+# how many ts missing?
+length(setdiff(dat$rarefyID, bt$rarefyID))
+length(missing <- setdiff(dat$rarefyID, trends$rarefyID))
+length(setdiff(bt$rarefyID, trends$rarefyID))
+length(setdiff(dat$rarefyID, rich$rarefyID))
+
+#richness of missing ts
+rich[rarefyID %in% missing, summary(Nspp)]
+rich[rarefyID %in% missing & Nspp < 3, .N] # only 69 fail because too few species
+
+# years in missing ts
+nyrs <- bt[, .(nyrBT = length(unique(c(year1, year2)))), by = rarefyID]
+nyrs[rarefyID %in% missing, summary(nyrBT)]
+nyrs[rarefyID %in% missing & nyrBT < 5, .N] # none fail because too few years
+
+# Full Antao vs. Antao now with human and mass
+length(setdiff(dat$rarefyID, combMHlogS$rarefyID)) # only missing 92 ts
+
+```
+## Response variables
+### Plots
+```{r}
+col = '#00000033'
+# compare
+comb[, plot(startYear, year1)]
+comb[, plot(endYear, year2)]
+comb[, plot(TempGAMCoef, temptrend)]; abline(0,1)
+comb[, plot(new_sTempYear, tempave.sc, col = c('green', 'blue')[(REALM=='Marine')+1])]; abline(0,1)
+comb[model_id == 'logS_lm' & measure == 'Jtu', plot(slope, disstrend, xlab = 'logS slope', ylab = 'Jtu slope', col = col)]
+comb[model_id == 'Gains_lm' & measure == 'Jtu', plot(slope, disstrend, xlab = 'Gains slope', ylab = 'Jtu slope', col = col)]
+comb[model_id == 'Losses_lm' & measure == 'Jtu', plot(slope, disstrend, xlab = 'Losses slope', ylab = 'Jtu slope', col = col)]
+
+comb[model_id == 'logS_lm' & measure == 'Jbeta', plot(slope, disstrend, xlab = 'logS slope', ylab = 'Jbeta slope', col = col)]
+comb[model_id == 'Gains_lm' & measure == 'Jbeta', plot(slope, disstrend, xlab = 'Gains slope', ylab = 'Jbeta slope', col = col)]
+comb[model_id == 'Losses_lm' & measure == 'Jbeta', plot(slope, disstrend, xlab = 'Losses slope', ylab = 'Jbeta slope', col = col)]
+
+comb[model_id == 'logS_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'logS slope', ylab = 'Horn slope', col = col)]
+comb[model_id == 'logN_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'logN slope', ylab = 'Horn slope', col = col)]
+comb[model_id == 'Gains_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'Gains slope', ylab = 'Horn slope', col = col)]
+comb[model_id == 'Losses_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'Losses slope', ylab = 'Horn slope', col = col)]
+
+```
+
+### Correlations
+```{r}
+comb[model_id == 'logS_lm' & measure == 'Jtu', cor(slope, disstrend)]
+comb[model_id == 'Gains_lm' & measure == 'Jtu', cor(slope, disstrend)]
+comb[model_id == 'Losses_lm' & measure == 'Jtu', cor(slope, disstrend)]
+
+comb[model_id == 'logS_lm' & measure == 'Jbeta', cor(slope, disstrend)]
+comb[model_id == 'Gains_lm' & measure == 'Jbeta', cor(slope, disstrend)]
+comb[model_id == 'Losses_lm' & measure == 'Jbeta', cor(slope, disstrend)]
+
+comb[model_id == 'logS_lm' & measure == 'Horn', cor(slope, disstrend)]
+comb[model_id == 'logN_lm' & measure == 'Horn', cor(slope, disstrend)]
+comb[model_id == 'Gains_lm' & measure == 'Horn', cor(slope, disstrend)]
+comb[model_id == 'Losses_lm' & measure == 'Horn', cor(slope, disstrend)]
+
 ```
 
 # Fit richness model
@@ -29,7 +109,7 @@ The richness (logS) model matches the published results if the error and RE term
 mod0 <- glmmTMB(slope ~ 0 + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
                 +(0 + TempGAMCoef|REALM/taxa_mod1) +(1|REALM/taxa_mod1/STUDY_ID), 
                 disp = ~std.error*REALM,
-                data = dat[model_id == 'logS_lm',])
+                data = datS)
 
 summary(mod0)
 ```
@@ -40,45 +120,94 @@ Adding an intercept to allow turnover at 0 temperature change doesn't alter the 
 mod1 <- glmmTMB(slope ~ 1 + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
                 +(0 + TempGAMCoef|REALM/taxa_mod1) +(1|REALM/taxa_mod1/STUDY_ID), 
                 disp = ~std.error*REALM,
-                data = dat[model_id == 'logS_lm',])
+                data = datS)
 summary(mod1)
 ```
 
-Another approach to adding an intercept: realm-specific, but with simpler REs. REALM-specific RE intercepts won't converge.
+Another approach to adding an intercept: realm-specific, but with simpler REs. Also adding REALM-specific RE intercepts won't converge.
 ```{r}
 # realm-specific intercept. Simplify REs that were near zero.
 mod2 <- glmmTMB(slope ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
                 +(0 + TempGAMCoef|REALM/taxa_mod1) +(1|taxa_mod1/STUDY_ID), 
                 disp = ~std.error*REALM,
-                data = dat[model_id == 'logS_lm',])
+                data = datS)
 
 
 summary(mod2)
 ```
 
-# Compare datasets
+## Richness model with abs(tempchange)
+abs(tempchange) is favored substantially (deltaAIC 70) over tempchange
 ```{r}
-# merge
-comb <- merge(dat, trends[duration_group == 'Ally1', ], by = c('STUDY_ID', 'rarefyID', 'REALM', 'rarefyID_y'))
+# realm-specific intercept. Simplify REs that were near zero.
+mod3 <- glmmTMB(slope ~ 0 + REALM + new_sTempYear:REALM + abs(TempGAMCoef):REALM + abs(TempGAMCoef):new_sTempYear:REALM
+                +(0 + abs(TempGAMCoef)|REALM/taxa_mod1) +(1|taxa_mod1/STUDY_ID), 
+                disp = ~std.error*REALM,
+                data = datS)
 
-# compare
-comb[, plot(startYear, year1)]
-comb[, plot(endYear, year2)]
-comb[, plot(TempGAMCoef, temptrend)]; abline(0,1)
-comb[, plot(new_sTempYear, tempave.sc, col = c('green', 'blue')[(REALM=='Marine')+1])]; abline(0,1)
-comb[model_id == 'logS_lm' & measure == 'Jtu', plot(slope, disstrend, xlab = 'logS slope', ylab = 'Jtu slope')]
-comb[model_id == 'Gains_lm' & measure == 'Jtu', plot(slope, disstrend, xlab = 'Gains slope', ylab = 'Jtu slope')]
-comb[model_id == 'Losses_lm' & measure == 'Jtu', plot(slope, disstrend, xlab = 'Losses slope', ylab = 'Jtu slope')]
 
-comb[model_id == 'logS_lm' & measure == 'Jbeta', plot(slope, disstrend, xlab = 'logS slope', ylab = 'Jbeta slope')]
-comb[model_id == 'Gains_lm' & measure == 'Jbeta', plot(slope, disstrend, xlab = 'Gains slope', ylab = 'Jbeta slope')]
-comb[model_id == 'Losses_lm' & measure == 'Jbeta', plot(slope, disstrend, xlab = 'Losses slope', ylab = 'Jbeta slope')]
+summary(mod3)
+AIC(mod2)
+AIC(mod3)
 
-comb[model_id == 'logS_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'logS slope', ylab = 'Horn slope')]
-comb[model_id == 'logN_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'logN slope', ylab = 'Horn slope')]
-comb[model_id == 'Gains_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'Gains slope', ylab = 'Horn slope')]
-comb[model_id == 'Losses_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'Losses slope', ylab = 'Horn slope')]
 
 ```
+# Fit model with mass and human
 
+```{r}
+modMH0 <- glmmTMB(slope ~ 0 + REALM + mass.sc + human_bowler.sc:REALM 
+                 + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+                +(0 + TempGAMCoef|REALM/taxa_mod1) +(1|taxa_mod1/STUDY_ID), 
+                disp = ~std.error*REALM,
+                data = combMHlogS)
+
+summary(modMH0)
+
+modMHFull <- glmmTMB(slope ~ 0 + REALM + mass.sc + human_bowler.sc:REALM +
+                         new_sTempYear:REALM + new_sTempYear:mass.sc + new_sTempYear:human_bowler.sc:REALM + 
+                         new_sTempYear:mass.sc:REALM + 
+                         TempGAMCoef:REALM + TempGAMCoef:mass.sc + TempGAMCoef:human_bowler.sc:REALM + 
+                         TempGAMCoef:mass.sc:REALM + 
+                         TempGAMCoef:new_sTempYear:REALM
+                     +(0 + TempGAMCoef|REALM/taxa_mod1) +(1|taxa_mod1/STUDY_ID), 
+                     disp = ~std.error*REALM,
+                     data = combMHlogS)
+
+modevalsMH <- dredge(modMHFull, evaluate = FALSE) # get the model calls
+length(modevalsMH) # how many to fit?
+modsMH <- mclapply(modevalsMH, eval, mc.cores = 25) # call in parallel
+#saveRDS(modsMH, file = here('temp', 'modsdredgeAntaoMH.rds'))
+
+cl <- sapply(modsMH, class)
+keep <- which(cl == 'glmmTMB') # those that didn't throw an error
+sum(cl != 'glmmTMB') # 158
+ll <- sapply(modsMH[keep], logLik)
+sum(is.na(ll)) # number that didn't converge. 38
+keep2 <- keep[!is.na(ll)] # find models that converged (non-NA logLik)
+ai <- sapply(modsMH[keep2], AIC)
+sum(is.na(ai)) # no AIC value (0)
+keep3 <- keep2[!is.na(ai)]
+length(keep3)
+
+modselMH <- model.sel(modsMH[keep3], rank = 'AIC', fit = FALSE)
+modselMH[modselMH$delta < 4,]
+
+modavgMH <- model.avg(modsMH[keep3])
+summary(modavgMH)
+confint(modavgMH, full = TRUE)
+coefTable(modselMH[1,]) # coefficients from the top model
+importance(modavgMH) # relative variable importance
+
+# a simpler model to capture the main effects
+modMH1 <- glmmTMB(slope ~ 0 + REALM + mass.sc:REALM + human_bowler.sc:REALM +
+                         new_sTempYear:REALM + new_sTempYear:human_bowler.sc:REALM + 
+                         new_sTempYear:mass.sc:REALM + 
+                         TempGAMCoef:REALM + TempGAMCoef:human_bowler.sc:REALM + 
+                         TempGAMCoef:new_sTempYear:REALM
+                     +(0 + TempGAMCoef|REALM/taxa_mod1) +(1|taxa_mod1/STUDY_ID), 
+                     disp = ~std.error*REALM,
+                     data = combMHlogS)
+
+summary(modMH1)
+```
 
