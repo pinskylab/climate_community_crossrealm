@@ -12,6 +12,7 @@ if(Sys.info()['nodename'] == 'annotate.sebs.rutgers.edu'){
 }
 library(data.table)
 library(ggplot2)
+library(here)
 
 
 knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
@@ -42,7 +43,7 @@ btinfo2 <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Bio
 bt <- merge(bt, btinfo2, by = 'rarefyID', all.x = TRUE)
 
 # richness
-rich <- fread('output/richness_by_rarefyID.csv.gz') # number of species
+rich <- fread(here('output','richness_by_rarefyID.csv.gz')) # number of species
 ```
 
 
@@ -63,16 +64,20 @@ Keep studies with:
 
 ```{r QAQC}
 length(unique(bt$rarefyID))
-
+length(setdiff(bt$rarefyID, rich$rarefyID))
 
 
 # number of years per study (in remaining samples)
 nyrs <- bt[, .(nyrBT = length(unique(c(year1, year2)))), by = rarefyID]
+length(setdiff(bt$rarefyID, nyrs$rarefyID))
+invisible(nyrs[, hist(nyrBT)])
+nyrs[nyrBT < 3, .N]
 
 # >2 species, >2 yrs
-bt <- bt[rarefyID %in% rich[Nspp > 2, rarefyID] & 
-           rarefyID %in% nyrs[nyrBT > 2, rarefyID], ]
+bt <- bt[rarefyID %in% rich[Nspp > 2, rarefyID], ]
+length(unique(bt$rarefyID))
 
+bt <- bt[rarefyID %in% nyrs[nyrBT > 2, rarefyID], ]
 length(unique(bt$rarefyID))
 ```
 
@@ -255,7 +260,7 @@ if(file.exists('temp/trendstemp.rds')){
   trends17 <- bt[, calctrendy1(Jbeta, year1, year2, 'JbetatrendAlly1'), by = .(rarefyID)]
   trends18 <- bt[!is.na(Horn), calctrendy1(Horn, year1, year2, 'HorntrendAlly1'), by = .(rarefyID)]
   
-  trends <- merge(trends1, trends2, all = TRUE)
+  trends <- merge(trends1, trends2, all = TRUE, by = 'rarefyID')
   trends <- merge(trends, trends3, all = TRUE)
   trends <- merge(trends, trends4, all = TRUE)
   trends <- merge(trends, trends5, all = TRUE)
@@ -273,9 +278,8 @@ if(file.exists('temp/trendstemp.rds')){
   trends <- merge(trends, trends17, all = TRUE)
   trends <- merge(trends, trends18, all = TRUE)
   
-  trends2 <- trends[!is.na(Jtutrend3) | !is.na(Jbetatrend3) | !is.na(Horntrend3), ]
 
-  saveRDS(trends2, file = 'temp/trendstemp.rds')
+  saveRDS(trends, file = here('temp', 'trendstemp.rds'))
   
 }
 

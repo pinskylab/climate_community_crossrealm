@@ -122,26 +122,6 @@ bt <- merge(bt, human[, .(rarefyID, human_bowler = atc)], all.x = TRUE) # human 
 
 
 
-## Trim data
-```{r}
-norig <- nrow(bt); norig
-# trim out timeseries with too few species
-bt[Nspp <= 2 | is.na(Nspp), .N] #0
-bt <- bt[Nspp > 2, ]
-  
-# or few individuals
-bt[Nave < 10, .N]
-bt <- bt[Nave >= 10 | is.na(Nave), ]
-
-
-nrow(bt)
-nrow(bt)/norig
-bt[, length(unique(STUDY_ID))]
-bt[, length(unique(rarefyID))]
-
-```
-
-
 ## Set up useful variables and transformations
 ```{r, echo=FALSE}
 # set realm order
