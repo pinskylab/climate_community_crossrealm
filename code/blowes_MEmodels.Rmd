@@ -1,0 +1,149 @@
+---
+title: "Replicate and extend analyses from Blowes et al. 2019"
+output: 
+    github_document: default
+---
+
+# Load data
+```{r setup, echo=FALSE}
+library(glmmTMB)
+library(data.table)
+library(here)
+library(MuMIn)
+library(parallel) # for mclapply()
+
+# turnover data
+trends <- fread(here('output', 'slope_w_covariates.csv.gz'))
+
+
+```
+
+# Fit biome-taxon model
+## On slopes from year 1 for all years
+Finds a significantly positive slope. Not as high as in 2019 paper, perhaps because year 1 self-comparison not included.
+```{r}
+# published model
+modJtuAlly1 <- glmmTMB(disstrend ~ 1 + (1|Biome/taxa_mod/STUDY_ID),
+                data = trends[measure == 'Jtu' & duration_group == 'Ally1', ])
+
+summary(modJtuAlly1)
+```
+
+### Slopes by realm/biome
+Essentially no difference among the realms. If anything, terrestrial is fastest.
+```{r}
+# extract
+res <- ranef(modJtuAlly1)$cond$Biome
+colnames(res) <- "re"
+res$Biome = rownames(res)
+realms <- trends[, .(REALM = unique(REALM)), by = Biome] # realm for each biome
+res <- as.data.table(merge(res, realms, by = 'Biome'))
+res[, intercept := re + as.numeric(fixef(modJtuAlly1))[1]] # add the fixed intercept to the REs
+
+# by realm
+res[, .(mean = mean(intercept), se = sd(intercept)/sqrt(.N), meanRE = mean(re), seRE = sd(re)/sqrt(.N)), by= REALM]
+```
+
+
+## On slopes from all pairs for all years
+Finds a significantly positive slope. Not as high as in 2019 paper, perhaps because year 1 self-comparison not included.
+```{r}
+# published model
+modJtuAll <- glmmTMB(disstrend ~ 1 + (1|Biome/taxa_mod/STUDY_ID),
+                data = trends[measure == 'Jtu' & duration_group == 'All', ])
+
+summary(modJtuAll)
+```
+
+### Slopes by realm/biome
+Essentially no difference among the realms. If anything, terrestrial is fastest.
+```{r}
+# extract
+res <- ranef(modJtuAll)$cond$Biome
+colnames(res) <- "re"
+res$Biome = rownames(res)
+realms <- trends[, .(REALM = unique(REALM)), by = Biome] # realm for each biome
+res <- as.data.table(merge(res, realms, by = 'Biome'))
+res[, intercept := re + as.numeric(fixef(modJtuAll))[1]] # add the fixed intercept to the REs
+
+# by realm
+res[, .(mean = mean(intercept), se = sd(intercept)/sqrt(.N), meanRE = mean(re), seRE = sd(re)/sqrt(.N)), by= REALM]
+```
+
+## On slopes from 5 consecutive years
+Finds a significantly positive slope. Not as high as in 2019 paper, perhaps because year 1 self-comparison not included.
+```{r}
+# published model
+modJtu5 <- glmmTMB(disstrend ~ 1 + (1|Biome/taxa_mod/STUDY_ID),
+                data = trends[measure == 'Jtu' & duration_group == '5', ])
+
+summary(modJtu5)
+```
+
+### Slopes by realm/biome
+Essentially no difference among the realms. If anything, terrestrial is fastest.
+```{r}
+# extract
+res <- ranef(modJtu5)$cond$Biome
+colnames(res) <- "re"
+res$Biome = rownames(res)
+realms <- trends[, .(REALM = unique(REALM)), by = Biome] # realm for each biome
+res <- as.data.table(merge(res, realms, by = 'Biome'))
+res[, intercept := re + as.numeric(fixef(modJtu5))[1]] # add the fixed intercept to the REs
+
+# by realm
+res[, .(mean = mean(intercept), se = sd(intercept)/sqrt(.N), meanRE = mean(re), seRE = sd(re)/sqrt(.N)), by= REALM]
+```
+
+
+
+## On slopes from 10 consecutive years
+Finds a significantly positive slope. Not as high as in 2019 paper, perhaps because year 1 self-comparison not included.
+```{r}
+# published model
+modJtu10 <- glmmTMB(disstrend ~ 1 + (1|Biome/taxa_mod/STUDY_ID),
+                data = trends[measure == 'Jtu' & duration_group == '10', ])
+
+summary(modJtu10)
+```
+
+### Slopes by realm/biome
+Essentially no difference among the realms. If anything, marine is fastest.
+```{r}
+# extract
+res <- ranef(modJtu10)$cond$Biome
+colnames(res) <- "re"
+res$Biome = rownames(res)
+realms <- trends[, .(REALM = unique(REALM)), by = Biome] # realm for each biome
+res <- as.data.table(merge(res, realms, by = 'Biome'))
+res[, intercept := re + as.numeric(fixef(modJtu10))[1]] # add the fixed intercept to the REs
+
+# by realm
+res[, .(mean = mean(intercept), se = sd(intercept)/sqrt(.N), meanRE = mean(re), seRE = sd(re)/sqrt(.N)), by= REALM]
+```
+
+
+## On slopes from 20 consecutive years
+Finds a significantly positive slope. Not as high as in 2019 paper, perhaps because year 1 self-comparison not included.
+```{r}
+# published model
+modJtu20 <- glmmTMB(disstrend ~ 1 + (1|Biome/taxa_mod/STUDY_ID),
+                data = trends[measure == 'Jtu' & duration_group == '20', ])
+
+summary(modJtu20)
+```
+
+### Slopes by realm/biome
+Essentially no difference among the realms. If anything, freshwater is fastest.
+```{r}
+# extract
+res <- ranef(modJtu20)$cond$Biome
+colnames(res) <- "re"
+res$Biome = rownames(res)
+realms <- trends[, .(REALM = unique(REALM)), by = Biome] # realm for each biome
+res <- as.data.table(merge(res, realms, by = 'Biome'))
+res[, intercept := re + as.numeric(fixef(modJtu20))[1]] # add the fixed intercept to the REs
+
+# by realm
+res[, .(mean = mean(intercept), se = sd(intercept)/sqrt(.N), meanRE = mean(re), seRE = sd(re)/sqrt(.N)), by= REALM]
+```
