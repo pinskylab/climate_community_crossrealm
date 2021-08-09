@@ -32,6 +32,7 @@ rich <- fread(here('output','richness_by_rarefyID.csv.gz')) # number of species
 
 # merge
 comb <- merge(dat, trends[duration_group == 'Ally1', !c("rarefyID_y" ,"duration", 'REALM')], by = c('STUDY_ID', 'rarefyID'), all = TRUE, allow.cartesian = TRUE)
+comb5 <- merge(dat[model_id == 'logS_lm', ], trends[duration_group == '5', !c("rarefyID_y" ,"duration", 'REALM')], by = c('STUDY_ID', 'rarefyID'), all = TRUE)
 
 # data subsets
 datS <- dat[model_id == 'logS_lm',]
@@ -136,8 +137,8 @@ mod2 <- glmmTMB(slope ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + Te
 summary(mod2)
 ```
 
-## Richness model with abs(tempchange)
-abs(tempchange) is favored substantially (deltaAIC 70) over tempchange
+## With abs(tempchange)
+abs(tempchange) is favored substantially (deltaAIC 70) over tempchange. Coefficients are largely the same, though no longer find faster turnover at higher temperatures in marine. 
 ```{r}
 # realm-specific intercept. Simplify REs that were near zero.
 mod3 <- glmmTMB(slope ~ 0 + REALM + new_sTempYear:REALM + abs(TempGAMCoef):REALM + abs(TempGAMCoef):new_sTempYear:REALM
@@ -152,8 +153,8 @@ AIC(mod3)
 
 
 ```
-# Fit model with mass and human
 
+## Fit richness model with mass and human
 ```{r}
 modMH0 <- glmmTMB(slope ~ 0 + REALM + mass.sc + human_bowler.sc:REALM 
                  + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
@@ -173,30 +174,30 @@ modMHFull <- glmmTMB(slope ~ 0 + REALM + mass.sc + human_bowler.sc:REALM +
                      disp = ~std.error*REALM,
                      data = combMHlogS)
 
-modevalsMH <- dredge(modMHFull, evaluate = FALSE) # get the model calls
-length(modevalsMH) # how many to fit?
-modsMH <- mclapply(modevalsMH, eval, mc.cores = 25) # call in parallel
-#saveRDS(modsMH, file = here('temp', 'modsdredgeAntaoMH.rds'))
-
-cl <- sapply(modsMH, class)
-keep <- which(cl == 'glmmTMB') # those that didn't throw an error
-sum(cl != 'glmmTMB') # 158
-ll <- sapply(modsMH[keep], logLik)
-sum(is.na(ll)) # number that didn't converge. 38
-keep2 <- keep[!is.na(ll)] # find models that converged (non-NA logLik)
-ai <- sapply(modsMH[keep2], AIC)
-sum(is.na(ai)) # no AIC value (0)
-keep3 <- keep2[!is.na(ai)]
-length(keep3)
-
-modselMH <- model.sel(modsMH[keep3], rank = 'AIC', fit = FALSE)
-modselMH[modselMH$delta < 4,]
-
-modavgMH <- model.avg(modsMH[keep3])
-summary(modavgMH)
-confint(modavgMH, full = TRUE)
-coefTable(modselMH[1,]) # coefficients from the top model
-importance(modavgMH) # relative variable importance
+# modevalsMH <- dredge(modMHFull, evaluate = FALSE) # get the model calls
+# length(modevalsMH) # how many to fit?
+# modsMH <- mclapply(modevalsMH, eval, mc.cores = 25) # call in parallel
+# #saveRDS(modsMH, file = here('temp', 'modsdredgeAntaoMH.rds'))
+# 
+# cl <- sapply(modsMH, class)
+# keep <- which(cl == 'glmmTMB') # those that didn't throw an error
+# sum(cl != 'glmmTMB') # 158
+# ll <- sapply(modsMH[keep], logLik)
+# sum(is.na(ll)) # number that didn't converge. 38
+# keep2 <- keep[!is.na(ll)] # find models that converged (non-NA logLik)
+# ai <- sapply(modsMH[keep2], AIC)
+# sum(is.na(ai)) # no AIC value (0)
+# keep3 <- keep2[!is.na(ai)]
+# length(keep3)
+# 
+# modselMH <- model.sel(modsMH[keep3], rank = 'AIC', fit = FALSE)
+# modselMH[modselMH$delta < 4,]
+# 
+# modavgMH <- model.avg(modsMH[keep3])
+# summary(modavgMH)
+# confint(modavgMH, full = TRUE)
+# coefTable(modselMH[1,]) # coefficients from the top model
+# importance(modavgMH) # relative variable importance
 
 # a simpler model to capture the main effects
 modMH1 <- glmmTMB(slope ~ 0 + REALM + mass.sc:REALM + human_bowler.sc:REALM +
@@ -211,3 +212,166 @@ modMH1 <- glmmTMB(slope ~ 0 + REALM + mass.sc:REALM + human_bowler.sc:REALM +
 summary(modMH1)
 ```
 
+# Fit a Jtu model
+## Original
+
+- Just like the richness model, using Antao predictors, but with Jtu slope as the response.
+- Now find LESS turnover at higher temperature in marine (opposite of richness and gains slope models).
+- But continue to find MORE turnover with changing temperatures at higher average temperatures in marine (the interaction), like the richness and gains models.
+
+```{r}
+# realm-specific intercept. Simplify REs that were near zero.
+modJtuAll0 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+                +(0 + TempGAMCoef|REALM/taxa_mod1) +(1|taxa_mod1/STUDY_ID),
+                disp = ~trendse*REALM,
+                data = comb[measure == 'Jtu' & model_id == 'logS_lm',])
+
+
+summary(modJtuAll0)
+```
+
+## abs(temptrend)
+AIC selects abs(temptrend). Results are now entirely different than richness model: 
+
+- less turnover at higher temperatures in marine
+- less turnover at faster temperature change in marine
+- less turnover at higher temperatures per unit temperature change (interaction)
+
+```{r}
+# realm-specific intercept. Simplify REs that were near zero.
+modJtuAll1 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + abs(TempGAMCoef):REALM + abs(TempGAMCoef):new_sTempYear:REALM
+                +(0 + abs(TempGAMCoef)|REALM/taxa_mod1) +(1|taxa_mod1/STUDY_ID),
+                disp = ~trendse*REALM,
+                data = comb[measure == 'Jtu' & model_id == 'logS_lm',])
+
+
+summary(modJtuAll1)
+AIC(modJtuAll0)
+AIC(modJtuAll1)
+```
+
+
+## 5-year standardized duration
+
+- Only for datasets of exactly 5 consecutive years
+- Only realm intercepts are significantly different from zero
+
+```{r}
+modJtu5 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+                +(0 + TempGAMCoef|REALM/taxa_mod1) +(1|taxa_mod1/STUDY_ID),
+                disp = ~trendse*REALM,
+                data = comb5[measure == 'Jtu',])
+
+
+summary(modJtu5)
+```
+
+# Fit a Jbeta model
+## Original
+
+- Much like the richness model, using Antao predictors, but with Jbeta slope as the response. Dropped the REALM random slope to allow convergence.
+- Positive temp:temptrend interaction, just like richness and gains models.
+
+```{r}
+# realm-specific intercept. Simplify REs that were near zero.
+modJbetaAll0 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+                +(0 + TempGAMCoef|REALM:taxa_mod1) +(1|taxa_mod1/STUDY_ID),
+                disp = ~trendse*REALM,
+                data = comb[measure == 'Jbeta' & model_id == 'logS_lm',])
+
+
+summary(modJbetaAll0)
+```
+
+## abs(temptrend)
+Results are now entirely different than richness model: 
+
+- Strongly selects abs(temptrend) over temptrend
+- less turnover at higher temperatures in marine
+- less turnover at faster temperature change in marine
+- less turnover at higher temperatures per unit temperature change (interaction)
+
+```{r}
+# realm-specific intercept. Simplify REs that were near zero.
+modJbetaAll1 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + abs(TempGAMCoef):REALM + abs(TempGAMCoef):new_sTempYear:REALM
+                +(0 + abs(TempGAMCoef)|REALM:taxa_mod1) +(1|taxa_mod1/STUDY_ID),
+                disp = ~trendse*REALM,
+                data = comb[measure == 'Jbeta' & model_id == 'logS_lm',])
+
+
+summary(modJbetaAll1)
+AIC(modJbetaAll0)
+AIC(modJbetaAll1)
+```
+
+
+## 5-year standardized duration
+
+- Only for datasets of exactly 5 consecutive years
+- Had to drop the random slopes to allow convergence (were very close to 0)
+- Only realm intercepts are significantly different from zero
+
+```{r}
+modJbeta5 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+                 +(1|taxa_mod1/STUDY_ID),
+                disp = ~trendse*REALM,
+                data = comb5[measure == 'Jbeta',])
+
+
+summary(modJbeta5)
+```
+
+
+# Fit a Horn model
+## Original
+
+- Like the richness model, using Antao predictors, but with Horn slope as the response. Had to drop the REALM random slope to allow convergence.
+- Now find LESS turnover at higher temperature in marine (opposite of richness and gains slope models).
+- Find more turnover with changing temperatures at higher average temperatures in TERRESTRIAL (the interaction), not marine. Not like the richness and gains models.
+
+```{r}
+# realm-specific intercept. Simplify REs that were near zero.
+modHornAll0 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+                +(0 + TempGAMCoef|taxa_mod1) +(1|taxa_mod1/STUDY_ID),
+                disp = ~trendse*REALM,
+                data = comb[measure == 'Horn' & model_id == 'logS_lm',])
+
+
+summary(modHornAll0)
+```
+
+## abs(temptrend)
+AIC selects temptrend instead of abs(temptrend). Results are entirely different than richness model: 
+
+- LESS turnover at higher temperatures in marine
+- LESS turnover at higher temperatures per unit temperature change in marine (interaction)
+- more turnover per unit temperature change in TERRESTRIAL
+
+```{r}
+# realm-specific intercept. Simplify REs that were near zero.
+modHornAll1 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + abs(TempGAMCoef):REALM + abs(TempGAMCoef):new_sTempYear:REALM
+                +(0 + abs(TempGAMCoef)|taxa_mod1) +(1|taxa_mod1/STUDY_ID),
+                disp = ~trendse*REALM,
+                data = comb[measure == 'Horn' & model_id == 'logS_lm',])
+
+
+summary(modHornAll1)
+AIC(modHornAll0)
+AIC(modHornAll1)
+```
+
+
+## 5-year standardized duration
+
+- Only for datasets of exactly 5 consecutive years. Removed random slope to allow convergence (was close to 0)
+- Only realm intercepts are significantly different from zero
+
+```{r}
+modHorn5 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+                +(1|taxa_mod1/STUDY_ID),
+                disp = ~trendse*REALM,
+                data = comb5[measure == 'Horn',])
+
+
+summary(modHorn5)
+```
