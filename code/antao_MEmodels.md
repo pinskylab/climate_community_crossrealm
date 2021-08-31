@@ -5,6 +5,8 @@ Replicate and extend analyses from Antao et al. 2020
 
     ## here() starts at /local/home/malinp/climate_community_crossrealm
 
+    ## Warning: NAs introduced by coercion
+
 # Compare datasets
 
 ## Trends included
@@ -252,7 +254,10 @@ comb[model_id == 'Losses_lm' & measure == 'Horn', cor(slope, disstrend)]
 
 # Fit richness model
 
-The richness (logS) model matches the published results if the error and
+## Original model with glmmTMB
+
+The richness (logS) model fit with glmmTMB as a single model matches the
+published results (realm-specific models fit with brms) if the error and
 RE terms are realm-specific.
 
 ``` r
@@ -314,6 +319,75 @@ summary(mod0)
     ## std.error:REALMTerrestrial 27.14306    2.46121    11.0   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+### Plot
+
+``` r
+# set up prediction frame
+newdatM <- expand.grid(new_sTempYear = seq(-2, 2.5, length.out = 100), TempGAMCoef = seq(-0.35, 0.35, length.out = 100))
+newdatM$REALM <- 'Marine'
+newdatM$taxa_mod1 <- 'All'
+newdatM$STUDY_ID <- 33
+newdatM$std.error <- 0.03
+sdTM <- sd(datS$newtempvalues[datS$REALM == 'Marine'])
+meanTM <- mean(datS$newtempvalues[datS$REALM == 'Marine'])
+newdatM$newtempvalues <- newdatM$new_sTempYear * sdTM + meanTM
+
+newdatT <- expand.grid(new_sTempYear = seq(-2.5, 2.7, length.out = 100), TempGAMCoef = seq(-0.3, 0.5, length.out = 100))
+newdatT$REALM <- 'Terrestrial'
+newdatT$taxa_mod1 <- 'Terrestrial plants'
+newdatT$STUDY_ID <- 18
+newdatT$std.error <- 0.03
+sdTT <- sd(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+meanTT <- mean(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+newdatT$newtempvalues <- newdatT$new_sTempYear * sdTT + meanTT
+
+# predict
+newdatM$slope <- predict(mod0, newdata = newdatM, se.fit = FALSE, re.form = NA)
+newdatT$slope <- predict(mod0, newdata = newdatT, se.fit = FALSE, re.form = NA)
+
+# plot
+p1 <- ggplot(newdatM, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Marine') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p2 <- ggplot(newdatT, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Terrestrial') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+
+p1
+```
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+``` r
+p2
+```
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+
+## With an intercept
 
 Adding an intercept to allow turnover at 0 temperature change doesn’t
 alter the results
@@ -380,7 +454,8 @@ summary(mod1)
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
 Another approach to adding an intercept: realm-specific, but with
-simpler REs. Also adding REALM-specific RE intercepts won’t converge.
+simpler REs. This model but also with REALM-specific RE intercepts won’t
+converge.
 
 ``` r
 # realm-specific intercept. Simplify REs that were near zero.
@@ -447,11 +522,135 @@ summary(mod2)
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-## With abs(tempchange)
+## With my temperature data
 
-abs(tempchange) is favored substantially (deltaAIC 70) over tempchange.
-Coefficients are largely the same, though no longer find faster turnover
-at higher temperatures in marine.
+``` r
+# 
+mod0alt_tempdata <- glmmTMB(slope ~ 0 + tempave.sc:REALM + temptrend.sc:REALM + temptrend.sc:tempave.sc:REALM
+                +(0 + temptrend.sc|REALM/taxa_mod1) +(1|REALM/taxa_mod1/STUDY_ID), 
+                disp = ~std.error*REALM,
+                data = comb[!duplicated(rarefyID) & model_id == 'logS_lm',])
+
+summary(mod0alt_tempdata)
+```
+
+    ##  Family: gaussian  ( identity )
+    ## Formula:          
+    ## slope ~ 0 + tempave.sc:REALM + temptrend.sc:REALM + temptrend.sc:tempave.sc:REALM +  
+    ##     (0 + temptrend.sc | REALM/taxa_mod1) + (1 | REALM/taxa_mod1/STUDY_ID)
+    ## Dispersion:             ~std.error * REALM
+    ## Data: comb[!duplicated(rarefyID) & model_id == "logS_lm", ]
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ## -33301.2 -33193.9  16665.6 -33331.2     9405 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups                     Name         Variance  Std.Dev. 
+    ##  taxa_mod1.REALM            temptrend.sc 5.564e-04 2.359e-02
+    ##  REALM                      temptrend.sc 1.598e-10 1.264e-05
+    ##  STUDY_ID..taxa_mod1.REALM. (Intercept)  3.672e-04 1.916e-02
+    ##  taxa_mod1.REALM.1          (Intercept)  1.010e-09 3.179e-05
+    ##  REALM.1                    (Intercept)  3.250e-05 5.701e-03
+    ##  Residual                                       NA        NA
+    ## Number of obs: 9420, groups:  
+    ## taxa_mod1:REALM, 12; REALM, 2; STUDY_ID:(taxa_mod1:REALM), 142
+    ## 
+    ## Conditional model:
+    ##                                           Estimate Std. Error z value Pr(>|z|)
+    ## tempave.sc:REALMMarine                    0.009656   0.001188   8.129 4.33e-16
+    ## tempave.sc:REALMTerrestrial               0.000648   0.001017   0.637   0.5240
+    ## REALMMarine:temptrend.sc                  0.027036   0.011292   2.394   0.0167
+    ## REALMTerrestrial:temptrend.sc            -0.004342   0.012443  -0.349   0.7271
+    ## tempave.sc:REALMMarine:temptrend.sc       0.017550   0.003624   4.842 1.28e-06
+    ## tempave.sc:REALMTerrestrial:temptrend.sc  0.005331   0.005542   0.962   0.3361
+    ##                                             
+    ## tempave.sc:REALMMarine                   ***
+    ## tempave.sc:REALMTerrestrial                 
+    ## REALMMarine:temptrend.sc                 *  
+    ## REALMTerrestrial:temptrend.sc               
+    ## tempave.sc:REALMMarine:temptrend.sc      ***
+    ## tempave.sc:REALMTerrestrial:temptrend.sc    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                            Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                -7.58207    0.02949 -257.13   <2e-16 ***
+    ## std.error                  34.92753    0.68286   51.15   <2e-16 ***
+    ## REALMTerrestrial           -1.05422    0.08177  -12.89   <2e-16 ***
+    ## std.error:REALMTerrestrial 32.86006    2.71900   12.09   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+### Plot
+
+``` r
+# set up prediction frame
+newdatM <- expand.grid(tempave.sc = seq(-2, 1.8, length.out = 100), temptrend.sc = seq(-1.8, 1.8, length.out = 100))
+newdatM$REALM <- 'Marine'
+newdatM$taxa_mod1 <- 'All'
+newdatM$STUDY_ID <- 33
+newdatM$std.error <- 0.03
+newdatM$tempave <- newdatM$tempave.sc * scaling[var == 'tempave.sc', scale] + scaling[var == 'tempave.sc', center]
+newdatM$temptrend <- newdatM$temptrend.sc * scaling[var == 'temptrend.sc', scale] + scaling[var == 'temptrend.sc', center]
+
+newdatT <- expand.grid(tempave.sc = seq(-2.2, 1.3, length.out = 100), temptrend.sc = seq(-1.8, 3, length.out = 100))
+newdatT$REALM <- 'Terrestrial'
+newdatT$taxa_mod1 <- 'Terrestrial plants'
+newdatT$STUDY_ID <- 18
+newdatT$std.error <- 0.03
+newdatT$tempave <- newdatT$tempave.sc * scaling[var == 'tempave.sc', scale] + scaling[var == 'tempave.sc', center]
+newdatT$temptrend <- newdatT$temptrend.sc * scaling[var == 'temptrend.sc', scale] + scaling[var == 'temptrend.sc', center]
+
+# predict
+newdatM$slope <- predict(mod0alt_tempdata, newdata = newdatM, se.fit = FALSE, re.form = NA)
+newdatT$slope <- predict(mod0alt_tempdata, newdata = newdatT, se.fit = FALSE, re.form = NA)
+
+# plot
+p1 <- ggplot(newdatM, aes(temptrend, tempave, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Marine') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p2 <- ggplot(newdatT, aes(temptrend, tempave, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Terrestrial') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+
+p1
+```
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+``` r
+p2
+```
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-9-2.png)<!-- --> \#\#
+With abs(tempchange) abs(tempchange) is favored substantially (deltaAIC
+70) over tempchange. Coefficients are largely the same other than this
+major changw.
 
 ``` r
 # realm-specific intercept. Simplify REs that were near zero.
@@ -529,6 +728,79 @@ AIC(mod3)
 ```
 
     ## [1] -80601.24
+
+``` r
+AIC(mod2) - AIC(mod3)
+```
+
+    ## [1] 71.59227
+
+### Plot abs(tempchange) effects
+
+``` r
+# set up prediction frame
+newdatM <- expand.grid(new_sTempYear = seq(-2, 2.5, length.out = 100), TempGAMCoef = seq(-0.35, 0.35, length.out = 100))
+newdatM$REALM <- 'Marine'
+newdatM$taxa_mod1 <- 'All'
+newdatM$STUDY_ID <- 33
+newdatM$std.error <- 0.03
+sdTM <- sd(datS$newtempvalues[datS$REALM == 'Marine'])
+meanTM <- mean(datS$newtempvalues[datS$REALM == 'Marine'])
+newdatM$newtempvalues <- newdatM$new_sTempYear * sdTM + meanTM
+
+newdatT <- expand.grid(new_sTempYear = seq(-2.5, 2.7, length.out = 100), TempGAMCoef = seq(-0.3, 0.5, length.out = 100))
+newdatT$REALM <- 'Terrestrial'
+newdatT$taxa_mod1 <- 'Terrestrial plants'
+newdatT$STUDY_ID <- 18
+newdatT$std.error <- 0.03
+sdTT <- sd(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+meanTT <- mean(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+newdatT$newtempvalues <- newdatT$new_sTempYear * sdTT + meanTT
+
+# predict
+newdatM$slope <- predict(mod3, newdata = newdatM, se.fit = FALSE, re.form = NA)
+newdatT$slope <- predict(mod3, newdata = newdatT, se.fit = FALSE, re.form = NA)
+
+# plot
+p1 <- ggplot(newdatM, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Marine') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p2 <- ggplot(newdatT, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Terrestrial') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+
+p1
+```
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+``` r
+p2
+```
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
 
 ## Fit richness model with mass and human
 
