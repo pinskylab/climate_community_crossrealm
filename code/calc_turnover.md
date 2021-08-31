@@ -16,17 +16,17 @@ bt[, Horn := 1-Hornsim] # convert similarity to dissimilarity
 bt[, Hornsim := NULL]
 
 # BioTime data type
-load('data/biotime_blowes/time_series_data_type.Rdata') # loads rarefyID_type
+load(here('data', 'biotime_blowes', 'time_series_data_type.Rdata')) # loads rarefyID_type
 bt <- merge(bt, rarefyID_type, by = 'rarefyID', all.x = TRUE) # merge with biotime
 
 # biotime taxa category and other info
 load(here::here('data', 'biotime_blowes', 'bt_malin.Rdata')) # load bt_malin
 btinfo <- data.table(bt_malin); rm(bt_malin)
 btinfo2 <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Biome, taxa_mod, REALM, STUDY_ID)]
-bt <- merge(bt, btinfo2, by = 'rarefyID', all.x = TRUE)
+bt <- merge(bt, btinfo2, by = 'rarefyID') # trims out rarefyIDs not in bt_malin
 
 # richness
-rich <- fread('output/richness_by_rarefyID.csv.gz') # number of species
+rich <- fread(here('output','richness_by_rarefyID.csv.gz')) # number of species
 ```
 
 ## Examine number of species and individuals per sample
@@ -57,26 +57,54 @@ btinfo[S == 1, .N]
 
 ## Remove studies that don’t meet quality thresholds
 
-Keep studies with: - \>2 species
+Keep studies with: - \>2 species - \>2 years
 
 ``` r
 length(unique(bt$rarefyID))
 ```
 
-    ## [1] 59036
+    ## [1] 53467
+
+``` r
+length(setdiff(bt$rarefyID, rich$rarefyID))
+```
+
+    ## [1] 0
 
 ``` r
 # number of years per study (in remaining samples)
 nyrs <- bt[, .(nyrBT = length(unique(c(year1, year2)))), by = rarefyID]
+length(setdiff(bt$rarefyID, nyrs$rarefyID))
+```
 
+    ## [1] 0
+
+``` r
+invisible(nyrs[, hist(nyrBT)])
+```
+
+![](calc_turnover_files/figure-gfm/QAQC-1.png)<!-- -->
+
+``` r
+nyrs[nyrBT < 3, .N]
+```
+
+    ## [1] 14157
+
+``` r
 # >2 species, >2 yrs
-bt <- bt[rarefyID %in% rich[Nspp > 2, rarefyID] & 
-           rarefyID %in% nyrs[nyrBT > 2, rarefyID], ]
-
+bt <- bt[rarefyID %in% rich[Nspp > 2, rarefyID], ]
 length(unique(bt$rarefyID))
 ```
 
-    ## [1] 38487
+    ## [1] 50790
+
+``` r
+bt <- bt[rarefyID %in% nyrs[nyrBT > 2, rarefyID], ]
+length(unique(bt$rarefyID))
+```
+
+    ## [1] 38732
 
 # Plot turnover example
 
@@ -131,26 +159,31 @@ available. \#\# Set up functions
 
 ``` r
 # function to calc linear trend from all year pairs of the time-series
-calctrend <- function(y, year1, year2, nm = 'y'){
+calctrend <- function(y, year1, year2, measure = 'y', duration_group = NA_character_){
+  yrs <- sort(unique(c(year1, year2)))
   dy <- year2 - year1
   if(length(dy)>1){
     mod <- lm(y ~ dy) # fit line
-    out <- list(y = coef(mod)[2], # coef for the slope
-                y_se = sqrt(diag(vcov(mod)))[2],
+    se <- suppressWarnings(sqrt(diag(vcov(mod)))[2])
+    out <- list(disstrend = coef(mod)[2], # coef for the slope
+                trendse = se,
                 year1 = min(year1), 
-                year2 = max(year2))
-    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+                year2 = max(year2),
+                measure = measure,
+                duration_group = duration_group,
+                nsamps = length(yrs))
     return(out)
   } else{
-    out <- list(y = NA_real_, y_se = NA_real_, year1 = NA_real_, year2 = NA_real_)
-    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+    out <- list(disstrend = NA_real_, trendse = NA_real_, year1 = NA_real_, year2 = NA_real_,
+                measure = measure, duration_group = duration_group, nsamps = NA_integer_)
     return(out)
   }
 }
 
 # function to calc linear trend from all years of the time-series
 # only comparing back to the first year
-calctrendy1 <- function(y, year1, year2, nm = 'y'){
+calctrendy1 <- function(y, year1, year2, measure = 'y', duration_group = NA_character_){
+  yrs <- sort(unique(c(year1, year2)))
   startyear = min(year1)
   dy <- year2 - year1
   keep = year1 == startyear
@@ -158,20 +191,26 @@ calctrendy1 <- function(y, year1, year2, nm = 'y'){
     y2 <- y[keep]
     dy2 <- dy[keep]
     mod <- lm(y2 ~ dy2) # fit line
-    out <- list(y = coef(mod)[2], # coef for the slope
-                y_se = sqrt(diag(vcov(mod)))[2],
+    se <- suppressWarnings(sqrt(diag(vcov(mod)))[2])
+    out <- list(disstrend = coef(mod)[2], # coef for the slope
+                trendse = se,
                 year1 = min(year1), 
-                year2 = max(year2))
-    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+                year2 = max(year2),
+                measure = measure, 
+                duration_group = duration_group,
+                nsamps = length(yrs))
     return(out)
   } else{
-    out <- list(y = NA_real_, y_se = NA_real_, year1 = NA_real_, year2 = NA_real_)
-    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+    out <- list(disstrend = NA_real_, trendse = NA_real_, year1 = NA_real_, year2 = NA_real_,
+                measure = measure, duration_group = duration_group, nsamps = NA_integer_)
     return(out)
   }
 }
 
-calctrendlast <- function(y, year1, year2, numyrs, nm = 'y'){
+# function to calc linear trend from all pairs
+# only using a sequence of annual samples that is numyrs long
+# use the most recent sequence that fits this criterion
+calctrendlast <- function(y, year1, year2, numyrs, measure = 'y', duration_group = NA_character_){
   yrs <- sort(unique(c(year1, year2)))
   dy <- diff(yrs) # find intervals between years
   rl <- rle(dy) # run length encoding
@@ -198,22 +237,77 @@ calctrendlast <- function(y, year1, year2, numyrs, nm = 'y'){
   
   if(run){
     dy <- year2 - year1
+    yrs <- sort(unique(c(year1, year2)))
     
-    mod <- lm(y ~ dy) # fit line
-    out <- list(y = coef(mod)[2], # coef for the slope
-                y_se = sqrt(diag(vcov(mod)))[2],
+    mod <- invisible(lm(y ~ dy)) # fit line
+    se <- suppressWarnings(sqrt(diag(vcov(mod)))[2])
+    out <- list(disstrend = coef(mod)[2], # coef for the slope
+                trendse = se,
                 year1 = min(yrs3), 
-                year2 = max(yrs3)) # SE
-    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+                year2 = max(yrs3),
+                measure = measure, 
+                duration_group = duration_group,
+                nsamps = length(yrs))
     return(out)
 
   } else {
-    out <- list(y = NA_real_, y_se = NA_real_, year1 = NA_real_, year2 = NA_real_)
-    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+    out <- list(disstrend = NA_real_, trendse = NA_real_, year1 = NA_real_, year2 = NA_real_,
+                measure = measure, duration_group = duration_group, nsamps = NA_integer_)
     return(out)
   }
-  
+}
 
+# function to calc linear trend from all pairs
+# only using a sequence of samples that is numyrs samples long and has nsamps samples
+# not necessarily annual samples
+# use the most recent sequence that fits this criterion
+calctrendnsamps <- function(y, year1, year2, numyrs, nsamps, 
+                            measure = 'y', duration_group = NA_character_){
+  if(nsamps > numyrs) stop('nsamps must be <= numyrs')
+  if(length(y) != length(year1) | length(y) != length(year2)) stop('y, year1, and year2 must be the same length')
+  yrs <- sort(unique(c(year1, year2)))
+  
+  # brute force search for a sequence of samples that match criteria
+  i = length(yrs) # index for finding a suitable sequence of samples. start at the end.
+  run <- FALSE # flag for whether we have found a suitable sequence of samples
+  while(i > 0 & !run){ 
+    dys <- yrs[i] - yrs
+    j <- which(dys == numyrs-1)
+    if(length(j) >0){
+      proposedset <- yrs[j:i]
+      if(length(proposedset) >= nsamps){
+        ykeep <- year1 %in% proposedset & year2 %in% proposedset # keep values in pairwise comparisons for the years we want
+        y <- y[ykeep] # trim the timeseries
+        year1 <- year1[ykeep] # trim the initial years
+        year2 <- year2[ykeep] # trim the final years
+        run <- TRUE # mark that we should run the calcs
+      }
+    }
+    if(run == FALSE){
+      i <- i - 1 # try the next earliest sample
+    }
+  }
+  
+  if(run){
+    dy <- year2 - year1
+    yrs <- sort(unique(c(year1, year2)))
+    
+    mod <- lm(y ~ dy) # fit line
+    se <- suppressWarnings(sqrt(diag(vcov(mod)))[2]) # standard error
+    out <- list(disstrend = coef(mod)[2], # coef for the slope
+                trendse = se, 
+                year1 = min(proposedset), 
+                year2 = max(proposedset),
+                measure = measure, 
+                duration_group = duration_group,
+                nsamps = length(yrs)) # SE
+    return(out)
+
+  } else {
+    out <- list(disstrend = NA_real_, trendse = NA_real_, year1 = NA_real_, year2 = NA_real_,
+                measure = measure, duration_group = duration_group, nsamps = NA_integer_)
+    return(out)
+  }
 }
 ```
 
@@ -226,75 +320,61 @@ setkey(bt, STUDY_ID, rarefyID, year1,  year2)
 
 if(file.exists('temp/trendstemp.rds')){
     print('File already exists. Will not do calculations')
-    trends2 <- readRDS('temp/trendstemp.rds')
+    trends <- readRDS('temp/trendstemp.rds')
 } else {
   print('Calculating from scratch')
   
-  # 3-year trends
-  trends1 <- bt[, calctrendlast(Jtu, year1, year2, 3, 'Jtutrend3'), 
-                by = .(REALM, Biome, taxa_mod, STUDY_ID, 
-                       rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover
-  trends2 <- bt[, calctrendlast(Jbeta, year1, year2, 3, 'Jbetatrend3'),
-                by = .(rarefyID)]
-  trends3 <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, 3, 'Horntrend3'),
-                by = .(rarefyID)]
+  ## Trends of standardized length and annual sampling frequency
+  yrslist <- 3:20
+  for(yr in yrslist){
+    print(yr)
+    temp <- bt[, calctrendlast(Jtu, year1, year2, numyrs = yr, measure = 'Jtu', 
+                               duration_group = paste0(yr, 'annual')), by = .(rarefyID)]
+    if(yr == min(yrslist)) trends = temp[!is.na(disstrend), ]
+    if(yr > min(yrslist)) trends = rbind(trends,temp[!is.na(disstrend), ])
+    
+    temp <- bt[, calctrendlast(Jbeta, year1, year2, numyrs = yr, measure = 'Jbeta',
+                               duration_group = paste0(yr, 'annual')), by = .(rarefyID)]
+    trends = rbind(trends, temp[!is.na(disstrend), ])
+    temp <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, numyrs = yr, measure = 'Horn',
+                                           duration_group = paste0(yr, 'annual')), by = .(rarefyID)]
+    trends = rbind(trends, temp[!is.na(disstrend), ])
+  }
   
-  # 5 year
-  trends4 <- bt[, calctrendlast(Jtu, year1, year2, 5, 'Jtutrend5'), 
-                by = .(rarefyID)]
-  trends5 <- bt[, calctrendlast(Jbeta, year1, year2, 5, 'Jbetatrend5'),
-                by = .(rarefyID)]
-  trends6 <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, 5, 'Horntrend5'),
-                by = .(rarefyID)]
-
-
-  # 10 year
-  trends7 <- bt[, calctrendlast(Jtu, year1, year2, 10, 'Jtutrend10'), 
-                by = .(rarefyID)]
-  trends8 <- bt[, calctrendlast(Jbeta, year1, year2, 10, 'Jbetatrend10'),
-                by = .(rarefyID)]
-  trends9 <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, 10, 'Horntrend10'),
-                by = .(rarefyID)]
-  
-  # 20 year
-  trends10 <- bt[, calctrendlast(Jtu, year1, year2, 20, 'Jtutrend20'), 
-                by = .(rarefyID)]
-  trends11 <- bt[, calctrendlast(Jbeta, year1, year2, 20, 'Jbetatrend20'),
-                by = .(rarefyID)]
-  trends12 <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, 20, 'Horntrend20'),
-                by = .(rarefyID)]
+  ## Trends of standardized length and at least 3 years sampled
+  yrslist <- 3:20
+  for(yr in yrslist){
+    print(yr)
+    temp <- bt[, calctrendnsamps(Jtu, year1, year2, numyrs = yr, nsamps = 3, measure = 'Jtu', 
+                               duration_group = paste0(yr, 'min3')), by = .(rarefyID)]
+    trends = rbind(trends,temp[!is.na(disstrend), ])
+    
+    temp <- bt[, calctrendnsamps(Jbeta, year1, year2, numyrs = yr, nsamps = 3, measure = 'Jbeta',
+                               duration_group = paste0(yr, 'min3')), by = .(rarefyID)]
+    trends = rbind(trends, temp[!is.na(disstrend), ])
+    temp <- bt[!is.na(Horn), calctrendnsamps(Horn, year1, year2, numyrs = yr, nsamps = 3, measure = 'Horn',
+                                           duration_group = paste0(yr, 'min3')), by = .(rarefyID)]
+    trends = rbind(trends, temp[!is.na(disstrend), ])
+  }
   
   # All years available using all year pairs
-  trends13 <- bt[, calctrend(Jtu, year1, year2, 'JtutrendAll'), by = .(rarefyID)]
-  trends14 <- bt[, calctrend(Jbeta, year1, year2, 'JbetatrendAll'), by = .(rarefyID)]
-  trends15 <- bt[!is.na(Horn), calctrend(Horn, year1, year2, 'HorntrendAll'), by = .(rarefyID)]
+  temp <- bt[, calctrend(Jtu, year1, year2, measure = 'Jtu', duration_group = 'All'), by = .(rarefyID)]
+  trends = rbind(trends, temp[!is.na(disstrend), ])
+  temp <- bt[, calctrend(Jbeta, year1, year2, measure = 'Jbeta', duration_group = 'All'), by = .(rarefyID)]
+  trends = rbind(trends, temp[!is.na(disstrend), ])
+  temp <- bt[!is.na(Horn), calctrend(Horn, year1, year2, measure = 'Horn', duration_group = 'All'), by = .(rarefyID)]
+  trends = rbind(trends, temp[!is.na(disstrend), ])
 
   # All years available using first year comparisons
-  trends16 <- bt[, calctrendy1(Jtu, year1, year2, 'JtutrendAlly1'), by = .(rarefyID)]
-  trends17 <- bt[, calctrendy1(Jbeta, year1, year2, 'JbetatrendAlly1'), by = .(rarefyID)]
-  trends18 <- bt[!is.na(Horn), calctrendy1(Horn, year1, year2, 'HorntrendAlly1'), by = .(rarefyID)]
+  temp <- bt[, calctrendy1(Jtu, year1, year2, measure = 'Jtu', duration_group = 'Ally1'), by = .(rarefyID)]
+  trends = rbind(trends, temp[!is.na(disstrend), ])
+  temp <- bt[, calctrendy1(Jbeta, year1, year2, measure = 'Jbeta', duration_group = 'Ally1'), by = .(rarefyID)]
+  trends = rbind(trends, temp[!is.na(disstrend), ])
+  temp <- bt[!is.na(Horn), calctrendy1(Horn, year1, year2, measure = 'Horn', duration_group = 'Ally1'), by = .(rarefyID)]
+  trends = rbind(trends, temp[!is.na(disstrend), ])
   
-  trends <- merge(trends1, trends2, all = TRUE)
-  trends <- merge(trends, trends3, all = TRUE)
-  trends <- merge(trends, trends4, all = TRUE)
-  trends <- merge(trends, trends5, all = TRUE)
-  trends <- merge(trends, trends6, all = TRUE)
-  trends <- merge(trends, trends7, all = TRUE)
-  trends <- merge(trends, trends8, all = TRUE)
-  trends <- merge(trends, trends9, all = TRUE)
-  trends <- merge(trends, trends10, all = TRUE)
-  trends <- merge(trends, trends11, all = TRUE)
-  trends <- merge(trends, trends12, all = TRUE)
-  trends <- merge(trends, trends13, all = TRUE)
-  trends <- merge(trends, trends14, all = TRUE)
-  trends <- merge(trends, trends15, all = TRUE)
-  trends <- merge(trends, trends16, all = TRUE)
-  trends <- merge(trends, trends17, all = TRUE)
-  trends <- merge(trends, trends18, all = TRUE)
-  
-  trends2 <- trends[!is.na(Jtutrend3) | !is.na(Jbetatrend3) | !is.na(Horntrend3), ]
 
-  saveRDS(trends2, file = 'temp/trendstemp.rds')
+  saveRDS(trends, file = here('temp', 'trendstemp.rds'))
   
 }
 ```
@@ -302,455 +382,258 @@ if(file.exists('temp/trendstemp.rds')){
     ## [1] "File already exists. Will not do calculations"
 
 ``` r
-nrow(trends2)
+nrow(trends)
 ```
 
-    ## [1] 10785
+    ## [1] 1125828
 
-## Add species richness to trends
+## Add species richness and realm to trends for plotting
 
 ``` r
-trends2 <- merge(trends2, rich, all.x = TRUE) # species richness
+trends <- merge(trends, rich, all.x = TRUE) # species richness
+realms <- bt[, .(REALM = unique(REALM)), by = rarefyID]
+trends <- merge(trends, realms, all.x = TRUE)
 ```
 
 ## Plot every Jtu timeseries (a lot\!)
 
-Not run during knitting
-
-``` r
-rids <- trends2[nyrBT > 2, sort(unique(rarefyID))]
-setkey(bt, rarefyID, YEAR)
-print(paste(length(rids), ' rarefyIDs'))
-filenum <- 1
-plotnum <- 1
-for(i in 1:length(rids)){
-#for(i in 1:400){ # for testing
-  jtutrendrem0 <- trends2[rarefyID == rids[i], Jtutrendrem0]
-  jtuexp <- trends2[rarefyID == rids[i], Jtuexp]
-  jtumm <- trends2[rarefyID == rids[i], Jtumm]
-  nspp <- trends2[rarefyID == rids[i], Nspp]
-  x <- bt[rarefyID == rids[i], YEAR]
-  y <- bt[rarefyID == rids[i], Jtu_base]
-  
-  if(length(x) > 2 & nspp > 1){
-    if(plotnum %% 400 == 1){
-      if(plotnum >1) dev.off()
-      png(file = paste0('figures/jtu_plots/jtu_plots', formatC(filenum, width = 3, format = 'd', flag = '0'), '.png'), 
-          width = 36, height = 36, units = 'in', res = 100)
-      par(mfrow=c(20,20), mai = c(0.4, 0.5, 0.5, 0.1))
-      filenum <- filenum + 1
-    }
-    plot(x, y, main = paste('Jtu rem0:', signif(jtutrendrem0, 3), 'Jtu exp:', signif(jtuexp, 3), '\nJtu mm:', signif(jtumm, 3), 'Nspp:', nspp, '\nrID:', rids[i]), xlab = '', ylab = 'Jtu',
-         cex.main = 0.7)
-    abline(lm(y ~ x))
-    if(plotnum %% 400 == 1){
-      legend('topleft', legend = c('linear', 'rem0', 'exp', 'mm'), lty = 1, 
-             col = c('black', 'red', 'blue', 'green'), cex = 0.5)
-    }
-    
-    x2 <- x[2:length(x)]
-    y2 <- y[2:length(y)]
-    abline(lm(y2 ~ x2), col = 'red')
-    
-    x3 <- calcexp(y, x, pred = TRUE)
-    lines(x3$YEAR, x3$pred, col = 'blue')
-    
-    x4 <- calcmm(y, x, pred = TRUE)
-    lines(x4$YEAR, x4$pred, col = 'green')
-    
-    plotnum <- plotnum + 1
-  }
-}
-  
-dev.off()
-```
+Not run during knitting. Not yet updated to new format and content of
+trends data.table
 
 # Examine the turnover calculations
 
 ## How many values?
 
+### print
+
 ``` r
-apply(trends2[, .(Jtutrend3, Jbetatrend3, Horntrend3,
-                 Jtutrend5, Jbetatrend5, Horntrend5,
-                Jtutrend10, Jbetatrend10, Horntrend10,
-                Jtutrend20, Jbetatrend20, Horntrend20,
-                JtutrendAll, JbetatrendAll, HorntrendAll)], MARGIN = 2, 
-      function(x) sum(!is.na(x)))
+trends[, .N, by = c('measure', 'duration_group')]
 ```
 
-    ##     Jtutrend3   Jbetatrend3    Horntrend3     Jtutrend5   Jbetatrend5 
-    ##         10785         10785         10492          5563          5563 
-    ##    Horntrend5    Jtutrend10  Jbetatrend10   Horntrend10    Jtutrend20 
-    ##          5385          2183          2183          2120           494 
-    ##  Jbetatrend20   Horntrend20   JtutrendAll JbetatrendAll  HorntrendAll 
-    ##           494           483         10785         10785         10492
+    ##      measure duration_group     N
+    ##   1:     Jtu        3annual 10881
+    ##   2:   Jbeta        3annual 10881
+    ##   3:    Horn        3annual 10492
+    ##   4:     Jtu        4annual  7511
+    ##   5:   Jbeta        4annual  7511
+    ##  ---                             
+    ## 110:   Jbeta            All 38732
+    ## 111:    Horn            All 37728
+    ## 112:     Jtu          Ally1 38732
+    ## 113:   Jbeta          Ally1 38732
+    ## 114:    Horn          Ally1 37728
+
+### plot
+
+``` r
+counts <- trends[, .N, by = c('measure', 'duration_group')]
+counts[!(duration_group %in% c('All', 'Ally1')), duration := as.numeric(gsub('annual|min3', '', duration_group))]
+counts[!(duration_group %in% c('All', 'Ally1')), group := sub('^[[:digit:]]+', '', duration_group)]
+counts[(duration_group %in% c('All', 'Ally1')), group := duration_group]
+counts[!is.na(duration), duration_string := as.character(duration)]
+counts[is.na(duration), duration_string := group]
+counts[, duration_string := factor(duration_string, levels = c('3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', 'All', 'Ally1'))]
+
+ggplot(counts, aes(duration_string, N, fill = group)) +
+  geom_bar(stat = 'identity', position=position_dodge())
+```
+
+![](calc_turnover_files/figure-gfm/number%20of%20values%20plot-1.png)<!-- -->
 
 ## Do some basic checks of the turnover calculations
 
 ``` r
 # basic checks
-trends2
+trends
 ```
 
-    ##           rarefyID  REALM                      Biome      taxa_mod STUDY_ID
-    ##     1:  100_606491 Marine     Northern_European_Seas          Fish      100
-    ##     2:  101_606491 Marine     Northern_European_Seas Invertebrates      101
-    ##     3: 108_4114762 Marine Continental_High_Antarctic         Birds      108
-    ##     4: 108_4183957 Marine Continental_High_Antarctic         Birds      108
-    ##     5: 108_4595757 Marine Southeast_Australian_Shelf         Birds      108
-    ##    ---                                                                     
-    ## 10781:  91_1619798 Marine     Northern_European_Seas         Birds       91
-    ## 10782:  91_1619799 Marine     Northern_European_Seas         Birds       91
-    ## 10783:  91_1620530 Marine     Northern_European_Seas         Birds       91
-    ## 10784:  91_1620531 Marine     Northern_European_Seas         Birds       91
-    ## 10785:  91_1624191 Marine     Northern_European_Seas         Birds       91
-    ##        rarefyID_x rarefyID_y   Jtutrend3 Jtutrend3_se Jtutrend3_y1 Jtutrend3_y2
-    ##     1:   -3.08000   51.14000  0.06031746 1.044729e-01         2009         2011
-    ##     2:   -3.08000   51.14000  0.00000000 0.000000e+00         2009         2011
-    ##     3:  109.54444  -65.44889  0.41666667 4.330127e-01         1994         1996
-    ##     4:  139.82600  -65.22800  0.50000000 8.660254e-01         1994         1996
-    ##     5:  146.01167  -44.73833 -0.16666667 2.634496e-16         1995         1997
-    ##    ---                                                                         
-    ## 10781:   21.03750   55.69375 -0.25000000 4.330127e-01         1994         1996
-    ## 10782:   20.97727   55.75727  0.12500000 2.165064e-01         1997         1999
-    ## 10783:   20.97500   55.90875  0.17460317 3.024216e-01         1993         1995
-    ## 10784:   20.94600   55.98300  0.36666667 5.196152e-01         1993         1995
-    ## 10785:   20.14625   57.30000 -0.16666667 2.886751e-01         1993         1995
-    ##        Jbetatrend3 Jbetatrend3_se Jbetatrend3_y1 Jbetatrend3_y2 Horntrend3
-    ##     1:  0.03419901     0.13594270           2009           2011  0.1586654
-    ##     2:  0.01818182     0.15745916           2009           2011  0.1519895
-    ##     3:  0.05952381     0.04123930           1994           1996 -0.4629824
-    ##     4:  0.16666667     0.28867513           1994           1996  0.4999542
-    ##     5: -0.17500000     0.04330127           1995           1997  0.2140151
-    ##    ---                                                                    
-    ## 10781: -0.13690476     0.09278844           1994           1996 -0.1311599
-    ## 10782:  0.13888889     0.24056261           1997           1999  0.2825524
-    ## 10783:  0.14318182     0.33460072           1993           1995  0.3741819
-    ## 10784:  0.20000000     0.28867513           1993           1995  0.3730799
-    ## 10785:  0.12142857     0.30929479           1993           1995  0.4072077
-    ##        Horntrend3_se Horntrend3_y1 Horntrend3_y2   Jtutrend5 Jtutrend5_se
-    ##     1:    0.07938981          2009          2011  0.01417706   0.02229779
-    ##     2:    0.03255360          2009          2011  0.00000000   0.00000000
-    ##     3:    0.04546305          1994          1996          NA           NA
-    ##     4:    0.86594610          1994          1996          NA           NA
-    ##     5:    0.28035861          1995          1997          NA           NA
-    ##    ---                                                                   
-    ## 10781:    0.03025215          1994          1996          NA           NA
-    ## 10782:    0.46657341          1997          1999 -0.06547619   0.04861131
-    ## 10783:    0.77766614          1993          1995          NA           NA
-    ## 10784:    0.74460278          1993          1995          NA           NA
-    ## 10785:    0.48435286          1993          1995          NA           NA
-    ##        Jtutrend5_y1 Jtutrend5_y2 Jbetatrend5 Jbetatrend5_se Jbetatrend5_y1
-    ##     1:         2007         2011  0.01829960     0.02121080           2007
-    ##     2:         2007         2011  0.06491841     0.02735165           2007
-    ##     3:           NA           NA          NA             NA             NA
-    ##     4:           NA           NA          NA             NA             NA
-    ##     5:           NA           NA          NA             NA             NA
-    ##    ---                                                                    
-    ## 10781:           NA           NA          NA             NA             NA
-    ## 10782:         1995         1999 -0.05415973     0.04646827           1995
-    ## 10783:           NA           NA          NA             NA             NA
-    ## 10784:           NA           NA          NA             NA             NA
-    ## 10785:           NA           NA          NA             NA             NA
-    ##        Jbetatrend5_y2   Horntrend5 Horntrend5_se Horntrend5_y1 Horntrend5_y2
-    ##     1:           2011  0.097426333    0.03629820          2007          2011
-    ##     2:           2011 -0.006999522    0.02101022          2007          2011
-    ##     3:             NA           NA            NA            NA            NA
-    ##     4:             NA           NA            NA            NA            NA
-    ##     5:             NA           NA            NA            NA            NA
-    ##    ---                                                                      
-    ## 10781:             NA           NA            NA            NA            NA
-    ## 10782:           1999 -0.074264193    0.11135998          1995          1999
-    ## 10783:             NA           NA            NA            NA            NA
-    ## 10784:             NA           NA            NA            NA            NA
-    ## 10785:             NA           NA            NA            NA            NA
-    ##          Jtutrend10 Jtutrend10_se Jtutrend10_y1 Jtutrend10_y2 Jbetatrend10
-    ##     1: -0.007288403   0.005205582          2002          2011  0.008630235
-    ##     2:  0.001078972   0.003874275          2002          2011  0.004222293
-    ##     3:           NA            NA            NA            NA           NA
-    ##     4:           NA            NA            NA            NA           NA
-    ##     5:           NA            NA            NA            NA           NA
-    ##    ---                                                                    
-    ## 10781:           NA            NA            NA            NA           NA
-    ## 10782:           NA            NA            NA            NA           NA
-    ## 10783:           NA            NA            NA            NA           NA
-    ## 10784:           NA            NA            NA            NA           NA
-    ## 10785:           NA            NA            NA            NA           NA
-    ##        Jbetatrend10_se Jbetatrend10_y1 Jbetatrend10_y2 Horntrend10
-    ##     1:     0.004356945            2002            2011 0.025979735
-    ##     2:     0.006004550            2002            2011 0.001354416
-    ##     3:              NA              NA              NA          NA
-    ##     4:              NA              NA              NA          NA
-    ##     5:              NA              NA              NA          NA
-    ##    ---                                                            
-    ## 10781:              NA              NA              NA          NA
-    ## 10782:              NA              NA              NA          NA
-    ## 10783:              NA              NA              NA          NA
-    ## 10784:              NA              NA              NA          NA
-    ## 10785:              NA              NA              NA          NA
-    ##        Horntrend10_se Horntrend10_y1 Horntrend10_y2  Jtutrend20 Jtutrend20_se
-    ##     1:    0.009168350           2002           2011 0.001301872   0.001359989
-    ##     2:    0.003620485           2002           2011 0.002267440   0.001508569
-    ##     3:             NA             NA             NA          NA            NA
-    ##     4:             NA             NA             NA          NA            NA
-    ##     5:             NA             NA             NA          NA            NA
-    ##    ---                                                                       
-    ## 10781:             NA             NA             NA          NA            NA
-    ## 10782:             NA             NA             NA          NA            NA
-    ## 10783:             NA             NA             NA          NA            NA
-    ## 10784:             NA             NA             NA          NA            NA
-    ## 10785:             NA             NA             NA          NA            NA
-    ##        Jtutrend20_y1 Jtutrend20_y2 Jbetatrend20 Jbetatrend20_se Jbetatrend20_y1
-    ##     1:          1992          2011  0.004917939     0.001018181            1992
-    ##     2:          1992          2011  0.005892922     0.001494195            1992
-    ##     3:            NA            NA           NA              NA              NA
-    ##     4:            NA            NA           NA              NA              NA
-    ##     5:            NA            NA           NA              NA              NA
-    ##    ---                                                                         
-    ## 10781:            NA            NA           NA              NA              NA
-    ## 10782:            NA            NA           NA              NA              NA
-    ## 10783:            NA            NA           NA              NA              NA
-    ## 10784:            NA            NA           NA              NA              NA
-    ## 10785:            NA            NA           NA              NA              NA
-    ##        Jbetatrend20_y2  Horntrend20 Horntrend20_se Horntrend20_y1
-    ##     1:            2011 0.0026249022    0.001928495           1992
-    ##     2:            2011 0.0002789841    0.001070418           1992
-    ##     3:              NA           NA             NA             NA
-    ##     4:              NA           NA             NA             NA
-    ##     5:              NA           NA             NA             NA
-    ##    ---                                                           
-    ## 10781:              NA           NA             NA             NA
-    ## 10782:              NA           NA             NA             NA
-    ## 10783:              NA           NA             NA             NA
-    ## 10784:              NA           NA             NA             NA
-    ## 10785:              NA           NA             NA             NA
-    ##        Horntrend20_y2  JtutrendAll JtutrendAll_se JtutrendAll_y1 JtutrendAll_y2
-    ##     1:           2011  0.002519604   0.0005271386           1981           2011
-    ##     2:           2011  0.001844628   0.0006968803           1981           2011
-    ##     3:             NA  0.020507246   0.0237470099           1990           2002
-    ##     4:             NA  0.380000000   0.2374868417           1993           1996
-    ##     5:             NA -0.150000000   0.1870828693           1994           1997
-    ##    ---                                                                         
-    ## 10781:             NA  0.099209486   0.0699589739           1993           1999
-    ## 10782:             NA -0.029162688   0.0241569824           1992           1999
-    ## 10783:             NA  0.069399626   0.0426281017           1992           1999
-    ## 10784:             NA  0.031313418   0.0359748410           1992           1999
-    ## 10785:             NA  0.200000000   0.2380476143           1992           1995
-    ##        JbetatrendAll JbetatrendAll_se JbetatrendAll_y1 JbetatrendAll_y2
-    ##     1:   0.003285291      0.000449605             1981             2011
-    ##     2:   0.006713102      0.000810327             1981             2011
-    ##     3:  -0.004143526      0.008255619             1990             2002
-    ##     4:   0.132380952      0.088805375             1993             1996
-    ##     5:   0.005303030      0.069984379             1994             1997
-    ##    ---                                                                 
-    ## 10781:   0.009302654      0.024901900             1993             1999
-    ## 10782:   0.009590836      0.013622507             1992             1999
-    ## 10783:   0.052660237      0.021213411             1992             1999
-    ## 10784:   0.009932716      0.019876409             1992             1999
-    ## 10785:   0.108571429      0.121741194             1992             1995
-    ##         HorntrendAll HorntrendAll_se HorntrendAll_y1 HorntrendAll_y2
-    ##     1:  0.0044639799    0.0008210369            1981            2011
-    ##     2: -0.0004329909    0.0003722616            1981            2011
-    ##     3: -0.0485170937    0.0217421003            1990            2002
-    ##     4:  0.2889130783    0.2069851260            1993            1996
-    ##     5:  0.2483119073    0.1713067801            1994            1997
-    ##    ---                                                              
-    ## 10781:  0.0754701872    0.0444102580            1993            1999
-    ## 10782: -0.0069010373    0.0348588399            1992            1999
-    ## 10783:  0.0386443798    0.0510251318            1992            1999
-    ## 10784:  0.0059745794    0.0356418670            1992            1999
-    ## 10785:  0.3345072230    0.1439054702            1992            1995
-    ##        JtutrendAlly1 JtutrendAlly1_se JtutrendAlly1_y1 JtutrendAlly1_y2
-    ##     1:  2.976230e-03      0.001309059             1981             2011
-    ##     2:  0.000000e+00      0.000000000             1981             2011
-    ##     3:  5.028571e-02      0.035949742             1990             2002
-    ##     4:  5.000000e-01      0.173205081             1993             1996
-    ##     5: -7.850462e-17      0.384900179             1994             1997
-    ##    ---                                                                 
-    ## 10781:  7.662338e-02      0.114379758             1993             1999
-    ## 10782: -3.053765e-02      0.046307206             1992             1999
-    ## 10783: -4.973475e-04      0.019106424             1992             1999
-    ## 10784: -5.583900e-02      0.050492580             1992             1999
-    ## 10785:  1.666667e-01      0.481125224             1992             1995
-    ##        JbetatrendAlly1 JbetatrendAlly1_se JbetatrendAlly1_y1 JbetatrendAlly1_y2
-    ##     1:     0.002587992       0.0009975709               1981               2011
-    ##     2:     0.002208307       0.0009103225               1981               2011
-    ##     3:     0.016076146       0.0187855714               1990               2002
-    ##     4:     0.200000000       0.0329914440               1993               1996
-    ##     5:     0.045454545       0.1355898359               1994               1997
-    ##    ---                                                                         
-    ## 10781:     0.009276438       0.0386134627               1993               1999
-    ## 10782:     0.012096088       0.0152655074               1992               1999
-    ## 10783:     0.011252541       0.0158858317               1992               1999
-    ## 10784:    -0.024196042       0.0267409270               1992               1999
-    ## 10785:     0.142857143       0.2474358297               1992               1995
-    ##        HorntrendAlly1 HorntrendAlly1_se HorntrendAlly1_y1 HorntrendAlly1_y2
-    ##     1:   0.0023147105      0.0016045472              1981              2011
-    ##     2:   0.0001735803      0.0009087936              1981              2011
-    ##     3:  -0.0320142666      0.0361522930              1990              2002
-    ##     4:   0.2225705826      0.1279420717              1993              1996
-    ##     5:   0.4285751955      0.2259227471              1994              1997
-    ##    ---                                                                     
-    ## 10781:   0.0887774433      0.1016192710              1993              1999
-    ## 10782:   0.0524156726      0.0544320927              1992              1999
-    ## 10783:   0.0699873264      0.0326755341              1992              1999
-    ## 10784:  -0.0226161165      0.0337895033              1992              1999
-    ## 10785:   0.4269255389      0.0934529733              1992              1995
-    ##        Nspp
-    ##     1:   83
-    ##     2:   15
-    ##     3:   15
-    ##     4:    7
-    ##     5:   12
-    ##    ---     
-    ## 10781:   16
-    ## 10782:   25
-    ## 10783:   18
-    ## 10784:   17
-    ## 10785:    8
+    ##            rarefyID   disstrend    trendse year1 year2 measure duration_group
+    ##       1: 100_606491  0.06031746 0.10447291  2009  2011     Jtu        3annual
+    ##       2: 100_606491  0.03419901 0.13594270  2009  2011   Jbeta        3annual
+    ##       3: 100_606491  0.15866541 0.07938981  2009  2011    Horn        3annual
+    ##       4: 100_606491  0.01728716 0.04431576  2008  2011     Jtu        4annual
+    ##       5: 100_606491  0.04961328 0.03113838  2008  2011   Jbeta        4annual
+    ##      ---                                                                     
+    ## 1125824: 99_4390299 -0.01011905 0.03486369  1982  1989   Jbeta          8min3
+    ## 1125825: 99_4390299 -0.01875000 0.05617171  1982  1989     Jtu            All
+    ## 1125826: 99_4390299 -0.01011905 0.03486369  1982  1989   Jbeta            All
+    ## 1125827: 99_4390299  0.01388889 0.05613128  1982  1989     Jtu          Ally1
+    ## 1125828: 99_4390299  0.01428571 0.04673788  1982  1989   Jbeta          Ally1
+    ##          nsamps Nspp NsppNAorNonZero NsppNonZero  REALM
+    ##       1:      3   83              83          83 Marine
+    ##       2:      3   83              83          83 Marine
+    ##       3:      3   83              83          83 Marine
+    ##       4:      4   83              83          83 Marine
+    ##       5:      4   83              83          83 Marine
+    ##      ---                                               
+    ## 1125824:      4   50               0           0 Marine
+    ## 1125825:      4   50               0           0 Marine
+    ## 1125826:      4   50               0           0 Marine
+    ## 1125827:      4   50               0           0 Marine
+    ## 1125828:      4   50               0           0 Marine
 
 ``` r
-summary(trends2$Jtutrend3)
+trends[measure == 'Jtu', summary(disstrend)]
+```
+
+    ##       Min.    1st Qu.     Median       Mean    3rd Qu.       Max. 
+    ## -1.0000000 -0.0104020  0.0004856  0.0060619  0.0223810  1.0000000
+
+``` r
+trends[measure == 'Jbeta', summary(disstrend)]
 ```
 
     ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-    ## -1.000000 -0.090909  0.000000  0.009606  0.125000  1.000000
+    ## -1.000000 -0.004400  0.003846  0.008194  0.020900  1.000000
 
 ``` r
-summary(trends2$Jbetatrend3)
+trends[measure == 'Horn', summary(disstrend)]
 ```
 
-    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-    ## -1.00000 -0.05263  0.01695  0.01590  0.12500  0.65233
-
-``` r
-summary(trends2$Horntrend3)
-```
-
-    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max.     NA's 
-    ## -1.00000 -0.05304  0.00802  0.01344  0.14626  0.99984      293
+    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
+    ## -1.000000 -0.007548  0.001960  0.009682  0.025767  1.000000
 
 ## Histograms of temporal change
 
 Standardized slopes have very large and small values
 
 ``` r
-x <- trends2[, hist(Jtutrend3)]
+x <- trends[measure == 'Jtu' & duration_group == '3annual', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-1.png)<!-- -->
 
 ``` r
-x <- trends2[, hist(Jbetatrend3)]
+x <- trends[measure == 'Jbeta' & duration_group == '3annual', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-2.png)<!-- -->
 
 ``` r
-x <- trends2[, hist(Horntrend3)]
+x <- trends[measure == 'Horn' & duration_group == '3annual', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-3.png)<!-- -->
 
 ``` r
-x <- trends2[, hist(Jtutrend5)]
+x <- trends[measure == 'Jtu' & duration_group == '5annual', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-4.png)<!-- -->
 
 ``` r
-x <- trends2[, hist(Jbetatrend5)]
+x <- trends[measure == 'Jbeta' & duration_group == '5annual', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-5.png)<!-- -->
 
 ``` r
-x <- trends2[, hist(Horntrend5)]
+x <- trends[measure == 'Horn' & duration_group == '5annual', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-6.png)<!-- -->
 
 ``` r
-x <- trends2[, hist(Jtutrend10)]
+x <- trends[measure == 'Jtu' & duration_group == '10annual', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-7.png)<!-- -->
 
 ``` r
-x <- trends2[, hist(Jbetatrend10)]
+x <- trends[measure == 'Jbeta' & duration_group == '10annual', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-8.png)<!-- -->
 
 ``` r
-x <- trends2[, hist(Horntrend10)]
+x <- trends[measure == 'Horn' & duration_group == '10annual', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-9.png)<!-- -->
 
 ``` r
-x <- trends2[, hist(Jtutrend20)]
+x <- trends[measure == 'Jtu' & duration_group == '20annual', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-10.png)<!-- -->
 
 ``` r
-x <- trends2[, hist(Jbetatrend20)]
+x <- trends[measure == 'Jbeta' & duration_group == '20annual', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-11.png)<!-- -->
 
 ``` r
-x <- trends2[, hist(Horntrend20)]
+x <- trends[measure == 'Horn' & duration_group == '20annual', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-12.png)<!-- -->
 
 ``` r
-x <- trends2[, hist(JtutrendAll)]
+x <- trends[measure == 'Jtu' & duration_group == 'All', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-13.png)<!-- -->
 
 ``` r
-x <- trends2[, hist(JbetatrendAll)]
+x <- trends[measure == 'Jbeta' & duration_group == 'All', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-14.png)<!-- -->
 
 ``` r
-x <- trends2[, hist(HorntrendAll)]
+x <- trends[measure == 'Horn' & duration_group == 'All', hist(disstrend)]
 ```
 
 ![](calc_turnover_files/figure-gfm/histograms%20of%20change-15.png)<!-- -->
 
-## Turnover calculations are correlated, though less so for Horn
+## Pairs plots
 
-``` r
-panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
-{
-    usr <- par("usr"); on.exit(par(usr))
-    par(usr = c(0, 1, 0, 1))
-    r <- cor(x, y, use = 'pairwise.complete.obs')
-    txt <- format(c(r, 0.123456789), digits = digits)[1]
-    txt <- paste0(prefix, txt)
-    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
-    text(0.5, 0.5, txt, cex = 0.5) #, cex = cex.cor * r)
-}
-pairs(formula = ~ Jtutrend3 + Jbetatrend3 + Horntrend3 +
-        Jtutrend5 + Jbetatrend5 + Horntrend5 +
-        Jtutrend10 + Jbetatrend10 + Horntrend10 +
-        Jtutrend20 + Jbetatrend20 + Horntrend20 +
-        JtutrendAll + JbetatrendAll + HorntrendAll +
-        JtutrendAlly1 + JbetatrendAlly1 + HorntrendAlly1, 
-      data = trends2, gap = 1/10, cex = 0.2, col = '#00000022', 
-      lower.panel = panel.cor,
-      upper.panel = panel.smooth)
-```
-
-![](calc_turnover_files/figure-gfm/pairs-1.png)<!-- -->
+Turnover calculations are correlated, though less so for Horn
+![](calc_turnover_files/figure-gfm/pairs-1.png)<!-- -->![](calc_turnover_files/figure-gfm/pairs-2.png)<!-- -->![](calc_turnover_files/figure-gfm/pairs-3.png)<!-- -->
 
 # Change compared to time-series characteristics
+
+## Duration
+
+Use the slopes with unstandardized durations
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+![](calc_turnover_files/figure-gfm/plot%20slope%20vs%20duration-1.png)<!-- -->
+
+## Number of samples
+
+Use the slopes with standardized durations to avoid confounding with
+duration \#\#\# Up to 20 years
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+![](calc_turnover_files/figure-gfm/plot%20slope%20vs%20nsamps20-1.png)<!-- -->
+
+### Up to 10 years
+
+    ## `geom_smooth()` using formula 'y ~ x'
+    ## `geom_smooth()` using formula 'y ~ x'
+    ## `geom_smooth()` using formula 'y ~ x'
+    ## `geom_smooth()` using formula 'y ~ x'
+    ## `geom_smooth()` using formula 'y ~ x'
+    ## `geom_smooth()` using formula 'y ~ x'
+
+![](calc_turnover_files/figure-gfm/plot%20slope%20vs%20nsamps10-1.png)<!-- -->
 
 ## Number of species
 
@@ -791,23 +674,26 @@ pairs(formula = ~ Jtutrend3 + Jbetatrend3 + Horntrend3 +
 ## Average change compared to \#species
 
 ``` r
-# number of species
-ggplot(trends2, aes(Nspp, Jtutrend3, color = 'Jtu trend3')) +
+trendswide <- dcast(trends[duration_group %in% c('3annual', '5annual', '10annual', '20annual', 
+                                                 '3min3', '5min3', '10min3', '20min3', 'All', 'Ally1')], 
+                    rarefyID + Nspp ~ measure + duration_group, value.var = 'disstrend')
+
+ggplot(trendswide, aes(Nspp, Jtu_3annual, color = 'Jtu trend3')) +
   geom_smooth() +
-  geom_smooth(aes(y = Jbetatrend3, color = 'Jbeta trend3')) +
-  geom_smooth(aes(y = Horntrend3, color = 'Horn trend3')) +
-  geom_smooth(aes(y = Jtutrend5, color = 'Jtu trend5')) +
-  geom_smooth(aes(y = Jbetatrend5, color = 'Jbeta trend5')) +
-  geom_smooth(aes(y = Horntrend5, color = 'Horn trend5')) +
-  geom_smooth(aes(y = Jtutrend10, color = 'Jtu trend10')) +
-  geom_smooth(aes(y = Jbetatrend10, color = 'Jbeta trend10')) +
-  geom_smooth(aes(y = Horntrend10, color = 'Horn trend10')) +
-  geom_smooth(aes(y = Jtutrend20, color = 'Jtu trend20')) +
-  geom_smooth(aes(y = Jbetatrend20, color = 'Jbeta trend20')) +
-  geom_smooth(aes(y = Horntrend20, color = 'Horn trend20')) +
-  geom_smooth(aes(y = JtutrendAll, color = 'Jtu trendAll')) +
-  geom_smooth(aes(y = JbetatrendAll, color = 'Jbeta trendAll')) +
-  geom_smooth(aes(y = HorntrendAll, color = 'Horn trendAll')) +
+  geom_smooth(aes(y = Jbeta_3annual, color = 'Jbeta trend3')) +
+  geom_smooth(aes(y = Horn_3annual, color = 'Horn trend3')) +
+  geom_smooth(aes(y = Jtu_5annual, color = 'Jtu trend5')) +
+  geom_smooth(aes(y = Jbeta_5annual, color = 'Jbeta trend5')) +
+  geom_smooth(aes(y = Horn_5annual, color = 'Horn trend5')) +
+  geom_smooth(aes(y = Jtu_10annual, color = 'Jtu trend10')) +
+  geom_smooth(aes(y = Jbeta_10annual, color = 'Jbeta trend10')) +
+  geom_smooth(aes(y = Horn_10annual, color = 'Horn trend10')) +
+  geom_smooth(aes(y = Jtu_20annual, color = 'Jtu trend20')) +
+  geom_smooth(aes(y = Jbeta_20annual, color = 'Jbeta trend20')) +
+  geom_smooth(aes(y = Horn_20annual, color = 'Horn trend20')) +
+  geom_smooth(aes(y = Jtu_All, color = 'Jtu trendAll')) +
+  geom_smooth(aes(y = Jbeta_All, color = 'Jbeta trendAll')) +
+  geom_smooth(aes(y = Horn_All, color = 'Horn trendAll')) +
   scale_x_log10() +
   labs(y = 'Slope') +
   geom_abline(intercept = 0, slope = 0)

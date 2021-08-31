@@ -30,34 +30,8 @@ signedsqrt_trans <- function() trans_new('signedsqrt',
 # Load data
 ```{r load data, echo=FALSE}
 # biotime community dissimilarity data
-bttrend <- readRDS(here('temp', 'trendstemp.rds'))
+btlong <- readRDS(here('temp', 'trendstemp.rds'))
 
-# convert biotime to long format
-btlong <- melt(bttrend, id.vars = c('rarefyID', 'REALM', 'Biome', 'taxa_mod', 'STUDY_ID', 'rarefyID_x', 'rarefyID_y'),
-               measure.vars = list(c('Jtutrend3', 'Jbetatrend3', 'Horntrend3', 'Jtutrend5', 'Jbetatrend5', 'Horntrend5', 
-                                     'Jtutrend10', 'Jbetatrend10', 'Horntrend10', 'Jtutrend20', 'Jbetatrend20', 'Horntrend20',
-                                     'JtutrendAll', 'JbetatrendAll', 'HorntrendAll',
-                                     'JtutrendAlly1', 'JbetatrendAlly1', 'HorntrendAlly1'),
-                                   c('Jtutrend3_se', 'Jbetatrend3_se', 'Horntrend3_se', 'Jtutrend5_se', 'Jbetatrend5_se',
-                                     'Horntrend5_se', 'Jtutrend10_se', 'Jbetatrend10_se', 'Horntrend10_se', 
-                                     'Jtutrend20_se', 'Jbetatrend20_se', 'Horntrend20_se',
-                                     'JtutrendAll_se', 'JbetatrendAll_se', 'HorntrendAll_se',
-                                     'JtutrendAlly1_se', 'JbetatrendAlly1_se', 'HorntrendAlly1_se'),
-                                   c('Jtutrend3_y1', 'Jbetatrend3_y1', 'Horntrend3_y1', 'Jtutrend5_y1', 'Jbetatrend5_y1',
-                                     'Horntrend5_y1', 'Jtutrend10_y1', 'Jbetatrend10_y1', 'Horntrend10_y1', 
-                                     'Jtutrend20_y1', 'Jbetatrend20_y1', 'Horntrend20_y1',
-                                     'JtutrendAll_y1', 'JbetatrendAll_y1', 'HorntrendAll_y1',
-                                     'JtutrendAlly1_y1', 'JbetatrendAlly1_y1', 'HorntrendAlly1_y1'),
-                                   c('Jtutrend3_y2', 'Jbetatrend3_y2', 'Horntrend3_y2', 'Jtutrend5_y2', 'Jbetatrend5_y2',
-                                     'Horntrend5_y2', 'Jtutrend10_y2', 'Jbetatrend10_y2', 'Horntrend10_y2', 
-                                     'Jtutrend20_y2', 'Jbetatrend20_y2','Horntrend20_y2',
-                                     'JtutrendAll_y2', 'JbetatrendAll_y2', 'HorntrendAll_y2',
-                                     'JtutrendAlly1_y2', 'JbetatrendAlly1_y2', 'HorntrendAlly1_y2')),
-               value.name = c('disstrend', 'trendse', 'year1', 'year2'))
-btlong[, measure := rep(c('Jtu', 'Jbeta', 'Horn'), 6)[variable]] # add Jtu, Jbeta, or Horn
-btlong[, duration_group := rep(c('3', '5', '10', '20', 'All', 'Ally1'), rep(3,6))[variable]] # add 3,5,10,20,all (duration)
-btlong[, variable := NULL]
-btlong <- btlong[!is.na(year1) & !is.na(year2) & !is.na(disstrend), ] # trim out missing
 
 # biotime num individuals and other info
 load(here::here('data', 'biotime_blowes', 'bt_malin.Rdata')) # load bt_malin
@@ -341,47 +315,6 @@ beanplot(npp ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A
 - Marine has a lot of slow, crawling organisms, but land has plants. Land also has birds (fast).
 
 
-# Plot slope vs. duration
-Use the slopes with unstandardized durations
-```{r plot slope vs duration, echo=FALSE, fig.height = 6, fig.width = 11}
-p1 <- ggplot(bt[measure == 'Jtu' & duration_group == 'All',], aes(duration, disstrend, group = REALM, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Years', y = 'Jaccard turnover slope')
-
-p2 <- ggplot(bt[measure == 'Jbeta' & duration_group == 'All',], aes(duration, disstrend, group = REALM, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Years', y = 'Jaccard total slope')
-
-p3 <- ggplot(bt[measure == 'Horn' & duration_group == 'All',], aes(duration, disstrend, group = REALM, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Years', y = 'Morisita-Horn slope')
-
-# without points
-p4 <- ggplot(bt[measure == 'Jtu' & duration_group == 'All',], aes(duration, disstrend, group = REALM, color = REALM)) +
-  geom_smooth(na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Years', y = 'Jaccard turnover slope')
-
-p5 <- ggplot(bt[measure == 'Jbeta' & duration_group == 'All',], aes(duration, disstrend, group = REALM, color = REALM)) +
-  geom_smooth(na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Years', y = 'Jaccard total slope')
-
-p6 <- ggplot(bt[measure == 'Horn' & duration_group == 'All',], aes(duration, disstrend, group = REALM, color = REALM)) +
-  geom_smooth(na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Years', y = 'Morisita-Horn slope')
-
-
-
-grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 3)
-```
 
 # Plot dissimilarity vs. explanatory variables
 

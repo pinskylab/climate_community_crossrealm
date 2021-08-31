@@ -12,6 +12,7 @@ if(Sys.info()['nodename'] == 'annotate.sebs.rutgers.edu'){
 }
 library(data.table)
 library(ggplot2)
+library(gridExtra) # for grid.arrange
 library(here)
 
 
@@ -33,14 +34,14 @@ bt[, Horn := 1-Hornsim] # convert similarity to dissimilarity
 bt[, Hornsim := NULL]
 
 # BioTime data type
-load('data/biotime_blowes/time_series_data_type.Rdata') # loads rarefyID_type
+load(here('data', 'biotime_blowes', 'time_series_data_type.Rdata')) # loads rarefyID_type
 bt <- merge(bt, rarefyID_type, by = 'rarefyID', all.x = TRUE) # merge with biotime
 
 # biotime taxa category and other info
 load(here::here('data', 'biotime_blowes', 'bt_malin.Rdata')) # load bt_malin
 btinfo <- data.table(bt_malin); rm(bt_malin)
 btinfo2 <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Biome, taxa_mod, REALM, STUDY_ID)]
-bt <- merge(bt, btinfo2, by = 'rarefyID', all.x = TRUE)
+bt <- merge(bt, btinfo2, by = 'rarefyID') # trims out rarefyIDs not in bt_malin
 
 # richness
 rich <- fread(here('output','richness_by_rarefyID.csv.gz')) # number of species
@@ -60,6 +61,7 @@ btinfo[S == 1, .N]
 ## Remove studies that don't meet quality thresholds
 Keep studies with:
 - >2 species
+- >2 years
 
 
 ```{r QAQC}
@@ -116,28 +118,33 @@ ggplot(test, aes(dY, Jtu)) +
 # Calculate temporal trends (temporal turnover)
 This only recalculates from scratch if temp/trendstemp.rds is not available.
 ## Set up functions
-```{r assemble trends, warning=FALSE, message=FALSE}
+```{r assemble trends}
 # function to calc linear trend from all year pairs of the time-series
-calctrend <- function(y, year1, year2, nm = 'y'){
+calctrend <- function(y, year1, year2, measure = 'y', duration_group = NA_character_){
+  yrs <- sort(unique(c(year1, year2)))
   dy <- year2 - year1
   if(length(dy)>1){
     mod <- lm(y ~ dy) # fit line
-    out <- list(y = coef(mod)[2], # coef for the slope
-                y_se = sqrt(diag(vcov(mod)))[2],
+    se <- suppressWarnings(sqrt(diag(vcov(mod)))[2])
+    out <- list(disstrend = coef(mod)[2], # coef for the slope
+                trendse = se,
                 year1 = min(year1), 
-                year2 = max(year2))
-    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+                year2 = max(year2),
+                measure = measure,
+                duration_group = duration_group,
+                nsamps = length(yrs))
     return(out)
   } else{
-    out <- list(y = NA_real_, y_se = NA_real_, year1 = NA_real_, year2 = NA_real_)
-    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+    out <- list(disstrend = NA_real_, trendse = NA_real_, year1 = NA_real_, year2 = NA_real_,
+                measure = measure, duration_group = duration_group, nsamps = NA_integer_)
     return(out)
   }
 }
 
 # function to calc linear trend from all years of the time-series
 # only comparing back to the first year
-calctrendy1 <- function(y, year1, year2, nm = 'y'){
+calctrendy1 <- function(y, year1, year2, measure = 'y', duration_group = NA_character_){
+  yrs <- sort(unique(c(year1, year2)))
   startyear = min(year1)
   dy <- year2 - year1
   keep = year1 == startyear
@@ -145,20 +152,26 @@ calctrendy1 <- function(y, year1, year2, nm = 'y'){
     y2 <- y[keep]
     dy2 <- dy[keep]
     mod <- lm(y2 ~ dy2) # fit line
-    out <- list(y = coef(mod)[2], # coef for the slope
-                y_se = sqrt(diag(vcov(mod)))[2],
+    se <- suppressWarnings(sqrt(diag(vcov(mod)))[2])
+    out <- list(disstrend = coef(mod)[2], # coef for the slope
+                trendse = se,
                 year1 = min(year1), 
-                year2 = max(year2))
-    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+                year2 = max(year2),
+                measure = measure, 
+                duration_group = duration_group,
+                nsamps = length(yrs))
     return(out)
   } else{
-    out <- list(y = NA_real_, y_se = NA_real_, year1 = NA_real_, year2 = NA_real_)
-    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+    out <- list(disstrend = NA_real_, trendse = NA_real_, year1 = NA_real_, year2 = NA_real_,
+                measure = measure, duration_group = duration_group, nsamps = NA_integer_)
     return(out)
   }
 }
 
-calctrendlast <- function(y, year1, year2, numyrs, nm = 'y'){
+# function to calc linear trend from all pairs
+# only using a sequence of annual samples that is numyrs long
+# use the most recent sequence that fits this criterion
+calctrendlast <- function(y, year1, year2, numyrs, measure = 'y', duration_group = NA_character_){
   yrs <- sort(unique(c(year1, year2)))
   dy <- diff(yrs) # find intervals between years
   rl <- rle(dy) # run length encoding
@@ -185,22 +198,77 @@ calctrendlast <- function(y, year1, year2, numyrs, nm = 'y'){
   
   if(run){
     dy <- year2 - year1
+    yrs <- sort(unique(c(year1, year2)))
     
-    mod <- lm(y ~ dy) # fit line
-    out <- list(y = coef(mod)[2], # coef for the slope
-                y_se = sqrt(diag(vcov(mod)))[2],
+    mod <- invisible(lm(y ~ dy)) # fit line
+    se <- suppressWarnings(sqrt(diag(vcov(mod)))[2])
+    out <- list(disstrend = coef(mod)[2], # coef for the slope
+                trendse = se,
                 year1 = min(yrs3), 
-                year2 = max(yrs3)) # SE
-    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+                year2 = max(yrs3),
+                measure = measure, 
+                duration_group = duration_group,
+                nsamps = length(yrs))
     return(out)
 
   } else {
-    out <- list(y = NA_real_, y_se = NA_real_, year1 = NA_real_, year2 = NA_real_)
-    names(out) <- c(nm, paste0(nm, '_se'), paste0(nm, '_y1'), paste0(nm, '_y2'))
+    out <- list(disstrend = NA_real_, trendse = NA_real_, year1 = NA_real_, year2 = NA_real_,
+                measure = measure, duration_group = duration_group, nsamps = NA_integer_)
     return(out)
   }
-  
+}
 
+# function to calc linear trend from all pairs
+# only using a sequence of samples that is numyrs samples long and has nsamps samples
+# not necessarily annual samples
+# use the most recent sequence that fits this criterion
+calctrendnsamps <- function(y, year1, year2, numyrs, nsamps, 
+                            measure = 'y', duration_group = NA_character_){
+  if(nsamps > numyrs) stop('nsamps must be <= numyrs')
+  if(length(y) != length(year1) | length(y) != length(year2)) stop('y, year1, and year2 must be the same length')
+  yrs <- sort(unique(c(year1, year2)))
+  
+  # brute force search for a sequence of samples that match criteria
+  i = length(yrs) # index for finding a suitable sequence of samples. start at the end.
+  run <- FALSE # flag for whether we have found a suitable sequence of samples
+  while(i > 0 & !run){ 
+    dys <- yrs[i] - yrs
+    j <- which(dys == numyrs-1)
+    if(length(j) >0){
+      proposedset <- yrs[j:i]
+      if(length(proposedset) >= nsamps){
+        ykeep <- year1 %in% proposedset & year2 %in% proposedset # keep values in pairwise comparisons for the years we want
+        y <- y[ykeep] # trim the timeseries
+        year1 <- year1[ykeep] # trim the initial years
+        year2 <- year2[ykeep] # trim the final years
+        run <- TRUE # mark that we should run the calcs
+      }
+    }
+    if(run == FALSE){
+      i <- i - 1 # try the next earliest sample
+    }
+  }
+  
+  if(run){
+    dy <- year2 - year1
+    yrs <- sort(unique(c(year1, year2)))
+    
+    mod <- lm(y ~ dy) # fit line
+    se <- suppressWarnings(sqrt(diag(vcov(mod)))[2]) # standard error
+    out <- list(disstrend = coef(mod)[2], # coef for the slope
+                trendse = se, 
+                year1 = min(proposedset), 
+                year2 = max(proposedset),
+                measure = measure, 
+                duration_group = duration_group,
+                nsamps = length(yrs)) # SE
+    return(out)
+
+  } else {
+    out <- list(disstrend = NA_real_, trendse = NA_real_, year1 = NA_real_, year2 = NA_real_,
+                measure = measure, duration_group = duration_group, nsamps = NA_integer_)
+    return(out)
+  }
 }
 
 ```
@@ -212,100 +280,89 @@ setkey(bt, STUDY_ID, rarefyID, year1,  year2)
 
 if(file.exists('temp/trendstemp.rds')){
     print('File already exists. Will not do calculations')
-    trends2 <- readRDS('temp/trendstemp.rds')
+    trends <- readRDS('temp/trendstemp.rds')
 } else {
   print('Calculating from scratch')
   
-  # 3-year trends
-  trends1 <- bt[, calctrendlast(Jtu, year1, year2, 3, 'Jtutrend3'), 
-                by = .(REALM, Biome, taxa_mod, STUDY_ID, 
-                       rarefyID, rarefyID_x, rarefyID_y)] # calculate trend in Jaccard turnover
-  trends2 <- bt[, calctrendlast(Jbeta, year1, year2, 3, 'Jbetatrend3'),
-                by = .(rarefyID)]
-  trends3 <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, 3, 'Horntrend3'),
-                by = .(rarefyID)]
+  ## Trends of standardized length and annual sampling frequency
+  yrslist <- 3:20
+  for(yr in yrslist){
+    print(yr)
+    temp <- bt[, calctrendlast(Jtu, year1, year2, numyrs = yr, measure = 'Jtu', 
+                               duration_group = paste0(yr, 'annual')), by = .(rarefyID)]
+    if(yr == min(yrslist)) trends = temp[!is.na(disstrend), ]
+    if(yr > min(yrslist)) trends = rbind(trends,temp[!is.na(disstrend), ])
+    
+    temp <- bt[, calctrendlast(Jbeta, year1, year2, numyrs = yr, measure = 'Jbeta',
+                               duration_group = paste0(yr, 'annual')), by = .(rarefyID)]
+    trends = rbind(trends, temp[!is.na(disstrend), ])
+    temp <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, numyrs = yr, measure = 'Horn',
+                                           duration_group = paste0(yr, 'annual')), by = .(rarefyID)]
+    trends = rbind(trends, temp[!is.na(disstrend), ])
+  }
   
-  # 5 year
-  trends4 <- bt[, calctrendlast(Jtu, year1, year2, 5, 'Jtutrend5'), 
-                by = .(rarefyID)]
-  trends5 <- bt[, calctrendlast(Jbeta, year1, year2, 5, 'Jbetatrend5'),
-                by = .(rarefyID)]
-  trends6 <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, 5, 'Horntrend5'),
-                by = .(rarefyID)]
-
-
-  # 10 year
-  trends7 <- bt[, calctrendlast(Jtu, year1, year2, 10, 'Jtutrend10'), 
-                by = .(rarefyID)]
-  trends8 <- bt[, calctrendlast(Jbeta, year1, year2, 10, 'Jbetatrend10'),
-                by = .(rarefyID)]
-  trends9 <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, 10, 'Horntrend10'),
-                by = .(rarefyID)]
-  
-  # 20 year
-  trends10 <- bt[, calctrendlast(Jtu, year1, year2, 20, 'Jtutrend20'), 
-                by = .(rarefyID)]
-  trends11 <- bt[, calctrendlast(Jbeta, year1, year2, 20, 'Jbetatrend20'),
-                by = .(rarefyID)]
-  trends12 <- bt[!is.na(Horn), calctrendlast(Horn, year1, year2, 20, 'Horntrend20'),
-                by = .(rarefyID)]
+  ## Trends of standardized length and at least 3 years sampled
+  yrslist <- 3:20
+  for(yr in yrslist){
+    print(yr)
+    temp <- bt[, calctrendnsamps(Jtu, year1, year2, numyrs = yr, nsamps = 3, measure = 'Jtu', 
+                               duration_group = paste0(yr, 'min3')), by = .(rarefyID)]
+    trends = rbind(trends,temp[!is.na(disstrend), ])
+    
+    temp <- bt[, calctrendnsamps(Jbeta, year1, year2, numyrs = yr, nsamps = 3, measure = 'Jbeta',
+                               duration_group = paste0(yr, 'min3')), by = .(rarefyID)]
+    trends = rbind(trends, temp[!is.na(disstrend), ])
+    temp <- bt[!is.na(Horn), calctrendnsamps(Horn, year1, year2, numyrs = yr, nsamps = 3, measure = 'Horn',
+                                           duration_group = paste0(yr, 'min3')), by = .(rarefyID)]
+    trends = rbind(trends, temp[!is.na(disstrend), ])
+  }
   
   # All years available using all year pairs
-  trends13 <- bt[, calctrend(Jtu, year1, year2, 'JtutrendAll'), by = .(rarefyID)]
-  trends14 <- bt[, calctrend(Jbeta, year1, year2, 'JbetatrendAll'), by = .(rarefyID)]
-  trends15 <- bt[!is.na(Horn), calctrend(Horn, year1, year2, 'HorntrendAll'), by = .(rarefyID)]
+  temp <- bt[, calctrend(Jtu, year1, year2, measure = 'Jtu', duration_group = 'All'), by = .(rarefyID)]
+  trends = rbind(trends, temp[!is.na(disstrend), ])
+  temp <- bt[, calctrend(Jbeta, year1, year2, measure = 'Jbeta', duration_group = 'All'), by = .(rarefyID)]
+  trends = rbind(trends, temp[!is.na(disstrend), ])
+  temp <- bt[!is.na(Horn), calctrend(Horn, year1, year2, measure = 'Horn', duration_group = 'All'), by = .(rarefyID)]
+  trends = rbind(trends, temp[!is.na(disstrend), ])
 
   # All years available using first year comparisons
-  trends16 <- bt[, calctrendy1(Jtu, year1, year2, 'JtutrendAlly1'), by = .(rarefyID)]
-  trends17 <- bt[, calctrendy1(Jbeta, year1, year2, 'JbetatrendAlly1'), by = .(rarefyID)]
-  trends18 <- bt[!is.na(Horn), calctrendy1(Horn, year1, year2, 'HorntrendAlly1'), by = .(rarefyID)]
-  
-  trends <- merge(trends1, trends2, all = TRUE, by = 'rarefyID')
-  trends <- merge(trends, trends3, all = TRUE)
-  trends <- merge(trends, trends4, all = TRUE)
-  trends <- merge(trends, trends5, all = TRUE)
-  trends <- merge(trends, trends6, all = TRUE)
-  trends <- merge(trends, trends7, all = TRUE)
-  trends <- merge(trends, trends8, all = TRUE)
-  trends <- merge(trends, trends9, all = TRUE)
-  trends <- merge(trends, trends10, all = TRUE)
-  trends <- merge(trends, trends11, all = TRUE)
-  trends <- merge(trends, trends12, all = TRUE)
-  trends <- merge(trends, trends13, all = TRUE)
-  trends <- merge(trends, trends14, all = TRUE)
-  trends <- merge(trends, trends15, all = TRUE)
-  trends <- merge(trends, trends16, all = TRUE)
-  trends <- merge(trends, trends17, all = TRUE)
-  trends <- merge(trends, trends18, all = TRUE)
+  temp <- bt[, calctrendy1(Jtu, year1, year2, measure = 'Jtu', duration_group = 'Ally1'), by = .(rarefyID)]
+  trends = rbind(trends, temp[!is.na(disstrend), ])
+  temp <- bt[, calctrendy1(Jbeta, year1, year2, measure = 'Jbeta', duration_group = 'Ally1'), by = .(rarefyID)]
+  trends = rbind(trends, temp[!is.na(disstrend), ])
+  temp <- bt[!is.na(Horn), calctrendy1(Horn, year1, year2, measure = 'Horn', duration_group = 'Ally1'), by = .(rarefyID)]
+  trends = rbind(trends, temp[!is.na(disstrend), ])
   
 
   saveRDS(trends, file = here('temp', 'trendstemp.rds'))
   
 }
 
-nrow(trends2)
+nrow(trends)
 ```
 
-## Add species richness to trends
+## Add species richness and realm to trends for plotting
 ```{r add richness}
-trends2 <- merge(trends2, rich, all.x = TRUE) # species richness
+trends <- merge(trends, rich, all.x = TRUE) # species richness
+realms <- bt[, .(REALM = unique(REALM)), by = rarefyID]
+trends <- merge(trends, realms, all.x = TRUE)
 ```
 
 
 ## Plot every Jtu timeseries (a lot!)
-Not run during knitting
-```{r plot of all ts, eval=FALSE}
-rids <- trends2[nyrBT > 2, sort(unique(rarefyID))]
+Not run during knitting. Not yet updated to new format and content of trends data.table
+```{r plot of all ts, eval=FALSE, echo = FALSE}
+rids <- trends[nyrBT > 2, sort(unique(rarefyID))]
 setkey(bt, rarefyID, YEAR)
 print(paste(length(rids), ' rarefyIDs'))
 filenum <- 1
 plotnum <- 1
 for(i in 1:length(rids)){
 #for(i in 1:400){ # for testing
-  jtutrendrem0 <- trends2[rarefyID == rids[i], Jtutrendrem0]
-  jtuexp <- trends2[rarefyID == rids[i], Jtuexp]
-  jtumm <- trends2[rarefyID == rids[i], Jtumm]
-  nspp <- trends2[rarefyID == rids[i], Nspp]
+  jtutrendrem0 <- trends[rarefyID == rids[i], Jtutrendrem0]
+  jtuexp <- trends[rarefyID == rids[i], Jtuexp]
+  jtumm <- trends[rarefyID == rids[i], Jtumm]
+  nspp <- trends[rarefyID == rids[i], Nspp]
   x <- bt[rarefyID == rids[i], YEAR]
   y <- bt[rarefyID == rids[i], Jtu_base]
   
@@ -346,53 +403,62 @@ dev.off()
 
 # Examine the turnover calculations
 ## How many values?
+### print
 ```{r number of values}
-apply(trends2[, .(Jtutrend3, Jbetatrend3, Horntrend3,
-                 Jtutrend5, Jbetatrend5, Horntrend5,
-                Jtutrend10, Jbetatrend10, Horntrend10,
-                Jtutrend20, Jbetatrend20, Horntrend20,
-                JtutrendAll, JbetatrendAll, HorntrendAll)], MARGIN = 2, 
-      function(x) sum(!is.na(x)))
+trends[, .N, by = c('measure', 'duration_group')]
+```
+### plot
+```{r number of values plot}
+counts <- trends[, .N, by = c('measure', 'duration_group')]
+counts[!(duration_group %in% c('All', 'Ally1')), duration := as.numeric(gsub('annual|min3', '', duration_group))]
+counts[!(duration_group %in% c('All', 'Ally1')), group := sub('^[[:digit:]]+', '', duration_group)]
+counts[(duration_group %in% c('All', 'Ally1')), group := duration_group]
+counts[!is.na(duration), duration_string := as.character(duration)]
+counts[is.na(duration), duration_string := group]
+counts[, duration_string := factor(duration_string, levels = c('3', '4', '5', '6', '7', '8', '9', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', 'All', 'Ally1'))]
+
+ggplot(counts, aes(duration_string, N, fill = group)) +
+  geom_bar(stat = 'identity', position=position_dodge())
 ```
 
 ## Do some basic checks of the turnover calculations
 ```{r summary of change}
 # basic checks
-trends2
+trends
 
-summary(trends2$Jtutrend3)
-summary(trends2$Jbetatrend3)
-summary(trends2$Horntrend3)
-
+trends[measure == 'Jtu', summary(disstrend)]
+trends[measure == 'Jbeta', summary(disstrend)]
+trends[measure == 'Horn', summary(disstrend)]
 ```
 
 ## Histograms of temporal change
 Standardized slopes have very large and small values
 ```{r histograms of change, messages = FALSE}
-x <- trends2[, hist(Jtutrend3)]
-x <- trends2[, hist(Jbetatrend3)]
-x <- trends2[, hist(Horntrend3)]
+x <- trends[measure == 'Jtu' & duration_group == '3annual', hist(disstrend)]
+x <- trends[measure == 'Jbeta' & duration_group == '3annual', hist(disstrend)]
+x <- trends[measure == 'Horn' & duration_group == '3annual', hist(disstrend)]
 
-x <- trends2[, hist(Jtutrend5)]
-x <- trends2[, hist(Jbetatrend5)]
-x <- trends2[, hist(Horntrend5)]
+x <- trends[measure == 'Jtu' & duration_group == '5annual', hist(disstrend)]
+x <- trends[measure == 'Jbeta' & duration_group == '5annual', hist(disstrend)]
+x <- trends[measure == 'Horn' & duration_group == '5annual', hist(disstrend)]
 
-x <- trends2[, hist(Jtutrend10)]
-x <- trends2[, hist(Jbetatrend10)]
-x <- trends2[, hist(Horntrend10)]
+x <- trends[measure == 'Jtu' & duration_group == '10annual', hist(disstrend)]
+x <- trends[measure == 'Jbeta' & duration_group == '10annual', hist(disstrend)]
+x <- trends[measure == 'Horn' & duration_group == '10annual', hist(disstrend)]
 
-x <- trends2[, hist(Jtutrend20)]
-x <- trends2[, hist(Jbetatrend20)]
-x <- trends2[, hist(Horntrend20)]
+x <- trends[measure == 'Jtu' & duration_group == '20annual', hist(disstrend)]
+x <- trends[measure == 'Jbeta' & duration_group == '20annual', hist(disstrend)]
+x <- trends[measure == 'Horn' & duration_group == '20annual', hist(disstrend)]
 
-x <- trends2[, hist(JtutrendAll)]
-x <- trends2[, hist(JbetatrendAll)]
-x <- trends2[, hist(HorntrendAll)]
+x <- trends[measure == 'Jtu' & duration_group == 'All', hist(disstrend)]
+x <- trends[measure == 'Jbeta' & duration_group == 'All', hist(disstrend)]
+x <- trends[measure == 'Horn' & duration_group == 'All', hist(disstrend)]
 
 ```
 
-## Turnover calculations are correlated, though less so for Horn
-```{r pairs, fig.height=10, fig.width=10}
+## Pairs plots
+Turnover calculations are correlated, though less so for Horn
+```{r pairs, fig.height=10, fig.width=10, echo = FALSE}
 panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
 {
     usr <- par("usr"); on.exit(par(usr))
@@ -403,13 +469,27 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
     if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
     text(0.5, 0.5, txt, cex = 0.5) #, cex = cex.cor * r)
 }
-pairs(formula = ~ Jtutrend3 + Jbetatrend3 + Horntrend3 +
-        Jtutrend5 + Jbetatrend5 + Horntrend5 +
-        Jtutrend10 + Jbetatrend10 + Horntrend10 +
-        Jtutrend20 + Jbetatrend20 + Horntrend20 +
-        JtutrendAll + JbetatrendAll + HorntrendAll +
-        JtutrendAlly1 + JbetatrendAlly1 + HorntrendAlly1, 
-      data = trends2, gap = 1/10, cex = 0.2, col = '#00000022', 
+
+# make wide dataset for pairs plotting
+trendswide <- dcast(trends[duration_group %in% c('3annual', '5annual', '10annual', '20annual', 
+                                                 '3min3', '5min3', '10min3', '20min3', 'All', 'Ally1')], 
+                    rarefyID ~ measure + duration_group, value.var = 'disstrend')
+
+# plots
+pairs(formula = ~ Jtu_3annual + Jtu_5annual + Jtu_10annual + Jtu_20annual +
+        Jtu_3min3 + Jtu_5min3 + Jtu_10min3 + Jtu_20min3 +
+        Jtu_All + Jtu_Ally1, 
+      data = trendswide, gap = 1/10, cex = 0.2, col = '#00000022', 
+      lower.panel = panel.cor,
+      upper.panel = panel.smooth)
+
+pairs(formula = ~ Jtu_5annual + Jbeta_5annual + Horn_5annual, 
+      data = trendswide, gap = 1/10, cex = 0.2, col = '#00000022', 
+      lower.panel = panel.cor,
+      upper.panel = panel.smooth)
+
+pairs(formula = ~ Jtu_All + Jbeta_All + Horn_All, 
+      data = trendswide, gap = 1/10, cex = 0.2, col = '#00000022', 
       lower.panel = panel.cor,
       upper.panel = panel.smooth)
 
@@ -418,51 +498,191 @@ pairs(formula = ~ Jtutrend3 + Jbetatrend3 + Horntrend3 +
 
 
 # Change compared to time-series characteristics
+## Duration
+Use the slopes with unstandardized durations
+```{r plot slope vs duration, echo=FALSE, fig.height = 6, fig.width = 11}
+trends[, duration := year2 - year1]
+p1 <- ggplot(trends[measure == 'Jtu' & duration_group == 'All',], aes(duration, disstrend)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Years', y = 'Jaccard turnover slope')
+
+p2 <- ggplot(trends[measure == 'Jbeta' & duration_group == 'All',], aes(duration, disstrend)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Years', y = 'Jaccard total slope')
+
+p3 <- ggplot(trends[measure == 'Horn' & duration_group == 'All',], aes(duration, disstrend)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Years', y = 'Morisita-Horn slope')
+
+# without points
+p4 <- ggplot(trends[measure == 'Jtu' & duration_group == 'All',], aes(duration, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Years', y = 'Jaccard turnover slope')
+
+p5 <- ggplot(trends[measure == 'Jbeta' & duration_group == 'All',], aes(duration, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Years', y = 'Jaccard total slope')
+
+p6 <- ggplot(trends[measure == 'Horn' & duration_group == 'All',], aes(duration, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Years', y = 'Morisita-Horn slope')
+
+grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 3)
+```
+
+## Number of samples
+Use the slopes with standardized durations to avoid confounding with duration
+### Up to 20 years
+```{r plot slope vs nsamps20, echo=FALSE, fig.height = 6, fig.width = 11}
+p1 <- ggplot(trends[measure == 'Jtu' & duration_group == '20min3',], aes(nsamps, disstrend)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Jaccard turnover slope')
+
+p2 <- ggplot(trends[measure == 'Jbeta' & duration_group == '20min3',], aes(nsamps, disstrend)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Jaccard total slope')
+
+p3 <- ggplot(trends[measure == 'Horn' & duration_group == '20min3',], aes(nsamps, disstrend)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Morisita-Horn slope')
+
+# without points
+p4 <- ggplot(trends[measure == 'Jtu' & duration_group == '20min3',], aes(nsamps, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Jaccard turnover slope')
+
+p5 <- ggplot(trends[measure == 'Jbeta' & duration_group == '20min3',], aes(nsamps, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Jaccard total slope')
+
+p6 <- ggplot(trends[measure == 'Horn' & duration_group == '20min3',], aes(nsamps, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Morisita-Horn slope')
+
+p7 <- ggplot(trends[measure == 'Jtu' & duration_group == '20min3',], aes(nsamps, trendse)) +
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Jaccard turnover slope SE')
+
+p8 <- ggplot(trends[measure == 'Jbeta' & duration_group == '20min3',], aes(nsamps, trendse)) +
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Jaccard total slope SE')
+
+p9 <- ggplot(trends[measure == 'Jtu' & duration_group == '20min3',], aes(nsamps, trendse)) +
+  geom_smooth(na.rm = TRUE) +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Morisita-Horn slope SE')
+
+
+grid.arrange(p1, p2, p3, p4, p5, p6, p7, p8, p9, ncol = 3)
+```
+
+### Up to 10 years
+```{r plot slope vs nsamps10, echo=FALSE, fig.height = 6, fig.width = 11}
+p1 <- ggplot(trends[measure == 'Jtu' & duration_group == '10min3',], aes(nsamps, disstrend)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(na.rm = TRUE, method = 'loess') + # loess is slow but works with this few x-values
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Jaccard turnover slope')
+
+p2 <- ggplot(trends[measure == 'Jbeta' & duration_group == '10min3',], aes(nsamps, disstrend)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(na.rm = TRUE, method = 'loess') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Jaccard total slope')
+
+p3 <- ggplot(trends[measure == 'Horn' & duration_group == '10min3',], aes(nsamps, disstrend)) +
+  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
+  geom_smooth(na.rm = TRUE, method = 'loess') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Morisita-Horn slope')
+
+# without points
+p4 <- ggplot(trends[measure == 'Jtu' & duration_group == '10min3',], aes(nsamps, disstrend)) +
+  geom_smooth(na.rm = TRUE, method = 'loess') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Jaccard turnover slope')
+
+p5 <- ggplot(trends[measure == 'Jbeta' & duration_group == '10min3',], aes(nsamps, disstrend)) +
+  geom_smooth(na.rm = TRUE, method = 'loess') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Jaccard total slope')
+
+p6 <- ggplot(trends[measure == 'Horn' & duration_group == '10min3',], aes(nsamps, disstrend)) +
+  geom_smooth(na.rm = TRUE, method = 'loess') +
+  scale_color_brewer(palette="Set1") + 
+  labs(x = 'Number of samples', y = 'Morisita-Horn slope')
+
+grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 3)
+```
+
 ## Number of species
 ```{r change vs. num spp, fig.height =12, echo=FALSE}
 par(mfrow=c(4,3))
-trends2[, plot(Nspp, Jtutrend3, log = 'x', col = '#00000033')]; abline(h=0)
-trends2[, plot(Nspp, Jbetatrend3, log = 'x', col = '#00000033')]; abline(h=0)
-trends2[, plot(Nspp, Horntrend3, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Jtu' & duration_group == '3annual', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Jbeta' & duration_group == '3annual', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Horn' & duration_group == '3annual', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
 
-trends2[, plot(Nspp, Jtutrend5, log = 'x', col = '#00000033')]; abline(h=0)
-trends2[, plot(Nspp, Jbetatrend5, log = 'x', col = '#00000033')]; abline(h=0)
-trends2[, plot(Nspp, Horntrend5, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Jtu' & duration_group == '5annual', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Jbeta' & duration_group == '5annual', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Horn' & duration_group == '5annual', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
 
-trends2[, plot(Nspp, Jtutrend10, log = 'x', col = '#00000033')]; abline(h=0)
-trends2[, plot(Nspp, Jbetatrend10, log = 'x', col = '#00000033')]; abline(h=0)
-trends2[, plot(Nspp, Horntrend10, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Jtu' & duration_group == '10annual', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Jbeta' & duration_group == '10annual', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Horn' & duration_group == '10annual', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
 
-trends2[, plot(Nspp, Jtutrend20, log = 'x', col = '#00000033')]; abline(h=0)
-trends2[, plot(Nspp, Jbetatrend20, log = 'x', col = '#00000033')]; abline(h=0)
-trends2[, plot(Nspp, Horntrend20, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Jtu' & duration_group == '20annual', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Jbeta' & duration_group == '20annual', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Horn' & duration_group == '20annual', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
 
-trends2[, plot(Nspp, JtutrendAll, log = 'x', col = '#00000033')]; abline(h=0)
-trends2[, plot(Nspp, JbetatrendAll, log = 'x', col = '#00000033')]; abline(h=0)
-trends2[, plot(Nspp, HorntrendAll, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Jtu' & duration_group == 'All', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Jbeta' & duration_group == 'All', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
+trends[measure == 'Horn' & duration_group == 'All', plot(Nspp, disstrend, log = 'x', col = '#00000033')]; abline(h=0)
 
 
 ```
 
 ## Average change compared to #species
 ```{r ave change vs. num spp, message = FALSE}
-# number of species
-ggplot(trends2, aes(Nspp, Jtutrend3, color = 'Jtu trend3')) +
+trendswide <- dcast(trends[duration_group %in% c('3annual', '5annual', '10annual', '20annual', 
+                                                 '3min3', '5min3', '10min3', '20min3', 'All', 'Ally1')], 
+                    rarefyID + Nspp ~ measure + duration_group, value.var = 'disstrend')
+
+ggplot(trendswide, aes(Nspp, Jtu_3annual, color = 'Jtu trend3')) +
   geom_smooth() +
-  geom_smooth(aes(y = Jbetatrend3, color = 'Jbeta trend3')) +
-  geom_smooth(aes(y = Horntrend3, color = 'Horn trend3')) +
-  geom_smooth(aes(y = Jtutrend5, color = 'Jtu trend5')) +
-  geom_smooth(aes(y = Jbetatrend5, color = 'Jbeta trend5')) +
-  geom_smooth(aes(y = Horntrend5, color = 'Horn trend5')) +
-  geom_smooth(aes(y = Jtutrend10, color = 'Jtu trend10')) +
-  geom_smooth(aes(y = Jbetatrend10, color = 'Jbeta trend10')) +
-  geom_smooth(aes(y = Horntrend10, color = 'Horn trend10')) +
-  geom_smooth(aes(y = Jtutrend20, color = 'Jtu trend20')) +
-  geom_smooth(aes(y = Jbetatrend20, color = 'Jbeta trend20')) +
-  geom_smooth(aes(y = Horntrend20, color = 'Horn trend20')) +
-  geom_smooth(aes(y = JtutrendAll, color = 'Jtu trendAll')) +
-  geom_smooth(aes(y = JbetatrendAll, color = 'Jbeta trendAll')) +
-  geom_smooth(aes(y = HorntrendAll, color = 'Horn trendAll')) +
+  geom_smooth(aes(y = Jbeta_3annual, color = 'Jbeta trend3')) +
+  geom_smooth(aes(y = Horn_3annual, color = 'Horn trend3')) +
+  geom_smooth(aes(y = Jtu_5annual, color = 'Jtu trend5')) +
+  geom_smooth(aes(y = Jbeta_5annual, color = 'Jbeta trend5')) +
+  geom_smooth(aes(y = Horn_5annual, color = 'Horn trend5')) +
+  geom_smooth(aes(y = Jtu_10annual, color = 'Jtu trend10')) +
+  geom_smooth(aes(y = Jbeta_10annual, color = 'Jbeta trend10')) +
+  geom_smooth(aes(y = Horn_10annual, color = 'Horn trend10')) +
+  geom_smooth(aes(y = Jtu_20annual, color = 'Jtu trend20')) +
+  geom_smooth(aes(y = Jbeta_20annual, color = 'Jbeta trend20')) +
+  geom_smooth(aes(y = Horn_20annual, color = 'Horn trend20')) +
+  geom_smooth(aes(y = Jtu_All, color = 'Jtu trendAll')) +
+  geom_smooth(aes(y = Jbeta_All, color = 'Jbeta trendAll')) +
+  geom_smooth(aes(y = Horn_All, color = 'Horn trendAll')) +
   scale_x_log10() +
   labs(y = 'Slope') +
   geom_abline(intercept = 0, slope = 0)
