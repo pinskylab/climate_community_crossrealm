@@ -76,115 +76,55 @@ length(setdiff(dat$rarefyID, combMHlogS$rarefyID)) # only missing 92 ts
 
 ### Plots
 
-``` r
-col = '#00000033'
-# compare
-comb[, plot(startYear, year1)]
-```
-
 ![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
     ## NULL
-
-``` r
-comb[, plot(endYear, year2)]
-```
 
 ![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-2.png)<!-- -->
 
     ## NULL
 
-``` r
-comb[, plot(TempGAMCoef, temptrend)]; abline(0,1)
-```
-
     ## NULL
 
 ![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-3.png)<!-- -->
 
-``` r
-comb[, plot(new_sTempYear, tempave.sc, col = c('green', 'blue')[(REALM=='Marine')+1])]; abline(0,1)
-```
-
     ## NULL
 
-![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-4.png)<!-- -->
-
-``` r
-comb[model_id == 'logS_lm' & measure == 'Jtu', plot(slope, disstrend, xlab = 'logS slope', ylab = 'Jtu slope', col = col)]
-```
-
-![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-5.png)<!-- -->
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-4.png)<!-- -->![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-5.png)<!-- -->
 
     ## NULL
-
-``` r
-comb[model_id == 'Gains_lm' & measure == 'Jtu', plot(slope, disstrend, xlab = 'Gains slope', ylab = 'Jtu slope', col = col)]
-```
 
 ![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-6.png)<!-- -->
 
     ## NULL
 
-``` r
-comb[model_id == 'Losses_lm' & measure == 'Jtu', plot(slope, disstrend, xlab = 'Losses slope', ylab = 'Jtu slope', col = col)]
-```
-
 ![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-7.png)<!-- -->
 
     ## NULL
-
-``` r
-comb[model_id == 'logS_lm' & measure == 'Jbeta', plot(slope, disstrend, xlab = 'logS slope', ylab = 'Jbeta slope', col = col)]
-```
 
 ![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-8.png)<!-- -->
 
     ## NULL
 
-``` r
-comb[model_id == 'Gains_lm' & measure == 'Jbeta', plot(slope, disstrend, xlab = 'Gains slope', ylab = 'Jbeta slope', col = col)]
-```
-
 ![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-9.png)<!-- -->
 
     ## NULL
-
-``` r
-comb[model_id == 'Losses_lm' & measure == 'Jbeta', plot(slope, disstrend, xlab = 'Losses slope', ylab = 'Jbeta slope', col = col)]
-```
 
 ![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-10.png)<!-- -->
 
     ## NULL
 
-``` r
-comb[model_id == 'logS_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'logS slope', ylab = 'Horn slope', col = col)]
-```
-
 ![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-11.png)<!-- -->
 
     ## NULL
-
-``` r
-comb[model_id == 'logN_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'logN slope', ylab = 'Horn slope', col = col)]
-```
 
 ![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-12.png)<!-- -->
 
     ## NULL
 
-``` r
-comb[model_id == 'Gains_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'Gains slope', ylab = 'Horn slope', col = col)]
-```
-
 ![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-13.png)<!-- -->
 
     ## NULL
-
-``` r
-comb[model_id == 'Losses_lm' & measure == 'Horn', plot(slope, disstrend, xlab = 'Losses slope', ylab = 'Horn slope', col = col)]
-```
 
 ![](antao_MEmodels_files/figure-gfm/unnamed-chunk-2-14.png)<!-- -->
 
@@ -322,70 +262,7 @@ summary(mod0)
 
 ### Plot
 
-``` r
-# set up prediction frame
-newdatM <- expand.grid(new_sTempYear = seq(-2, 2.5, length.out = 100), TempGAMCoef = seq(-0.35, 0.35, length.out = 100))
-newdatM$REALM <- 'Marine'
-newdatM$taxa_mod1 <- 'All'
-newdatM$STUDY_ID <- 33
-newdatM$std.error <- 0.03
-sdTM <- sd(datS$newtempvalues[datS$REALM == 'Marine'])
-meanTM <- mean(datS$newtempvalues[datS$REALM == 'Marine'])
-newdatM$newtempvalues <- newdatM$new_sTempYear * sdTM + meanTM
-
-newdatT <- expand.grid(new_sTempYear = seq(-2.5, 2.7, length.out = 100), TempGAMCoef = seq(-0.3, 0.5, length.out = 100))
-newdatT$REALM <- 'Terrestrial'
-newdatT$taxa_mod1 <- 'Terrestrial plants'
-newdatT$STUDY_ID <- 18
-newdatT$std.error <- 0.03
-sdTT <- sd(datS$newtempvalues[datS$REALM == 'Terrestrial'])
-meanTT <- mean(datS$newtempvalues[datS$REALM == 'Terrestrial'])
-newdatT$newtempvalues <- newdatT$new_sTempYear * sdTT + meanTT
-
-# predict
-newdatM$slope <- predict(mod0, newdata = newdatM, se.fit = FALSE, re.form = NA)
-newdatT$slope <- predict(mod0, newdata = newdatT, se.fit = FALSE, re.form = NA)
-
-# plot
-p1 <- ggplot(newdatM, aes(TempGAMCoef, newtempvalues, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Marine') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-p2 <- ggplot(newdatT, aes(TempGAMCoef, newtempvalues, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Terrestrial') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-
-p1
-```
-
-![](antao_MEmodels_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
-
-``` r
-p2
-```
-
-![](antao_MEmodels_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->![](antao_MEmodels_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
 
 ## With an intercept
 
@@ -586,71 +463,10 @@ summary(mod0alt_tempdata)
 
 ### Plot
 
-``` r
-# set up prediction frame
-newdatM <- expand.grid(tempave.sc = seq(-2, 1.8, length.out = 100), temptrend.sc = seq(-1.8, 1.8, length.out = 100))
-newdatM$REALM <- 'Marine'
-newdatM$taxa_mod1 <- 'All'
-newdatM$STUDY_ID <- 33
-newdatM$std.error <- 0.03
-newdatM$tempave <- newdatM$tempave.sc * scaling[var == 'tempave.sc', scale] + scaling[var == 'tempave.sc', center]
-newdatM$temptrend <- newdatM$temptrend.sc * scaling[var == 'temptrend.sc', scale] + scaling[var == 'temptrend.sc', center]
-
-newdatT <- expand.grid(tempave.sc = seq(-2.2, 1.3, length.out = 100), temptrend.sc = seq(-1.8, 3, length.out = 100))
-newdatT$REALM <- 'Terrestrial'
-newdatT$taxa_mod1 <- 'Terrestrial plants'
-newdatT$STUDY_ID <- 18
-newdatT$std.error <- 0.03
-newdatT$tempave <- newdatT$tempave.sc * scaling[var == 'tempave.sc', scale] + scaling[var == 'tempave.sc', center]
-newdatT$temptrend <- newdatT$temptrend.sc * scaling[var == 'temptrend.sc', scale] + scaling[var == 'temptrend.sc', center]
-
-# predict
-newdatM$slope <- predict(mod0alt_tempdata, newdata = newdatM, se.fit = FALSE, re.form = NA)
-newdatT$slope <- predict(mod0alt_tempdata, newdata = newdatT, se.fit = FALSE, re.form = NA)
-
-# plot
-p1 <- ggplot(newdatM, aes(temptrend, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Marine') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-p2 <- ggplot(newdatT, aes(temptrend, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Terrestrial') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-
-p1
-```
-
-![](antao_MEmodels_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
-
-``` r
-p2
-```
-
-![](antao_MEmodels_files/figure-gfm/unnamed-chunk-9-2.png)<!-- --> \#\#
-With abs(tempchange) abs(tempchange) is favored substantially (deltaAIC
-70) over tempchange. Coefficients are largely the same other than this
-major changw.
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->![](antao_MEmodels_files/figure-gfm/unnamed-chunk-9-2.png)<!-- -->
+\#\# With abs(tempchange) abs(tempchange) is favored substantially
+(deltaAIC 70) over tempchange. Coefficients are largely the same other
+than this major changw.
 
 ``` r
 # realm-specific intercept. Simplify REs that were near zero.
@@ -737,70 +553,7 @@ AIC(mod2) - AIC(mod3)
 
 ### Plot abs(tempchange) effects
 
-``` r
-# set up prediction frame
-newdatM <- expand.grid(new_sTempYear = seq(-2, 2.5, length.out = 100), TempGAMCoef = seq(-0.35, 0.35, length.out = 100))
-newdatM$REALM <- 'Marine'
-newdatM$taxa_mod1 <- 'All'
-newdatM$STUDY_ID <- 33
-newdatM$std.error <- 0.03
-sdTM <- sd(datS$newtempvalues[datS$REALM == 'Marine'])
-meanTM <- mean(datS$newtempvalues[datS$REALM == 'Marine'])
-newdatM$newtempvalues <- newdatM$new_sTempYear * sdTM + meanTM
-
-newdatT <- expand.grid(new_sTempYear = seq(-2.5, 2.7, length.out = 100), TempGAMCoef = seq(-0.3, 0.5, length.out = 100))
-newdatT$REALM <- 'Terrestrial'
-newdatT$taxa_mod1 <- 'Terrestrial plants'
-newdatT$STUDY_ID <- 18
-newdatT$std.error <- 0.03
-sdTT <- sd(datS$newtempvalues[datS$REALM == 'Terrestrial'])
-meanTT <- mean(datS$newtempvalues[datS$REALM == 'Terrestrial'])
-newdatT$newtempvalues <- newdatT$new_sTempYear * sdTT + meanTT
-
-# predict
-newdatM$slope <- predict(mod3, newdata = newdatM, se.fit = FALSE, re.form = NA)
-newdatT$slope <- predict(mod3, newdata = newdatT, se.fit = FALSE, re.form = NA)
-
-# plot
-p1 <- ggplot(newdatM, aes(TempGAMCoef, newtempvalues, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Marine') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-p2 <- ggplot(newdatT, aes(TempGAMCoef, newtempvalues, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Terrestrial') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-
-p1
-```
-
-![](antao_MEmodels_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
-
-``` r
-p2
-```
-
-![](antao_MEmodels_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->![](antao_MEmodels_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
 
 ## Fit richness model with mass and human
 
@@ -1000,15 +753,17 @@ summary(modMH1)
 
 # Fit a Jtu model
 
-## Original
+## Original Antao-style
 
   - Just like the richness model, using Antao predictors, but with Jtu
-    slope as the response.
-  - Now find LESS turnover at higher temperature in marine (opposite of
-    richness and gains slope models).
-  - But continue to find MORE turnover with changing temperatures at
-    higher average temperatures in marine (the interaction), like the
-    richness and gains models.
+    slope as the response. All durations.
+  - Results quite similar to the richness model for the marine realm
+    (see plot)
+  - Continue to find MORE turnover with warming at higher average
+    temperatures in marine (the interaction), like the richness and
+    gains models.
+  - Terrestrial is positive slope everywhere, and temperature effects
+    not significant
 
 <!-- end list -->
 
@@ -1077,13 +832,15 @@ summary(modJtuAll0)
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-## abs(temptrend)
+### Plot
 
-AIC selects abs(temptrend). Results are now entirely different than
-richness model:
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->![](antao_MEmodels_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
+\#\# abs(temptrend) AIC selects abs(temptrend) by deltaAIC 8. Results
+are now quite different from the richness model:
 
-  - less turnover at higher temperatures in marine
-  - less turnover at faster temperature change in marine
+  - less turnover at higher temperatures in marine (warming or cooling)
+  - less turnover at faster temperature change in marine (temperatures
+    \> 17degC)
   - less turnover at higher temperatures per unit temperature change
     (interaction)
 
@@ -1166,6 +923,16 @@ AIC(modJtuAll1)
 
     ## [1] -97076.85
 
+``` r
+AIC(modJtuAll0) - AIC(modJtuAll1)
+```
+
+    ## [1] 8.699537
+
+### Plot
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->![](antao_MEmodels_files/figure-gfm/unnamed-chunk-16-2.png)<!-- -->
+
 ## 5-year standardized duration
 
   - Only for datasets of exactly 5 consecutive years
@@ -1236,6 +1003,10 @@ summary(modJtu5)
     ## trendse:REALMTerrestrial 24.11937    2.53954    9.50   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+### Plot
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->![](antao_MEmodels_files/figure-gfm/unnamed-chunk-18-2.png)<!-- -->
 
 # Fit a Jbeta model
 

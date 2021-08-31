@@ -623,8 +623,8 @@ summary(modslopeTtrendTaveHorn10)
 
 ## Antao-style models
 ```{r}
-randef <- '+(0 + temptrend.sc|REALM/taxa_mod) +(1|REALM/taxa_mod/STUDY_ID)'
-randef <- '+(1|REALM/taxa_mod/STUDY_ID)'
+#randef <- '+(0 + temptrend.sc|taxa_mod) +(1|taxa_mod/STUDY_ID)' # won't converge
+randef <- '+(1|STUDY_ID)'
 disp <- '~trendse*REALM'
 cont <- glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3))
 
@@ -655,8 +655,11 @@ modAntaoWInt5Jtu <- glmmTMB(formula(paste(fixed1, randef)),
 summary(modAntaoAllJtu)
 summary(modAntao5Jtu)
 summary(modAntaoWInt5Jtu)
+```
 
-# Simplify the Jtu model
+
+### Simplify the Jtu model
+```{r}
 modAntaoGlobal5Jtu <- glmmTMB(disstrend ~ temptrend.sc*tempave_metab.sc*REALM +(1|taxa_mod/STUDY_ID),
                            data = trends5Jtu, disp = formula(disp),
                          control = cont) # with an intercep
@@ -675,8 +678,10 @@ confint(modavgAntao5Jtu, full = TRUE)
 coefTable(modselAntao5Jtu[1,]) # coefficients from the top model
 importance(modavgAntao5Jtu) # relative variable importance
 
+```
 
-
+### Horn
+```{r}
 modAntao5Horn <- glmmTMB(formula(paste(fixed0, randef)),
                            data = trends5Horn, disp = formula(disp),
                          control = cont)

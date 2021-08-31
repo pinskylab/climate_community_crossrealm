@@ -68,7 +68,7 @@ length(setdiff(dat$rarefyID, combMHlogS$rarefyID)) # only missing 92 ts
 ```
 ## Response variables
 ### Plots
-```{r}
+```{r, echo = FALSE}
 col = '#00000033'
 # compare
 comb[, plot(startYear, year1)]
@@ -120,7 +120,7 @@ mod0 <- glmmTMB(slope ~ 0 + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoe
 summary(mod0)
 ```
 ### Plot
-```{r}
+```{r, echo = FALSE}
 # set up prediction frame
 newdatM <- expand.grid(new_sTempYear = seq(-2, 2.5, length.out = 100), TempGAMCoef = seq(-0.35, 0.35, length.out = 100))
 newdatM$REALM <- 'Marine'
@@ -213,7 +213,7 @@ summary(mod0alt_tempdata)
 ```
 
 ### Plot
-```{r}
+```{r, echo = FALSE}
 # set up prediction frame
 newdatM <- expand.grid(tempave.sc = seq(-2, 1.8, length.out = 100), temptrend.sc = seq(-1.8, 1.8, length.out = 100))
 newdatM$REALM <- 'Marine'
@@ -287,7 +287,7 @@ AIC(mod2) - AIC(mod3)
 ```
 
 ### Plot abs(tempchange) effects
-```{r}
+```{r, echo = FALSE}
 # set up prediction frame
 newdatM <- expand.grid(new_sTempYear = seq(-2, 2.5, length.out = 100), TempGAMCoef = seq(-0.35, 0.35, length.out = 100))
 newdatM$REALM <- 'Marine'
@@ -404,11 +404,12 @@ summary(modMH1)
 ```
 
 # Fit a Jtu model
-## Original
+## Original Antao-style
 
-- Just like the richness model, using Antao predictors, but with Jtu slope as the response.
-- Now find LESS turnover at higher temperature in marine (opposite of richness and gains slope models).
-- But continue to find MORE turnover with changing temperatures at higher average temperatures in marine (the interaction), like the richness and gains models.
+- Just like the richness model, using Antao predictors, but with Jtu slope as the response. All durations.
+- Results quite similar to the richness model for the marine realm (see plot)
+- Continue to find MORE turnover with warming at higher average temperatures in marine (the interaction), like the richness and gains models.
+- Terrestrial is positive slope everywhere, and temperature effects not significant
 
 ```{r}
 # realm-specific intercept. Simplify REs that were near zero.
@@ -421,11 +422,69 @@ modJtuAll0 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:
 summary(modJtuAll0)
 ```
 
-## abs(temptrend)
-AIC selects abs(temptrend). Results are now entirely different than richness model: 
+### Plot
+```{r, echo = FALSE}
+# set up prediction frame
+newdatM <- expand.grid(new_sTempYear = seq(-2, 2.5, length.out = 100), TempGAMCoef = seq(-0.35, 0.35, length.out = 100))
+newdatM$REALM <- 'Marine'
+newdatM$taxa_mod1 <- 'All'
+newdatM$STUDY_ID <- 33
+newdatM$trendse <- 0.015
+sdTM <- sd(datS$newtempvalues[datS$REALM == 'Marine'])
+meanTM <- mean(datS$newtempvalues[datS$REALM == 'Marine'])
+newdatM$newtempvalues <- newdatM$new_sTempYear * sdTM + meanTM
 
-- less turnover at higher temperatures in marine
-- less turnover at faster temperature change in marine
+newdatT <- expand.grid(new_sTempYear = seq(-2.5, 2.7, length.out = 100), TempGAMCoef = seq(-0.3, 0.5, length.out = 100))
+newdatT$REALM <- 'Terrestrial'
+newdatT$taxa_mod1 <- 'Terrestrial plants'
+newdatT$STUDY_ID <- 18
+newdatT$trendse <- 0.015
+sdTT <- sd(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+meanTT <- mean(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+newdatT$newtempvalues <- newdatT$new_sTempYear * sdTT + meanTT
+
+# predict
+newdatM$slope <- predict(modJtuAll0, newdata = newdatM, se.fit = FALSE, re.form = NA)
+newdatT$slope <- predict(modJtuAll0, newdata = newdatT, se.fit = FALSE, re.form = NA)
+
+# plot
+p1 <- ggplot(newdatM, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Marine') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p2 <- ggplot(newdatT, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Terrestrial') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+
+p1
+p2
+```
+## abs(temptrend)
+AIC selects abs(temptrend) by deltaAIC 8. Results are now quite different from the richness model: 
+
+- less turnover at higher temperatures in marine (warming or cooling)
+- less turnover at faster temperature change in marine (temperatures > 17degC)
 - less turnover at higher temperatures per unit temperature change (interaction)
 
 ```{r}
@@ -439,8 +498,67 @@ modJtuAll1 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + abs(TempGAMC
 summary(modJtuAll1)
 AIC(modJtuAll0)
 AIC(modJtuAll1)
+AIC(modJtuAll0) - AIC(modJtuAll1)
 ```
 
+### Plot
+```{r, echo = FALSE}
+# set up prediction frame
+newdatM <- expand.grid(new_sTempYear = seq(-2, 2.5, length.out = 100), TempGAMCoef = seq(-0.35, 0.35, length.out = 100))
+newdatM$REALM <- 'Marine'
+newdatM$taxa_mod1 <- 'All'
+newdatM$STUDY_ID <- 33
+newdatM$trendse <- 0.015
+sdTM <- sd(datS$newtempvalues[datS$REALM == 'Marine'])
+meanTM <- mean(datS$newtempvalues[datS$REALM == 'Marine'])
+newdatM$newtempvalues <- newdatM$new_sTempYear * sdTM + meanTM
+
+newdatT <- expand.grid(new_sTempYear = seq(-2.5, 2.7, length.out = 100), TempGAMCoef = seq(-0.3, 0.5, length.out = 100))
+newdatT$REALM <- 'Terrestrial'
+newdatT$taxa_mod1 <- 'Terrestrial plants'
+newdatT$STUDY_ID <- 18
+newdatT$trendse <- 0.015
+sdTT <- sd(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+meanTT <- mean(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+newdatT$newtempvalues <- newdatT$new_sTempYear * sdTT + meanTT
+
+# predict
+newdatM$slope <- predict(modJtuAll1, newdata = newdatM, se.fit = FALSE, re.form = NA)
+newdatT$slope <- predict(modJtuAll1, newdata = newdatT, se.fit = FALSE, re.form = NA)
+
+# plot
+p1 <- ggplot(newdatM, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Marine') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p2 <- ggplot(newdatT, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Terrestrial') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+
+p1
+p2
+```
 
 ## 5-year standardized duration
 
@@ -455,6 +573,65 @@ modJtu5 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REA
 
 
 summary(modJtu5)
+```
+
+### Plot
+```{r, echo = FALSE}
+# set up prediction frame
+newdatM <- expand.grid(new_sTempYear = seq(-2, 2.5, length.out = 100), TempGAMCoef = seq(-0.35, 0.35, length.out = 100))
+newdatM$REALM <- 'Marine'
+newdatM$taxa_mod1 <- 'All'
+newdatM$STUDY_ID <- 33
+newdatM$trendse <- 0.015
+sdTM <- sd(datS$newtempvalues[datS$REALM == 'Marine'])
+meanTM <- mean(datS$newtempvalues[datS$REALM == 'Marine'])
+newdatM$newtempvalues <- newdatM$new_sTempYear * sdTM + meanTM
+
+newdatT <- expand.grid(new_sTempYear = seq(-2.5, 2.7, length.out = 100), TempGAMCoef = seq(-0.3, 0.5, length.out = 100))
+newdatT$REALM <- 'Terrestrial'
+newdatT$taxa_mod1 <- 'Terrestrial plants'
+newdatT$STUDY_ID <- 18
+newdatT$trendse <- 0.015
+sdTT <- sd(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+meanTT <- mean(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+newdatT$newtempvalues <- newdatT$new_sTempYear * sdTT + meanTT
+
+# predict
+newdatM$slope <- predict(modJtu5, newdata = newdatM, se.fit = FALSE, re.form = NA)
+newdatT$slope <- predict(modJtu5, newdata = newdatT, se.fit = FALSE, re.form = NA)
+
+# plot
+p1 <- ggplot(newdatM, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Marine') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p2 <- ggplot(newdatT, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Terrestrial') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+
+p1
+p2
 ```
 
 # Fit a Jbeta model
