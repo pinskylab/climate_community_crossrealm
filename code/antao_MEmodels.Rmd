@@ -36,7 +36,10 @@ rich <- fread(here('output','richness_by_rarefyID.csv.gz')) # number of species
 
 # merge
 comb <- merge(dat, trends[duration_group == 'Ally1', !c("rarefyID_y" ,"duration", 'REALM')], by = c('STUDY_ID', 'rarefyID'), all = TRUE, allow.cartesian = TRUE)
-comb5 <- merge(dat[model_id == 'logS_lm', ], trends[duration_group == '5', !c("rarefyID_y" ,"duration", 'REALM')], by = c('STUDY_ID', 'rarefyID'), all = TRUE)
+comb5 <- merge(dat[model_id == 'logS_lm', ], trends[duration_group == '5annual', !c("rarefyID_y" ,"duration", 'REALM')], by = c('STUDY_ID', 'rarefyID'), all = TRUE)
+comb5min3 <- merge(dat[model_id == 'logS_lm', ], trends[duration_group == '5min3', !c("rarefyID_y" ,"duration", 'REALM')], by = c('STUDY_ID', 'rarefyID'), all = TRUE)
+comb10min3 <- merge(dat[model_id == 'logS_lm', ], trends[duration_group == '10min3', !c("rarefyID_y" ,"duration", 'REALM')], by = c('STUDY_ID', 'rarefyID'), all = TRUE)
+comb20min3 <- merge(dat[model_id == 'logS_lm', ], trends[duration_group == '20min3', !c("rarefyID_y" ,"duration", 'REALM')], by = c('STUDY_ID', 'rarefyID'), all = TRUE)
 
 # data subsets
 datS <- dat[model_id == 'logS_lm',]
@@ -647,9 +650,68 @@ modJbetaAll0 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoe
                 disp = ~trendse*REALM,
                 data = comb[measure == 'Jbeta' & model_id == 'logS_lm',])
 
-
 summary(modJbetaAll0)
 ```
+
+### Plot
+```{r, echo = FALSE}
+# set up prediction frame
+newdatM <- expand.grid(new_sTempYear = seq(-2, 2.5, length.out = 100), TempGAMCoef = seq(-0.35, 0.35, length.out = 100))
+newdatM$REALM <- 'Marine'
+newdatM$taxa_mod1 <- 'All'
+newdatM$STUDY_ID <- 33
+newdatM$trendse <- 0.015
+sdTM <- sd(datS$newtempvalues[datS$REALM == 'Marine'])
+meanTM <- mean(datS$newtempvalues[datS$REALM == 'Marine'])
+newdatM$newtempvalues <- newdatM$new_sTempYear * sdTM + meanTM
+
+newdatT <- expand.grid(new_sTempYear = seq(-2.5, 2.7, length.out = 100), TempGAMCoef = seq(-0.3, 0.5, length.out = 100))
+newdatT$REALM <- 'Terrestrial'
+newdatT$taxa_mod1 <- 'Terrestrial plants'
+newdatT$STUDY_ID <- 18
+newdatT$trendse <- 0.015
+sdTT <- sd(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+meanTT <- mean(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+newdatT$newtempvalues <- newdatT$new_sTempYear * sdTT + meanTT
+
+# predict
+newdatM$slope <- predict(modJbetaAll0, newdata = newdatM, se.fit = FALSE, re.form = NA)
+newdatT$slope <- predict(modJbetaAll0, newdata = newdatT, se.fit = FALSE, re.form = NA)
+
+# plot
+p1 <- ggplot(newdatM, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Marine') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p2 <- ggplot(newdatT, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Terrestrial') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+
+p1
+p2
+```
+
 
 ## abs(temptrend)
 Results are now entirely different than richness model: 
@@ -673,7 +735,7 @@ AIC(modJbetaAll1)
 ```
 
 
-## 5-year standardized duration
+## 5-year duration, annual samples
 
 - Only for datasets of exactly 5 consecutive years
 - Had to drop the random slopes to allow convergence (were very close to 0)
@@ -687,6 +749,228 @@ modJbeta5 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:R
 
 
 summary(modJbeta5)
+```
+
+### Plot
+```{r, echo = FALSE}
+# set up prediction frame
+newdatM <- expand.grid(new_sTempYear = seq(-2, 2.5, length.out = 100), TempGAMCoef = seq(-0.35, 0.35, length.out = 100))
+newdatM$REALM <- 'Marine'
+newdatM$taxa_mod1 <- 'All'
+newdatM$STUDY_ID <- 33
+newdatM$trendse <- 0.015
+sdTM <- sd(datS$newtempvalues[datS$REALM == 'Marine'])
+meanTM <- mean(datS$newtempvalues[datS$REALM == 'Marine'])
+newdatM$newtempvalues <- newdatM$new_sTempYear * sdTM + meanTM
+
+newdatT <- expand.grid(new_sTempYear = seq(-2.5, 2.7, length.out = 100), TempGAMCoef = seq(-0.3, 0.5, length.out = 100))
+newdatT$REALM <- 'Terrestrial'
+newdatT$taxa_mod1 <- 'Terrestrial plants'
+newdatT$STUDY_ID <- 18
+newdatT$trendse <- 0.015
+sdTT <- sd(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+meanTT <- mean(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+newdatT$newtempvalues <- newdatT$new_sTempYear * sdTT + meanTT
+
+# predict
+newdatM$slope <- predict(modJbeta5, newdata = newdatM, se.fit = FALSE, re.form = NA)
+newdatT$slope <- predict(modJbeta5, newdata = newdatT, se.fit = FALSE, re.form = NA)
+
+# plot
+p1 <- ggplot(newdatM, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Marine') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p2 <- ggplot(newdatT, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Terrestrial') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+
+p1
+p2
+```
+
+## 5-year duration, min3 samples
+
+- Only for datasets of exactly 5 year duration with at least 3 samples
+- Effect is now the opposite of non-standardized (see interaction term for marine)
+
+```{r}
+modJbeta5min3 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+                 +(1|taxa_mod1/STUDY_ID),
+                disp = ~trendse*REALM,
+                data = comb5min3[measure == 'Jbeta',])
+
+
+summary(modJbeta5min3)
+```
+
+### Plot
+```{r, echo = FALSE}
+# set up prediction frame
+newdatM <- expand.grid(new_sTempYear = seq(-2, 2.5, length.out = 100), TempGAMCoef = seq(-0.35, 0.35, length.out = 100))
+newdatM$REALM <- 'Marine'
+newdatM$taxa_mod1 <- 'All'
+newdatM$STUDY_ID <- 33
+newdatM$trendse <- 0.015
+sdTM <- sd(datS$newtempvalues[datS$REALM == 'Marine'])
+meanTM <- mean(datS$newtempvalues[datS$REALM == 'Marine'])
+newdatM$newtempvalues <- newdatM$new_sTempYear * sdTM + meanTM
+
+newdatT <- expand.grid(new_sTempYear = seq(-2.5, 2.7, length.out = 100), TempGAMCoef = seq(-0.3, 0.5, length.out = 100))
+newdatT$REALM <- 'Terrestrial'
+newdatT$taxa_mod1 <- 'Terrestrial plants'
+newdatT$STUDY_ID <- 18
+newdatT$trendse <- 0.015
+sdTT <- sd(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+meanTT <- mean(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+newdatT$newtempvalues <- newdatT$new_sTempYear * sdTT + meanTT
+
+# predict
+newdatM$slope <- predict(modJbeta5min3, newdata = newdatM, se.fit = FALSE, re.form = NA)
+newdatT$slope <- predict(modJbeta5min3, newdata = newdatT, se.fit = FALSE, re.form = NA)
+
+# plot
+p1 <- ggplot(newdatM, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Marine') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p2 <- ggplot(newdatT, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Terrestrial') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+
+p1
+p2
+```
+
+## 10-year duration, min3 samples
+
+- Only for datasets of exactly 10 year duration with at least 3 samples
+- Had to drop the random slopes to allow convergence (were very close to 0)
+- Only realm intercepts are significantly different from zero
+
+```{r}
+modJbeta10min3 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+                 +(1|taxa_mod1/STUDY_ID),
+                disp = ~trendse*REALM,
+                data = comb10min3[measure == 'Jbeta',])
+
+
+summary(modJbeta10min3)
+```
+
+### Plot
+```{r, echo = FALSE}
+# set up prediction frame
+newdatM <- expand.grid(new_sTempYear = seq(-2, 2.5, length.out = 100), TempGAMCoef = seq(-0.35, 0.35, length.out = 100))
+newdatM$REALM <- 'Marine'
+newdatM$taxa_mod1 <- 'All'
+newdatM$STUDY_ID <- 33
+newdatM$trendse <- 0.015
+sdTM <- sd(datS$newtempvalues[datS$REALM == 'Marine'])
+meanTM <- mean(datS$newtempvalues[datS$REALM == 'Marine'])
+newdatM$newtempvalues <- newdatM$new_sTempYear * sdTM + meanTM
+
+newdatT <- expand.grid(new_sTempYear = seq(-2.5, 2.7, length.out = 100), TempGAMCoef = seq(-0.3, 0.5, length.out = 100))
+newdatT$REALM <- 'Terrestrial'
+newdatT$taxa_mod1 <- 'Terrestrial plants'
+newdatT$STUDY_ID <- 18
+newdatT$trendse <- 0.015
+sdTT <- sd(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+meanTT <- mean(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+newdatT$newtempvalues <- newdatT$new_sTempYear * sdTT + meanTT
+
+# predict
+newdatM$slope <- predict(modJbeta10min3, newdata = newdatM, se.fit = FALSE, re.form = NA)
+newdatT$slope <- predict(modJbeta10min3, newdata = newdatT, se.fit = FALSE, re.form = NA)
+
+# plot
+p1 <- ggplot(newdatM, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Marine') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p2 <- ggplot(newdatT, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Terrestrial') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+
+p1
+p2
+```
+
+## Standardized durations, min3 samples
+
+- To do: All durations in one model, but allow slopes to differ by duration
+
+```{r}
+# modJbetaXmin3 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+#                  +(1|taxa_mod1/STUDY_ID),
+#                 disp = ~trendse*REALM,
+#                 data = comb10min3[measure == 'Jbeta',])
+
+
+#summary(modJbetaXmin3)
 ```
 
 

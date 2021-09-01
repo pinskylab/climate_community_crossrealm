@@ -28,7 +28,7 @@ length(missing <- setdiff(dat$rarefyID, trends$rarefyID))
 length(setdiff(bt$rarefyID, trends$rarefyID))
 ```
 
-    ## [1] 20294
+    ## [1] 20304
 
 ``` r
 length(setdiff(dat$rarefyID, rich$rarefyID))
@@ -407,7 +407,12 @@ mod0alt_tempdata <- glmmTMB(slope ~ 0 + tempave.sc:REALM + temptrend.sc:REALM + 
                 +(0 + temptrend.sc|REALM/taxa_mod1) +(1|REALM/taxa_mod1/STUDY_ID), 
                 disp = ~std.error*REALM,
                 data = comb[!duplicated(rarefyID) & model_id == 'logS_lm',])
+```
 
+    ## Warning in fitTMB(TMBStruc): Model convergence problem; non-positive-definite
+    ## Hessian matrix. See vignette('troubleshooting')
+
+``` r
 summary(mod0alt_tempdata)
 ```
 
@@ -419,47 +424,36 @@ summary(mod0alt_tempdata)
     ## Data: comb[!duplicated(rarefyID) & model_id == "logS_lm", ]
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ## -33301.2 -33193.9  16665.6 -33331.2     9405 
+    ##       NA       NA       NA       NA    21148 
     ## 
     ## Random effects:
     ## 
     ## Conditional model:
     ##  Groups                     Name         Variance  Std.Dev. 
-    ##  taxa_mod1.REALM            temptrend.sc 5.564e-04 2.359e-02
-    ##  REALM                      temptrend.sc 1.598e-10 1.264e-05
-    ##  STUDY_ID..taxa_mod1.REALM. (Intercept)  3.672e-04 1.916e-02
-    ##  taxa_mod1.REALM.1          (Intercept)  1.010e-09 3.179e-05
-    ##  REALM.1                    (Intercept)  3.250e-05 5.701e-03
+    ##  taxa_mod1.REALM            temptrend.sc 1.699e-04 1.303e-02
+    ##  REALM                      temptrend.sc 1.407e-10 1.186e-05
+    ##  STUDY_ID..taxa_mod1.REALM. (Intercept)  3.383e-04 1.839e-02
+    ##  taxa_mod1.REALM.1          (Intercept)  1.315e-16 1.147e-08
+    ##  REALM.1                    (Intercept)  1.673e-05 4.090e-03
     ##  Residual                                       NA        NA
-    ## Number of obs: 9420, groups:  
-    ## taxa_mod1:REALM, 12; REALM, 2; STUDY_ID:(taxa_mod1:REALM), 142
+    ## Number of obs: 21163, groups:  
+    ## taxa_mod1:REALM, 12; REALM, 2; STUDY_ID:(taxa_mod1:REALM), 155
     ## 
     ## Conditional model:
-    ##                                           Estimate Std. Error z value Pr(>|z|)
-    ## tempave.sc:REALMMarine                    0.009656   0.001188   8.129 4.33e-16
-    ## tempave.sc:REALMTerrestrial               0.000648   0.001017   0.637   0.5240
-    ## REALMMarine:temptrend.sc                  0.027036   0.011292   2.394   0.0167
-    ## REALMTerrestrial:temptrend.sc            -0.004342   0.012443  -0.349   0.7271
-    ## tempave.sc:REALMMarine:temptrend.sc       0.017550   0.003624   4.842 1.28e-06
-    ## tempave.sc:REALMTerrestrial:temptrend.sc  0.005331   0.005542   0.962   0.3361
-    ##                                             
-    ## tempave.sc:REALMMarine                   ***
-    ## tempave.sc:REALMTerrestrial                 
-    ## REALMMarine:temptrend.sc                 *  
-    ## REALMTerrestrial:temptrend.sc               
-    ## tempave.sc:REALMMarine:temptrend.sc      ***
-    ## tempave.sc:REALMTerrestrial:temptrend.sc    
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ##                                            Estimate Std. Error z value Pr(>|z|)
+    ## tempave.sc:REALMMarine                    0.0044289         NA      NA       NA
+    ## tempave.sc:REALMTerrestrial               0.0009143         NA      NA       NA
+    ## REALMMarine:temptrend.sc                  0.0169319         NA      NA       NA
+    ## REALMTerrestrial:temptrend.sc            -0.0023093         NA      NA       NA
+    ## tempave.sc:REALMMarine:temptrend.sc       0.0032050         NA      NA       NA
+    ## tempave.sc:REALMTerrestrial:temptrend.sc  0.0006510         NA      NA       NA
     ## 
     ## Dispersion model:
-    ##                            Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)                -7.58207    0.02949 -257.13   <2e-16 ***
-    ## std.error                  34.92753    0.68286   51.15   <2e-16 ***
-    ## REALMTerrestrial           -1.05422    0.08177  -12.89   <2e-16 ***
-    ## std.error:REALMTerrestrial 32.86006    2.71900   12.09   <2e-16 ***
-    ## ---
-    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ##                            Estimate Std. Error z value Pr(>|z|)
+    ## (Intercept)                  -7.883         NA      NA       NA
+    ## std.error                    39.519         NA      NA       NA
+    ## REALMTerrestrial             -0.554         NA      NA       NA
+    ## std.error:REALMTerrestrial   25.922         NA      NA       NA
 
 ### Plot
 
@@ -581,38 +575,38 @@ summary(modMH0)
     ## Random effects:
     ## 
     ## Conditional model:
-    ##  Groups             Name        Variance  Std.Dev. 
-    ##  taxa_mod1:REALM    TempGAMCoef 5.612e-03 0.0749147
-    ##  REALM              TempGAMCoef 1.863e-08 0.0001365
-    ##  STUDY_ID:taxa_mod1 (Intercept) 6.747e-04 0.0259751
-    ##  taxa_mod1          (Intercept) 2.813e-05 0.0053036
-    ##  Residual                              NA        NA
+    ##  Groups             Name        Variance  Std.Dev.
+    ##  taxa_mod1:REALM    TempGAMCoef 5.613e-03 0.074918
+    ##  REALM              TempGAMCoef 1.346e-08 0.000116
+    ##  STUDY_ID:taxa_mod1 (Intercept) 6.747e-04 0.025974
+    ##  taxa_mod1          (Intercept) 2.818e-05 0.005309
+    ##  Residual                              NA       NA
     ## Number of obs: 64224, groups:  
     ## taxa_mod1:REALM, 12; REALM, 2; STUDY_ID:taxa_mod1, 150; taxa_mod1, 9
     ## 
     ## Conditional model:
     ##                                              Estimate Std. Error z value
-    ## REALMMarine                                 0.0080587  0.0041901   1.923
-    ## REALMTerrestrial                            0.0071146  0.0045349   1.569
-    ## mass.sc                                     0.0021871  0.0003160   6.922
-    ## REALMMarine:human_bowler.sc                -0.0021801  0.0001961 -11.118
-    ## REALMTerrestrial:human_bowler.sc            0.0002971  0.0004197   0.708
-    ## REALMMarine:new_sTempYear                   0.0035026  0.0003505   9.992
+    ## REALMMarine                                 0.0080084  0.0041920   1.910
+    ## REALMTerrestrial                            0.0071759  0.0045365   1.582
+    ## mass.sc                                     0.0020599  0.0002976   6.922
+    ## REALMMarine:human_bowler.sc                -0.0021927  0.0001972 -11.118
+    ## REALMTerrestrial:human_bowler.sc            0.0002932  0.0004142   0.708
+    ## REALMMarine:new_sTempYear                   0.0035025  0.0003505   9.991
     ## REALMTerrestrial:new_sTempYear              0.0012874  0.0004701   2.739
-    ## REALMMarine:TempGAMCoef                     0.1140021  0.0352687   3.232
-    ## REALMTerrestrial:TempGAMCoef               -0.0148753  0.0429362  -0.346
-    ## REALMMarine:new_sTempYear:TempGAMCoef       0.0821839  0.0068431  12.010
-    ## REALMTerrestrial:new_sTempYear:TempGAMCoef -0.0214610  0.0093221  -2.302
+    ## REALMMarine:TempGAMCoef                     0.1140011  0.0352701   3.232
+    ## REALMTerrestrial:TempGAMCoef               -0.0148928  0.0429381  -0.347
+    ## REALMMarine:new_sTempYear:TempGAMCoef       0.0821827  0.0068431  12.009
+    ## REALMTerrestrial:new_sTempYear:TempGAMCoef -0.0214598  0.0093220  -2.302
     ##                                            Pr(>|z|)    
-    ## REALMMarine                                 0.05444 .  
-    ## REALMTerrestrial                            0.11668    
-    ## mass.sc                                    4.46e-12 ***
+    ## REALMMarine                                 0.05608 .  
+    ## REALMTerrestrial                            0.11369    
+    ## mass.sc                                    4.45e-12 ***
     ## REALMMarine:human_bowler.sc                 < 2e-16 ***
-    ## REALMTerrestrial:human_bowler.sc            0.47891    
+    ## REALMTerrestrial:human_bowler.sc            0.47895    
     ## REALMMarine:new_sTempYear                   < 2e-16 ***
     ## REALMTerrestrial:new_sTempYear              0.00617 ** 
     ## REALMMarine:TempGAMCoef                     0.00123 ** 
-    ## REALMTerrestrial:TempGAMCoef                0.72900    
+    ## REALMTerrestrial:TempGAMCoef                0.72871    
     ## REALMMarine:new_sTempYear:TempGAMCoef       < 2e-16 ***
     ## REALMTerrestrial:new_sTempYear:TempGAMCoef  0.02133 *  
     ## ---
@@ -621,9 +615,9 @@ summary(modMH0)
     ## Dispersion model:
     ##                            Estimate Std. Error z value Pr(>|z|)    
     ## (Intercept)                -7.88048    0.01082  -728.2   <2e-16 ***
-    ## std.error                  39.36340    0.27644   142.4   <2e-16 ***
-    ## REALMTerrestrial           -0.62239    0.04176   -14.9   <2e-16 ***
-    ## std.error:REALMTerrestrial 27.88436    1.45721    19.1   <2e-16 ***
+    ## std.error                  39.36342    0.27644   142.4   <2e-16 ***
+    ## REALMTerrestrial           -0.62240    0.04176   -14.9   <2e-16 ***
+    ## std.error:REALMTerrestrial 27.88472    1.45722    19.1   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -692,62 +686,62 @@ summary(modMH1)
     ## 
     ## Conditional model:
     ##  Groups             Name        Variance  Std.Dev. 
-    ##  taxa_mod1:REALM    TempGAMCoef 7.877e-03 0.0887548
-    ##  REALM              TempGAMCoef 2.136e-08 0.0001462
-    ##  STUDY_ID:taxa_mod1 (Intercept) 7.544e-04 0.0274655
-    ##  taxa_mod1          (Intercept) 2.210e-05 0.0047013
+    ##  taxa_mod1:REALM    TempGAMCoef 7.877e-03 0.0887529
+    ##  REALM              TempGAMCoef 2.033e-08 0.0001426
+    ##  STUDY_ID:taxa_mod1 (Intercept) 7.544e-04 0.0274656
+    ##  taxa_mod1          (Intercept) 2.209e-05 0.0046997
     ##  Residual                              NA        NA
     ## Number of obs: 64224, groups:  
     ## taxa_mod1:REALM, 12; REALM, 2; STUDY_ID:taxa_mod1, 150; taxa_mod1, 9
     ## 
     ## Conditional model:
     ##                                                  Estimate Std. Error z value
-    ## REALMMarine                                     7.302e-03  4.251e-03   1.718
-    ## REALMTerrestrial                                5.998e-03  5.171e-03   1.160
-    ## REALMMarine:mass.sc                             9.419e-04  3.172e-04   2.969
-    ## REALMTerrestrial:mass.sc                        2.724e-03  1.975e-03   1.379
-    ## REALMMarine:human_bowler.sc                    -1.806e-03  1.962e-04  -9.204
-    ## REALMTerrestrial:human_bowler.sc                1.631e-03  5.003e-04   3.260
-    ## REALMMarine:new_sTempYear                      -8.824e-05  3.675e-04  -0.240
-    ## REALMTerrestrial:new_sTempYear                 -2.648e-03  1.232e-03  -2.148
-    ## REALMMarine:TempGAMCoef                         1.255e-01  4.085e-02   3.072
-    ## REALMTerrestrial:TempGAMCoef                   -1.155e-02  4.841e-02  -0.239
-    ## REALMMarine:human_bowler.sc:new_sTempYear      -3.187e-03  2.038e-04 -15.639
-    ## REALMTerrestrial:human_bowler.sc:new_sTempYear  7.555e-04  4.254e-04   1.776
-    ## REALMMarine:mass.sc:new_sTempYear               1.050e-02  4.362e-04  24.064
-    ## REALMTerrestrial:mass.sc:new_sTempYear         -2.673e-03  9.958e-04  -2.684
-    ## REALMMarine:human_bowler.sc:TempGAMCoef        -4.953e-02  4.952e-03 -10.003
-    ## REALMTerrestrial:human_bowler.sc:TempGAMCoef   -4.368e-02  8.153e-03  -5.357
+    ## REALMMarine                                     7.239e-03  4.251e-03   1.703
+    ## REALMTerrestrial                                6.128e-03  5.191e-03   1.181
+    ## REALMMarine:mass.sc                             8.871e-04  2.988e-04   2.969
+    ## REALMTerrestrial:mass.sc                        2.566e-03  1.860e-03   1.379
+    ## REALMMarine:human_bowler.sc                    -1.816e-03  1.973e-04  -9.204
+    ## REALMTerrestrial:human_bowler.sc                1.609e-03  4.937e-04   3.260
+    ## REALMMarine:new_sTempYear                      -1.985e-05  3.652e-04  -0.054
+    ## REALMTerrestrial:new_sTempYear                 -2.667e-03  1.251e-03  -2.132
+    ## REALMMarine:TempGAMCoef                         1.232e-01  4.084e-02   3.017
+    ## REALMTerrestrial:TempGAMCoef                   -1.354e-02  4.841e-02  -0.280
+    ## REALMMarine:human_bowler.sc:new_sTempYear      -3.206e-03  2.050e-04 -15.639
+    ## REALMTerrestrial:human_bowler.sc:new_sTempYear  7.457e-04  4.198e-04   1.776
+    ## REALMMarine:mass.sc:new_sTempYear               9.885e-03  4.108e-04  24.064
+    ## REALMTerrestrial:mass.sc:new_sTempYear         -2.517e-03  9.379e-04  -2.684
+    ## REALMMarine:human_bowler.sc:TempGAMCoef        -4.982e-02  4.981e-03 -10.003
+    ## REALMTerrestrial:human_bowler.sc:TempGAMCoef   -4.311e-02  8.047e-03  -5.357
     ## REALMMarine:new_sTempYear:TempGAMCoef           5.694e-02  6.884e-03   8.271
     ## REALMTerrestrial:new_sTempYear:TempGAMCoef      2.544e-03  1.039e-02   0.245
     ##                                                Pr(>|z|)    
-    ## REALMMarine                                     0.08583 .  
-    ## REALMTerrestrial                                0.24605    
+    ## REALMMarine                                     0.08861 .  
+    ## REALMTerrestrial                                0.23780    
     ## REALMMarine:mass.sc                             0.00299 ** 
-    ## REALMTerrestrial:mass.sc                        0.16791    
+    ## REALMTerrestrial:mass.sc                        0.16789    
     ## REALMMarine:human_bowler.sc                     < 2e-16 ***
     ## REALMTerrestrial:human_bowler.sc                0.00111 ** 
-    ## REALMMarine:new_sTempYear                       0.81023    
-    ## REALMTerrestrial:new_sTempYear                  0.03168 *  
-    ## REALMMarine:TempGAMCoef                         0.00213 ** 
-    ## REALMTerrestrial:TempGAMCoef                    0.81140    
+    ## REALMMarine:new_sTempYear                       0.95664    
+    ## REALMTerrestrial:new_sTempYear                  0.03298 *  
+    ## REALMMarine:TempGAMCoef                         0.00255 ** 
+    ## REALMTerrestrial:TempGAMCoef                    0.77975    
     ## REALMMarine:human_bowler.sc:new_sTempYear       < 2e-16 ***
-    ## REALMTerrestrial:human_bowler.sc:new_sTempYear  0.07573 .  
+    ## REALMTerrestrial:human_bowler.sc:new_sTempYear  0.07572 .  
     ## REALMMarine:mass.sc:new_sTempYear               < 2e-16 ***
     ## REALMTerrestrial:mass.sc:new_sTempYear          0.00728 ** 
     ## REALMMarine:human_bowler.sc:TempGAMCoef         < 2e-16 ***
     ## REALMTerrestrial:human_bowler.sc:TempGAMCoef   8.47e-08 ***
     ## REALMMarine:new_sTempYear:TempGAMCoef           < 2e-16 ***
-    ## REALMTerrestrial:new_sTempYear:TempGAMCoef      0.80645    
+    ## REALMTerrestrial:new_sTempYear:TempGAMCoef      0.80650    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Dispersion model:
     ##                            Estimate Std. Error z value Pr(>|z|)    
     ## (Intercept)                -7.92027    0.01084  -730.7   <2e-16 ***
-    ## std.error                  39.98343    0.27705   144.3   <2e-16 ***
+    ## std.error                  39.98338    0.27705   144.3   <2e-16 ***
     ## REALMTerrestrial           -0.58864    0.04164   -14.1   <2e-16 ***
-    ## std.error:REALMTerrestrial 27.14260    1.45125    18.7   <2e-16 ***
+    ## std.error:REALMTerrestrial 27.14280    1.45125    18.7   <2e-16 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
@@ -1027,7 +1021,6 @@ modJbetaAll0 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoe
                 disp = ~trendse*REALM,
                 data = comb[measure == 'Jbeta' & model_id == 'logS_lm',])
 
-
 summary(modJbetaAll0)
 ```
 
@@ -1083,6 +1076,10 @@ summary(modJbetaAll0)
     ## trendse:REALMTerrestrial 29.92835    4.70782     6.4 2.06e-10 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+### Plot
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->![](antao_MEmodels_files/figure-gfm/unnamed-chunk-20-2.png)<!-- -->
 
 ## abs(temptrend)
 
@@ -1172,7 +1169,7 @@ AIC(modJbetaAll1)
 
     ## [1] -117590.6
 
-## 5-year standardized duration
+## 5-year duration, annual samples
 
   - Only for datasets of exactly 5 consecutive years
   - Had to drop the random slopes to allow convergence (were very close
@@ -1240,6 +1237,173 @@ summary(modJbeta5)
     ## trendse:REALMTerrestrial 24.37130    3.18445    7.65 1.96e-14 ***
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+### Plot
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->![](antao_MEmodels_files/figure-gfm/unnamed-chunk-23-2.png)<!-- -->
+
+## 5-year duration, min3 samples
+
+  - Only for datasets of exactly 5 year duration with at least 3 samples
+  - Effect is now the opposite of non-standardized (see interaction term
+    for marine)
+
+<!-- end list -->
+
+``` r
+modJbeta5min3 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+                 +(1|taxa_mod1/STUDY_ID),
+                disp = ~trendse*REALM,
+                data = comb5min3[measure == 'Jbeta',])
+
+
+summary(modJbeta5min3)
+```
+
+    ##  Family: gaussian  ( identity )
+    ## Formula:          
+    ## disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM +  
+    ##     TempGAMCoef:new_sTempYear:REALM + (1 | taxa_mod1/STUDY_ID)
+    ## Dispersion:                 ~trendse * REALM
+    ## Data: comb5min3[measure == "Jbeta", ]
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ## -43120.7 -43012.7  21574.3 -43148.7    16492 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups             Name        Variance  Std.Dev.
+    ##  STUDY_ID:taxa_mod1 (Intercept) 6.352e-05 7.97e-03
+    ##  taxa_mod1          (Intercept) 1.037e-11 3.22e-06
+    ##  Residual                              NA       NA
+    ## Number of obs: 16506, groups:  STUDY_ID:taxa_mod1, 153; taxa_mod1, 9
+    ## 
+    ## Conditional model:
+    ##                                              Estimate Std. Error z value
+    ## REALMMarine                                 1.022e-02  1.671e-03   6.114
+    ## REALMTerrestrial                            1.387e-02  2.512e-03   5.524
+    ## REALMMarine:new_sTempYear                  -1.164e-03  1.147e-03  -1.015
+    ## REALMTerrestrial:new_sTempYear              5.861e-05  1.356e-03   0.043
+    ## REALMMarine:TempGAMCoef                    -2.441e-02  1.406e-02  -1.737
+    ## REALMTerrestrial:TempGAMCoef                7.236e-03  1.716e-02   0.422
+    ## REALMMarine:new_sTempYear:TempGAMCoef      -3.630e-02  1.778e-02  -2.041
+    ## REALMTerrestrial:new_sTempYear:TempGAMCoef  9.160e-03  1.731e-02   0.529
+    ##                                            Pr(>|z|)    
+    ## REALMMarine                                9.73e-10 ***
+    ## REALMTerrestrial                           3.32e-08 ***
+    ## REALMMarine:new_sTempYear                    0.3102    
+    ## REALMTerrestrial:new_sTempYear               0.9655    
+    ## REALMMarine:TempGAMCoef                      0.0824 .  
+    ## REALMTerrestrial:TempGAMCoef                 0.6733    
+    ## REALMMarine:new_sTempYear:TempGAMCoef        0.0412 *  
+    ## REALMTerrestrial:new_sTempYear:TempGAMCoef   0.5967    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                          Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)              -5.83741    0.01732  -337.0  < 2e-16 ***
+    ## trendse                   8.88243    0.24467    36.3  < 2e-16 ***
+    ## REALMTerrestrial         -0.99711    0.05562   -17.9  < 2e-16 ***
+    ## trendse:REALMTerrestrial  7.80925    1.21552     6.4 1.32e-10 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+### Plot
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->![](antao_MEmodels_files/figure-gfm/unnamed-chunk-25-2.png)<!-- -->
+
+## 10-year duration, min3 samples
+
+  - Only for datasets of exactly 10 year duration with at least 3
+    samples
+  - Had to drop the random slopes to allow convergence (were very close
+    to 0)
+  - Only realm intercepts are significantly different from zero
+
+<!-- end list -->
+
+``` r
+modJbeta10min3 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+                 +(1|taxa_mod1/STUDY_ID),
+                disp = ~trendse*REALM,
+                data = comb10min3[measure == 'Jbeta',])
+
+
+summary(modJbeta10min3)
+```
+
+    ##  Family: gaussian  ( identity )
+    ## Formula:          
+    ## disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM +  
+    ##     TempGAMCoef:new_sTempYear:REALM + (1 | taxa_mod1/STUDY_ID)
+    ## Dispersion:                 ~trendse * REALM
+    ## Data: comb10min3[measure == "Jbeta", ]
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ## -72713.6 -72607.6  36370.8 -72741.6    14356 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups             Name        Variance  Std.Dev. 
+    ##  STUDY_ID:taxa_mod1 (Intercept) 3.471e-05 5.892e-03
+    ##  taxa_mod1          (Intercept) 7.527e-12 2.743e-06
+    ##  Residual                              NA        NA
+    ## Number of obs: 14370, groups:  STUDY_ID:taxa_mod1, 115; taxa_mod1, 9
+    ## 
+    ## Conditional model:
+    ##                                              Estimate Std. Error z value
+    ## REALMMarine                                 9.532e-03  1.029e-03   9.259
+    ## REALMTerrestrial                            9.028e-03  1.271e-03   7.106
+    ## REALMMarine:new_sTempYear                  -6.761e-04  3.994e-04  -1.693
+    ## REALMTerrestrial:new_sTempYear              4.942e-05  4.112e-04   0.120
+    ## REALMMarine:TempGAMCoef                    -2.087e-03  7.053e-03  -0.296
+    ## REALMTerrestrial:TempGAMCoef               -4.117e-03  9.666e-03  -0.426
+    ## REALMMarine:new_sTempYear:TempGAMCoef       2.150e-02  7.908e-03   2.719
+    ## REALMTerrestrial:new_sTempYear:TempGAMCoef  1.407e-02  1.006e-02   1.398
+    ##                                            Pr(>|z|)    
+    ## REALMMarine                                 < 2e-16 ***
+    ## REALMTerrestrial                            1.2e-12 ***
+    ## REALMMarine:new_sTempYear                   0.09046 .  
+    ## REALMTerrestrial:new_sTempYear              0.90434    
+    ## REALMMarine:TempGAMCoef                     0.76726    
+    ## REALMTerrestrial:TempGAMCoef                0.67015    
+    ## REALMMarine:new_sTempYear:TempGAMCoef       0.00656 ** 
+    ## REALMTerrestrial:new_sTempYear:TempGAMCoef  0.16208    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                          Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)              -8.78295    0.02352  -373.4   <2e-16 ***
+    ## trendse                  60.58465    1.23630    49.0   <2e-16 ***
+    ## REALMTerrestrial         -1.69731    0.08677   -19.6   <2e-16 ***
+    ## trendse:REALMTerrestrial 95.66251    8.36546    11.4   <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+### Plot
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->![](antao_MEmodels_files/figure-gfm/unnamed-chunk-27-2.png)<!-- -->
+
+## Standardized durations, min3 samples
+
+  - To do: All durations in one model, but allow slopes to differ by
+    duration
+
+<!-- end list -->
+
+``` r
+# modJbetaXmin3 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
+#                  +(1|taxa_mod1/STUDY_ID),
+#                 disp = ~trendse*REALM,
+#                 data = comb10min3[measure == 'Jbeta',])
+
+
+#summary(modJbetaXmin3)
+```
 
 # Fit a Horn model
 
