@@ -32,12 +32,16 @@ signedsqrt_trans <- function() trans_new('signedsqrt',
 # biotime community dissimilarity data
 btlong <- readRDS(here('temp', 'trendstemp.rds'))
 
+# biotime lat/lon
+load(here::here('data', 'biotime_blowes', 'bt_malin.Rdata')) # load bt_malin
+btinfo <- data.table(bt_malin); rm(bt_malin)
+btinfo <- btinfo[!duplicated(rarefyID), .(rarefyID, STUDY_ID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod)]
 
 # biotime num individuals and other info
 load(here::here('data', 'biotime_blowes', 'bt_malin.Rdata')) # load bt_malin
-btinfo <- data.table(bt_malin); rm(bt_malin)
-btinfo[, Nave := mean(N), by = rarefyID] # average number of individuals in the timeseries
-btinfo <- btinfo[!duplicated(rarefyID), .(rarefyID, Nave)]
+btnave <- data.table(bt_malin); rm(bt_malin)
+btnave[, Nave := mean(N), by = rarefyID] # average number of individuals in the timeseries
+btnave <- btnave[!duplicated(rarefyID), .(rarefyID, Nave)]
 
 # Temperature average, changes, and seasonality
 temperature <- fread(here('output', 'temperaturetrend_byrarefyID_by_year1_year2.csv.gz'))
@@ -84,6 +88,7 @@ veg[, veg := (`tree cover % (mean)` + 0.5 * `non-tree veg. % (mean)`)/100] # veg
 ```{r add covariate data, echo=FALSE}
 # add covariates
 bt <- merge(btlong, btinfo, all.x = TRUE, by = 'rarefyID')
+bt <- merge(bt, btnave, all.x = TRUE, by = 'rarefyID')
 bt <- merge(bt, temperature, all.x = TRUE, by = c('rarefyID', 'year1', 'year2')) # temperature ave, ave metabolic, change, and seasonality
 bt <- merge(bt, microclim[, .(rarefyID, microclim = Temp_sd20km)], all.x = TRUE, by = 'rarefyID') # microclimates
 bt <- merge(bt, npp, all.x = TRUE, by = 'rarefyID') # npp
@@ -114,7 +119,14 @@ bt[, duration := year2 - year1]
 
 
 # set duration group order
-bt[, duration_group := factor(duration_group, levels = c('3', '5', '10', '20', 'All', 'Ally1'), ordered = FALSE)]
+bt[, duration_group := factor(duration_group, levels = c('3annual', '4annual', '5annual', '6annual', '7annual', 
+                                                         '8annual', '9annual', '10annual', '11annual', '12annual',
+                                                         '13annual', '14annual', '15annual', '16annual', '17annual',
+                                                         '18annual', '19annual', '20annual', 
+                                                         '3min3', '4min3', '5min3', '6min3', '7min3', '8min3', '9min3',
+                                                         '10min3', '11min3', '12min3', '13min3', '14min3', '15min3', 
+                                                         '16min3', '17min3', '18min3', '19min3', '20min3',
+                                                         'All', 'Ally1'), ordered = FALSE)]
 
 #add a comparison id
 bt[, compID := paste0(rarefyID, '_', year1, '_', year2)]
@@ -160,7 +172,8 @@ scaling$plus[scaling$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
 Only if file doesn't yet exist
 ```{r write out, echo=FALSE}
 if(!file.exists(here('output', 'slope_w_covariates.csv.gz'))){
-  write.csv(bt[,.(STUDY_ID, rarefyID, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration_group, duration, 
+  write.csv(bt[,.(STUDY_ID, rarefyID, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, 
+                  duration_group, duration, 
                   disstrend, trendse, measure, 
                   tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, temptrend, temptrend.sc, temptrend_abs.sc,
@@ -177,21 +190,21 @@ if(!file.exists(here('output', 'slope_w_covariates.csv.gz'))){
 # Check variable distributions
 ## Response variables
 ```{r summaries response}
-bt[measure =='Jbeta' & duration_group == '3', summary(disstrend)]
-bt[measure =='Jtu' & duration_group == '3', summary(disstrend)]
-bt[measure =='Horn' & duration_group == '3', summary(disstrend)]
+bt[measure =='Jbeta' & duration_group == '3annual', summary(disstrend)]
+bt[measure =='Jtu' & duration_group == '3annual', summary(disstrend)]
+bt[measure =='Horn' & duration_group == '3annual', summary(disstrend)]
 
-bt[measure =='Jbeta' & duration_group == '5', summary(disstrend)]
-bt[measure =='Jtu' & duration_group == '5', summary(disstrend)]
-bt[measure =='Horn' & duration_group == '5', summary(disstrend)]
+bt[measure =='Jbeta' & duration_group == '5annual', summary(disstrend)]
+bt[measure =='Jtu' & duration_group == '5annual', summary(disstrend)]
+bt[measure =='Horn' & duration_group == '5annual', summary(disstrend)]
 
-bt[measure =='Jbeta' & duration_group == '10', summary(disstrend)]
-bt[measure =='Jtu' & duration_group == '10', summary(disstrend)]
-bt[measure =='Horn' & duration_group == '10', summary(disstrend)]
+bt[measure =='Jbeta' & duration_group == '10annual', summary(disstrend)]
+bt[measure =='Jtu' & duration_group == '10annual', summary(disstrend)]
+bt[measure =='Horn' & duration_group == '10annual', summary(disstrend)]
 
-bt[measure =='Jbeta' & duration_group == '20', summary(disstrend)]
-bt[measure =='Jtu' & duration_group == '20', summary(disstrend)]
-bt[measure =='Horn' & duration_group == '20', summary(disstrend)]
+bt[measure =='Jbeta' & duration_group == '20annual', summary(disstrend)]
+bt[measure =='Jtu' & duration_group == '20annual', summary(disstrend)]
+bt[measure =='Horn' & duration_group == '20annual', summary(disstrend)]
 
 bt[measure =='Jbeta' & duration_group == 'All', summary(disstrend)]
 bt[measure =='Jtu' & duration_group == 'All', summary(disstrend)]
@@ -201,29 +214,49 @@ bt[measure =='Horn' & duration_group == 'All', summary(disstrend)]
 
 ```{r histograms response, echo = FALSE}
 # histograms for 3-year ts
-invisible(bt[measure =='Jbeta' & duration_group == '3', hist(disstrend, main = 'Jaccard total 3-year slope', breaks = 80)])
-invisible(bt[measure =='Jtu' & duration_group == '3', hist(disstrend, main = 'Jaccard turnover 3-year slope', breaks = 80)])
-invisible(bt[measure =='Horn' & duration_group == '3', hist(disstrend, main = 'Morisita-Horn 3-year slope', breaks = 80)])
+invisible(bt[measure =='Jbeta' & duration_group == '3annual', hist(disstrend, main = 'Jaccard total 3-year annual slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & duration_group == '3annual', hist(disstrend, main = 'Jaccard turnover 3-year annual slope', breaks = 80)])
+invisible(bt[measure =='Horn' & duration_group == '3annual', hist(disstrend, main = 'Morisita-Horn 3-year annual slope', breaks = 80)])
 
 # histograms for 5-year ts
-invisible(bt[measure =='Jbeta' & duration_group == '5', hist(disstrend, main = 'Jaccard total 5-year slope', breaks = 80)])
-invisible(bt[measure =='Jtu' & duration_group == '5', hist(disstrend, main = 'Jaccard turnover 5-year slope', breaks = 80)])
-invisible(bt[measure =='Horn' & duration_group == '5', hist(disstrend, main = 'Morisita-Horn 5-year slope', breaks = 80)])
+invisible(bt[measure =='Jbeta' & duration_group == '5annual', hist(disstrend, main = 'Jaccard total 5-year annual slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & duration_group == '5annual', hist(disstrend, main = 'Jaccard turnover 5-year annual slope', breaks = 80)])
+invisible(bt[measure =='Horn' & duration_group == '5annual', hist(disstrend, main = 'Morisita-Horn 5-year annual slope', breaks = 80)])
 
 # histograms for 10-year ts
-invisible(bt[measure =='Jbeta' & duration_group == '10', hist(disstrend, main = 'Jaccard total 10-year slope', breaks = 80)])
-invisible(bt[measure =='Jtu' & duration_group == '10', hist(disstrend, main = 'Jaccard turnover 10-year slope', breaks = 80)])
-invisible(bt[measure =='Horn' & duration_group == '10', hist(disstrend, main = 'Morisita-Horn 10-year slope', breaks = 80)])
+invisible(bt[measure =='Jbeta' & duration_group == '10annual', hist(disstrend, main = 'Jaccard total 10-year annual slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & duration_group == '10annual', hist(disstrend, main = 'Jaccard turnover 10-year annual slope', breaks = 80)])
+invisible(bt[measure =='Horn' & duration_group == '10annual', hist(disstrend, main = 'Morisita-Horn 10-year annual slope', breaks = 80)])
 
 # histograms for 20-year ts
-invisible(bt[measure =='Jbeta' & duration_group == '20', hist(disstrend, main = 'Jaccard total 20-year slope', breaks = 80)])
-invisible(bt[measure =='Jtu' & duration_group == '20', hist(disstrend, main = 'Jaccard turnover 20-year slope', breaks = 80)])
-invisible(bt[measure =='Horn' & duration_group == '20', hist(disstrend, main = 'Morisita-Horn 20-year slope', breaks = 80)])
+invisible(bt[measure =='Jbeta' & duration_group == '20annual', hist(disstrend, main = 'Jaccard total 20-year annual slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & duration_group == '20annual', hist(disstrend, main = 'Jaccard turnover 20-year annual slope', breaks = 80)])
+invisible(bt[measure =='Horn' & duration_group == '20annual', hist(disstrend, main = 'Morisita-Horn 20-year annual slope', breaks = 80)])
+
+# histograms for 3-year min3 ts
+invisible(bt[measure =='Jbeta' & duration_group == '3min3', hist(disstrend, main = 'Jaccard total 3-year min3 slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & duration_group == '3min3', hist(disstrend, main = 'Jaccard turnover 3-year min3 slope', breaks = 80)])
+invisible(bt[measure =='Horn' & duration_group == '3min3', hist(disstrend, main = 'Morisita-Horn 3-year min3 slope', breaks = 80)])
+
+# histograms for 5-year min3 ts
+invisible(bt[measure =='Jbeta' & duration_group == '5min3', hist(disstrend, main = 'Jaccard total 5-year min3 slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & duration_group == '5min3', hist(disstrend, main = 'Jaccard turnover 5-year min3 slope', breaks = 80)])
+invisible(bt[measure =='Horn' & duration_group == '5min3', hist(disstrend, main = 'Morisita-Horn 5-year min3 slope', breaks = 80)])
+
+# histograms for 10-year min3 ts
+invisible(bt[measure =='Jbeta' & duration_group == '10min3', hist(disstrend, main = 'Jaccard total 10-year min3 slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & duration_group == '10min3', hist(disstrend, main = 'Jaccard turnover 10-year min3 slope', breaks = 80)])
+invisible(bt[measure =='Horn' & duration_group == '10min3', hist(disstrend, main = 'Morisita-Horn 10-year min3 slope', breaks = 80)])
+
+# histograms for 20-year min3 ts
+invisible(bt[measure =='Jbeta' & duration_group == '20min3', hist(disstrend, main = 'Jaccard total 20-year min3 slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & duration_group == '20min3', hist(disstrend, main = 'Jaccard turnover 20-year min3 slope', breaks = 80)])
+invisible(bt[measure =='Horn' & duration_group == '20min3', hist(disstrend, main = 'Morisita-Horn 20-year min3 slope', breaks = 80)])
 
 # histograms for all ts
-invisible(bt[measure =='Jbeta' & duration_group == 'All', hist(disstrend, main = 'Jaccard total 20-year slope', breaks = 80)])
-invisible(bt[measure =='Jtu' & duration_group == 'All', hist(disstrend, main = 'Jaccard turnover 20-year slope', breaks = 80)])
-invisible(bt[measure =='Horn' & duration_group == 'All', hist(disstrend, main = 'Morisita-Horn 20-year slope', breaks = 80)])
+invisible(bt[measure =='Jbeta' & duration_group == 'All', hist(disstrend, main = 'Jaccard total all-year slope', breaks = 80)])
+invisible(bt[measure =='Jtu' & duration_group == 'All', hist(disstrend, main = 'Jaccard turnover all-year slope', breaks = 80)])
+invisible(bt[measure =='Horn' & duration_group == 'All', hist(disstrend, main = 'Morisita-Horn all-year slope', breaks = 80)])
 
 ```
 
