@@ -1,7 +1,7 @@
 Replicate and extend analyses from Antao et al. 2020
 ================
 
-# Load data
+# Load data and libraries
 
     ## here() starts at /local/home/malinp/climate_community_crossrealm
 
@@ -1388,39 +1388,658 @@ summary(modJbeta10min3)
 
 ![](antao_MEmodels_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->![](antao_MEmodels_files/figure-gfm/unnamed-chunk-27-2.png)<!-- -->
 
-## Standardized durations, min3 samples
+## All durations of min3 samples
 
-  - To do: All durations in one model, but allow slopes to differ by
-    duration
+  - All durations in one model, but allow slopes to differ by duration
+  - Converges for durations \< 11. Doesn’t converge for \<21.
 
 <!-- end list -->
 
 ``` r
-# modJbetaXmin3 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
-#                  +(1|taxa_mod1/STUDY_ID),
-#                 disp = ~trendse*REALM,
-#                 data = comb10min3[measure == 'Jbeta',])
+modJbetaXmin3 <- glmmTMB(disstrend ~ 0 + duration_factor + REALM:duration_factor + 
+                             new_sTempYear:REALM:duration_factor + 
+                             TempGAMCoef:REALM:duration_factor + 
+                             TempGAMCoef:new_sTempYear:REALM:duration_factor +
+                         (1|duration_factor/taxa_mod1/STUDY_ID),
+                         disp = ~trendse*REALM + REALM*duration_factor,
+                         data = combXmin3[measure == 'Jbeta' & duration < 11,],
+                         control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
 
 
-#summary(modJbetaXmin3)
+summary(modJbetaXmin3)
 ```
 
-# Fit a Horn model
+    ##  Family: gaussian  ( identity )
+    ## Formula:          
+    ## disstrend ~ 0 + duration_factor + REALM:duration_factor + new_sTempYear:REALM:duration_factor +  
+    ##     TempGAMCoef:REALM:duration_factor + TempGAMCoef:new_sTempYear:REALM:duration_factor +  
+    ##     (1 | duration_factor/taxa_mod1/STUDY_ID)
+    ## Dispersion:                 ~trendse * REALM + REALM * duration_factor
+    ## Data: combXmin3[measure == "Jbeta" & duration < 11, ]
+    ## 
+    ##       AIC       BIC    logLik  deviance  df.resid 
+    ## -394114.4 -393287.3  197142.2 -394284.4    124174 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups                               Name        Variance  Std.Dev. 
+    ##  STUDY_ID:(taxa_mod1:duration_factor) (Intercept) 6.653e-05 8.157e-03
+    ##  taxa_mod1:duration_factor            (Intercept) 5.822e-12 2.413e-06
+    ##  duration_factor                      (Intercept) 2.440e-12 1.562e-06
+    ##  Residual                                                NA        NA
+    ## Number of obs: 124259, groups:  
+    ## STUDY_ID:(taxa_mod1:duration_factor), 1084; taxa_mod1:duration_factor, 72; duration_factor, 8
+    ## 
+    ## Conditional model:
+    ##                                                                Estimate
+    ## duration_factor3                                             -0.0379863
+    ## duration_factor4                                              0.0118715
+    ## duration_factor5                                              0.0102990
+    ## duration_factor6                                              0.0098424
+    ## duration_factor7                                              0.0096925
+    ## duration_factor8                                              0.0089077
+    ## duration_factor9                                              0.0090725
+    ## duration_factor10                                             0.0097537
+    ## duration_factor3:REALMTerrestrial                             0.0191896
+    ## duration_factor4:REALMTerrestrial                             0.0030613
+    ## duration_factor5:REALMTerrestrial                             0.0039991
+    ## duration_factor6:REALMTerrestrial                             0.0003293
+    ## duration_factor7:REALMTerrestrial                             0.0017609
+    ## duration_factor8:REALMTerrestrial                             0.0039960
+    ## duration_factor9:REALMTerrestrial                             0.0016690
+    ## duration_factor10:REALMTerrestrial                            0.0008202
+    ## duration_factor3:REALMMarine:new_sTempYear                   -0.0069867
+    ## duration_factor4:REALMMarine:new_sTempYear                    0.0008244
+    ## duration_factor5:REALMMarine:new_sTempYear                   -0.0011516
+    ## duration_factor6:REALMMarine:new_sTempYear                   -0.0016282
+    ## duration_factor7:REALMMarine:new_sTempYear                   -0.0011779
+    ## duration_factor8:REALMMarine:new_sTempYear                   -0.0014174
+    ## duration_factor9:REALMMarine:new_sTempYear                   -0.0012633
+    ## duration_factor10:REALMMarine:new_sTempYear                  -0.0005797
+    ## duration_factor3:REALMTerrestrial:new_sTempYear               0.0036673
+    ## duration_factor4:REALMTerrestrial:new_sTempYear              -0.0017257
+    ## duration_factor5:REALMTerrestrial:new_sTempYear               0.0001188
+    ## duration_factor6:REALMTerrestrial:new_sTempYear               0.0001870
+    ## duration_factor7:REALMTerrestrial:new_sTempYear              -0.0008702
+    ## duration_factor8:REALMTerrestrial:new_sTempYear              -0.0001427
+    ## duration_factor9:REALMTerrestrial:new_sTempYear               0.0003000
+    ## duration_factor10:REALMTerrestrial:new_sTempYear              0.0002465
+    ## duration_factor3:REALMMarine:TempGAMCoef                      0.0384413
+    ## duration_factor4:REALMMarine:TempGAMCoef                     -0.0326006
+    ## duration_factor5:REALMMarine:TempGAMCoef                     -0.0253172
+    ## duration_factor6:REALMMarine:TempGAMCoef                     -0.0267058
+    ## duration_factor7:REALMMarine:TempGAMCoef                     -0.0216756
+    ## duration_factor8:REALMMarine:TempGAMCoef                     -0.0274243
+    ## duration_factor9:REALMMarine:TempGAMCoef                     -0.0024233
+    ## duration_factor10:REALMMarine:TempGAMCoef                    -0.0086419
+    ## duration_factor3:REALMTerrestrial:TempGAMCoef                -0.1977369
+    ## duration_factor4:REALMTerrestrial:TempGAMCoef                -0.0049024
+    ## duration_factor5:REALMTerrestrial:TempGAMCoef                 0.0068415
+    ## duration_factor6:REALMTerrestrial:TempGAMCoef                 0.0092862
+    ## duration_factor7:REALMTerrestrial:TempGAMCoef                 0.0212751
+    ## duration_factor8:REALMTerrestrial:TempGAMCoef                 0.0256100
+    ## duration_factor9:REALMTerrestrial:TempGAMCoef                 0.0110589
+    ## duration_factor10:REALMTerrestrial:TempGAMCoef                0.0042959
+    ## duration_factor3:REALMMarine:new_sTempYear:TempGAMCoef        0.1150865
+    ## duration_factor4:REALMMarine:new_sTempYear:TempGAMCoef       -0.0128800
+    ## duration_factor5:REALMMarine:new_sTempYear:TempGAMCoef       -0.0362463
+    ## duration_factor6:REALMMarine:new_sTempYear:TempGAMCoef       -0.0131547
+    ## duration_factor7:REALMMarine:new_sTempYear:TempGAMCoef       -0.0014673
+    ## duration_factor8:REALMMarine:new_sTempYear:TempGAMCoef        0.0067058
+    ## duration_factor9:REALMMarine:new_sTempYear:TempGAMCoef        0.0201005
+    ## duration_factor10:REALMMarine:new_sTempYear:TempGAMCoef       0.0276520
+    ## duration_factor3:REALMTerrestrial:new_sTempYear:TempGAMCoef  -0.1481683
+    ## duration_factor4:REALMTerrestrial:new_sTempYear:TempGAMCoef  -0.0052984
+    ## duration_factor5:REALMTerrestrial:new_sTempYear:TempGAMCoef   0.0079418
+    ## duration_factor6:REALMTerrestrial:new_sTempYear:TempGAMCoef   0.0251594
+    ## duration_factor7:REALMTerrestrial:new_sTempYear:TempGAMCoef   0.0508889
+    ## duration_factor8:REALMTerrestrial:new_sTempYear:TempGAMCoef   0.0303414
+    ## duration_factor9:REALMTerrestrial:new_sTempYear:TempGAMCoef   0.0237664
+    ## duration_factor10:REALMTerrestrial:new_sTempYear:TempGAMCoef  0.0174694
+    ##                                                              Std. Error z value
+    ## duration_factor3                                              0.0029206 -13.006
+    ## duration_factor4                                              0.0018901   6.281
+    ## duration_factor5                                              0.0017027   6.049
+    ## duration_factor6                                              0.0015398   6.392
+    ## duration_factor7                                              0.0014738   6.577
+    ## duration_factor8                                              0.0014070   6.331
+    ## duration_factor9                                              0.0013971   6.494
+    ## duration_factor10                                             0.0013863   7.036
+    ## duration_factor3:REALMTerrestrial                             0.0052286   3.670
+    ## duration_factor4:REALMTerrestrial                             0.0032897   0.931
+    ## duration_factor5:REALMTerrestrial                             0.0030056   1.331
+    ## duration_factor6:REALMTerrestrial                             0.0027857   0.118
+    ## duration_factor7:REALMTerrestrial                             0.0026559   0.663
+    ## duration_factor8:REALMTerrestrial                             0.0024790   1.612
+    ## duration_factor9:REALMTerrestrial                             0.0023734   0.703
+    ## duration_factor10:REALMTerrestrial                            0.0022656   0.362
+    ## duration_factor3:REALMMarine:new_sTempYear                    0.0029271  -2.387
+    ## duration_factor4:REALMMarine:new_sTempYear                    0.0014865   0.555
+    ## duration_factor5:REALMMarine:new_sTempYear                    0.0011520  -1.000
+    ## duration_factor6:REALMMarine:new_sTempYear                    0.0008756  -1.859
+    ## duration_factor7:REALMMarine:new_sTempYear                    0.0007268  -1.621
+    ## duration_factor8:REALMMarine:new_sTempYear                    0.0006162  -2.300
+    ## duration_factor9:REALMMarine:new_sTempYear                    0.0005388  -2.345
+    ## duration_factor10:REALMMarine:new_sTempYear                   0.0004773  -1.215
+    ## duration_factor3:REALMTerrestrial:new_sTempYear               0.0033573   1.092
+    ## duration_factor4:REALMTerrestrial:new_sTempYear               0.0015464  -1.116
+    ## duration_factor5:REALMTerrestrial:new_sTempYear               0.0013541   0.088
+    ## duration_factor6:REALMTerrestrial:new_sTempYear               0.0010234   0.183
+    ## duration_factor7:REALMTerrestrial:new_sTempYear               0.0009602  -0.906
+    ## duration_factor8:REALMTerrestrial:new_sTempYear               0.0008330  -0.171
+    ## duration_factor9:REALMTerrestrial:new_sTempYear               0.0007341   0.409
+    ## duration_factor10:REALMTerrestrial:new_sTempYear              0.0006486   0.380
+    ## duration_factor3:REALMMarine:TempGAMCoef                      0.0430407   0.893
+    ## duration_factor4:REALMMarine:TempGAMCoef                      0.0186415  -1.749
+    ## duration_factor5:REALMMarine:TempGAMCoef                      0.0141179  -1.793
+    ## duration_factor6:REALMMarine:TempGAMCoef                      0.0110276  -2.422
+    ## duration_factor7:REALMMarine:TempGAMCoef                      0.0101315  -2.139
+    ## duration_factor8:REALMMarine:TempGAMCoef                      0.0093877  -2.921
+    ## duration_factor9:REALMMarine:TempGAMCoef                      0.0091719  -0.264
+    ## duration_factor10:REALMMarine:TempGAMCoef                     0.0085032  -1.016
+    ## duration_factor3:REALMTerrestrial:TempGAMCoef                 0.0442952  -4.464
+    ## duration_factor4:REALMTerrestrial:TempGAMCoef                 0.0208768  -0.235
+    ## duration_factor5:REALMTerrestrial:TempGAMCoef                 0.0169934   0.403
+    ## duration_factor6:REALMTerrestrial:TempGAMCoef                 0.0152104   0.611
+    ## duration_factor7:REALMTerrestrial:TempGAMCoef                 0.0155124   1.371
+    ## duration_factor8:REALMTerrestrial:TempGAMCoef                 0.0153974   1.663
+    ## duration_factor9:REALMTerrestrial:TempGAMCoef                 0.0145421   0.760
+    ## duration_factor10:REALMTerrestrial:TempGAMCoef                0.0136652   0.314
+    ## duration_factor3:REALMMarine:new_sTempYear:TempGAMCoef        0.0568017   2.026
+    ## duration_factor4:REALMMarine:new_sTempYear:TempGAMCoef        0.0241050  -0.534
+    ## duration_factor5:REALMMarine:new_sTempYear:TempGAMCoef        0.0178588  -2.030
+    ## duration_factor6:REALMMarine:new_sTempYear:TempGAMCoef        0.0137742  -0.955
+    ## duration_factor7:REALMMarine:new_sTempYear:TempGAMCoef        0.0121408  -0.121
+    ## duration_factor8:REALMMarine:new_sTempYear:TempGAMCoef        0.0105778   0.634
+    ## duration_factor9:REALMMarine:new_sTempYear:TempGAMCoef        0.0097694   2.057
+    ## duration_factor10:REALMMarine:new_sTempYear:TempGAMCoef       0.0090228   3.065
+    ## duration_factor3:REALMTerrestrial:new_sTempYear:TempGAMCoef   0.0462728  -3.202
+    ## duration_factor4:REALMTerrestrial:new_sTempYear:TempGAMCoef   0.0206568  -0.256
+    ## duration_factor5:REALMTerrestrial:new_sTempYear:TempGAMCoef   0.0173142   0.459
+    ## duration_factor6:REALMTerrestrial:new_sTempYear:TempGAMCoef   0.0156795   1.605
+    ## duration_factor7:REALMTerrestrial:new_sTempYear:TempGAMCoef   0.0183248   2.777
+    ## duration_factor8:REALMTerrestrial:new_sTempYear:TempGAMCoef   0.0180135   1.684
+    ## duration_factor9:REALMTerrestrial:new_sTempYear:TempGAMCoef   0.0157561   1.508
+    ## duration_factor10:REALMTerrestrial:new_sTempYear:TempGAMCoef  0.0142389   1.227
+    ##                                                              Pr(>|z|)    
+    ## duration_factor3                                              < 2e-16 ***
+    ## duration_factor4                                             3.37e-10 ***
+    ## duration_factor5                                             1.46e-09 ***
+    ## duration_factor6                                             1.64e-10 ***
+    ## duration_factor7                                             4.81e-11 ***
+    ## duration_factor8                                             2.44e-10 ***
+    ## duration_factor9                                             8.36e-11 ***
+    ## duration_factor10                                            1.98e-12 ***
+    ## duration_factor3:REALMTerrestrial                            0.000242 ***
+    ## duration_factor4:REALMTerrestrial                            0.352071    
+    ## duration_factor5:REALMTerrestrial                            0.183340    
+    ## duration_factor6:REALMTerrestrial                            0.905913    
+    ## duration_factor7:REALMTerrestrial                            0.507332    
+    ## duration_factor8:REALMTerrestrial                            0.106975    
+    ## duration_factor9:REALMTerrestrial                            0.481933    
+    ## duration_factor10:REALMTerrestrial                           0.717326    
+    ## duration_factor3:REALMMarine:new_sTempYear                   0.016993 *  
+    ## duration_factor4:REALMMarine:new_sTempYear                   0.579156    
+    ## duration_factor5:REALMMarine:new_sTempYear                   0.317458    
+    ## duration_factor6:REALMMarine:new_sTempYear                   0.062960 .  
+    ## duration_factor7:REALMMarine:new_sTempYear                   0.105082    
+    ## duration_factor8:REALMMarine:new_sTempYear                   0.021439 *  
+    ## duration_factor9:REALMMarine:new_sTempYear                   0.019045 *  
+    ## duration_factor10:REALMMarine:new_sTempYear                  0.224539    
+    ## duration_factor3:REALMTerrestrial:new_sTempYear              0.274692    
+    ## duration_factor4:REALMTerrestrial:new_sTempYear              0.264463    
+    ## duration_factor5:REALMTerrestrial:new_sTempYear              0.930111    
+    ## duration_factor6:REALMTerrestrial:new_sTempYear              0.855016    
+    ## duration_factor7:REALMTerrestrial:new_sTempYear              0.364807    
+    ## duration_factor8:REALMTerrestrial:new_sTempYear              0.864033    
+    ## duration_factor9:REALMTerrestrial:new_sTempYear              0.682785    
+    ## duration_factor10:REALMTerrestrial:new_sTempYear             0.703909    
+    ## duration_factor3:REALMMarine:TempGAMCoef                     0.371783    
+    ## duration_factor4:REALMMarine:TempGAMCoef                     0.080322 .  
+    ## duration_factor5:REALMMarine:TempGAMCoef                     0.072931 .  
+    ## duration_factor6:REALMMarine:TempGAMCoef                     0.015447 *  
+    ## duration_factor7:REALMMarine:TempGAMCoef                     0.032401 *  
+    ## duration_factor8:REALMMarine:TempGAMCoef                     0.003486 ** 
+    ## duration_factor9:REALMMarine:TempGAMCoef                     0.791617    
+    ## duration_factor10:REALMMarine:TempGAMCoef                    0.309478    
+    ## duration_factor3:REALMTerrestrial:TempGAMCoef                8.04e-06 ***
+    ## duration_factor4:REALMTerrestrial:TempGAMCoef                0.814345    
+    ## duration_factor5:REALMTerrestrial:TempGAMCoef                0.687245    
+    ## duration_factor6:REALMTerrestrial:TempGAMCoef                0.541522    
+    ## duration_factor7:REALMTerrestrial:TempGAMCoef                0.170224    
+    ## duration_factor8:REALMTerrestrial:TempGAMCoef                0.096259 .  
+    ## duration_factor9:REALMTerrestrial:TempGAMCoef                0.446970    
+    ## duration_factor10:REALMTerrestrial:TempGAMCoef               0.753244    
+    ## duration_factor3:REALMMarine:new_sTempYear:TempGAMCoef       0.042754 *  
+    ## duration_factor4:REALMMarine:new_sTempYear:TempGAMCoef       0.593115    
+    ## duration_factor5:REALMMarine:new_sTempYear:TempGAMCoef       0.042397 *  
+    ## duration_factor6:REALMMarine:new_sTempYear:TempGAMCoef       0.339567    
+    ## duration_factor7:REALMMarine:new_sTempYear:TempGAMCoef       0.903802    
+    ## duration_factor8:REALMMarine:new_sTempYear:TempGAMCoef       0.526113    
+    ## duration_factor9:REALMMarine:new_sTempYear:TempGAMCoef       0.039639 *  
+    ## duration_factor10:REALMMarine:new_sTempYear:TempGAMCoef      0.002179 ** 
+    ## duration_factor3:REALMTerrestrial:new_sTempYear:TempGAMCoef  0.001364 ** 
+    ## duration_factor4:REALMTerrestrial:new_sTempYear:TempGAMCoef  0.797569    
+    ## duration_factor5:REALMTerrestrial:new_sTempYear:TempGAMCoef  0.646458    
+    ## duration_factor6:REALMTerrestrial:new_sTempYear:TempGAMCoef  0.108580    
+    ## duration_factor7:REALMTerrestrial:new_sTempYear:TempGAMCoef  0.005486 ** 
+    ## duration_factor8:REALMTerrestrial:new_sTempYear:TempGAMCoef  0.092111 .  
+    ## duration_factor9:REALMTerrestrial:new_sTempYear:TempGAMCoef  0.131454    
+    ## duration_factor10:REALMTerrestrial:new_sTempYear:TempGAMCoef 0.219869    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                                    Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                        -3.85331    0.01318 -292.29  < 2e-16 ***
+    ## trendse                             7.70906    0.09197   83.82  < 2e-16 ***
+    ## REALMTerrestrial                   -1.33011    0.04248  -31.31  < 2e-16 ***
+    ## duration_factor4                   -1.52962    0.01820  -84.06  < 2e-16 ***
+    ## duration_factor5                   -1.92072    0.01726 -111.31  < 2e-16 ***
+    ## duration_factor6                   -2.47908    0.01723 -143.91  < 2e-16 ***
+    ## duration_factor7                   -2.88257    0.01723 -167.31  < 2e-16 ***
+    ## duration_factor8                   -3.26013    0.01730 -188.44  < 2e-16 ***
+    ## duration_factor9                   -3.54100    0.01745 -202.96  < 2e-16 ***
+    ## duration_factor10                  -3.85682    0.01772 -217.66  < 2e-16 ***
+    ## trendse:REALMTerrestrial            7.18095    0.46286   15.51  < 2e-16 ***
+    ## REALMTerrestrial:duration_factor4   0.07729    0.05614    1.38  0.16861    
+    ## REALMTerrestrial:duration_factor5   0.32855    0.05487    5.99 2.13e-09 ***
+    ## REALMTerrestrial:duration_factor6   0.18490    0.05647    3.27  0.00106 ** 
+    ## REALMTerrestrial:duration_factor7   0.25656    0.05682    4.52 6.33e-06 ***
+    ## REALMTerrestrial:duration_factor8   0.24470    0.05832    4.20 2.72e-05 ***
+    ## REALMTerrestrial:duration_factor9   0.25504    0.05865    4.35 1.37e-05 ***
+    ## REALMTerrestrial:duration_factor10  0.25849    0.05965    4.33 1.47e-05 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 
-## Original
+### Plot coefficients
 
-  - Like the richness model, using Antao predictors, but with Horn slope
-    as the response. Had to drop the REALM random slope to allow
-    convergence.
-  - Now find LESS turnover at higher temperature in marine (opposite of
-    richness and gains slope models).
-  - Find more turnover with changing temperatures at higher average
-    temperatures in TERRESTRIAL (the interaction), not marine. Not like
-    the richness and gains models.
+``` r
+coefs <- fixef(modJbetaXmin3)$cond
+iM <- grep('REALMMarine:new_sTempYear:TempGAMCoef', names(coefs))
+dursM <- as.numeric(gsub('duration_factor|:REALMMarine:new_sTempYear:TempGAMCoef', '', names(coefs)[iM]))
+iT <- grep('REALMTerrestrial:new_sTempYear:TempGAMCoef', names(coefs))
+dursT <- as.numeric(gsub('duration_factor|:REALMTerrestrial:new_sTempYear:TempGAMCoef', '', names(coefs)[iT]))
+par(mfrow=c(1,2))
+plot(dursM, coefs[iM], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = "Marine")
+abline(h =0, lty = 2)
+plot(dursT, coefs[iT], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = 'Terrestrial')
+abline(h =0, lty = 2)
+```
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+
+## All durations min3 abs(temptrend)
+
+  - All durations in one model, but allow slopes to differ by duration.
+    Uses abs(temptrend)
+  - Converges for durations \< 11
 
 <!-- end list -->
 
 ``` r
+modJbetaXmin3abs <- glmmTMB(disstrend ~ 0 + duration_factor + REALM:duration_factor + 
+                             new_sTempYear:REALM:duration_factor + 
+                             abs(TempGAMCoef):REALM:duration_factor + 
+                             abs(TempGAMCoef):new_sTempYear:REALM:duration_factor +
+                         (1|duration_factor/taxa_mod1/STUDY_ID),
+                         disp = ~trendse*REALM + REALM*duration_factor,
+                         data = combXmin3[measure == 'Jbeta' & duration < 11,],
+                         control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+
+
+AIC(modJbetaXmin3) - AIC(modJbetaXmin3abs)
+```
+
+    ## [1] 22.44947
+
+``` r
+summary(modJbetaXmin3abs)
+```
+
+    ##  Family: gaussian  ( identity )
+    ## Formula:          
+    ## disstrend ~ 0 + duration_factor + REALM:duration_factor + new_sTempYear:REALM:duration_factor +  
+    ##     abs(TempGAMCoef):REALM:duration_factor + abs(TempGAMCoef):new_sTempYear:REALM:duration_factor +  
+    ##     (1 | duration_factor/taxa_mod1/STUDY_ID)
+    ## Dispersion:                 ~trendse * REALM + REALM * duration_factor
+    ## Data: combXmin3[measure == "Jbeta" & duration < 11, ]
+    ## 
+    ##       AIC       BIC    logLik  deviance  df.resid 
+    ## -394136.8 -393309.8  197153.4 -394306.8    124174 
+    ## 
+    ## Random effects:
+    ## 
+    ## Conditional model:
+    ##  Groups                               Name        Variance  Std.Dev. 
+    ##  STUDY_ID:(taxa_mod1:duration_factor) (Intercept) 6.113e-05 7.819e-03
+    ##  taxa_mod1:duration_factor            (Intercept) 1.484e-11 3.852e-06
+    ##  duration_factor                      (Intercept) 1.537e-12 1.240e-06
+    ##  Residual                                                NA        NA
+    ## Number of obs: 124259, groups:  
+    ## STUDY_ID:(taxa_mod1:duration_factor), 1084; taxa_mod1:duration_factor, 72; duration_factor, 8
+    ## 
+    ## Conditional model:
+    ##                                                                     Estimate
+    ## duration_factor3                                                  -3.477e-02
+    ## duration_factor4                                                   1.280e-02
+    ## duration_factor5                                                   1.064e-02
+    ## duration_factor6                                                   1.059e-02
+    ## duration_factor7                                                   1.009e-02
+    ## duration_factor8                                                   8.812e-03
+    ## duration_factor9                                                   8.131e-03
+    ## duration_factor10                                                  9.448e-03
+    ## duration_factor3:REALMTerrestrial                                  2.715e-02
+    ## duration_factor4:REALMTerrestrial                                  4.349e-03
+    ## duration_factor5:REALMTerrestrial                                 -3.421e-04
+    ## duration_factor6:REALMTerrestrial                                 -7.346e-04
+    ## duration_factor7:REALMTerrestrial                                 -3.800e-04
+    ## duration_factor8:REALMTerrestrial                                  3.204e-03
+    ## duration_factor9:REALMTerrestrial                                  1.887e-03
+    ## duration_factor10:REALMTerrestrial                                 5.939e-04
+    ## duration_factor3:REALMMarine:new_sTempYear                        -2.298e-03
+    ## duration_factor4:REALMMarine:new_sTempYear                         2.070e-03
+    ## duration_factor5:REALMMarine:new_sTempYear                        -8.570e-04
+    ## duration_factor6:REALMMarine:new_sTempYear                        -4.833e-04
+    ## duration_factor7:REALMMarine:new_sTempYear                        -8.602e-04
+    ## duration_factor8:REALMMarine:new_sTempYear                        -1.390e-03
+    ## duration_factor9:REALMMarine:new_sTempYear                        -1.463e-03
+    ## duration_factor10:REALMMarine:new_sTempYear                       -5.562e-04
+    ## duration_factor3:REALMTerrestrial:new_sTempYear                    8.651e-03
+    ## duration_factor4:REALMTerrestrial:new_sTempYear                   -7.649e-05
+    ## duration_factor5:REALMTerrestrial:new_sTempYear                   -7.434e-04
+    ## duration_factor6:REALMTerrestrial:new_sTempYear                   -9.517e-04
+    ## duration_factor7:REALMTerrestrial:new_sTempYear                   -2.190e-03
+    ## duration_factor8:REALMTerrestrial:new_sTempYear                   -1.008e-03
+    ## duration_factor9:REALMTerrestrial:new_sTempYear                   -2.091e-04
+    ## duration_factor10:REALMTerrestrial:new_sTempYear                  -7.575e-04
+    ## duration_factor3:REALMMarine:abs(TempGAMCoef)                     -9.070e-02
+    ## duration_factor4:REALMMarine:abs(TempGAMCoef)                     -3.874e-02
+    ## duration_factor5:REALMMarine:abs(TempGAMCoef)                     -1.673e-02
+    ## duration_factor6:REALMMarine:abs(TempGAMCoef)                     -2.919e-02
+    ## duration_factor7:REALMMarine:abs(TempGAMCoef)                     -1.880e-02
+    ## duration_factor8:REALMMarine:abs(TempGAMCoef)                     -5.349e-03
+    ## duration_factor9:REALMMarine:abs(TempGAMCoef)                      2.926e-02
+    ## duration_factor10:REALMMarine:abs(TempGAMCoef)                     7.422e-03
+    ## duration_factor3:REALMTerrestrial:abs(TempGAMCoef)                -2.775e-01
+    ## duration_factor4:REALMTerrestrial:abs(TempGAMCoef)                -4.300e-02
+    ## duration_factor5:REALMTerrestrial:abs(TempGAMCoef)                 6.596e-02
+    ## duration_factor6:REALMTerrestrial:abs(TempGAMCoef)                 2.049e-02
+    ## duration_factor7:REALMTerrestrial:abs(TempGAMCoef)                 5.889e-02
+    ## duration_factor8:REALMTerrestrial:abs(TempGAMCoef)                 4.059e-02
+    ## duration_factor9:REALMTerrestrial:abs(TempGAMCoef)                 2.808e-02
+    ## duration_factor10:REALMTerrestrial:abs(TempGAMCoef)                1.519e-02
+    ## duration_factor3:REALMMarine:new_sTempYear:abs(TempGAMCoef)       -1.331e-01
+    ## duration_factor4:REALMMarine:new_sTempYear:abs(TempGAMCoef)       -5.521e-02
+    ## duration_factor5:REALMMarine:new_sTempYear:abs(TempGAMCoef)       -2.825e-02
+    ## duration_factor6:REALMMarine:new_sTempYear:abs(TempGAMCoef)       -5.235e-02
+    ## duration_factor7:REALMMarine:new_sTempYear:abs(TempGAMCoef)       -1.810e-02
+    ## duration_factor8:REALMMarine:new_sTempYear:abs(TempGAMCoef)       -1.650e-03
+    ## duration_factor9:REALMMarine:new_sTempYear:abs(TempGAMCoef)        2.286e-02
+    ## duration_factor10:REALMMarine:new_sTempYear:abs(TempGAMCoef)       1.212e-02
+    ## duration_factor3:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)  -2.190e-01
+    ## duration_factor4:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)  -4.436e-02
+    ## duration_factor5:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   3.392e-02
+    ## duration_factor6:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   4.626e-02
+    ## duration_factor7:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   8.528e-02
+    ## duration_factor8:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   5.335e-02
+    ## duration_factor9:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   3.798e-02
+    ## duration_factor10:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)  4.752e-02
+    ##                                                                   Std. Error
+    ## duration_factor3                                                   3.424e-03
+    ## duration_factor4                                                   2.059e-03
+    ## duration_factor5                                                   1.801e-03
+    ## duration_factor6                                                   1.593e-03
+    ## duration_factor7                                                   1.507e-03
+    ## duration_factor8                                                   1.427e-03
+    ## duration_factor9                                                   1.408e-03
+    ## duration_factor10                                                  1.389e-03
+    ## duration_factor3:REALMTerrestrial                                  6.333e-03
+    ## duration_factor4:REALMTerrestrial                                  3.712e-03
+    ## duration_factor5:REALMTerrestrial                                  3.288e-03
+    ## duration_factor6:REALMTerrestrial                                  2.883e-03
+    ## duration_factor7:REALMTerrestrial                                  2.714e-03
+    ## duration_factor8:REALMTerrestrial                                  2.527e-03
+    ## duration_factor9:REALMTerrestrial                                  2.408e-03
+    ## duration_factor10:REALMTerrestrial                                 2.296e-03
+    ## duration_factor3:REALMMarine:new_sTempYear                         3.470e-03
+    ## duration_factor4:REALMMarine:new_sTempYear                         1.714e-03
+    ## duration_factor5:REALMMarine:new_sTempYear                         1.311e-03
+    ## duration_factor6:REALMMarine:new_sTempYear                         9.980e-04
+    ## duration_factor7:REALMMarine:new_sTempYear                         8.277e-04
+    ## duration_factor8:REALMMarine:new_sTempYear                         7.022e-04
+    ## duration_factor9:REALMMarine:new_sTempYear                         6.184e-04
+    ## duration_factor10:REALMMarine:new_sTempYear                        5.540e-04
+    ## duration_factor3:REALMTerrestrial:new_sTempYear                    4.173e-03
+    ## duration_factor4:REALMTerrestrial:new_sTempYear                    1.902e-03
+    ## duration_factor5:REALMTerrestrial:new_sTempYear                    1.623e-03
+    ## duration_factor6:REALMTerrestrial:new_sTempYear                    1.205e-03
+    ## duration_factor7:REALMTerrestrial:new_sTempYear                    1.111e-03
+    ## duration_factor8:REALMTerrestrial:new_sTempYear                    1.005e-03
+    ## duration_factor9:REALMTerrestrial:new_sTempYear                    8.593e-04
+    ## duration_factor10:REALMTerrestrial:new_sTempYear                   7.641e-04
+    ## duration_factor3:REALMMarine:abs(TempGAMCoef)                      5.582e-02
+    ## duration_factor4:REALMMarine:abs(TempGAMCoef)                      2.444e-02
+    ## duration_factor5:REALMMarine:abs(TempGAMCoef)                      1.839e-02
+    ## duration_factor6:REALMMarine:abs(TempGAMCoef)                      1.431e-02
+    ## duration_factor7:REALMMarine:abs(TempGAMCoef)                      1.290e-02
+    ## duration_factor8:REALMMarine:abs(TempGAMCoef)                      1.191e-02
+    ## duration_factor9:REALMMarine:abs(TempGAMCoef)                      1.192e-02
+    ## duration_factor10:REALMMarine:abs(TempGAMCoef)                     1.113e-02
+    ## duration_factor3:REALMTerrestrial:abs(TempGAMCoef)                 5.814e-02
+    ## duration_factor4:REALMTerrestrial:abs(TempGAMCoef)                 2.698e-02
+    ## duration_factor5:REALMTerrestrial:abs(TempGAMCoef)                 2.139e-02
+    ## duration_factor6:REALMTerrestrial:abs(TempGAMCoef)                 1.910e-02
+    ## duration_factor7:REALMTerrestrial:abs(TempGAMCoef)                 1.929e-02
+    ## duration_factor8:REALMTerrestrial:abs(TempGAMCoef)                 1.953e-02
+    ## duration_factor9:REALMTerrestrial:abs(TempGAMCoef)                 1.869e-02
+    ## duration_factor10:REALMTerrestrial:abs(TempGAMCoef)                1.767e-02
+    ## duration_factor3:REALMMarine:new_sTempYear:abs(TempGAMCoef)        7.470e-02
+    ## duration_factor4:REALMMarine:new_sTempYear:abs(TempGAMCoef)        3.187e-02
+    ## duration_factor5:REALMMarine:new_sTempYear:abs(TempGAMCoef)        2.353e-02
+    ## duration_factor6:REALMMarine:new_sTempYear:abs(TempGAMCoef)        1.838e-02
+    ## duration_factor7:REALMMarine:new_sTempYear:abs(TempGAMCoef)        1.632e-02
+    ## duration_factor8:REALMMarine:new_sTempYear:abs(TempGAMCoef)        1.441e-02
+    ## duration_factor9:REALMMarine:new_sTempYear:abs(TempGAMCoef)        1.352e-02
+    ## duration_factor10:REALMMarine:new_sTempYear:abs(TempGAMCoef)       1.273e-02
+    ## duration_factor3:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   5.858e-02
+    ## duration_factor4:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   2.617e-02
+    ## duration_factor5:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   2.131e-02
+    ## duration_factor6:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   1.907e-02
+    ## duration_factor7:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   2.223e-02
+    ## duration_factor8:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   2.300e-02
+    ## duration_factor9:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   1.966e-02
+    ## duration_factor10:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)  1.785e-02
+    ##                                                                   z value
+    ## duration_factor3                                                  -10.156
+    ## duration_factor4                                                    6.217
+    ## duration_factor5                                                    5.910
+    ## duration_factor6                                                    6.646
+    ## duration_factor7                                                    6.697
+    ## duration_factor8                                                    6.174
+    ## duration_factor9                                                    5.774
+    ## duration_factor10                                                   6.802
+    ## duration_factor3:REALMTerrestrial                                   4.288
+    ## duration_factor4:REALMTerrestrial                                   1.172
+    ## duration_factor5:REALMTerrestrial                                  -0.104
+    ## duration_factor6:REALMTerrestrial                                  -0.255
+    ## duration_factor7:REALMTerrestrial                                  -0.140
+    ## duration_factor8:REALMTerrestrial                                   1.268
+    ## duration_factor9:REALMTerrestrial                                   0.784
+    ## duration_factor10:REALMTerrestrial                                  0.259
+    ## duration_factor3:REALMMarine:new_sTempYear                         -0.662
+    ## duration_factor4:REALMMarine:new_sTempYear                          1.208
+    ## duration_factor5:REALMMarine:new_sTempYear                         -0.654
+    ## duration_factor6:REALMMarine:new_sTempYear                         -0.484
+    ## duration_factor7:REALMMarine:new_sTempYear                         -1.039
+    ## duration_factor8:REALMMarine:new_sTempYear                         -1.980
+    ## duration_factor9:REALMMarine:new_sTempYear                         -2.365
+    ## duration_factor10:REALMMarine:new_sTempYear                        -1.004
+    ## duration_factor3:REALMTerrestrial:new_sTempYear                     2.073
+    ## duration_factor4:REALMTerrestrial:new_sTempYear                    -0.040
+    ## duration_factor5:REALMTerrestrial:new_sTempYear                    -0.458
+    ## duration_factor6:REALMTerrestrial:new_sTempYear                    -0.790
+    ## duration_factor7:REALMTerrestrial:new_sTempYear                    -1.971
+    ## duration_factor8:REALMTerrestrial:new_sTempYear                    -1.003
+    ## duration_factor9:REALMTerrestrial:new_sTempYear                    -0.243
+    ## duration_factor10:REALMTerrestrial:new_sTempYear                   -0.991
+    ## duration_factor3:REALMMarine:abs(TempGAMCoef)                      -1.625
+    ## duration_factor4:REALMMarine:abs(TempGAMCoef)                      -1.585
+    ## duration_factor5:REALMMarine:abs(TempGAMCoef)                      -0.910
+    ## duration_factor6:REALMMarine:abs(TempGAMCoef)                      -2.040
+    ## duration_factor7:REALMMarine:abs(TempGAMCoef)                      -1.457
+    ## duration_factor8:REALMMarine:abs(TempGAMCoef)                      -0.449
+    ## duration_factor9:REALMMarine:abs(TempGAMCoef)                       2.454
+    ## duration_factor10:REALMMarine:abs(TempGAMCoef)                      0.667
+    ## duration_factor3:REALMTerrestrial:abs(TempGAMCoef)                 -4.773
+    ## duration_factor4:REALMTerrestrial:abs(TempGAMCoef)                 -1.594
+    ## duration_factor5:REALMTerrestrial:abs(TempGAMCoef)                  3.083
+    ## duration_factor6:REALMTerrestrial:abs(TempGAMCoef)                  1.073
+    ## duration_factor7:REALMTerrestrial:abs(TempGAMCoef)                  3.053
+    ## duration_factor8:REALMTerrestrial:abs(TempGAMCoef)                  2.079
+    ## duration_factor9:REALMTerrestrial:abs(TempGAMCoef)                  1.503
+    ## duration_factor10:REALMTerrestrial:abs(TempGAMCoef)                 0.860
+    ## duration_factor3:REALMMarine:new_sTempYear:abs(TempGAMCoef)        -1.782
+    ## duration_factor4:REALMMarine:new_sTempYear:abs(TempGAMCoef)        -1.733
+    ## duration_factor5:REALMMarine:new_sTempYear:abs(TempGAMCoef)        -1.201
+    ## duration_factor6:REALMMarine:new_sTempYear:abs(TempGAMCoef)        -2.848
+    ## duration_factor7:REALMMarine:new_sTempYear:abs(TempGAMCoef)        -1.110
+    ## duration_factor8:REALMMarine:new_sTempYear:abs(TempGAMCoef)        -0.114
+    ## duration_factor9:REALMMarine:new_sTempYear:abs(TempGAMCoef)         1.691
+    ## duration_factor10:REALMMarine:new_sTempYear:abs(TempGAMCoef)        0.952
+    ## duration_factor3:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   -3.738
+    ## duration_factor4:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   -1.695
+    ## duration_factor5:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)    1.592
+    ## duration_factor6:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)    2.425
+    ## duration_factor7:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)    3.837
+    ## duration_factor8:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)    2.319
+    ## duration_factor9:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)    1.932
+    ## duration_factor10:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)   2.662
+    ##                                                                   Pr(>|z|)    
+    ## duration_factor3                                                   < 2e-16 ***
+    ## duration_factor4                                                  5.08e-10 ***
+    ## duration_factor5                                                  3.43e-09 ***
+    ## duration_factor6                                                  3.01e-11 ***
+    ## duration_factor7                                                  2.12e-11 ***
+    ## duration_factor8                                                  6.65e-10 ***
+    ## duration_factor9                                                  7.75e-09 ***
+    ## duration_factor10                                                 1.03e-11 ***
+    ## duration_factor3:REALMTerrestrial                                 1.80e-05 ***
+    ## duration_factor4:REALMTerrestrial                                 0.241271    
+    ## duration_factor5:REALMTerrestrial                                 0.917149    
+    ## duration_factor6:REALMTerrestrial                                 0.798857    
+    ## duration_factor7:REALMTerrestrial                                 0.888670    
+    ## duration_factor8:REALMTerrestrial                                 0.204857    
+    ## duration_factor9:REALMTerrestrial                                 0.433263    
+    ## duration_factor10:REALMTerrestrial                                0.795837    
+    ## duration_factor3:REALMMarine:new_sTempYear                        0.507863    
+    ## duration_factor4:REALMMarine:new_sTempYear                        0.227188    
+    ## duration_factor5:REALMMarine:new_sTempYear                        0.513296    
+    ## duration_factor6:REALMMarine:new_sTempYear                        0.628213    
+    ## duration_factor7:REALMMarine:new_sTempYear                        0.298688    
+    ## duration_factor8:REALMMarine:new_sTempYear                        0.047738 *  
+    ## duration_factor9:REALMMarine:new_sTempYear                        0.018006 *  
+    ## duration_factor10:REALMMarine:new_sTempYear                       0.315338    
+    ## duration_factor3:REALMTerrestrial:new_sTempYear                   0.038166 *  
+    ## duration_factor4:REALMTerrestrial:new_sTempYear                   0.967923    
+    ## duration_factor5:REALMTerrestrial:new_sTempYear                   0.646990    
+    ## duration_factor6:REALMTerrestrial:new_sTempYear                   0.429697    
+    ## duration_factor7:REALMTerrestrial:new_sTempYear                   0.048736 *  
+    ## duration_factor8:REALMTerrestrial:new_sTempYear                   0.315652    
+    ## duration_factor9:REALMTerrestrial:new_sTempYear                   0.807774    
+    ## duration_factor10:REALMTerrestrial:new_sTempYear                  0.321510    
+    ## duration_factor3:REALMMarine:abs(TempGAMCoef)                     0.104211    
+    ## duration_factor4:REALMMarine:abs(TempGAMCoef)                     0.112937    
+    ## duration_factor5:REALMMarine:abs(TempGAMCoef)                     0.363007    
+    ## duration_factor6:REALMMarine:abs(TempGAMCoef)                     0.041375 *  
+    ## duration_factor7:REALMMarine:abs(TempGAMCoef)                     0.145023    
+    ## duration_factor8:REALMMarine:abs(TempGAMCoef)                     0.653380    
+    ## duration_factor9:REALMMarine:abs(TempGAMCoef)                     0.014140 *  
+    ## duration_factor10:REALMMarine:abs(TempGAMCoef)                    0.504788    
+    ## duration_factor3:REALMTerrestrial:abs(TempGAMCoef)                1.82e-06 ***
+    ## duration_factor4:REALMTerrestrial:abs(TempGAMCoef)                0.110954    
+    ## duration_factor5:REALMTerrestrial:abs(TempGAMCoef)                0.002047 ** 
+    ## duration_factor6:REALMTerrestrial:abs(TempGAMCoef)                0.283353    
+    ## duration_factor7:REALMTerrestrial:abs(TempGAMCoef)                0.002269 ** 
+    ## duration_factor8:REALMTerrestrial:abs(TempGAMCoef)                0.037661 *  
+    ## duration_factor9:REALMTerrestrial:abs(TempGAMCoef)                0.132890    
+    ## duration_factor10:REALMTerrestrial:abs(TempGAMCoef)               0.389799    
+    ## duration_factor3:REALMMarine:new_sTempYear:abs(TempGAMCoef)       0.074701 .  
+    ## duration_factor4:REALMMarine:new_sTempYear:abs(TempGAMCoef)       0.083170 .  
+    ## duration_factor5:REALMMarine:new_sTempYear:abs(TempGAMCoef)       0.229751    
+    ## duration_factor6:REALMMarine:new_sTempYear:abs(TempGAMCoef)       0.004397 ** 
+    ## duration_factor7:REALMMarine:new_sTempYear:abs(TempGAMCoef)       0.267165    
+    ## duration_factor8:REALMMarine:new_sTempYear:abs(TempGAMCoef)       0.908843    
+    ## duration_factor9:REALMMarine:new_sTempYear:abs(TempGAMCoef)       0.090750 .  
+    ## duration_factor10:REALMMarine:new_sTempYear:abs(TempGAMCoef)      0.341051    
+    ## duration_factor3:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)  0.000185 ***
+    ## duration_factor4:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)  0.090069 .  
+    ## duration_factor5:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)  0.111495    
+    ## duration_factor6:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)  0.015299 *  
+    ## duration_factor7:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)  0.000125 ***
+    ## duration_factor8:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)  0.020373 *  
+    ## duration_factor9:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef)  0.053385 .  
+    ## duration_factor10:REALMTerrestrial:new_sTempYear:abs(TempGAMCoef) 0.007773 ** 
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Dispersion model:
+    ##                                    Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                        -3.85294    0.01318 -292.25  < 2e-16 ***
+    ## trendse                             7.70970    0.09199   83.81  < 2e-16 ***
+    ## REALMTerrestrial                   -1.32771    0.04245  -31.27  < 2e-16 ***
+    ## duration_factor4                   -1.53007    0.01820  -84.07  < 2e-16 ***
+    ## duration_factor5                   -1.92078    0.01726 -111.31  < 2e-16 ***
+    ## duration_factor6                   -2.47974    0.01723 -143.93  < 2e-16 ***
+    ## duration_factor7                   -2.88277    0.01723 -167.31  < 2e-16 ***
+    ## duration_factor8                   -3.25972    0.01730 -188.41  < 2e-16 ***
+    ## duration_factor9                   -3.54154    0.01745 -202.98  < 2e-16 ***
+    ## duration_factor10                  -3.85635    0.01772 -217.62  < 2e-16 ***
+    ## trendse:REALMTerrestrial            7.11443    0.46332   15.36  < 2e-16 ***
+    ## REALMTerrestrial:duration_factor4   0.07652    0.05613    1.36   0.1728    
+    ## REALMTerrestrial:duration_factor5   0.32338    0.05485    5.90 3.72e-09 ***
+    ## REALMTerrestrial:duration_factor6   0.18426    0.05645    3.26   0.0011 ** 
+    ## REALMTerrestrial:duration_factor7   0.25068    0.05680    4.41 1.02e-05 ***
+    ## REALMTerrestrial:duration_factor8   0.24162    0.05830    4.14 3.41e-05 ***
+    ## REALMTerrestrial:duration_factor9   0.25333    0.05863    4.32 1.55e-05 ***
+    ## REALMTerrestrial:duration_factor10  0.25266    0.05962    4.24 2.26e-05 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+### Plot
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->![](antao_MEmodels_files/figure-gfm/unnamed-chunk-31-2.png)<!-- -->
+
+### Plot coefs by duration
+
+``` r
+coefs <- fixef(modJbetaXmin3abs)$cond
+iM <- grep('REALMMarine:new_sTempYear:abs', names(coefs))
+dursM <- as.numeric(gsub('duration_factor|:REALMMarine:new_sTempYear:abs\\(TempGAMCoef\\)', '', names(coefs)[iM]))
+iT <- grep('REALMTerrestrial:new_sTempYear:abs', names(coefs))
+dursT <- as.numeric(gsub('duration_factor|:REALMTerrestrial:new_sTempYear:abs\\(TempGAMCoef\\)', '', names(coefs)[iT]))
+par(mfrow=c(1,2))
+plot(dursM, coefs[iM], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = "Marine")
+abline(h =0, lty = 2)
+plot(dursT, coefs[iT], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = 'Terrestrial')
+abline(h =0, lty = 2)
+```
+
+![](antao_MEmodels_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+
+```` 
+
+
+# Fit a Horn model
+## Original
+
+- Like the richness model, using Antao predictors, but with Horn slope as the response. Had to drop the REALM random slope to allow convergence.
+- Now find LESS turnover at higher temperature in marine (opposite of richness and gains slope models).
+- Find more turnover with changing temperatures at higher average temperatures in TERRESTRIAL (the interaction), not marine. Not like the richness and gains models.
+
+
+```r
 # realm-specific intercept. Simplify REs that were near zero.
 modHornAll0 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
                 +(0 + TempGAMCoef|taxa_mod1) +(1|taxa_mod1/STUDY_ID),
@@ -1429,7 +2048,7 @@ modHornAll0 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef
 
 
 summary(modHornAll0)
-```
+````
 
     ##  Family: gaussian  ( identity )
     ## Formula:          

@@ -4,7 +4,7 @@ output:
     github_document: default
 ---
 
-# Load data
+# Load data and libraries
 ```{r setup, echo=FALSE}
 library(glmmTMB)
 library(data.table)
@@ -40,6 +40,8 @@ comb5 <- merge(dat[model_id == 'logS_lm', ], trends[duration_group == '5annual',
 comb5min3 <- merge(dat[model_id == 'logS_lm', ], trends[duration_group == '5min3', !c("rarefyID_y" ,"duration", 'REALM')], by = c('STUDY_ID', 'rarefyID'), all = TRUE)
 comb10min3 <- merge(dat[model_id == 'logS_lm', ], trends[duration_group == '10min3', !c("rarefyID_y" ,"duration", 'REALM')], by = c('STUDY_ID', 'rarefyID'), all = TRUE)
 comb20min3 <- merge(dat[model_id == 'logS_lm', ], trends[duration_group == '20min3', !c("rarefyID_y" ,"duration", 'REALM')], by = c('STUDY_ID', 'rarefyID'), all = TRUE)
+combXmin3 <- merge(dat[model_id == 'logS_lm', .(rarefyID, new_sTempYear, TempGAMCoef, taxa_mod1)], trends[grep('min3', duration_group), !c("rarefyID_y" ,"duration")], by = c('rarefyID'), all = TRUE)
+combXmin3[, ':='(duration = year2 - year1 + 1, duration_factor = as.factor(year2 - year1 + 1))]
 
 # data subsets
 datS <- dat[model_id == 'logS_lm',]
@@ -959,18 +961,133 @@ p1
 p2
 ```
 
-## Standardized durations, min3 samples
+## All durations of min3 samples
 
-- To do: All durations in one model, but allow slopes to differ by duration
+- All durations in one model, but allow slopes to differ by duration
+- Converges for durations < 11. Doesn't converge for <21.
 
 ```{r}
-# modJbetaXmin3 <- glmmTMB(disstrend ~ 0 + REALM + new_sTempYear:REALM + TempGAMCoef:REALM + TempGAMCoef:new_sTempYear:REALM
-#                  +(1|taxa_mod1/STUDY_ID),
-#                 disp = ~trendse*REALM,
-#                 data = comb10min3[measure == 'Jbeta',])
+modJbetaXmin3 <- glmmTMB(disstrend ~ 0 + duration_factor + REALM:duration_factor + 
+                             new_sTempYear:REALM:duration_factor + 
+                             TempGAMCoef:REALM:duration_factor + 
+                             TempGAMCoef:new_sTempYear:REALM:duration_factor +
+                         (1|duration_factor/taxa_mod1/STUDY_ID),
+                         disp = ~trendse*REALM + REALM*duration_factor,
+                         data = combXmin3[measure == 'Jbeta' & duration < 11,],
+                         control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
 
 
-#summary(modJbetaXmin3)
+summary(modJbetaXmin3)
+```
+
+### Plot coefficients
+```{r}
+coefs <- fixef(modJbetaXmin3)$cond
+iM <- grep('REALMMarine:new_sTempYear:TempGAMCoef', names(coefs))
+dursM <- as.numeric(gsub('duration_factor|:REALMMarine:new_sTempYear:TempGAMCoef', '', names(coefs)[iM]))
+iT <- grep('REALMTerrestrial:new_sTempYear:TempGAMCoef', names(coefs))
+dursT <- as.numeric(gsub('duration_factor|:REALMTerrestrial:new_sTempYear:TempGAMCoef', '', names(coefs)[iT]))
+par(mfrow=c(1,2))
+plot(dursM, coefs[iM], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = "Marine")
+abline(h =0, lty = 2)
+plot(dursT, coefs[iT], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = 'Terrestrial')
+abline(h =0, lty = 2)
+```
+
+## All durations min3 abs(temptrend)
+
+- All durations in one model, but allow slopes to differ by duration. Uses abs(temptrend)
+- Converges for durations < 11
+
+```{r}
+modJbetaXmin3abs <- glmmTMB(disstrend ~ 0 + duration_factor + REALM:duration_factor + 
+                             new_sTempYear:REALM:duration_factor + 
+                             abs(TempGAMCoef):REALM:duration_factor + 
+                             abs(TempGAMCoef):new_sTempYear:REALM:duration_factor +
+                         (1|duration_factor/taxa_mod1/STUDY_ID),
+                         disp = ~trendse*REALM + REALM*duration_factor,
+                         data = combXmin3[measure == 'Jbeta' & duration < 11,],
+                         control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+
+
+AIC(modJbetaXmin3) - AIC(modJbetaXmin3abs)
+summary(modJbetaXmin3abs)
+```
+
+### Plot
+```{r, echo = FALSE}
+# set up prediction frame
+newdatM <- expand.grid(new_sTempYear = seq(-2, 2.5, length.out = 100), TempGAMCoef = seq(-0.35, 0.35, length.out = 100))
+newdatM$REALM <- 'Marine'
+newdatM$taxa_mod1 <- 'All'
+newdatM$duration_factor <- '5'
+newdatM$STUDY_ID <- 33
+newdatM$trendse <- 0.015
+sdTM <- sd(datS$newtempvalues[datS$REALM == 'Marine'])
+meanTM <- mean(datS$newtempvalues[datS$REALM == 'Marine'])
+newdatM$newtempvalues <- newdatM$new_sTempYear * sdTM + meanTM
+
+newdatT <- expand.grid(new_sTempYear = seq(-2.5, 2.7, length.out = 100), TempGAMCoef = seq(-0.3, 0.5, length.out = 100))
+newdatT$REALM <- 'Terrestrial'
+newdatT$taxa_mod1 <- 'Terrestrial plants'
+newdatT$duration_factor <- '5'
+newdatT$STUDY_ID <- 18
+newdatT$trendse <- 0.015
+sdTT <- sd(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+meanTT <- mean(datS$newtempvalues[datS$REALM == 'Terrestrial'])
+newdatT$newtempvalues <- newdatT$new_sTempYear * sdTT + meanTT
+
+# predict
+newdatM$slope <- predict(modJbetaXmin3abs, newdata = newdatM, se.fit = FALSE, re.form = NA)
+newdatT$slope <- predict(modJbetaXmin3abs, newdata = newdatT, se.fit = FALSE, re.form = NA)
+
+# plot
+p1 <- ggplot(newdatM, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Marine') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p2 <- ggplot(newdatT, aes(TempGAMCoef, newtempvalues, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term temperature (degC)', title = 'Terrestrial') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+
+p1
+p2
+```
+
+### Plot coefs by duration
+```{r}
+coefs <- fixef(modJbetaXmin3abs)$cond
+iM <- grep('REALMMarine:new_sTempYear:abs', names(coefs))
+dursM <- as.numeric(gsub('duration_factor|:REALMMarine:new_sTempYear:abs\\(TempGAMCoef\\)', '', names(coefs)[iM]))
+iT <- grep('REALMTerrestrial:new_sTempYear:abs', names(coefs))
+dursT <- as.numeric(gsub('duration_factor|:REALMTerrestrial:new_sTempYear:abs\\(TempGAMCoef\\)', '', names(coefs)[iT]))
+par(mfrow=c(1,2))
+plot(dursM, coefs[iM], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = "Marine")
+abline(h =0, lty = 2)
+plot(dursT, coefs[iT], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = 'Terrestrial')
+abline(h =0, lty = 2)
+```
 ```
 
 
