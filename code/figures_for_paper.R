@@ -23,8 +23,56 @@ signedsq = function(x) sign(x) * x^2
 signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, inverse = signedsq)
 
 
+##############################
+## Figure 1: duration problem
+##############################
+# load raw BioTime
+load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians, which has all pairwise dissimilarities
+bt <- data.table(rarefied_beta_medians); rm(rarefied_beta_medians)
+bt[, year1 := as.numeric(year1)] # not sure why it gets read in as character
+bt[, year2 := as.numeric(year2)]
+bt[, dY := year2 - year1]
+bt[, Horn := 1-Hornsim] # convert similarity to dissimilarity
+bt[, Hornsim := NULL]
+
+# load biotime trends
+trends <- fread('output/slope_w_covariates.csv.gz')
+
+# make plots of dissimilarity vs. duration with different durations plotted
+png(file = 'figures/fig1.png', width = 6, height = 6, units = 'in', res = 300)
+par(mfrow=c(2,2), mai = c(0.7, 0.7, 0.1, 0.1))
+
+plot(-1, -1, xlim=c(0,20), ylim=c(0,1), xlab = 'Temporal difference (years)', ylab = 'Jaccard turnover', bty = 'l')
+abline(h = 1, lty= 2)
+segments(0,0,5,1, col = '#b2df8a', lwd = 2)
+segments(5,0,5,1, lty = 2)
+segments(0,0,20,1, col = '#a6cee3', lwd = 2)
+segments(20,0,20,1, lty = 2)
+
+bt[rarefyID == '339_1085477', plot(dY, Jtu, xlab = 'Temporal difference (years)', ylab = 'Jaccard turnover', col = '#00000044', bty = 'l')]
+bt[rarefyID == '339_1085477', abline(lm(Jtu~dY), col = '#a6cee3', lwd = 2)]
+mod5 <- bt[rarefyID == '339_1085477' & dY <=5, lm(Jtu~dY)] # calc trendline
+preds <- data.table(dY = 1:20)
+preds$Jtu5 <- predict(mod5, preds)
+preds[dY <=10, lines(dY, Jtu5, col = '#b2df8a', lwd = 2)]
+
+modgam <- trends[measure == 'Jtu' & duration_group == 'All', gam(disstrend~s(duration))]
+predsgam <- data.table(duration = 1:120)
+predsgam[, c('disstrend', 'se') := predict(modgam, newdata = predsgam, se.fit = TRUE)]
+
+trends[measure == 'Jtu' & duration_group == 'All', plot(duration, disstrend, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')]
+predsgam[, lines(duration, disstrend, col = 'red')]
+abline(h = 0, lty = 2)
+
+plot(-1, -1, xlim = c(0,120), ylim = c(-0.04, 0.04), xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')
+predsgam[, polygon(c(duration, rev(duration)), c(disstrend+se, rev(disstrend - se)), col = '#00000044', border = NA)]
+predsgam[, lines(duration, disstrend, col = 'red')]
+abline(h = 0, lty = 2)
+
+dev.off()
+
 ####################
-## Figure 1: map
+## Figure 2: map
 ####################
 # load BioTime data
 trends <- fread('output/turnover_w_covariates.csv.gz')
