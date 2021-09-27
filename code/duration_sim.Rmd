@@ -4,58 +4,98 @@ output:
     github_document: default
 ---
 
-Generate pairs of random time-series and correlate the abs(slope). Time-series have a random length 3 to 100 steps.
-```{r}
+```{r setup, echo = FALSE}
 require(data.table)
+require(ggplot2)
+require(ggpubr) # for ggarrange
+library(here)
+```
 
+# Plot an example
+```{r}
+set.seed(5)
+dat <- data.table(tsid = rep(1:1000, rep(3:102, 1000/100)))
+dat[, ':='(value1 = rnorm(.N), value2 = rnorm(.N))]
+slopes <- dat[, .(slope1 = as.numeric(coef(lm(value1 ~ I(1:length(value1)))))[2], slope2 = as.numeric(coef(lm(value2 ~ I(1:length(value2)))))[2]), by = tsid]
 
-## too slow
-n<- 98*1000
-dat <- data.table(duration = rep(3:100, n/98, replace=TRUE), slope1 = NA_real_, slope2 = NA_real_)
-for(i in 1:n){
-    dat$slope1[i] <- coef(lm(I(rnorm(dat$duration[i])) ~ I(1:dat$duration[i])))[2]
-    dat$slope2[i] <- coef(lm(I(rnorm(dat$duration[i])) ~ I(1:dat$duration[i])))[2]
+slopes[, cor.test(slope1, slope2)]
+
+slopes[, plot(slope1, slope2)]
+
+```
+
+# False positive analysis
+Generate pairs of random time-series and correlate the slopes. Time-series have a random length 3 to 100 steps.
+```{r}
+if(file.exists(here('output', 'simulated_ts.csv.gz'))){
+    cors <- fread(here('output', 'simulated_ts.csv.gz'))
+} else {
+    set.seed(5)
+    n<- 1000 # number of timeseries per dataset
+    nreps <- 100 # number of datasets
+    
+    cors <- data.table(minduration = rep(c(10,3,3,3,3), nreps), maxduration = rep(c(10, 12, 27, 52, 102), nreps), p = NA_real_, cor = NA_real_) # holds the summaries from each dataset
+    pb <- txtProgressBar(min = 0, max = nrow(cors), style = 3) # progress bar
+    
+    for(i in 1:nrow(cors)){
+        # make datasets with timeseries of all the same length
+        if(cors[i, minduration == maxduration]){
+            len <- cors[i, minduration]
+            dat <- data.table(tsid = rep(1:n, rep(len, n)), index = rep(1:len, n), value1 = rnorm(len*n), value2 = rnorm(len*n))
+        }
+        
+        # variable length timeseries
+        if(cors[i, minduration != maxduration]){
+            mind <- cors[i, minduration]
+            maxd <- cors[i, maxduration]
+            ndur <- maxd - mind + 1
+            dat <- data.table(tsid = rep(1:n, rep(mind:maxd, n/ndur)))
+            dat[, ':='(value1 = rnorm(.N), value2 = rnorm(.N))]
+        }
+        
+        # calc slopes
+        slopes <- dat[, .(slope1 = as.numeric(coef(lm(value1 ~ I(1:length(value1)))))[2], slope2 = as.numeric(coef(lm(value2 ~ I(1:length(value2)))))[2]), by = tsid]
+        
+        test <- slopes[, cor.test(slope1, slope2)]
+        cors[i, ':='(p = test$p.value, cor = test$estimate)]    
+        setTxtProgressBar(pb, i)
+    }
+    close(pb)
+    
+    cors[, name := paste0(minduration, '-', maxduration)]
+    cors[, range := maxduration - minduration + 1]
+    
+    write.csv(cors, gzfile(here('output', 'simulated_ts.csv.gz')), row.names = FALSE)
 }
 ```
 
 
-# Plot the slopes
+
+
+# Plot the results
 ```{r}
+ylims = c(-10, 0)
+p1 <- ggplot(cors, aes(range, log10(p))) +
+           geom_point() +
+           geom_smooth() +
+           labs(x = 'Range of durations', title = 'Raw timeseries') +
+           lims(y = ylims) +
+           geom_abline(intercept = log10(0.05), slope = 0, linetype = 'dashed', color = 'red')
 
-dat[, plot(slope1, slope2)]
-dat[, plot(abs(slope1), abs(slope2))]
-dat[, plot(abs(slope1), abs(slope3))]
+p2 <- ggplot(cors, aes(as.factor(range), log10(p))) +
+           geom_violin() +
+           labs(x = 'Range of durations', title = 'Raw timeseries') +
+           lims(y = ylims) +
+           geom_abline(intercept = log10(0.05), slope = 0, linetype = 'dashed', color = 'red')
+
+p3 <- ggplot(cors[, .(prop = sum(p < 0.05)/length(p)), by = range], aes(range, prop)) +
+    geom_col() +
+    labs(x = 'Range of durations', title = 'Raw timeseries', y = 'Proportion false positive') +
+    lims(y = c(0,1)) +
+    geom_abline(intercept = 0.05, slope = 0, linetype = 'dashed', color = 'red')
+
+ggarrange(p1, p2, p3, ncol = 2, nrow = 2)
+
 ```
-
-# Correlation of variable durations
-Notice the strongly significant correlation when taking the absolute value of the slope
-```{r}
-cors <- data.table(minduration = rep(50:3,10), maxduration = rep(50:100, 10), p = NA_real_, cor = NA_real_)
-for(i in 1:nrow(cors)){
-    thisdat <- dat[duration <= cors$minduration[i] & duration <= cors$maxduration[i], ][sample(.N, 1000)]
-    test <- cor.test(thisdat$slope1, thisdat$slope2)
-}
-cor.test(dat$slope1, dat$slope2)
-cor.test(abs(dat$slope1), abs(dat$slope2))
-cor.test(abs(dat$slope1), abs(dat$slope2))
-```
-
-# Correlation of 5-step durations
-Notice the induced correlation goes away.
-```{r}
-cor.test(dat5$slope1, dat5$slope2)
-cor.test(abs(dat5$slope1), abs(dat5$slope2))
-cor.test(abs(dat5$slope1), abs(dat5$slope2))
-```
-
-# Correlation of 20-step durations
-Notice the induced correlation goes away.
-```{r}
-cor.test(dat20$slope1, dat20$slope2)
-cor.test(abs(dat20$slope1), abs(dat20$slope2))
-cor.test(abs(dat20$slope1), abs(dat20$slope2))
-```
-
-
          
          
