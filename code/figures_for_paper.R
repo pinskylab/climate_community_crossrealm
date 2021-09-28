@@ -11,6 +11,9 @@ library(gridExtra) # to combine ggplots together
 library(grid) # to combine ggplots together
 library(RColorBrewer)
 library(scales) # for defining signed sqrt axis transformation
+library(here)
+library(mgcv) # for gam smoother
+source(here('code', 'error.bar.R'))
 
 # produce ggplot-style colors
 gg_color_hue <- function(n) {
@@ -38,24 +41,44 @@ bt[, Hornsim := NULL]
 # load biotime trends
 trends <- fread('output/slope_w_covariates.csv.gz')
 
+# load simulations
+cors <- fread(here('output', 'simulated_ts.csv.gz'))
+prop <- cors[, .(prop = sum(p < 0.05)/length(p), n = length(p)), by = .(range,n)]
+prop[, se := sqrt((prop * (1-prop))/n)]
+     
 # make plots of dissimilarity vs. duration with different durations plotted
 png(file = 'figures/fig1.png', width = 6, height = 6, units = 'in', res = 300)
-par(mfrow=c(2,2), mai = c(0.7, 0.7, 0.1, 0.1))
+par(mfrow=c(2,2), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(1.9, 0.5, 0), tcl = -0.2, cex.axis = 0.8)
 
-plot(-1, -1, xlim=c(0,20), ylim=c(0,1), xlab = 'Temporal difference (years)', ylab = 'Jaccard turnover', bty = 'l')
-abline(h = 1, lty= 2)
-segments(0,0,5,1, col = '#b2df8a', lwd = 2)
-segments(5,0,5,1, lty = 2)
-segments(0,0,20,1, col = '#a6cee3', lwd = 2)
-segments(20,0,20,1, lty = 2)
-
-bt[rarefyID == '339_1085477', plot(dY, Jtu, xlab = 'Temporal difference (years)', ylab = 'Jaccard turnover', col = '#00000044', bty = 'l')]
-bt[rarefyID == '339_1085477', abline(lm(Jtu~dY), col = '#a6cee3', lwd = 2)]
+# part a
+bt[rarefyID == '339_1085477', plot(dY, Jtu, xlab = 'Temporal difference (years)', ylab = 'Jaccard turnover', col = '#00000044', bty = 'l', ylim = c(0,1))]
+bt[rarefyID == '339_1085477', abline(lm(Jtu~dY), col = '#a6cee3', lwd = 3)]
 mod5 <- bt[rarefyID == '339_1085477' & dY <=5, lm(Jtu~dY)] # calc trendline
 preds <- data.table(dY = 1:20)
 preds$Jtu5 <- predict(mod5, preds)
-preds[dY <=10, lines(dY, Jtu5, col = '#b2df8a', lwd = 2)]
+preds[dY <=10, lines(dY, Jtu5, col = '#b2df8a', lwd = 3)]
 
+# part a inset
+oldpar <- par()
+par(fig = c(0.05,0.3, 0.8, 1), new = T, mgp = c(0.7, 0.12, 0), cex.lab = 0.7, cex.axis = 0.5, tcl = -0.1)
+plot(-1, -1, xlim=c(0,20), ylim=c(0,1), xlab = 'Temporal difference', ylab = 'Tturnover', bty = 'l')
+abline(h = 1, lty= 2)
+segments(0,0,5,1, col = '#b2df8a', lwd = 3)
+segments(5,0,5,1, lty = 2)
+segments(0,0,20,1, col = '#a6cee3', lwd = 3)
+segments(20,0,20,1, lty = 2)
+
+par(oldpar) # go back to original figure settings
+par(mfg = c(1,2)) # start with top-right
+
+# part b
+prop[n==1000, plot(range, prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1))]
+prop[n==1000, error.bar(range, prop, lower = se, upper = se, length = 0.02)]
+prop[n==10000, points(range, prop, col = 'grey')]
+prop[n==10000, error.bar(range, prop, lower = se, upper = se, length = 0.02, col = 'grey')]
+abline(h = 0.05, lty = 2, col = 'red')
+
+# part c
 modgam <- trends[measure == 'Jtu' & duration_group == 'All', gam(disstrend~s(duration))]
 predsgam <- data.table(duration = 1:120)
 predsgam[, c('disstrend', 'se') := predict(modgam, newdata = predsgam, se.fit = TRUE)]
@@ -64,6 +87,7 @@ trends[measure == 'Jtu' & duration_group == 'All', plot(duration, disstrend, cex
 predsgam[, lines(duration, disstrend, col = 'red')]
 abline(h = 0, lty = 2)
 
+# part d
 plot(-1, -1, xlim = c(0,120), ylim = c(-0.04, 0.04), xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')
 predsgam[, polygon(c(duration, rev(duration)), c(disstrend+se, rev(disstrend - se)), col = '#00000044', border = NA)]
 predsgam[, lines(duration, disstrend, col = 'red')]
