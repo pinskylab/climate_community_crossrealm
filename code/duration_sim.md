@@ -50,17 +50,21 @@ if(file.exists(here('output', 'simulated_ts.csv.gz'))){
     cors <- fread(here('output', 'simulated_ts.csv.gz'))
 } else {
     set.seed(5)
-    n<- 1000 # number of timeseries per dataset
     nreps <- 100 # number of datasets
     
-    cors <- data.table(minduration = rep(c(10,3,3,3,3), nreps), maxduration = rep(c(10, 12, 27, 52, 102), nreps), p = NA_real_, cor = NA_real_) # holds the summaries from each dataset
+    cors <- data.table(n = 1000, minduration = rep(c(10,3,3,3,3), nreps), maxduration = rep(c(10, 12, 27, 52, 102), nreps), p = NA_real_, cor = NA_real_) # holds the summaries from each dataset. use n = 1000 timeseries per dataset.
+    cors2 <- copy(cors)
+    cors2[, n:=10000] # add another run with 10k timeseries per dataset
+    cors <- rbind(cors, cors2) 
+    rm(cors2)
+    
     pb <- txtProgressBar(min = 0, max = nrow(cors), style = 3) # progress bar
     
     for(i in 1:nrow(cors)){
         # make datasets with timeseries of all the same length
         if(cors[i, minduration == maxduration]){
             len <- cors[i, minduration]
-            dat <- data.table(tsid = rep(1:n, rep(len, n)), index = rep(1:len, n), value1 = rnorm(len*n), value2 = rnorm(len*n))
+            dat <- data.table(tsid = rep(1:cors[i,n], rep(len, cors[i,n])), index = rep(1:len, cors[i,n]), value1 = rnorm(len*cors[i,n]), value2 = rnorm(len*cors[i,n]))
         }
         
         # variable length timeseries
@@ -68,7 +72,7 @@ if(file.exists(here('output', 'simulated_ts.csv.gz'))){
             mind <- cors[i, minduration]
             maxd <- cors[i, maxduration]
             ndur <- maxd - mind + 1
-            dat <- data.table(tsid = rep(1:n, rep(mind:maxd, n/ndur)))
+            dat <- data.table(tsid = rep(1:cors[i,n], rep(mind:maxd, cors[i,n]/ndur)))
             dat[, ':='(value1 = rnorm(.N), value2 = rnorm(.N))]
         }
         
@@ -82,7 +86,7 @@ if(file.exists(here('output', 'simulated_ts.csv.gz'))){
     close(pb)
     
     cors[, name := paste0(minduration, '-', maxduration)]
-    cors[, range := maxduration - minduration + 1]
+    cors[, range := maxduration - minduration]
     
     write.csv(cors, gzfile(here('output', 'simulated_ts.csv.gz')), row.names = FALSE)
 }
@@ -92,21 +96,22 @@ if(file.exists(here('output', 'simulated_ts.csv.gz'))){
 
 ``` r
 ylims = c(-10, 0)
-p1 <- ggplot(cors, aes(range, log10(p))) +
+p1 <- ggplot(cors, aes(range, log10(p), group = as.factor(n), color = as.factor(n))) +
            geom_point() +
            geom_smooth() +
            labs(x = 'Range of durations', title = 'Raw timeseries') +
            lims(y = ylims) +
            geom_abline(intercept = log10(0.05), slope = 0, linetype = 'dashed', color = 'red')
 
-p2 <- ggplot(cors, aes(as.factor(range), log10(p))) +
+p2 <- ggplot(cors, aes(as.factor(range), log10(p), group = as.factor(n), color = as.factor(n))) +
            geom_violin() +
            labs(x = 'Range of durations', title = 'Raw timeseries') +
            lims(y = ylims) +
            geom_abline(intercept = log10(0.05), slope = 0, linetype = 'dashed', color = 'red')
 
-p3 <- ggplot(cors[, .(prop = sum(p < 0.05)/length(p)), by = range], aes(range, prop)) +
-    geom_col() +
+p3 <- ggplot(cors[, .(prop = sum(p < 0.05)/length(p)), by = c("range", "n")], 
+             aes(range, prop, group = as.factor(n), color = as.factor(n))) +
+    geom_col(position = "dodge") +
     labs(x = 'Range of durations', title = 'Raw timeseries', y = 'Proportion false positive') +
     lims(y = c(0,1)) +
     geom_abline(intercept = 0.05, slope = 0, linetype = 'dashed', color = 'red')
@@ -116,10 +121,10 @@ ggarrange(p1, p2, p3, ncol = 2, nrow = 2)
 
     ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
 
-    ## Warning: Removed 36 rows containing non-finite values (stat_smooth).
+    ## Warning: Removed 86 rows containing non-finite values (stat_smooth).
 
-    ## Warning: Removed 36 rows containing missing values (geom_point).
+    ## Warning: Removed 86 rows containing missing values (geom_point).
 
-    ## Warning: Removed 36 rows containing non-finite values (stat_ydensity).
+    ## Warning: Removed 86 rows containing non-finite values (stat_ydensity).
 
 ![](duration_sim_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
