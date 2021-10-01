@@ -9,23 +9,39 @@ require(data.table)
 require(ggplot2)
 require(ggpubr) # for ggarrange
 library(here)
+library(glmmTMB)
 ```
 
 # Plot an example
 ```{r}
 set.seed(5)
+slope <- function(x){
+    mod <- lm(x ~ I(1:length(x)))
+    return(as.numeric(coef(mod)[2]))
+}
+slopese <- function(x){
+    mod <- lm(x ~ I(1:length(x)))
+    return(as.numeric(sqrt(diag(vcov(mod)))[2]))
+}
+
 dat <- data.table(tsid = rep(1:1000, rep(3:102, 1000/100)))
 dat[, ':='(value1 = rnorm(.N), value2 = rnorm(.N))]
-slopes <- dat[, .(slope1 = as.numeric(coef(lm(value1 ~ I(1:length(value1)))))[2], slope2 = as.numeric(coef(lm(value2 ~ I(1:length(value2)))))[2]), by = tsid]
+dat[, ':='(slope1 = slope(value1), slope2 = slope(value2),
+                  se1 = slopese(value1), se2 = slopese(value2)), by = tsid]
+slopes <- dat[, .(slope1 = slope(value1), slope2 = slope(value2),
+                  se1 = slopese(value1), se2 = slopese(value2)), by = tsid]
 
-slopes[, cor.test(slope1, slope2)]
+slopes[, cor.test(slope1, slope2)] # a problem with simple correlation
+slopes[, summary(lm(slope1 ~ slope2, weights = 1/se1))] # not solved by weighting (though p is marginal)
+slopes[, summary(glmmTMB(slope1 ~ slope2, disp=~se1))] # not solved by glmmTMB and dispersion
+dat[, summary(glmmTMB(value1 ~ slope2 + (1|tsid)))] # maybe addressed by a one-stage model
 
 slopes[, plot(slope1, slope2)]
 
 ```
 
 # False positive analysis
-Generate pairs of random time-series and correlate the slopes. Time-series have a random length 3 to 100 steps.
+Generate pairs of random time-series and correlate the slopes. Time-series have a fixed length or a variety of lengths from 3 to 100 steps. Do this many times to check for false-positive correlations using cor.test and a one-stage mixed-effects analysis.
 ```{r}
 if(file.exists(here('output', 'simulated_ts.csv.gz'))){
     cors <- fread(here('output', 'simulated_ts.csv.gz'))
@@ -33,11 +49,12 @@ if(file.exists(here('output', 'simulated_ts.csv.gz'))){
     set.seed(5)
     nreps <- 100 # number of datasets
     
-    cors <- data.table(n = 1000, minduration = rep(c(10,3,3,3,3), nreps), maxduration = rep(c(10, 12, 27, 52, 102), nreps), p = NA_real_, cor = NA_real_) # holds the summaries from each dataset. use n = 1000 timeseries per dataset.
-    cors2 <- copy(cors)
-    cors2[, n:=10000] # add another run with 10k timeseries per dataset
-    cors <- rbind(cors, cors2) 
-    rm(cors2)
+    cors <- data.table(n = 1000, minduration = rep(c(10,3,3,3,3), nreps), maxduration = rep(c(10, 12, 27, 52, 102), nreps), cor.p = NA_real_, cor.cor = NA_real_, lm.m = NA_real_,
+                       glmmwgt.p = NA_real_, glmmwgt.beta = NA_real_, glmmone.p = NA_real_, glmmone.beta = NA_real_) # holds the summaries from each dataset. use n = 1000 timeseries per dataset.
+    #cors2 <- copy(cors)
+    #cors2[, n:=10000] # add another run with 10k timeseries per dataset
+    #cors <- rbind(cors, cors2) 
+    #rm(cors2)
     
     pb <- txtProgressBar(min = 0, max = nrow(cors), style = 3) # progress bar
     
@@ -58,10 +75,15 @@ if(file.exists(here('output', 'simulated_ts.csv.gz'))){
         }
         
         # calc slopes
-        slopes <- dat[, .(slope1 = as.numeric(coef(lm(value1 ~ I(1:length(value1)))))[2], slope2 = as.numeric(coef(lm(value2 ~ I(1:length(value2)))))[2]), by = tsid]
+        dat[, slope2 := slope(value2), by = tsid]
+        slopes <- dat[, .(slope1 = slope(value1), slope2 = slope(value2), se1 = slopese(value1)), by = tsid]
         
-        test <- slopes[, cor.test(slope1, slope2)]
-        cors[i, ':='(p = test$p.value, cor = test$estimate)]    
+        # statistical tests
+        test <- slopes[, cor.test(slope1, slope2)] # a pearson correlation
+        test2 <- slopes[, coef(lm(slope1 ~ slope2))[2]] # a simple regression
+        test3 <- slopes[, summary(glmmTMB(slope1 ~ slope2, disp=~se1))$coefficients$cond] # glmmTMB and dispersion
+        test4 <- dat[, summary(glmmTMB(value1 ~ value2 + (1|tsid)))$coefficients$cond] # the coef summary from a one-stage model
+        cors[i, ':='(cor.p = test$p.value, cor.cor = test$estimate, lm.m = test2, glmmwgt.p = test3[2,4], glmmwgt.beta = test3[2,1], glmmone.p = test4[2,4], glmmone.beta = test4[2,1])]    
         setTxtProgressBar(pb, i)
     }
     close(pb)
@@ -77,29 +99,45 @@ if(file.exists(here('output', 'simulated_ts.csv.gz'))){
 
 
 # Plot the results
+Only the one-stage regression appears to have a reasonable false-positive rate.
 ```{r}
 ylims = c(-10, 0)
-p1 <- ggplot(cors, aes(range, log10(p), group = as.factor(n), color = as.factor(n))) +
+normparms <- cors[, .(mean = mean(lm.m), sd = sd(lm.m)), by = range] # parameters for Gaussian curves on each histogram
+x <- seq(-1,1,length.out = 1000)
+
+cors[range == 0, hist(lm.m, breaks = 40, main = 'Range = 0', freq = FALSE)]; normparms[range == 0, lines(x, dnorm(x,mean, sd))]
+cors[range == 9, hist(lm.m, breaks = 40, main = 'Range = 9', freq = FALSE)]; normparms[range == 9, lines(x, dnorm(x,mean, sd))]
+cors[range == 24, hist(lm.m, breaks = 40, main = 'Range = 24', freq = FALSE)]; normparms[range == 24, lines(x, dnorm(x,mean, sd))]
+cors[range == 49, hist(lm.m, breaks = 40, main = 'Range = 49', freq = FALSE)]; normparms[range == 49, lines(x, dnorm(x,mean, sd))]
+cors[range == 99, hist(lm.m, breaks = 40, main = 'Range = 99', freq = FALSE)]; normparms[range == 99, lines(x, dnorm(x,mean, sd))]
+
+ggplot(cors, aes(range, log10(cor.p), group = as.factor(n), color = as.factor(n))) +
            geom_point() +
            geom_smooth() +
-           labs(x = 'Range of durations', title = 'Raw timeseries') +
+           labs(x = 'Range of durations', title = 'Correlation') +
            lims(y = ylims) +
            geom_abline(intercept = log10(0.05), slope = 0, linetype = 'dashed', color = 'red')
 
-p2 <- ggplot(cors, aes(as.factor(range), log10(p), group = as.factor(n), color = as.factor(n))) +
-           geom_violin() +
-           labs(x = 'Range of durations', title = 'Raw timeseries') +
-           lims(y = ylims) +
-           geom_abline(intercept = log10(0.05), slope = 0, linetype = 'dashed', color = 'red')
-
-p3 <- ggplot(cors[, .(prop = sum(p < 0.05)/length(p)), by = c("range", "n")], 
+ggplot(cors[, .(prop = sum(cor.p < 0.05)/length(cor.p)), by = c("range", "n")], 
              aes(range, prop, group = as.factor(n), color = as.factor(n))) +
     geom_col(position = "dodge") +
-    labs(x = 'Range of durations', title = 'Raw timeseries', y = 'Proportion false positive') +
+    labs(x = 'Range of durations', title = 'Correlation', y = 'Proportion false positive') +
     lims(y = c(0,1)) +
     geom_abline(intercept = 0.05, slope = 0, linetype = 'dashed', color = 'red')
 
-ggarrange(p1, p2, p3, ncol = 2, nrow = 2)
+ggplot(cors[, .(prop = sum(glmmwgt.p < 0.05)/length(glmmwgt.p)), by = c("range", "n")], 
+             aes(range, prop, group = as.factor(n), color = as.factor(n))) +
+    geom_col(position = "dodge") +
+    labs(x = 'Range of durations', title = 'Weighted regression', y = 'Proportion false positive') +
+    lims(y = c(0,1)) +
+    geom_abline(intercept = 0.05, slope = 0, linetype = 'dashed', color = 'red')
+
+ggplot(cors[, .(prop = sum(glmmone.p < 0.05)/length(glmmone.p)), by = c("range", "n")], 
+             aes(range, prop, group = as.factor(n), color = as.factor(n))) +
+    geom_col(position = "dodge") +
+    labs(x = 'Range of durations', title = 'Single-stage regression', y = 'Proportion false positive') +
+    lims(y = c(0,1)) +
+    geom_abline(intercept = 0.05, slope = 0, linetype = 'dashed', color = 'red')
 
 ```
          
