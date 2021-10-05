@@ -1,7 +1,9 @@
 ---
 title: "Dissimilarity slope covariate data prep and visualization"
 output:
-  github_document: default
+  github_document:
+    toc: true
+    toc_depth: 3
 ---
 Uses slope of dissimilarity vs. time from calc_turnover.Rmd.
 
@@ -349,21 +351,30 @@ beanplot(npp ~ REALM, data = bt[i,], what = c(1,1,1,1), col = c("#CAB2D6", "#33A
 
 
 
-# Plot dissimilarity vs. explanatory variables
+# Plot dissimilarity slope vs. explanatory variables
 
 Lines are ggplot smoother fits
 
 ## Jtu
 ### Realm
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jtu'], aes(REALM, disstrend)) +
   geom_boxplot(na.rm = TRUE) + 
   labs(x = 'Realm', y = 'Jaccard turnover slope') +
   facet_wrap(vars(duration_group), scales = 'free')
 ```
 
+### Initial year
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
+ggplot(bt[measure == 'Jtu'], aes(year1, disstrend)) +
+  geom_point(alpha = 0.1, aes(color = year2 - year1)) + 
+  geom_smooth() +
+  labs(x = 'Initial year', y = 'Jaccard turnover slope') +
+  facet_wrap(vars(duration_group), scales = 'free')
+```
+
 ### Temperature trend
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jtu'], aes(temptrend, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -373,7 +384,7 @@ ggplot(bt[measure == 'Jtu'], aes(temptrend, disstrend)) +
 ```
 
 ### abs(Temperature trend)
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jtu'], aes(abs(temptrend), disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -383,7 +394,7 @@ ggplot(bt[measure == 'Jtu'], aes(abs(temptrend), disstrend)) +
 ```
 
 ### Temperature
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jtu'], aes(tempave, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -394,7 +405,7 @@ ggplot(bt[measure == 'Jtu'], aes(tempave, disstrend)) +
 ```
 
 ### Metabolic temperature
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jtu'], aes(tempave_metab, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -405,7 +416,7 @@ ggplot(bt[measure == 'Jtu'], aes(tempave_metab, disstrend)) +
 ```
 
 ### Seasonality
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jtu'], aes(seas, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -416,7 +427,7 @@ ggplot(bt[measure == 'Jtu'], aes(seas, disstrend)) +
 ```
 
 ### Microclimates
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jtu'], aes(microclim, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -428,7 +439,7 @@ ggplot(bt[measure == 'Jtu'], aes(microclim, disstrend)) +
 ```
 
 ### Mass
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jtu'], aes(mass, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -440,7 +451,7 @@ ggplot(bt[measure == 'Jtu'], aes(mass, disstrend)) +
 ```
 
 ### Endotherms
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jtu'], aes(endofrac, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 3), na.rm = TRUE, color = 'black') +
@@ -451,7 +462,7 @@ ggplot(bt[measure == 'Jtu'], aes(endofrac, disstrend)) +
 ```
 
 ### Richness
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jtu'], aes(Nspp, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -463,7 +474,7 @@ ggplot(bt[measure == 'Jtu'], aes(Nspp, disstrend)) +
 ```
 
 ### Thermal bias
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jtu'], aes(thermal_bias, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -474,7 +485,7 @@ ggplot(bt[measure == 'Jtu'], aes(thermal_bias, disstrend)) +
 ```
 
 ### NPP
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jtu'], aes(npp, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -486,7 +497,7 @@ ggplot(bt[measure == 'Jtu'], aes(npp, disstrend)) +
 ```
 
 ### Human
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jtu'], aes(human_bowler, disstrend, color = REALM)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
@@ -501,15 +512,24 @@ ggplot(bt[measure == 'Jtu'], aes(human_bowler, disstrend, color = REALM)) +
 
 ## Jbeta (total)
 ### Realm
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jbeta'], aes(REALM, disstrend)) +
   geom_boxplot(na.rm = TRUE) + 
   labs(x = 'Realm', y = 'Jaccard total slope') +
   facet_wrap(vars(duration_group), scales = 'free')
 ```
 
+### Initial year
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
+ggplot(bt[measure == 'Jbeta'], aes(year1, disstrend)) +
+  geom_point(alpha = 0.1, aes(color = year2 - year1)) + 
+  geom_smooth() +
+  labs(x = 'Initial year', y = 'Jaccard total slope') +
+  facet_wrap(vars(duration_group), scales = 'free')
+```
+
 ### Temperature trend
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jbeta'], aes(temptrend, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -520,7 +540,7 @@ ggplot(bt[measure == 'Jbeta'], aes(temptrend, disstrend)) +
 ```
 
 ### abs(Temperature trend)
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jbeta'], aes(abs(temptrend), disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -531,7 +551,7 @@ ggplot(bt[measure == 'Jbeta'], aes(abs(temptrend), disstrend)) +
 ```
 
 ### Temperature
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jbeta'], aes(tempave, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -542,7 +562,7 @@ ggplot(bt[measure == 'Jbeta'], aes(tempave, disstrend)) +
 ```
 
 ### Metabolic temperature
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jbeta'], aes(tempave_metab, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -553,7 +573,7 @@ ggplot(bt[measure == 'Jbeta'], aes(tempave_metab, disstrend)) +
 ```
 
 ### Seasonality
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jbeta'], aes(seas, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -564,7 +584,7 @@ ggplot(bt[measure == 'Jbeta'], aes(seas, disstrend)) +
 ```
 
 ### Microclimate
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jbeta'], aes(microclim, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -576,7 +596,7 @@ ggplot(bt[measure == 'Jbeta'], aes(microclim, disstrend)) +
 ```
 
 ### Mass
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jbeta'], aes(mass, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -588,7 +608,7 @@ ggplot(bt[measure == 'Jbeta'], aes(mass, disstrend)) +
 ```
 
 ### Endotherms
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jbeta'], aes(endofrac, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 3), na.rm = TRUE, color = 'black') +
@@ -599,7 +619,7 @@ ggplot(bt[measure == 'Jbeta'], aes(endofrac, disstrend)) +
 ```
 
 ### Richness
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jbeta'], aes(Nspp, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -611,7 +631,7 @@ ggplot(bt[measure == 'Jbeta'], aes(Nspp, disstrend)) +
 ```
 
 ### Thermal bias
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jbeta'], aes(thermal_bias, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -622,7 +642,7 @@ ggplot(bt[measure == 'Jbeta'], aes(thermal_bias, disstrend)) +
 ```
 
 ### NPP
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jbeta'], aes(npp, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -634,7 +654,7 @@ ggplot(bt[measure == 'Jbeta'], aes(npp, disstrend)) +
 ```
 
 ### Human
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Jbeta'], aes(human_bowler, disstrend, color = REALM)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
@@ -646,7 +666,7 @@ ggplot(bt[measure == 'Jbeta'], aes(human_bowler, disstrend, color = REALM)) +
 
 ## Horn
 ### Realm
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Horn'], aes(REALM, disstrend)) +
   geom_boxplot(na.rm = TRUE) + 
   labs(x = 'Realm', y = 'Horn slope') +
@@ -654,8 +674,17 @@ ggplot(bt[measure == 'Horn'], aes(REALM, disstrend)) +
 
 ```
 
+### Initial year
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
+ggplot(bt[measure == 'Horn'], aes(year1, disstrend)) +
+  geom_point(alpha = 0.1, aes(color = year2 - year1)) + 
+  geom_smooth() +
+  labs(x = 'Initial year', y = 'Horn slope') +
+  facet_wrap(vars(duration_group), scales = 'free')
+```
+
 ### Temperature trend
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Horn'], aes(temptrend, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -666,7 +695,7 @@ ggplot(bt[measure == 'Horn'], aes(temptrend, disstrend)) +
 ```
 
 ### abs(Temperature trend)
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Horn'], aes(abs(temptrend), disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -677,7 +706,7 @@ ggplot(bt[measure == 'Horn'], aes(abs(temptrend), disstrend)) +
 ```
 
 ### Temperature
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Horn'], aes(tempave, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -688,7 +717,7 @@ ggplot(bt[measure == 'Horn'], aes(tempave, disstrend)) +
 ```
 
 ### Metabolic temperature
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Horn'], aes(tempave_metab, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -699,7 +728,7 @@ ggplot(bt[measure == 'Horn'], aes(tempave_metab, disstrend)) +
 ```
 
 ### Seasonality
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Horn'], aes(seas, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -710,7 +739,7 @@ ggplot(bt[measure == 'Horn'], aes(seas, disstrend)) +
 ```
 
 ### Microclimates
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Horn'], aes(microclim, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -722,7 +751,7 @@ ggplot(bt[measure == 'Horn'], aes(microclim, disstrend)) +
 ```
 
 ### Mass
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Horn'], aes(mass, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -734,7 +763,7 @@ ggplot(bt[measure == 'Horn'], aes(mass, disstrend)) +
 ```
 
 ### Endotherms
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Horn'], aes(endofrac, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 3), na.rm = TRUE, color = 'black') +
@@ -745,7 +774,7 @@ ggplot(bt[measure == 'Horn'], aes(endofrac, disstrend)) +
 ```
 
 ### Richness
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Horn'], aes(Nspp, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -757,7 +786,7 @@ ggplot(bt[measure == 'Horn'], aes(Nspp, disstrend)) +
 ```
 
 ### Thermal bias
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Horn'], aes(thermal_bias, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -768,7 +797,7 @@ ggplot(bt[measure == 'Horn'], aes(thermal_bias, disstrend)) +
 ```
 
 ### NPP
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Horn'], aes(npp, disstrend)) +
   geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
@@ -780,7 +809,7 @@ ggplot(bt[measure == 'Horn'], aes(npp, disstrend)) +
 ```
 
 ### Human
-```{r, echo=FALSE, warning = FALSE, message = FALSE}
+```{r, echo=FALSE, warning = FALSE, message = FALSE, fig.width=14,fig.height=12}
 ggplot(bt[measure == 'Horn'], aes(human_bowler, disstrend, color = REALM)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +

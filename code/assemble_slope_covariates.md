@@ -1,6 +1,68 @@
 Dissimilarity slope covariate data prep and visualization
 ================
 
+  - [Load data](#load-data)
+      - [Add covariates to BT data](#add-covariates-to-bt-data)
+      - [Set up useful variables and
+        transformations](#set-up-useful-variables-and-transformations)
+      - [Write out](#write-out)
+  - [Check variable distributions](#check-variable-distributions)
+      - [Response variables](#response-variables)
+      - [Unscaled covariates](#unscaled-covariates)
+      - [Scaled covariates](#scaled-covariates)
+  - [Response variable SE](#response-variable-se)
+  - [Check correlations among
+    variables](#check-correlations-among-variables)
+  - [Compare covariates across
+    realms](#compare-covariates-across-realms)
+  - [Plot dissimilarity slope vs. explanatory
+    variables](#plot-dissimilarity-slope-vs.-explanatory-variables)
+      - [Jtu](#jtu)
+          - [Realm](#realm)
+          - [Initial year](#initial-year)
+          - [Temperature trend](#temperature-trend)
+          - [abs(Temperature trend)](#abstemperature-trend)
+          - [Temperature](#temperature)
+          - [Metabolic temperature](#metabolic-temperature)
+          - [Seasonality](#seasonality)
+          - [Microclimates](#microclimates)
+          - [Mass](#mass)
+          - [Endotherms](#endotherms)
+          - [Richness](#richness)
+          - [Thermal bias](#thermal-bias)
+          - [NPP](#npp)
+          - [Human](#human)
+      - [Jbeta (total)](#jbeta-total)
+          - [Realm](#realm-1)
+          - [Initial year](#initial-year-1)
+          - [Temperature trend](#temperature-trend-1)
+          - [abs(Temperature trend)](#abstemperature-trend-1)
+          - [Temperature](#temperature-1)
+          - [Metabolic temperature](#metabolic-temperature-1)
+          - [Seasonality](#seasonality-1)
+          - [Microclimate](#microclimate)
+          - [Mass](#mass-1)
+          - [Endotherms](#endotherms-1)
+          - [Richness](#richness-1)
+          - [Thermal bias](#thermal-bias-1)
+          - [NPP](#npp-1)
+          - [Human](#human-1)
+      - [Horn](#horn)
+          - [Realm](#realm-2)
+          - [Initial year](#initial-year-2)
+          - [Temperature trend](#temperature-trend-2)
+          - [abs(Temperature trend)](#abstemperature-trend-2)
+          - [Temperature](#temperature-2)
+          - [Metabolic temperature](#metabolic-temperature-2)
+          - [Seasonality](#seasonality-2)
+          - [Microclimates](#microclimates-1)
+          - [Mass](#mass-2)
+          - [Endotherms](#endotherms-2)
+          - [Richness](#richness-2)
+          - [Thermal bias](#thermal-bias-2)
+          - [NPP](#npp-2)
+          - [Human](#human-2)
+
 Uses slope of dissimilarity vs. time from calc\_turnover.Rmd.
 
 ``` r
@@ -202,7 +264,7 @@ Pearson’s r is in the lower triangle
   - Marine has a lot of slow, crawling organisms, but land has plants.
     Land also has birds (fast).
 
-# Plot dissimilarity vs. explanatory variables
+# Plot dissimilarity slope vs. explanatory variables
 
 Lines are ggplot smoother fits
 
@@ -212,158 +274,170 @@ Lines are ggplot smoother fits
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
-### Temperature trend
+### Initial year
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
-### abs(Temperature trend)
+### Temperature trend
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
-### Temperature
+### abs(Temperature trend)
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
-### Metabolic temperature
+### Temperature
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
-### Seasonality
+### Metabolic temperature
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
-### Microclimates
+### Seasonality
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
-### Mass
+### Microclimates
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
-### Endotherms
+### Mass
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
-### Richness
+### Endotherms
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
-### Thermal bias
+### Richness
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
-### NPP
+### Thermal bias
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
-### Human
+### NPP
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+### Human
+
+![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 ## Jbeta (total)
 
 ### Realm
 
-![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
-
-### Temperature trend
-
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
-### abs(Temperature trend)
+### Initial year
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
-### Temperature
+### Temperature trend
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
-### Metabolic temperature
+### abs(Temperature trend)
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
-### Seasonality
+### Temperature
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
-### Microclimate
+### Metabolic temperature
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
-### Mass
+### Seasonality
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
-### Endotherms
+### Microclimate
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
-### Richness
+### Mass
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
-### Thermal bias
+### Endotherms
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
-### NPP
+### Richness
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
 
-### Human
+### Thermal bias
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+
+### NPP
+
+![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+
+### Human
+
+![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 ## Horn
 
 ### Realm
 
-![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
-
-### Temperature trend
-
-![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
-
-### abs(Temperature trend)
-
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
-### Temperature
+### Initial year
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
-### Metabolic temperature
+### Temperature trend
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
-### Seasonality
+### abs(Temperature trend)
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
 
-### Microclimates
+### Temperature
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
-### Mass
+### Metabolic temperature
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-35-1.png)<!-- -->
 
-### Endotherms
+### Seasonality
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-36-1.png)<!-- -->
 
-### Richness
+### Microclimates
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-37-1.png)<!-- -->
 
-### Thermal bias
+### Mass
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-38-1.png)<!-- -->
 
-### NPP
+### Endotherms
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-39-1.png)<!-- -->
 
-### Human
+### Richness
 
 ![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-40-1.png)<!-- -->
+
+### Thermal bias
+
+![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-41-1.png)<!-- -->
+
+### NPP
+
+![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-42-1.png)<!-- -->
+
+### Human
+
+![](assemble_slope_covariates_files/figure-gfm/unnamed-chunk-43-1.png)<!-- -->
