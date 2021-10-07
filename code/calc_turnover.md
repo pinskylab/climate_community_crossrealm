@@ -1,6 +1,40 @@
 Calculate biodiversity turnover as slope of dissimilarity vs. time
 ================
 
+  - [Set up](#set-up)
+  - [Load data](#load-data)
+      - [Examine number of species and individuals per
+        sample](#examine-number-of-species-and-individuals-per-sample)
+      - [Remove studies that don’t meet quality
+        thresholds](#remove-studies-that-dont-meet-quality-thresholds)
+  - [Plot turnover example](#plot-turnover-example)
+  - [Calculate temporal trends (temporal
+    turnover)](#calculate-temporal-trends-temporal-turnover)
+      - [Do calculations](#do-calculations)
+      - [Add species richness and realm to trends for
+        plotting](#add-species-richness-and-realm-to-trends-for-plotting)
+      - [Plot every Jtu timeseries (a
+        lot\!)](#plot-every-jtu-timeseries-a-lot)
+  - [Examine the turnover
+    calculations](#examine-the-turnover-calculations)
+      - [How many values?](#how-many-values)
+          - [print](#print)
+          - [plot](#plot)
+      - [Do some basic checks of the turnover
+        calculations](#do-some-basic-checks-of-the-turnover-calculations)
+      - [Histograms of temporal change](#histograms-of-temporal-change)
+      - [Pairs plots](#pairs-plots)
+  - [Change compared to time-series
+    characteristics](#change-compared-to-time-series-characteristics)
+      - [Duration](#duration)
+          - [Duration vs. start year](#duration-vs.-start-year)
+          - [Up to 10 years](#up-to-10-years)
+      - [Number of species](#number-of-species)
+      - [Average change compared to number of
+        species](#average-change-compared-to-number-of-species)
+      - [Initial year](#initial-year)
+          - [10 year slopes](#year-slopes)
+
 # Set up
 
 # Load data
@@ -211,14 +245,17 @@ calctrendy1 <- function(y, year1, year2, measure = 'y', duration_group = NA_char
 # only using a sequence of annual samples that is numyrs long
 # use the most recent sequence that fits this criterion
 calctrendlast <- function(y, year1, year2, numyrs, measure = 'y', duration_group = NA_character_){
+  # try to identify a suitable sequence of samples
   yrs <- sort(unique(c(year1, year2)))
   dy <- diff(yrs) # find intervals between years
   rl <- rle(dy) # run length encoding
   end = cumsum(rl$lengths) # find ends of runs
   start = c(1, head(end, -1) + 1) # find starts of runs
   rlkeep <- which(rl$lengths >= numyrs & rl$values == 1) # find runs with desired length and 1 year intervals
+  
+  # find the latest run that meets our criteria (if any exist)
   if(length(rlkeep)>0){
-    rlkeep <- max(rlkeep) # find the latest run that meets our criteria
+    rlkeep <- max(rlkeep) 
     start <- start[rlkeep] # start of this run
     end <- end[rlkeep] # end of this run
     dykeep <- rep(FALSE, length(dy)) # year intervals to keep
@@ -235,6 +272,7 @@ calctrendlast <- function(y, year1, year2, numyrs, measure = 'y', duration_group
     run <- FALSE
   }
   
+  # calculate slope (if a suitable sequence of samples was found)
   if(run){
     dy <- year2 - year1
     yrs <- sort(unique(c(year1, year2)))
@@ -309,29 +347,90 @@ calctrendnsamps <- function(y, year1, year2, numyrs, nsamps,
     return(out)
   }
 }
+
+
+# function to calc linear trend from all pairs
+# only using a sequence of samples that is numyrs samples long and has nsamps samples
+# not necessarily annual samples
+# use all sequences that fits this criterion
+calctrendnsampsall <- function(y, year1, year2, numyrs, nsamps, 
+                            measure = 'y', duration_group = NA_character_){
+  if(exists('out')) rm(out) # remove the output object, if it exists for some reason
+  
+  if(nsamps > numyrs) stop('nsamps must be <= numyrs')
+  if(length(y) != length(year1) | length(y) != length(year2)) stop('y, year1, and year2 must be the same length')
+  
+  yrs <- sort(unique(c(year1, year2))) # list of years in the dataset
+  
+  # search for sequences of samples that match criteria
+  run <- FALSE # flag for whether we have found a suitable sequence of samples
+  for(i in length(yrs):1){ 
+    dys <- yrs[i] - yrs # find difference from this year to all other years in the set
+    j <- which(dys == numyrs-1) # indiex for the other year that matches our desired length
+    if(length(j) >0){
+      proposedset <- yrs[j:i] # set of years that match our duration criterion
+      if(length(proposedset) >= nsamps){ # check if number of smaples is sufficient
+        ykeep <- year1 %in% proposedset & year2 %in% proposedset # keep values in pairwise comparisons for the years we want
+        thisy <- y[ykeep] # trim the timeseries for this calc
+        thisyear1 <- year1[ykeep] # trim the initial years for this calc
+        thisyear2 <- year2[ykeep] # trim the final years for this calc
+        thisdy <- thisyear2 - thisyear1 # calculate temporal difference among the year pairs for this calc
+        run <- TRUE # mark that we ran the calcs at least once and should return an answer
+        
+        mod <- lm(thisy ~ thisdy) # fit line
+        se <- suppressWarnings(sqrt(diag(vcov(mod)))[2]) # standard error of the slope
+        thisout <- data.table(disstrend = coef(mod)[2], # coef for the slope
+                    trendse = se, 
+                    year1 = min(proposedset), 
+                    year2 = max(proposedset),
+                    measure = measure, 
+                    duration_group = duration_group,
+                    nsamps = length(proposedset)) # SE
+        if(exists('out')) out <- rbind(out, thisout) # append if the output object exists
+        if(!exists('out')) out <- thisout # create the output object if it doesn't exist
+      }
+    }
+  }
+  
+  if(run){
+    return(out)
+
+  } else {
+    out <- data.table(disstrend = NA_real_, trendse = NA_real_, year1 = NA_real_, year2 = NA_real_,
+                measure = measure, duration_group = duration_group, nsamps = NA_integer_)
+    return(out)
+  }
+}
 ```
 
 ## Do calculations
 
-And write out trendstemp.rds
+Write out trendstemp.rds, which has the slopes for all timeseries that
+meet criteria (all pairwise dissimilarities, all dissimilarities from
+year 1, durations 3 to 20 and annual sampling, or durations 3 to 20 and
+minimum 3 samples), focused on the last series in each rarefyID.  
+Also write out trendstempallmin3.rds, which has slopes for all
+timeseries in all rarefyIDs (not just the last series).
 
 ``` r
 setkey(bt, STUDY_ID, rarefyID, year1,  year2)
 
+# for trendstemp.rds
 if(file.exists('temp/trendstemp.rds')){
-    print('File already exists. Will not do calculations')
+    print('File already exists. Will not do trendstemp calculations')
     trends <- readRDS('temp/trendstemp.rds')
 } else {
-  print('Calculating from scratch')
+  print('Calculating trendstemp from scratch')
   
   ## Trends of standardized length and annual sampling frequency
+  ## Only use the last sequence of samples that meet criteria
   yrslist <- 3:20
   for(yr in yrslist){
     print(yr)
     temp <- bt[, calctrendlast(Jtu, year1, year2, numyrs = yr, measure = 'Jtu', 
                                duration_group = paste0(yr, 'annual')), by = .(rarefyID)]
-    if(yr == min(yrslist)) trends = temp[!is.na(disstrend), ]
-    if(yr > min(yrslist)) trends = rbind(trends,temp[!is.na(disstrend), ])
+    if(yr == min(yrslist)) trends = temp[!is.na(disstrend), ] # make a new dataset if first iteration through
+    if(yr > min(yrslist)) trends = rbind(trends,temp[!is.na(disstrend), ]) # otherwise append
     
     temp <- bt[, calctrendlast(Jbeta, year1, year2, numyrs = yr, measure = 'Jbeta',
                                duration_group = paste0(yr, 'annual')), by = .(rarefyID)]
@@ -342,6 +441,7 @@ if(file.exists('temp/trendstemp.rds')){
   }
   
   ## Trends of standardized length and at least 3 years sampled
+  ## Use last possible sequences of samples
   yrslist <- 3:20
   for(yr in yrslist){
     print(yr)
@@ -379,13 +479,51 @@ if(file.exists('temp/trendstemp.rds')){
 }
 ```
 
-    ## [1] "File already exists. Will not do calculations"
+    ## [1] "File already exists. Will not do trendstemp calculations"
+
+``` r
+# for trendstempallmin3.rds
+if(file.exists('temp/trendstempallmin3.rds')){
+    print('File already exists. Will not do trendstempallmin3 calculations')
+    trendsallmin3 <- readRDS('temp/trendstempallmin3.rds')
+} else {
+  print('Calculating trendstempallmin3 from scratch')
+
+  ## Trends of standardized length and at least 3 years sampled
+  ## Use all possible sequences of samples
+  yrslist <- 3:20
+  for(yr in yrslist){
+    print(yr)
+    temp <- bt[, calctrendnsampsall(Jtu, year1, year2, numyrs = yr, nsamps = 3, measure = 'Jtu', 
+                               duration_group = paste0(yr, 'min3')), by = .(rarefyID)]
+    if(yr == min(yrslist)) trendsallmin3 = temp[!is.na(disstrend), ] # make a new dataset if first iteration through
+    if(yr > min(yrslist)) trendsallmin3 = rbind(trendsallmin3,temp[!is.na(disstrend), ]) # otherwise append
+
+    temp <- bt[, calctrendnsampsall(Jbeta, year1, year2, numyrs = yr, nsamps = 3, measure = 'Jbeta',
+                               duration_group = paste0(yr, 'min3')), by = .(rarefyID)]
+    trendsallmin3 = rbind(trendsallmin3, temp[!is.na(disstrend), ])
+    temp <- bt[!is.na(Horn), calctrendnsampsall(Horn, year1, year2, numyrs = yr, nsamps = 3, measure = 'Horn',
+                                           duration_group = paste0(yr, 'min3')), by = .(rarefyID)]
+    trendsallmin3 = rbind(trendsallmin3, temp[!is.na(disstrend), ])
+  }
+
+  saveRDS(trendsallmin3, file = here('temp', 'trendstempallmin3.rds'))
+}
+```
+
+    ## [1] "File already exists. Will not do trendstempallmin3 calculations"
 
 ``` r
 nrow(trends)
 ```
 
     ## [1] 1125828
+
+``` r
+nrow(trendsallmin3)
+```
+
+    ## [1] 2618195
 
 ## Add species richness and realm to trends for plotting
 
@@ -596,7 +734,10 @@ Turnover calculations are correlated, though less so for Horn
 
 ## Duration
 
-Use the slopes with unstandardized durations
+Do shorter timeseries have steeper slopes? \#\#\# Across timeseries
+Compare timeseries of different durations, using the slopes with
+unstandardized durations. We see that shorter timeseries have steeper
+slopes.
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
@@ -606,11 +747,34 @@ Use the slopes with unstandardized durations
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
 
 ![](calc_turnover_files/figure-gfm/plot%20slope%20vs%20duration-1.png)<!-- -->
+\#\#\# Within timeseries Compare slopes of different durations within
+the same timeseries (only ts with durations 3 to 20). Short durations
+are clearly steeper.
 
-## Number of samples
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
 
-Use the slopes with standardized durations to avoid confounding with
-duration \#\#\# Up to 20 years
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+![](calc_turnover_files/figure-gfm/plot%20slope%20vs%20duration%20min3-1.png)<!-- -->
+
+### Duration vs. start year
+
+``` r
+ggplot(trends, aes(year1, year2 - year1 + 1)) +
+  geom_point(alpha = 0.1) + 
+  geom_smooth() +
+  labs(x = 'Start year', y = 'Duration')
+```
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+![](calc_turnover_files/figure-gfm/unnamed-chunk-1-1.png)<!-- --> \#\#
+Number of samples Use the slopes with standardized durations to avoid
+confounding with duration \#\#\# Up to 20 years
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
@@ -671,7 +835,7 @@ duration \#\#\# Up to 20 years
 
 ![](calc_turnover_files/figure-gfm/change%20vs.%20num%20spp-2.png)<!-- -->
 
-## Average change compared to \#species
+## Average change compared to number of species
 
 ``` r
 trendswide <- dcast(trends[duration_group %in% c('3annual', '5annual', '10annual', '20annual', 
@@ -700,3 +864,27 @@ ggplot(trendswide, aes(Nspp, Jtu_3annual, color = 'Jtu trend3')) +
 ```
 
 ![](calc_turnover_files/figure-gfm/ave%20change%20vs.%20num%20spp-1.png)<!-- -->
+
+## Initial year
+
+Check whether slopes in more recent time-periods are steeper. There
+don’t appear to be clear indications of that pattern. \#\#\# 5 year
+slopes Use the slopes with standardized 5min3 durations for all possible
+slopes within each rarefyID.
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+![](calc_turnover_files/figure-gfm/plot%20slope%20vs%20initial%20year%205min3-1.png)<!-- -->
+
+### 10 year slopes
+
+Use the slopes with standardized 10min3 durations for all possible
+slopes within each rarefyID.
+
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+    ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
+
+![](calc_turnover_files/figure-gfm/plot%20slope%20vs%20initial%20year%2010min3-1.png)<!-- -->

@@ -1,7 +1,9 @@
 ---
 title: "Calculate biodiversity turnover as slope of dissimilarity vs. time"
 output:
-  github_document: default
+  github_document:
+    toc: true
+    toc_depth: 3
 ---
 # Set up
 ```{r setup, include=FALSE}
@@ -172,14 +174,17 @@ calctrendy1 <- function(y, year1, year2, measure = 'y', duration_group = NA_char
 # only using a sequence of annual samples that is numyrs long
 # use the most recent sequence that fits this criterion
 calctrendlast <- function(y, year1, year2, numyrs, measure = 'y', duration_group = NA_character_){
+  # try to identify a suitable sequence of samples
   yrs <- sort(unique(c(year1, year2)))
   dy <- diff(yrs) # find intervals between years
   rl <- rle(dy) # run length encoding
   end = cumsum(rl$lengths) # find ends of runs
   start = c(1, head(end, -1) + 1) # find starts of runs
   rlkeep <- which(rl$lengths >= numyrs & rl$values == 1) # find runs with desired length and 1 year intervals
+  
+  # find the latest run that meets our criteria (if any exist)
   if(length(rlkeep)>0){
-    rlkeep <- max(rlkeep) # find the latest run that meets our criteria
+    rlkeep <- max(rlkeep) 
     start <- start[rlkeep] # start of this run
     end <- end[rlkeep] # end of this run
     dykeep <- rep(FALSE, length(dy)) # year intervals to keep
@@ -196,6 +201,7 @@ calctrendlast <- function(y, year1, year2, numyrs, measure = 'y', duration_group
     run <- FALSE
   }
   
+  # calculate slope (if a suitable sequence of samples was found)
   if(run){
     dy <- year2 - year1
     yrs <- sort(unique(c(year1, year2)))
@@ -271,27 +277,84 @@ calctrendnsamps <- function(y, year1, year2, numyrs, nsamps,
   }
 }
 
+
+# function to calc linear trend from all pairs
+# only using a sequence of samples that is numyrs samples long and has nsamps samples
+# not necessarily annual samples
+# use all sequences that fits this criterion
+calctrendnsampsall <- function(y, year1, year2, numyrs, nsamps, 
+                            measure = 'y', duration_group = NA_character_){
+  if(exists('out')) rm(out) # remove the output object, if it exists for some reason
+  
+  if(nsamps > numyrs) stop('nsamps must be <= numyrs')
+  if(length(y) != length(year1) | length(y) != length(year2)) stop('y, year1, and year2 must be the same length')
+  
+  yrs <- sort(unique(c(year1, year2))) # list of years in the dataset
+  
+  # search for sequences of samples that match criteria
+  run <- FALSE # flag for whether we have found a suitable sequence of samples
+  for(i in length(yrs):1){ 
+    dys <- yrs[i] - yrs # find difference from this year to all other years in the set
+    j <- which(dys == numyrs-1) # indiex for the other year that matches our desired length
+    if(length(j) >0){
+      proposedset <- yrs[j:i] # set of years that match our duration criterion
+      if(length(proposedset) >= nsamps){ # check if number of smaples is sufficient
+        ykeep <- year1 %in% proposedset & year2 %in% proposedset # keep values in pairwise comparisons for the years we want
+        thisy <- y[ykeep] # trim the timeseries for this calc
+        thisyear1 <- year1[ykeep] # trim the initial years for this calc
+        thisyear2 <- year2[ykeep] # trim the final years for this calc
+        thisdy <- thisyear2 - thisyear1 # calculate temporal difference among the year pairs for this calc
+        run <- TRUE # mark that we ran the calcs at least once and should return an answer
+        
+        mod <- lm(thisy ~ thisdy) # fit line
+        se <- suppressWarnings(sqrt(diag(vcov(mod)))[2]) # standard error of the slope
+        thisout <- data.table(disstrend = coef(mod)[2], # coef for the slope
+                    trendse = se, 
+                    year1 = min(proposedset), 
+                    year2 = max(proposedset),
+                    measure = measure, 
+                    duration_group = duration_group,
+                    nsamps = length(proposedset)) # SE
+        if(exists('out')) out <- rbind(out, thisout) # append if the output object exists
+        if(!exists('out')) out <- thisout # create the output object if it doesn't exist
+      }
+    }
+  }
+  
+  if(run){
+    return(out)
+
+  } else {
+    out <- data.table(disstrend = NA_real_, trendse = NA_real_, year1 = NA_real_, year2 = NA_real_,
+                measure = measure, duration_group = duration_group, nsamps = NA_integer_)
+    return(out)
+  }
+}
+
 ```
 
 ## Do calculations
-And write out trendstemp.rds
+Write out trendstemp.rds, which has the slopes for all timeseries that meet criteria (all pairwise dissimilarities, all dissimilarities from year 1, durations 3 to 20 and annual sampling, or durations 3 to 20 and minimum 3 samples), focused on the last series in each rarefyID.  
+Also write out trendstempallmin3.rds, which has slopes for all timeseries in all rarefyIDs (not just the last series).
 ```{r do calculations}
 setkey(bt, STUDY_ID, rarefyID, year1,  year2)
 
+# for trendstemp.rds
 if(file.exists('temp/trendstemp.rds')){
-    print('File already exists. Will not do calculations')
+    print('File already exists. Will not do trendstemp calculations')
     trends <- readRDS('temp/trendstemp.rds')
 } else {
-  print('Calculating from scratch')
+  print('Calculating trendstemp from scratch')
   
   ## Trends of standardized length and annual sampling frequency
+  ## Only use the last sequence of samples that meet criteria
   yrslist <- 3:20
   for(yr in yrslist){
     print(yr)
     temp <- bt[, calctrendlast(Jtu, year1, year2, numyrs = yr, measure = 'Jtu', 
                                duration_group = paste0(yr, 'annual')), by = .(rarefyID)]
-    if(yr == min(yrslist)) trends = temp[!is.na(disstrend), ]
-    if(yr > min(yrslist)) trends = rbind(trends,temp[!is.na(disstrend), ])
+    if(yr == min(yrslist)) trends = temp[!is.na(disstrend), ] # make a new dataset if first iteration through
+    if(yr > min(yrslist)) trends = rbind(trends,temp[!is.na(disstrend), ]) # otherwise append
     
     temp <- bt[, calctrendlast(Jbeta, year1, year2, numyrs = yr, measure = 'Jbeta',
                                duration_group = paste0(yr, 'annual')), by = .(rarefyID)]
@@ -302,6 +365,7 @@ if(file.exists('temp/trendstemp.rds')){
   }
   
   ## Trends of standardized length and at least 3 years sampled
+  ## Use last possible sequences of samples
   yrslist <- 3:20
   for(yr in yrslist){
     print(yr)
@@ -338,7 +402,36 @@ if(file.exists('temp/trendstemp.rds')){
   
 }
 
+# for trendstempallmin3.rds
+if(file.exists('temp/trendstempallmin3.rds')){
+    print('File already exists. Will not do trendstempallmin3 calculations')
+    trendsallmin3 <- readRDS('temp/trendstempallmin3.rds')
+} else {
+  print('Calculating trendstempallmin3 from scratch')
+
+  ## Trends of standardized length and at least 3 years sampled
+  ## Use all possible sequences of samples
+  yrslist <- 3:20
+  for(yr in yrslist){
+    print(yr)
+    temp <- bt[, calctrendnsampsall(Jtu, year1, year2, numyrs = yr, nsamps = 3, measure = 'Jtu', 
+                               duration_group = paste0(yr, 'min3')), by = .(rarefyID)]
+    if(yr == min(yrslist)) trendsallmin3 = temp[!is.na(disstrend), ] # make a new dataset if first iteration through
+    if(yr > min(yrslist)) trendsallmin3 = rbind(trendsallmin3,temp[!is.na(disstrend), ]) # otherwise append
+
+    temp <- bt[, calctrendnsampsall(Jbeta, year1, year2, numyrs = yr, nsamps = 3, measure = 'Jbeta',
+                               duration_group = paste0(yr, 'min3')), by = .(rarefyID)]
+    trendsallmin3 = rbind(trendsallmin3, temp[!is.na(disstrend), ])
+    temp <- bt[!is.na(Horn), calctrendnsampsall(Horn, year1, year2, numyrs = yr, nsamps = 3, measure = 'Horn',
+                                           duration_group = paste0(yr, 'min3')), by = .(rarefyID)]
+    trendsallmin3 = rbind(trendsallmin3, temp[!is.na(disstrend), ])
+  }
+
+  saveRDS(trendsallmin3, file = here('temp', 'trendstempallmin3.rds'))
+}
+
 nrow(trends)
+nrow(trendsallmin3)
 ```
 
 ## Add species richness and realm to trends for plotting
@@ -499,7 +592,9 @@ pairs(formula = ~ Jtu_All + Jbeta_All + Horn_All,
 
 # Change compared to time-series characteristics
 ## Duration
-Use the slopes with unstandardized durations
+Do shorter timeseries have steeper slopes?
+### Across timeseries
+Compare timeseries of different durations, using the slopes with unstandardized durations. We see that shorter timeseries have steeper slopes.
 ```{r plot slope vs duration, echo=FALSE, fig.height = 6, fig.width = 11}
 trends[, duration := year2 - year1]
 p1 <- ggplot(trends[measure == 'Jtu' & duration_group == 'All',], aes(duration, disstrend)) +
@@ -538,7 +633,72 @@ p6 <- ggplot(trends[measure == 'Horn' & duration_group == 'All',], aes(duration,
 
 grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 3)
 ```
+### Within timeseries
+Compare slopes of different durations within the same timeseries (only ts with durations 3 to 20). Short durations are clearly steeper.
+```{r plot slope vs duration min3, echo=FALSE, fig.height = 9, fig.width = 11}
+longtsJtu <- trendsallmin3[measure == 'Jtu', .(n = length(unique(duration_group))), by = rarefyID][n==18, ] # find IDs for timeseries with at least 15 different durations
+longtsJbeta <- trendsallmin3[measure == 'Jbeta', .(n = length(unique(duration_group))), by = rarefyID][n==18, ]
+longtsHorn <- trendsallmin3[measure == 'Horn', .(n = length(unique(duration_group))), by = rarefyID][n==18, ]
 
+# some examples
+p0a <- ggplot(trendsallmin3[measure == 'Jtu' & rarefyID == '18_335699'], aes(year2 - year1 + 1, disstrend, group = rarefyID, color = rarefyID)) +
+  geom_point() + 
+  geom_smooth(na.rm = TRUE) +
+  theme(legend.position = 'none') + 
+  labs(x = 'Duration', y = 'Jaccard turnover slope', title = '18_335699')
+
+p0b <- ggplot(trendsallmin3[measure == 'Jtu' & rarefyID == '39_407478'], aes(year2 - year1 + 1, disstrend, group = rarefyID, color = rarefyID)) +
+  geom_point() + 
+  geom_smooth(na.rm = TRUE) +
+  theme(legend.position = 'none') + 
+  labs(x = 'Duration', y = 'Jaccard turnover slope' ,title = '39_407478')
+
+p0c <- ggplot(trendsallmin3[measure == 'Jtu' & rarefyID == '42_605049'], aes(year2 - year1 + 1, disstrend, group = rarefyID, color = rarefyID)) +
+  geom_point() + 
+  geom_smooth(na.rm = TRUE) +
+  theme(legend.position = 'none') + 
+  labs(x = 'Duration', y = 'Jaccard turnover slope', title = '42_605049')
+
+# with lines for each ts
+p1 <- ggplot(trendsallmin3[measure == 'Jtu' & rarefyID %in% longtsJtu$rarefyID,], aes(year2 - year1 + 1, disstrend, group = rarefyID, color = rarefyID)) +
+  geom_line(alpha = 0.1) + 
+  theme(legend.position = 'none') + 
+  labs(x = 'Duration', y = 'Jaccard turnover slope')
+
+p2 <- ggplot(trendsallmin3[measure == 'Jbeta' & rarefyID %in% longtsJbeta$rarefyID,], aes(year2 - year1 + 1, disstrend, group = rarefyID, color = rarefyID)) +
+  geom_line(alpha = 0.1) + 
+  theme(legend.position = 'none') + 
+  labs(x = 'Duration', y = 'Jaccard total slope')
+
+p3 <- ggplot(trendsallmin3[measure == 'Horn' & rarefyID %in% longtsHorn$rarefyID,], aes(year2 - year1 + 1, disstrend, group = rarefyID, color = rarefyID)) +
+  geom_line(alpha = 0.1) + 
+  theme(legend.position = 'none') + 
+  labs(x = 'Duration', y = 'Morisita-Horn slope')
+
+# without points
+p4 <- ggplot(trendsallmin3[measure == 'Jtu' & rarefyID %in% longtsJtu$rarefyID,], aes(year2 - year1 + 1, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  labs(x = 'Duration', y = 'Jaccard turnover slope')
+
+p5 <- ggplot(trendsallmin3[measure == 'Jbeta' & rarefyID %in% longtsJbeta$rarefyID,], aes(year2 - year1 + 1, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  labs(x = 'Duration', y = 'Jaccard total slope')
+
+p6 <- ggplot(trendsallmin3[measure == 'Horn' & rarefyID %in% longtsHorn$rarefyID,], aes(year2 - year1 + 1, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  labs(x = 'Duration', y = 'Morisita-Horn slope')
+
+grid.arrange(p0a, p0b, p0c, p1, p2, p3, p4, p5, p6, ncol = 3)
+```
+
+### Duration vs. start year
+```{r}
+ggplot(trends, aes(year1, year2 - year1 + 1)) +
+  geom_point(alpha = 0.1) + 
+  geom_smooth() +
+  labs(x = 'Start year', y = 'Duration')
+
+```
 ## Number of samples
 Use the slopes with standardized durations to avoid confounding with duration
 ### Up to 20 years
@@ -661,7 +821,7 @@ trends[measure == 'Horn' & duration_group == 'All', plot(Nspp, disstrend, log = 
 
 ```
 
-## Average change compared to #species
+## Average change compared to number of species
 ```{r ave change vs. num spp, message = FALSE}
 trendswide <- dcast(trends[duration_group %in% c('3annual', '5annual', '10annual', '20annual', 
                                                  '3min3', '5min3', '10min3', '20min3', 'All', 'Ally1')], 
@@ -691,3 +851,81 @@ ggplot(trendswide, aes(Nspp, Jtu_3annual, color = 'Jtu trend3')) +
 ```
 
 
+## Initial year
+Check whether slopes in more recent time-periods are steeper. There don't appear to be clear indications of that pattern.
+### 5 year slopes
+Use the slopes with standardized 5min3 durations for all possible slopes within each rarefyID.
+```{r plot slope vs initial year 5min3, echo=FALSE, fig.height = 6, fig.width = 11}
+longtsJtu <- trendsallmin3[measure == 'Jtu' & duration_group == '5min3', .(n = .N), by = rarefyID][n>=20, ] # find IDs for timeseries with at least 20 values
+longtsJbeta <- trendsallmin3[measure == 'Jbeta' & duration_group == '5min3', .(n = .N), by = rarefyID][n>=20, ] # find IDs for timeseries with at least 20 values
+longtsHorn <- trendsallmin3[measure == 'Horn' & duration_group == '5min3', .(n = .N), by = rarefyID][n>=20, ] # find IDs for timeseries with at least 20 values
+
+p1 <- ggplot(trendsallmin3[measure == 'Jtu' & duration_group == '5min3' & rarefyID %in% longtsJtu$rarefyID,], aes(year1, disstrend, group = rarefyID, color = rarefyID)) +
+  geom_line(alpha = 0.1) + 
+  theme(legend.position = 'none') + 
+  labs(x = 'Years', y = 'Jaccard turnover slope')
+
+p2 <- ggplot(trendsallmin3[measure == 'Jbeta' & duration_group == '5min3' & rarefyID %in% longtsJbeta$rarefyID,], aes(year1, disstrend, group = rarefyID, color = rarefyID)) +
+  geom_line(alpha = 0.1) + 
+  theme(legend.position = 'none') + 
+  labs(x = 'Years', y = 'Jaccard total slope')
+
+p3 <- ggplot(trendsallmin3[measure == 'Horn' & duration_group == '5min3' & rarefyID %in% longtsHorn$rarefyID,], aes(year1, disstrend, group = rarefyID, color = rarefyID)) +
+  geom_line(alpha = 0.1) + 
+  theme(legend.position = 'none') + 
+  labs(x = 'Years', y = 'Morisita-Horn slope')
+
+# without points
+p4 <- ggplot(trendsallmin3[measure == 'Jtu' & duration_group == '5min3' & rarefyID %in% longtsJtu$rarefyID,], aes(year1, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  labs(x = 'Years', y = 'Jaccard turnover slope')
+
+p5 <- ggplot(trendsallmin3[measure == 'Jbeta' & duration_group == '5min3' & rarefyID %in% longtsJbeta$rarefyID,], aes(year1, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  labs(x = 'Years', y = 'Jaccard total slope')
+
+p6 <- ggplot(trendsallmin3[measure == 'Horn' & duration_group == '5min3' & rarefyID %in% longtsHorn$rarefyID,], aes(year1, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  labs(x = 'Years', y = 'Morisita-Horn slope')
+
+grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 3)
+```
+
+
+### 10 year slopes
+Use the slopes with standardized 10min3 durations for all possible slopes within each rarefyID.
+```{r plot slope vs initial year 10min3, echo=FALSE, fig.height = 6, fig.width = 11}
+longtsJtu <- trendsallmin3[measure == 'Jtu' & duration_group == '10min3', .(n = .N), by = rarefyID][n>=20, ] # find IDs for timeseries with at least 20 values
+longtsJbeta <- trendsallmin3[measure == 'Jbeta' & duration_group == '10min3', .(n = .N), by = rarefyID][n>=20, ] # find IDs for timeseries with at least 20 values
+longtsHorn <- trendsallmin3[measure == 'Horn' & duration_group == '10min3', .(n = .N), by = rarefyID][n>=20, ] # find IDs for timeseries with at least 20 values
+
+p1 <- ggplot(trendsallmin3[measure == 'Jtu' & duration_group == '10min3' & rarefyID %in% longtsJtu$rarefyID,], aes(year1, disstrend, group = rarefyID, color = rarefyID)) +
+  geom_line(alpha = 0.1) + 
+  theme(legend.position = 'none') + 
+  labs(x = 'Years', y = 'Jaccard turnover slope')
+
+p2 <- ggplot(trendsallmin3[measure == 'Jbeta' & duration_group == '10min3' & rarefyID %in% longtsJbeta$rarefyID,], aes(year1, disstrend, group = rarefyID, color = rarefyID)) +
+  geom_line(alpha = 0.1) + 
+  theme(legend.position = 'none') + 
+  labs(x = 'Years', y = 'Jaccard total slope')
+
+p3 <- ggplot(trendsallmin3[measure == 'Horn' & duration_group == '10min3' & rarefyID %in% longtsHorn$rarefyID,], aes(year1, disstrend, group = rarefyID, color = rarefyID)) +
+  geom_line(alpha = 0.1) + 
+  theme(legend.position = 'none') + 
+  labs(x = 'Years', y = 'Morisita-Horn slope')
+
+# without points
+p4 <- ggplot(trendsallmin3[measure == 'Jtu' & duration_group == '10min3' & rarefyID %in% longtsJtu$rarefyID,], aes(year1, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  labs(x = 'Years', y = 'Jaccard turnover slope')
+
+p5 <- ggplot(trendsallmin3[measure == 'Jbeta' & duration_group == '10min3' & rarefyID %in% longtsJbeta$rarefyID,], aes(year1, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  labs(x = 'Years', y = 'Jaccard total slope')
+
+p6 <- ggplot(trendsallmin3[measure == 'Horn' & duration_group == '10min3' & rarefyID %in% longtsHorn$rarefyID,], aes(year1, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  labs(x = 'Years', y = 'Morisita-Horn slope')
+
+grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 3)
+```
