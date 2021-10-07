@@ -1,0 +1,18 @@
+---
+title: "Turnover simulations to test effect of duration"
+output:
+  github_document:
+    toc: true
+    toc_depth: 3
+---
+
+```{r setup, include=FALSE}
+library(untb)
+```
+
+# Neutral simulation with an even metacommunity
+```{r}
+metaeven = rep(1:100, 100) # metacommunity of 100 evenly distributed species
+even <- untb(start = sample(metaeven, 100), prob.of.immigrate = 0.1, D = 1, gens = 10, keep = TRUE, meta = metaeven)
+
+```
