@@ -8,11 +8,289 @@ output:
 
 ```{r setup, include=FALSE}
 library(untb)
+library(vegan)
+library(data.table)
+library(ggplot2)
+library(gridExtra) # for grid.arrange
+
+## Functions
+# convert untb format to community matrix used by vegan
+tocommat <- function(x){
+    nspp <- max(as.numeric(x)) # the number of species in all generations
+    out <- matrix(0, nrow=nrow(x), ncol = nspp) # the output matrix, one col for each spp
+    for(i in 1:nrow(x)){ # for each generation
+        thisrle <- rle(sort(x[i,])) # count up how many of each spp
+        for(j in 1:length(thisrle$values)){
+            out[i,thisrle$values[j]] <- thisrle$lengths[j]
+        }
+    }
+    return(out)
+}
+
+# function to calc linear trend from all pairs
+# only using a sequence of samples that is numyrs samples long and has nsamps samples
+# not necessarily annual samples
+# use all sequences that fits this criterion
+calctrendnsampsall <- function(y, year1, year2, numyrs, nsamps, 
+                            measure = 'y', duration_group = NA_character_){
+  if(exists('out')){
+    rm(out) # remove the output object, if it exists for some reason  
+  } 
+
+  if(nsamps > numyrs) stop('nsamps must be <= numyrs')
+  if(length(y) != length(year1) | length(y) != length(year2)) stop('y, year1, and year2 must be the same length')
+  
+  yrs <- sort(unique(c(year1, year2))) # list of years in the dataset
+  
+  # search for sequences of samples that match criteria
+  run <- FALSE # flag for whether we have found a suitable sequence of samples
+  for(i in length(yrs):1){ 
+    dys <- yrs[i] - yrs # find difference from this year to all other years in the set
+    j <- which(dys == numyrs-1) # index for the other year that matches our desired length
+    if(length(j) >0){
+      proposedset <- yrs[j:i] # set of years that match our duration criterion
+      if(length(proposedset) >= nsamps){ # check if number of smaples is sufficient
+        ykeep <- year1 %in% proposedset & year2 %in% proposedset # keep values in pairwise comparisons for the years we want
+        thisy <- y[ykeep] # trim the timeseries for this calc
+        thisyear1 <- year1[ykeep] # trim the initial years for this calc
+        thisyear2 <- year2[ykeep] # trim the final years for this calc
+        thisdy <- thisyear2 - thisyear1 # calculate temporal difference among the year pairs for this calc
+        run <- TRUE # mark that we ran the calcs at least once and should return an answer
+        
+        mod <- lm(thisy ~ thisdy) # fit line
+        se <- suppressWarnings(sqrt(diag(vcov(mod)))[2]) # standard error of the slope
+        thisout <- data.table(disstrend = coef(mod)[2], # coef for the slope
+                    trendse = se, 
+                    year1 = min(proposedset), 
+                    year2 = max(proposedset),
+                    measure = measure, 
+                    duration_group = duration_group,
+                    nsamps = length(proposedset)) # SE
+        if(exists('out')){
+            out <- rbind(out, thisout) # append if the output object exists
+        }
+        if(!exists('out')){
+            out <- thisout # create the output object if it doesn't exist  
+        } 
+      }
+    }
+  }
+  
+  if(run){
+    return(out)
+
+  } else {
+    out <- data.table(disstrend = NA_real_, trendse = NA_real_, year1 = NA_real_, year2 = NA_real_,
+                measure = measure, duration_group = duration_group, nsamps = NA_integer_)
+    return(out)
+  }
+}
+```
+
+# Basic settings
+```{r settings}
+## Basic settings
+nburn = 1000 # length of burnin
+ngen = 100 # number of simulated generations
+nrep = 100 # number of replicates
+
 ```
 
 # Neutral simulation with an even metacommunity
-```{r}
+Each replicate has a burnin and then a simulation period. Do many replicates. Plot dynamics from the first replicate.
+```{r sim even}
+set.seed(6)
 metaeven = rep(1:100, 100) # metacommunity of 100 evenly distributed species
-even <- untb(start = sample(metaeven, 100), prob.of.immigrate = 0.1, D = 1, gens = 10, keep = TRUE, meta = metaeven)
+
+simburnineven <- vector('list', nrep)
+simeven <- vector('list', nrep)
+names(simeven) <- 1:nrep
+for(i in 1:nrep){
+    simburnineven[[i]] <- untb(start = sample(metaeven, 100), prob = 0.1, D = 1, gens = nburn, keep = TRUE, meta = metaeven) # burnin
+    simeven[[i]] <- untb(start = simburnineven[[i]][nburn,], prob = 0.1, D=1, gens = ngen, keep = TRUE, meta = metaeven) # simulation
+}
+
+# plot an example from the first
+plot(species.count(simburnineven[[1]]), type = 'b', main = 'Burnin: num spp through time') # evaluate burnin
+matplot(species.table(simburnineven[[1]]), type='l', lty=1, main = 'Burnin: spp dynamics')
+plot(count(simburnineven[[1]][1,]), main = 'Burnin: Initial SAD')
+plot(count(simburnineven[[1]][1000,]), main = 'Burnin: Final SAD')
+plot(species.count(simeven[[1]]), type = 'b', main = 'Sim: num spp through time')
+matplot(species.table(simeven[[1]]), type='l', lty=1, main = 'Sim: spp dynamics')
+plot(count(simeven[[1]][100,]), main = 'Sim: Final SAD')
 
 ```
+
+Sample from each annual community and calculate slope of Jaccard dissimilarity among pairs of years for timeseries of 3:20 years.
+```{r sample even}
+# sample from the community
+nsamp = 20 # number of individuals sampled
+sampeven = lapply(simeven, FUN = function(x) t(apply(x, MARGIN = 1, FUN = sample, size = nsamp)))
+
+# calculate dissimilarity
+disteven <- lapply(sampeven, FUN = function(x) as.matrix(vegdist(tocommat(x), method='jaccard', binary=TRUE)))
+
+# convert to long format
+for(i in 1:length(disteven)){
+    dimnames(disteven[[i]]) <- list(1:ngen, 1:ngen)
+    xy <- t(combn(colnames(disteven[[i]]), 2))
+    temp <- data.table(year1 = as.numeric(xy[,1]), year2 = as.numeric(xy[,2]), dist = as.numeric(disteven[[i]][xy]), rarefyID = i)
+    if(i == 1){
+        distlongeven <- temp
+    } else {
+        distlongeven <- rbind(distlongeven, temp)
+    }
+}
+
+# calculate slopes. slow.
+yrslist <- 3:20
+for(yr in yrslist){
+    temp <- distlongeven[, calctrendnsampsall(dist, year1, year2, numyrs = yr, nsamps = 3, 
+                                              measure = 'Jtu', duration_group = paste0(yr, 'min3')), by = rarefyID]
+    if(yr == min(yrslist)) trendseven = temp[!is.na(disstrend), ] # make a new dataset if first iteration through
+    if(yr > min(yrslist)) trendseven = rbind(trendseven,temp[!is.na(disstrend), ]) # otherwise append
+    
+}
+```
+
+Plot all pairwise dissimilarities and dissimilarities vs. year 1 for an example
+```{r plot even, echo= FALSE}
+p1 <- ggplot(distlongeven[rarefyID == 1, ], aes(year2 - year1 + 1, dist)) +
+    geom_point() +
+    geom_smooth() +
+    labs(title = 'All pairwise for #1')
+ 
+p2 <- ggplot(distlongeven[year1 == 1], aes(year2, dist, group = rarefyID, color = rarefyID)) +
+    geom_point() +
+    geom_smooth() +
+    labs(title = 'Distance from year 1 for all repetitions')
+
+grid.arrange(p1, p2, ncol = 2)
+
+```
+
+# Neutral simulation with an uneven metacommunity
+Use BCI data as the metacommunity.
+```{r sim SAD, echo = FALSE}
+set.seed(5)
+data('BCI')
+metaSAD = colSums(BCI) # metacommunity
+
+# burnin
+simburninSAD <- vector('list', nrep)
+simSAD <- vector('list', nrep)
+names(simSAD) <- 1:nrep
+
+# simulation
+for(i in 1:nrep){
+    simburninSAD[[i]] <- untb(start = sample(metaSAD, 100), prob = 0.1, D = 1, gens = nburn, keep = TRUE, meta = metaSAD) # burnin
+    simSAD[[i]] <- untb(start = simburninSAD[[i]][nburn,], prob = 0.1, D=1, gens = ngen, keep = TRUE, meta = metaSAD) # simulation
+}
+
+
+# plots
+plot(species.count(simburninSAD[[1]]), type = 'b', main = 'Burnin: num spp through time') # evaluate burnin
+matplot(species.table(simburninSAD[[1]]), type='l', lty=1, main = 'Burnin: spp dynamics')
+plot(count(simburninSAD[[1]][1,]), main = 'Burnin: Initial SAD')
+plot(count(simburninSAD[[1]][1000,]), main = 'Burnin: Final SAD')
+plot(species.count(simSAD[[1]]), type = 'b', main = 'Sim: num spp through time')
+matplot(species.table(simSAD[[1]]), type='l', lty=1, main = 'Sim: spp dynamics')
+plot(count(simSAD[[1]][100,]), main = 'Sim: Final SAD')
+
+```
+
+Sample from them and calculate Jaccard dissimilarity among pairs of years
+```{r sample SAD, echo = FALSE}
+# sample from the community
+nsamp = 20 # number of individuals sampled
+sampSAD = lapply(simSAD, FUN = function(x) t(apply(x, MARGIN = 1, FUN = sample, size = nsamp)))
+
+# calculate dissimilarity
+distSAD <- lapply(sampSAD, FUN = function(x) as.matrix(vegdist(tocommat(x), method='jaccard', binary=TRUE)))
+
+# convert to long format
+for(i in 1:length(distSAD)){
+    dimnames(distSAD[[i]]) <- list(1:ngen, 1:ngen)
+    xy <- t(combn(colnames(distSAD[[i]]), 2))
+    temp <- data.table(year1 = as.numeric(xy[,1]), year2 = as.numeric(xy[,2]), dist = as.numeric(distSAD[[i]][xy]), rarefyID = i)
+    if(i == 1){
+        distlongSAD <- temp
+    } else {
+        distlongSAD <- rbind(distlongSAD, temp)
+    }
+}
+
+# calculate slopes. slow.
+yrslist <- 3:20
+for(yr in yrslist){
+    temp <- distlongSAD[, calctrendnsampsall(dist, year1, year2, numyrs = yr, nsamps = 3, 
+                                              measure = 'Jtu', duration_group = paste0(yr, 'min3')), by = rarefyID]
+    if(yr == min(yrslist)) trendsSAD = temp[!is.na(disstrend), ] # make a new dataset if first iteration through
+    if(yr > min(yrslist)) trendsSAD = rbind(trendsSAD,temp[!is.na(disstrend), ]) # otherwise append
+    
+}
+```
+
+Plot all dissimilarities for an example
+```{r plot SAD example, echo=FALSE}
+p1 <- ggplot(distlongSAD[rarefyID == 1, ], aes(year2 - year1 + 1, dist)) +
+    geom_point() +
+    geom_smooth() +
+    labs(title = 'All pairwise for #1')
+ 
+p2 <- ggplot(distlongSAD[year1 == 1], aes(year2, dist, group = rarefyID, color = rarefyID)) +
+    geom_point() +
+    geom_smooth() +
+    labs(title = 'Distance from year 1 for all repetitions')
+
+grid.arrange(p1, p2, ncol = 2)
+ 
+```
+
+
+# Plot slope vs. duration
+Top row has an example from one replicate. Middle row shows slopes from all replicates. Bottom row is the average across all replicates. Left column is even metacommunity, right column is BCI metacommunity (a skewed SAD).  
+Notice that declining slope with duration _only_ appears in the skewed SAD.
+```{r plot slopes, fig.height = 8, echo = FALSE}
+# examples
+p1 <- ggplot(trendseven[measure == 'Jtu' & rarefyID == 1], aes(year2 - year1 + 1, disstrend)) +
+  geom_point() + 
+  geom_smooth(na.rm = TRUE) +
+  theme(legend.position = 'none') + 
+  labs(x = 'Duration', y = 'Jaccard turnover slope', title = 'even 1')
+
+p2 <- ggplot(trendsSAD[measure == 'Jtu' & rarefyID == 1], aes(year2 - year1 + 1, disstrend)) +
+  geom_point() + 
+  geom_smooth(na.rm = TRUE) +
+  theme(legend.position = 'none') + 
+  labs(x = 'Duration', y = 'Jaccard turnover slope', title = 'SAD 1')
+
+p3 <- ggplot(trendseven[measure == 'Jtu'], aes(year2 - year1 + 1, disstrend, color = rarefyID)) +
+  geom_point() + 
+  geom_smooth(na.rm = TRUE) +
+  theme(legend.position = 'none') + 
+  labs(x = 'Duration', y = 'Jaccard turnover slope', title = 'even')
+
+p4 <- ggplot(trendsSAD[measure == 'Jtu' & rarefyID == 1], aes(year2 - year1 + 1, disstrend, color = rarefyID)) +
+  geom_point() + 
+  geom_smooth(na.rm = TRUE) +
+  theme(legend.position = 'none') + 
+  labs(x = 'Duration', y = 'Jaccard turnover slope', title = 'SAD')
+
+p5 <- ggplot(trendseven[measure == 'Jtu'], aes(year2 - year1 + 1, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  theme(legend.position = 'none') + 
+  labs(x = 'Duration', y = 'Jaccard turnover slope', title = 'even')
+
+
+p6 <- ggplot(trendsSAD[measure == 'Jtu'], aes(year2 - year1 + 1, disstrend)) +
+  geom_smooth(na.rm = TRUE) +
+  theme(legend.position = 'none') + 
+  labs(x = 'Duration', y = 'Jaccard turnover slope', title = 'SAD')
+
+grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 2)
+
+```
+
+
+
