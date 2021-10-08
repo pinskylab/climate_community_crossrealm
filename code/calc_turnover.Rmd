@@ -85,7 +85,8 @@ bt <- bt[rarefyID %in% nyrs[nyrBT > 2, rarefyID], ]
 length(unique(bt$rarefyID))
 ```
 
-# Plot turnover example
+
+## Plot turnover example
 ```{r plot turnover}
 test <- bt[rarefyID == '339_1085477',]
 test[, dY := year2 - year1]
@@ -114,6 +115,24 @@ ggplot(test, aes(dY, Jtu)) +
     geom_smooth(data = test, 
                 method = 'lm') + # a straight line fit
     labs(x = 'Difference in years', y = 'Jaccard turnover')
+```
+
+## Examine autocorrelation in dissimilarities
+Calculate from year1. A large fraction are NAs for some reason. Histogram is centered slightly <0.
+```{r autocor}
+acfy1 <- function(year1, year2, Jtu){
+  keep <- year1 == min(year1)
+  year2 <- year2[keep]
+  Jtu <- Jtu[keep]
+  mod <- lm(Jtu ~ year2)
+  return(acf(residuals(mod), lag.max = 1, plot=FALSE)$acf[2])
+}
+
+acfy1s <- bt[,acfy1(year1, year2, Jtu), by = rarefyID]
+
+print('Fraction NA: '); acfy1s[, sum(is.na(V1))]/nrow(acfy1s) # faction NA for acf AR1
+
+hist <- acfy1s[, hist(V1)] # histogram of AR1
 ```
 
 
