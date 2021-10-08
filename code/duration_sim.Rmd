@@ -12,7 +12,12 @@ library(here)
 library(glmmTMB)
 ```
 
-# Plot an example
+# Plot an example of false positives
+Dataset is 1000 timeseries of differing durations from 3 to 102 observations through time. The response variable is positively related to time (random slope 0.005 to 0.01) with Gaussian noise and an inverse-logit transform to constrain it to 0-1. The explanatory variables are time and the slope of a Gaussian time-series of the same durations. Time but not the slope should be related to the response.  
+Two-stage regressions have a false positive.  
+One-stage regression may as well.  
+The shorter response time-series have steeper slopes (2nd to last graph), probably because the slope of the response vs. time is great enough to hit 1 often in longer ts. Shorter time-series do have steeper slopes if the response hits 1 less often (e.g., if random slopes only go up to 0.01).  
+The shorter explanatory time-series have steeper abs(slopes), also as expected (last graph).
 ```{r}
 set.seed(5)
 slope <- function(x){
@@ -25,23 +30,72 @@ slopese <- function(x){
 }
 
 dat <- data.table(tsid = rep(1:1000, rep(3:102, 1000/100)))
-dat[, ':='(value1 = rnorm(.N), value2 = rnorm(.N))]
-dat[, ':='(slope1 = slope(value1), slope2 = slope(value2),
-                  se1 = slopese(value1), se2 = slopese(value2)), by = tsid]
-slopes <- dat[, .(slope1 = slope(value1), slope2 = slope(value2),
-                  se1 = slopese(value1), se2 = slopese(value2)), by = tsid]
+dat[, ':='(obsid = 1:.N, tslope = runif(1, 0.005, 0.1)), by = tsid] # add time counter and a random slope for each tsid
+dat[, ':='(value1.logit = obsid*tslope + rnorm(.N), value2 = rnorm(.N))] # create random ts. value1 has a positive slope like dissimilarites and is on a logit scale.
+dat[, value1 := exp(value1.logit)/(exp(value1.logit)+1)] # inverse-logit for value 1
+dat[, ':='(slope2_abs = abs(slope(value2)), duration = .N), by = tsid] # explanatory slopes for one-stage model
+slopes <- dat[, .(slope1 = slope(value1), slope2_abs = abs(slope(value2)),
+                  se1 = slopese(value1), duration = .N), by = tsid]
 
-slopes[, cor.test(slope1, slope2)] # a problem with simple correlation
-slopes[, summary(lm(slope1 ~ slope2, weights = 1/se1))] # not solved by weighting (though p is marginal)
-slopes[, summary(glmmTMB(slope1 ~ slope2, disp=~se1))] # not solved by glmmTMB and dispersion
-dat[, summary(glmmTMB(value1 ~ slope2 + (1|tsid)))] # maybe addressed by a one-stage model
+print('CORRELATION TEST')
+slopes[, cor.test(slope1, slope2_abs)] # a problem with simple correlation in this example
+print('WEIGHTED REGRESSION')
+slopes[, summary(lm(slope1 ~ slope2_abs, weights = 1/se1))] # problem not solved by weighting
+print('WEIGHTED GLMM')
+slopes[, summary(glmmTMB(slope1 ~ slope2_abs, disp=~se1))] # not solved by glmmTMB and dispersion
+print('ONE-STAGE GLMM')
+dat[, summary(glmmTMB(value1 ~ obsid + obsid:slope2_abs + (obsid|tsid)))] # maybe addressed by a one-stage model
 
-slopes[, plot(slope1, slope2)]
+slopes[, plot(slope2_abs, slope1)]
+dat[, .(max = max(value1), duration = duration), by = tsid][, plot(duration, max)]
+ggplot(slopes, aes(duration, slope1)) +
+    geom_point() +
+    geom_smooth()
+ggplot(slopes, aes(duration, slope1)) +
+    geom_smooth()
+ggplot(slopes, aes(duration, slope2_abs)) +
+    geom_smooth()
+```
+# Plot an example of true positives
+Dataset is 1000 timeseries of differing durations from 3 to 102 observations through time. The response variable is positively related to time (random slope 0.005 to 0.01) AND the explanatory variable (abs value of Gaussian) with Gaussian noise and an inverse-logit transform to constrain it to 0-1. The explanatory variables are time and the slope of a Gaussian time-series of the same durations. Time and explanatory variable should be related to the response.  
+Two-stage regressions have a false positive.  
+One-stage regression does not.  
+```{r}
+set.seed(5)
+slope <- function(x){
+    mod <- lm(x ~ I(1:length(x)))
+    return(as.numeric(coef(mod)[2]))
+}
+slopese <- function(x){
+    mod <- lm(x ~ I(1:length(x)))
+    return(as.numeric(sqrt(diag(vcov(mod)))[2]))
+}
+
+dat <- data.table(tsid = rep(1:1000, rep(3:102, 1000/100)))
+dat[, ':='(obsid = 1:.N, tslope = runif(1, 0.005, 0.1), value2 = rnorm(.N), duration = .N), by = tsid] # add time counter, a random temporal slope for each tsid, and a random explanatory slope
+dat[, slope2_abs := abs(slope(value2)), by = tsid]
+dat[, ':='(value1.logit = obsid*tslope + 0.5*tslope*obsid*slope2_abs + rnorm(.N))] # value1 has a positive slope like dissimilarites and is on a logit scale. Positively related to slope2.
+dat[, value1 := exp(value1.logit)/(exp(value1.logit)+1)] # inverse-logit for value 1
+slopes <- dat[, .(slope1 = slope(value1), slope2_abs = unique(slope2_abs),
+                  se1 = slopese(value1), duration = .N), by = tsid]
+
+print('CORRELATION TEST')
+slopes[, cor.test(slope1, slope2_abs)] # a problem with simple correlation in this example
+print('WEIGHTED REGRESSION')
+slopes[, summary(lm(slope1 ~ slope2_abs, weights = 1/se1))] # problem not solved by weighting
+print('WEIGHTED GLMM')
+slopes[, summary(glmmTMB(slope1 ~ slope2_abs, disp=~se1))] # not solved by glmmTMB and dispersion
+print('ONE-STAGE GLMM')
+dat[, summary(glmmTMB(value1 ~ obsid + obsid:slope2_abs + (obsid|tsid)))] # maybe addressed by a one-stage model
+
+ggplot(slopes, aes(slope2_abs, slope1, color = duration)) + geom_point() + geom_smooth()
+dat[, .(max = max(value1), duration = duration), by = tsid][, plot(duration, max)]
 
 ```
 
 # False positive analysis
-Generate pairs of random time-series and correlate the slopes. Time-series have a fixed length or a variety of lengths from 3 to 100 steps. Do this many times to check for false-positive correlations using cor.test and a one-stage mixed-effects analysis.
+Generate pairs of random time-series and correlate the slopes. Time-series have a fixed length or a variety of lengths from 3 to 102 steps. Do this many times to check for false-positive correlations using cor.test, a weighted linear regression, and a one-stage mixed-effects analysis.  
+TO DO: add beta regressions
 ```{r}
 if(file.exists(here('output', 'simulated_ts.csv.gz'))){
     cors <- fread(here('output', 'simulated_ts.csv.gz'))
@@ -62,7 +116,7 @@ if(file.exists(here('output', 'simulated_ts.csv.gz'))){
         # make datasets with timeseries of all the same length
         if(cors[i, minduration == maxduration]){
             len <- cors[i, minduration]
-            dat <- data.table(tsid = rep(1:cors[i,n], rep(len, cors[i,n])), index = rep(1:len, cors[i,n]), value1 = rnorm(len*cors[i,n]), value2 = rnorm(len*cors[i,n]))
+            dat <- data.table(tsid = rep(1:cors[i,n], rep(len, cors[i,n])))
         }
         
         # variable length timeseries
@@ -71,19 +125,29 @@ if(file.exists(here('output', 'simulated_ts.csv.gz'))){
             maxd <- cors[i, maxduration]
             ndur <- maxd - mind + 1
             dat <- data.table(tsid = rep(1:cors[i,n], rep(mind:maxd, cors[i,n]/ndur)))
-            dat[, ':='(value1 = rnorm(.N), value2 = rnorm(.N))]
         }
-        
+
+        # add response and explanatory variables
+        dat[, ':='(obsid = 1:.N, tslope = runif(1, 0.005, 0.1)), by = tsid] # time counter and a random slope for each tsid
+        dat[, ':='(value1.logit = obsid*tslope + rnorm(.N), value2 = rnorm(.N))] # create random ts. value1 has a positive slope like dissimilarities and is on a logit scale.
+        dat[, value1 := exp(value1.logit)/(exp(value1.logit)+1)] # inverse logit-transform
+                
         # calc slopes
-        dat[, slope2 := slope(value2), by = tsid]
-        slopes <- dat[, .(slope1 = slope(value1), slope2 = slope(value2), se1 = slopese(value1)), by = tsid]
+        dat[, slope2_abs := abs(slope(value2)), by = tsid]
+        slopes <- dat[, .(slope1 = slope(value1), slope2_abs = unique(slope2_abs), se1 = slopese(value1)), by = tsid]
         
         # statistical tests
-        test <- slopes[, cor.test(slope1, slope2)] # a pearson correlation
-        test2 <- slopes[, coef(lm(slope1 ~ slope2))[2]] # a simple regression
-        test3 <- slopes[, summary(glmmTMB(slope1 ~ slope2, disp=~se1))$coefficients$cond] # glmmTMB and dispersion
-        test4 <- dat[, summary(glmmTMB(value1 ~ value2 + (1|tsid)))$coefficients$cond] # the coef summary from a one-stage model
-        cors[i, ':='(cor.p = test$p.value, cor.cor = test$estimate, lm.m = test2, glmmwgt.p = test3[2,4], glmmwgt.beta = test3[2,1], glmmone.p = test4[2,4], glmmone.beta = test4[2,1])]    
+        test <- slopes[, cor.test(slope1, slope2_abs)] # a pearson correlation
+        test2 <- slopes[, coef(lm(slope1 ~ slope2_abs))[2]] # a simple regression
+        test3 <- slopes[, summary(glmmTMB(slope1 ~ slope2_abs, disp=~se1))$coefficients$cond] # glmmTMB and dispersion
+        mod4 <- dat[, glmmTMB(value1 ~ obsid + obsid:slope2_abs + (obsid|tsid))] # the coef summary from a one-stage model
+        if(mod4$fit$convergence==0){ # if the one-stage model converged
+            test4 <- summary(mod4)$coefficients$cond
+            cors[i, ':='(cor.p = test$p.value, cor.cor = test$estimate, lm.m = test2, glmmwgt.p = test3[2,4], glmmwgt.beta = test3[2,1], glmmone.p = test4[3,4], glmmone.beta = test4[3,1])]    
+        } else {  # if not converged
+            cors[i, ':='(cor.p = test$p.value, cor.cor = test$estimate, lm.m = test2, glmmwgt.p = test3[2,4], glmmwgt.beta = test3[2,1], glmmone.p = NA, glmmone.beta = NA)]    
+        }
+        
         setTxtProgressBar(pb, i)
     }
     close(pb)
@@ -98,7 +162,7 @@ if(file.exists(here('output', 'simulated_ts.csv.gz'))){
 
 
 
-# Plot the results
+## Plot the results
 Only the one-stage regression appears to have a reasonable false-positive rate.
 ```{r}
 ylims = c(-10, 0)
@@ -132,7 +196,7 @@ ggplot(cors[, .(prop = sum(glmmwgt.p < 0.05)/length(glmmwgt.p)), by = c("range",
     lims(y = c(0,1)) +
     geom_abline(intercept = 0.05, slope = 0, linetype = 'dashed', color = 'red')
 
-ggplot(cors[, .(prop = sum(glmmone.p < 0.05)/length(glmmone.p)), by = c("range", "n")], 
+ggplot(cors[, .(prop = sum(glmmone.p < 0.05, na.rm=TRUE)/sum(!is.na(glmmone.p), na.rm=TRUE)), by = c("range", "n")], 
              aes(range, prop, group = as.factor(n), color = as.factor(n))) +
     geom_col(position = "dodge") +
     labs(x = 'Range of durations', title = 'Single-stage regression', y = 'Proportion false positive') +
@@ -142,3 +206,70 @@ ggplot(cors[, .(prop = sum(glmmone.p < 0.05)/length(glmmone.p)), by = c("range",
 ```
          
          
+# Power analysis
+Generate pairs of correlated time-series with error and correlate the slopes. Time-series have a fixed length or a variety of lengths from 3 to 102 steps. Do this many times to check for true positive rate with a one-stage mixed-effects analysis.  
+CHECK THIS CAREFULLY!!
+```{r}
+if(file.exists(here('output', 'simulated_ts_power.csv.gz'))){
+    corspower <- fread(here('output', 'simulated_ts_power.csv.gz'))
+} else {
+    set.seed(5)
+    nreps <- 100 # number of datasets
+    
+    corspower <- data.table(n = 1000, minduration = rep(c(10,3), nreps), maxduration = rep(c(10, 102), nreps), beta = runif(2*nreps), glmmone.p = NA_real_, glmmone.beta = NA_real_) # holds the summaries from each dataset. use n = 1000 timeseries per dataset. beta is the true effect of slope2 on the response.
+    #corspower2 <- copy(corspower)
+    #corspower2[, n:=10000] # add another run with 10k timeseries per dataset
+    #corspower <- rbind(corspower, corspower2) 
+    #rm(corspower2)
+    
+    pb <- txtProgressBar(min = 0, max = nrow(corspower), style = 3) # progress bar
+    
+    for(i in 1:nrow(corspower)){
+        # make datasets with timeseries of all the same length
+        if(corspower[i, minduration == maxduration]){
+            len <- corspower[i, minduration]
+            dat <- data.table(tsid = rep(1:corspower[i,n], rep(len, corspower[i,n])), beta = corspower[i, beta])
+        }
+        
+        # variable length timeseries
+        if(corspower[i, minduration != maxduration]){
+            mind <- corspower[i, minduration]
+            maxd <- corspower[i, maxduration]
+            ndur <- maxd - mind + 1
+            dat <- data.table(tsid = rep(1:corspower[i,n], rep(mind:maxd, corspower[i,n]/ndur)))
+        }
+
+        # add response and explanatory variables
+        dat[, ':='(obsid = 1:.N, tslope = runif(1, 0.005, 0.1), value2 = rnorm(.N), duration = .N), by = tsid] # add time counter, a random temporal slope for each tsid, and a random explanatory slope
+        dat[, slope2_abs := abs(slope(value2)), by = tsid]
+        dat[, ':='(value1.logit = obsid*tslope + beta*tslope*obsid*slope2_abs + rnorm(.N))] # value1 has a positive slope like dissimilarities and is on a logit scale. Positively related to slope2.
+        dat[, value1 := exp(value1.logit)/(exp(value1.logit)+1)] # inverse logit-transform
+        dat[, value1 := exp(value1.logit)/(exp(value1.logit)+1)] # inverse-logit for value 1
+
+
+        # calc slopes
+        dat[, slope2_abs := abs(slope(value2)), by = tsid]
+        slopes <- dat[, .(slope1 = slope(value1), slope2_abs = unique(slope2_abs), se1 = slopese(value1)), by = tsid]
+        
+        # statistical tests
+        test <- slopes[, cor.test(slope1, slope2_abs)] # a pearson correlation
+        test2 <- slopes[, coef(lm(slope1 ~ slope2_abs))[2]] # a simple regression
+        test3 <- slopes[, summary(glmmTMB(slope1 ~ slope2_abs, disp=~se1))$coefficients$cond] # glmmTMB and dispersion
+        mod4 <- dat[, glmmTMB(value1 ~ obsid + obsid:slope2_abs + (obsid|tsid))] # the coef summary from a one-stage model
+        if(mod4$fit$convergence==0){ # if the one-stage model converged
+            test4 <- summary(mod4)$coefficients$cond
+            corspower[i, ':='(cor.p = test$p.value, cor.cor = test$estimate, lm.m = test2, glmmwgt.p = test3[2,4], glmmwgt.beta = test3[2,1], glmmone.p = test4[3,4], glmmone.beta = test4[3,1])]    
+        } else {  # if not converged
+            corspower[i, ':='(cor.p = test$p.value, cor.cor = test$estimate, lm.m = test2, glmmwgt.p = test3[2,4], glmmwgt.beta = test3[2,1], glmmone.p = NA, glmmone.beta = NA)]    
+        }
+        
+        setTxtProgressBar(pb, i)
+    }
+    close(pb)
+    
+    corspower[, name := paste0(minduration, '-', maxduration)]
+    corspower[, range := maxduration - minduration]
+    
+    write.csv(corspower, gzfile(here('output', 'simulated_ts_power.csv.gz')), row.names = FALSE)
+}
+```
