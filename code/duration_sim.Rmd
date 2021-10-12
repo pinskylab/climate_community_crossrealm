@@ -10,6 +10,9 @@ require(ggplot2)
 require(ggpubr) # for ggarrange
 library(here)
 library(glmmTMB)
+
+# transformation for 2 categories. Eq. 1 in Douma & Weedon 2019 MEE
+transform01 <- function(x) (x * (length(x) - 1) + 0.5) / (length(x))
 ```
 
 # Plot an example of false positives
@@ -96,66 +99,12 @@ dat[, .(max = max(value1), duration = duration), by = tsid][, plot(duration, max
 # False positive analysis
 Generate pairs of random time-series and correlate the slopes. Time-series have a fixed length or a variety of lengths from 3 to 102 steps. Do this many times to check for false-positive correlations using cor.test, a weighted linear regression, and a one-stage mixed-effects analysis.  
 TO DO: add beta regressions
-```{r}
+```{r,message=FALSE, warning=FALSE }
 if(file.exists(here('output', 'simulated_ts.csv.gz'))){
-    cors <- fread(here('output', 'simulated_ts.csv.gz'))
+    cors <- fread(here('temp', 'simulated_ts_temp.csv.gz')) # the in-progress analysis
+    #cors <- fread(here('output', 'simulated_ts.csv.gz')) # the full analysis
 } else {
-    set.seed(5)
-    nreps <- 100 # number of datasets
-    
-    cors <- data.table(n = 1000, minduration = rep(c(10,3,3,3,3), nreps), maxduration = rep(c(10, 12, 27, 52, 102), nreps), cor.p = NA_real_, cor.cor = NA_real_, lm.m = NA_real_,
-                       glmmwgt.p = NA_real_, glmmwgt.beta = NA_real_, glmmone.p = NA_real_, glmmone.beta = NA_real_) # holds the summaries from each dataset. use n = 1000 timeseries per dataset.
-    #cors2 <- copy(cors)
-    #cors2[, n:=10000] # add another run with 10k timeseries per dataset
-    #cors <- rbind(cors, cors2) 
-    #rm(cors2)
-    
-    pb <- txtProgressBar(min = 0, max = nrow(cors), style = 3) # progress bar
-    
-    for(i in 1:nrow(cors)){
-        # make datasets with timeseries of all the same length
-        if(cors[i, minduration == maxduration]){
-            len <- cors[i, minduration]
-            dat <- data.table(tsid = rep(1:cors[i,n], rep(len, cors[i,n])))
-        }
-        
-        # variable length timeseries
-        if(cors[i, minduration != maxduration]){
-            mind <- cors[i, minduration]
-            maxd <- cors[i, maxduration]
-            ndur <- maxd - mind + 1
-            dat <- data.table(tsid = rep(1:cors[i,n], rep(mind:maxd, cors[i,n]/ndur)))
-        }
-
-        # add response and explanatory variables
-        dat[, ':='(obsid = 1:.N, tslope = runif(1, 0.005, 0.1)), by = tsid] # time counter and a random slope for each tsid
-        dat[, ':='(value1.logit = obsid*tslope + rnorm(.N), value2 = rnorm(.N))] # create random ts. value1 has a positive slope like dissimilarities and is on a logit scale.
-        dat[, value1 := exp(value1.logit)/(exp(value1.logit)+1)] # inverse logit-transform
-                
-        # calc slopes
-        dat[, slope2_abs := abs(slope(value2)), by = tsid]
-        slopes <- dat[, .(slope1 = slope(value1), slope2_abs = unique(slope2_abs), se1 = slopese(value1)), by = tsid]
-        
-        # statistical tests
-        test <- slopes[, cor.test(slope1, slope2_abs)] # a pearson correlation
-        test2 <- slopes[, coef(lm(slope1 ~ slope2_abs))[2]] # a simple regression
-        test3 <- slopes[, summary(glmmTMB(slope1 ~ slope2_abs, disp=~se1))$coefficients$cond] # glmmTMB and dispersion
-        mod4 <- dat[, glmmTMB(value1 ~ obsid + obsid:slope2_abs + (obsid|tsid))] # the coef summary from a one-stage model
-        if(mod4$fit$convergence==0){ # if the one-stage model converged
-            test4 <- summary(mod4)$coefficients$cond
-            cors[i, ':='(cor.p = test$p.value, cor.cor = test$estimate, lm.m = test2, glmmwgt.p = test3[2,4], glmmwgt.beta = test3[2,1], glmmone.p = test4[3,4], glmmone.beta = test4[3,1])]    
-        } else {  # if not converged
-            cors[i, ':='(cor.p = test$p.value, cor.cor = test$estimate, lm.m = test2, glmmwgt.p = test3[2,4], glmmwgt.beta = test3[2,1], glmmone.p = NA, glmmone.beta = NA)]    
-        }
-        
-        setTxtProgressBar(pb, i)
-    }
-    close(pb)
-    
-    cors[, name := paste0(minduration, '-', maxduration)]
-    cors[, range := maxduration - minduration]
-    
-    write.csv(cors, gzfile(here('output', 'simulated_ts.csv.gz')), row.names = FALSE)
+    stop('Need to run duration_sim.R first.')
 }
 ```
 
@@ -207,9 +156,11 @@ ggplot(cors[, .(prop = sum(glmmone.p < 0.05, na.rm=TRUE)/sum(!is.na(glmmone.p), 
          
          
 # Power analysis
+NOT FINISHED  
+and not evaluated  
+
 Generate pairs of correlated time-series with error and correlate the slopes. Time-series have a fixed length or a variety of lengths from 3 to 102 steps. Do this many times to check for true positive rate with a one-stage mixed-effects analysis.  
-CHECK THIS CAREFULLY!!
-```{r}
+```{r, eval = FALSE}
 if(file.exists(here('output', 'simulated_ts_power.csv.gz'))){
     corspower <- fread(here('output', 'simulated_ts_power.csv.gz'))
 } else {
@@ -273,3 +224,4 @@ if(file.exists(here('output', 'simulated_ts_power.csv.gz'))){
     write.csv(corspower, gzfile(here('output', 'simulated_ts_power.csv.gz')), row.names = FALSE)
 }
 ```
+
