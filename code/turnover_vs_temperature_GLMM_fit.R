@@ -3,8 +3,8 @@
 # Script to fit glmmTMB models
 # Set up to be run on the command line for one model at a time
 # Argument is model name to run (see below for options), e.g.
-# nohup code/turnover_vs_temperature_GLMM.R modRFgauss > logs/turnover_vs_temperature_GLMMmodRFgauss.Rout &
-# (this works if code is executable, e.g., chmod u+x turnover_vs_temperature_GLMM.R)
+# nohup code/turnover_vs_temperature_GLMM_fit.R modRFgauss > logs/turnover_vs_temperature_GLMMmodRFgauss.Rout &
+# (this works if code is executable, e.g., chmod u+x turnover_vs_temperature_GLMM_fit.R)
 # (otherwise using nohup Rscript ...)
 
 # Read command line arguments ############
@@ -27,16 +27,18 @@ print(Sys.time())
 # load libraries ############################
 
 library(data.table) # for handling large datasets
-library(glmmTMB) # for ME models
+library(glmmTMB, lib.loc = "/usr/lib64/R/library") # for ME models
 library(performance) # for R2
 
 # load data ############################
 
 # Turnover and covariates assembled by assemble_turnover_covariates.Rmd
+trendsall <- fread('output/turnover_w_covariates.csv.gz')
 trends5 <- fread('output/turnover_w_covariates5.csv.gz')
 trends10 <- fread('output/turnover_w_covariates10.csv.gz')
 trends20 <- fread('output/turnover_w_covariates20.csv.gz')
 
+trendsall[, tsign := as.factor(tsign)]
 trends5[, tsign := as.factor(tsign)]
 trends10[, tsign := as.factor(tsign)]
 trends20[, tsign := as.factor(tsign)]
@@ -44,6 +46,7 @@ trends20[, tsign := as.factor(tsign)]
 # Models ############################
 
 ## Choose dataset
+iallJtu <- trendsall[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
 i5Jtu <- trends5[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
 i10Jtu <- trends10[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
 i20Jtu <- trends20[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
@@ -3427,8 +3430,74 @@ if(fitmod == 'modsdTxhuman5Horn'){
 }
 
 
+# T:dT/sdT:REALM INTERACTION WITH SINGLE FACTORS ########################
+# T:dT:REALM:duration like Antao #########################
 
-# T+dT:REALM:duration Antao-style dataset #########################
+# use tempchange like Antao
+if(fitmod == 'modTdTTRealmAllJtu'){
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration +
+                       REALM:duration +
+                       REALM:tempchange.sc:duration + 
+                       REALM:tempave_metab.sc:duration +
+                       REALM:tempave_metab.sc:tempchange.sc:duration +
+                       (duration|STUDY_ID/rarefyID), 
+                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# use tempchange like Antao. scale duration
+if(fitmod == 'modTdTTRealmDurscAllJtu'){
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc +
+                       REALM:duration.sc +
+                       REALM:tempchange.sc:duration.sc + 
+                       REALM:tempave_metab.sc:duration.sc +
+                       REALM:tempave_metab.sc:tempchange.sc:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+
+# T:sdT:REALM:duration #########################
+# use tempchange_abs (otherwise like Antao)
+if(fitmod == 'modTsdTTRealmAllJtu'){
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration +
+                       REALM:duration +
+                       REALM:tempchange_abs.sc:duration + 
+                       REALM:tempave_metab.sc:duration +
+                       REALM:tempave_metab.sc:tempchange_abs.sc:duration +
+                       (duration|STUDY_ID/rarefyID), 
+                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# use tempchange_abs
+if(fitmod == 'modTsdTTRealmDurscAllJtu'){
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration.sc +
+                       REALM:duration.sc +
+                       REALM:tempchange_abs.sc:duration.sc + 
+                       REALM:tempave_metab.sc:duration.sc +
+                       REALM:tempave_metab.sc:tempchange_abs.sc:duration.sc +
+                       (duration.sc|STUDY_ID/rarefyID), 
+                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+
+
+# T+dT:REALM:duration ANTAO-STYLE DATASET #########################
 
 # try on Antao et al. 2020-style dataset
 # use tempchange, not tempchange_abs

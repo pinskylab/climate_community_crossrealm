@@ -40,7 +40,7 @@ btinfo <- data.table(bt_malin); rm(bt_malin)
 btinfo[, Nave := mean(N), by = rarefyID] # average number of individuals in the timeseries
 btinfo <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Biome, taxa_mod, Nave, REALM, STUDY_ID)]
 
-# biotime community dissimilarity data
+# biotime community dissimilarity data (all pairs)
 load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians
 bt <- data.table(rarefied_beta_medians); rm(rarefied_beta_medians)
 bt[, year1 := as.numeric(year1)] # not sure why it gets read in as character
@@ -110,6 +110,8 @@ bt[REALM == 'Marine', veg := 0] # veg index is 0 at sea
 
 ## Trim data
 
+At least 5 species and at least 10 individuals on average.
+
 ``` r
 cat('original number of rows'); norig <- nrow(bt); norig
 ```
@@ -125,7 +127,7 @@ cat('rows with <5 spp'); bt[Nspp < 5 | is.na(Nspp), .N]
 
     ## rows with <5 spp
 
-    ## [1] 46914
+    ## [1] 35975
 
 ``` r
 bt <- bt[Nspp >= 5, ]
@@ -136,7 +138,7 @@ cat('rows with <10 indivs'); bt[Nave < 10, .N]
 
     ## rows with <10 indivs
 
-    ## [1] 31850
+    ## [1] 31899
 
 ``` r
 bt <- bt[Nave >= 10 | is.na(Nave), ]
@@ -147,7 +149,7 @@ cat('rows left'); nrow(bt)
 
     ## rows left
 
-    ## [1] 1225386
+    ## [1] 1236276
 
 ``` r
 cat('fraction kept'); nrow(bt)/norig
@@ -155,7 +157,7 @@ cat('fraction kept'); nrow(bt)/norig
 
     ## fraction kept
 
-    ## [1] 0.9396051
+    ## [1] 0.9479554
 
 ``` r
 cat('number of studies'); bt[, length(unique(STUDY_ID))]
@@ -163,7 +165,7 @@ cat('number of studies'); bt[, length(unique(STUDY_ID))]
 
     ## number of studies
 
-    ## [1] 293
+    ## [1] 319
 
 ``` r
 cat('number of timeseries'); bt[, length(unique(rarefyID))]
@@ -171,40 +173,46 @@ cat('number of timeseries'); bt[, length(unique(rarefyID))]
 
     ## number of timeseries
 
-    ## [1] 41899
+    ## [1] 42255
 
 ## Choose datasets of the same duration
 
 ### Function to choose the data to use within each timeseries
 
-Find the most recent set of consecutive years of duration numyrs
+Find the most recent set of at least 3 years of duration numyrs
 
 ``` r
 # function takes columns of bt. returns a vector of T/F for whether to include a row.
 flagbyduration <- function(year1, year2, numyrs){
+  if(3 > numyrs) stop('numyrs must be >= 3')
   yrs <- sort(unique(c(year1, year2)))
-  dy <- diff(yrs) # find intervals between years
-  rl <- rle(dy) # run length encoding
-  end = cumsum(rl$lengths) # find ends of runs of the same year interval
-  start = c(1, head(end, -1) + 1) # find starts of runs
-  rlkeep <- which(rl$lengths >= numyrs & rl$values == 1) # find runs with desired length and 1 year intervals
-  if(length(rlkeep)>0){
-    rlkeep <- max(rlkeep) # find the latest run that meets our criteria
-    start <- start[rlkeep] # start of this run
-    end <- end[rlkeep] # end of this run
-    dykeep <- rep(FALSE, length(dy)) # year intervals to keep
-    dykeep[start:end] <- TRUE
-    yrs2 <- yrs[c(dykeep, FALSE) | c(FALSE, dykeep)] # keep years involved in at least one interval to keep
-    maxyr <- max(yrs2)
-    yrs3 <- yrs2[yrs2 > maxyr - numyrs] # only use last numyrs years
-    
-    flag <- year1 %in% yrs3 & year2 %in% yrs3
+
+  # brute force search for a sequence of samples that match criteria
+  i = length(yrs) # index for the end of a suitable sequence of samples. start at the final year and work backwards in time.
+  run <- FALSE # flag for whether we have found a suitable sequence of samples
+  while(i > 0 & !run){ 
+    dys <- yrs[i] - yrs
+    j <- which(dys == numyrs-1) # index for a start year that is the correct distance to the current final year
+    if(length(j) >0){ # if a suitable start year was found
+      proposedset <- yrs[j:i] # identify the proposed set of years to keep
+      if(length(proposedset) >= 3){ # if the proposed set is long enough (at least 3)
+        flag <- year1 %in% proposedset & year2 %in% proposedset # keep values in pairwise comparisons for the years we want
+        run <- TRUE # mark that we should return something
+      }
+    }
+    if(run == FALSE){
+      i <- i - 1 # try the next earliest sample
+    }
+  }
+  
+  if(run){
     return(flag)
-  } else{ # didn't find any suitable sequences of years
+  } else {
     flag <- rep(FALSE, length(year1))
     return(flag)
   }
-
+  
+  
 }
 ```
 
@@ -218,6 +226,7 @@ bt[, keep10 := flagbyduration(year1, year2, 10), by = .(rarefyID)]
 bt[, keep20 := flagbyduration(year1, year2, 20), by = .(rarefyID)]
 
 # divide into separate datasets
+btall <- bt
 bt3 <- bt[keep3 == TRUE,]
 bt5 <- bt[keep5 == TRUE,]
 bt10 <- bt[keep10 == TRUE,]
@@ -234,6 +243,10 @@ picklongest <- function(year1, year2, y){
   keep <- which.max(dy)
   return(y[keep])
 }
+
+btall[, tempave := picklongest(year1, year2, tempave), by = rarefyID]
+btall[, tempave_metab := picklongest(year1, year2, tempave_metab), by = rarefyID]
+btall[, tempchange := median(tempchange/(year2 - year1)), by = rarefyID] # Thiel-Sen estimator of the slope: median of all pairwise differences
 
 bt3[, tempave := picklongest(year1, year2, tempave), by = rarefyID]
 bt3[, tempave_metab := picklongest(year1, year2, tempave_metab), by = rarefyID]
@@ -256,12 +269,16 @@ bt20[, tempchange := median(tempchange/(year2 - year1)), by = rarefyID] # Thiel-
 
 ``` r
 # set realm order
+btall[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
 bt3[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
 bt5[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
 bt10[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
 bt20[, REALM := factor(REALM, levels = c('Freshwater', 'Marine', 'Terrestrial'), ordered = FALSE)]
 
 # realm that combines Terrestrial and Freshwater, for interacting with human impact
+btall[, REALM2 := REALM]
+levels(btall$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
+
 bt3[, REALM2 := REALM]
 levels(bt3$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
 
@@ -275,12 +292,16 @@ bt20[, REALM2 := REALM]
 levels(bt20$REALM2) = list(TerrFresh = "Freshwater", TerrFresh = "Terrestrial", Marine = "Marine")
 
 # duration
+btall[, duration := year2 - year1]
 bt3[, duration := year2 - year1]
 bt5[, duration := year2 - year1]
 bt10[, duration := year2 - year1]
 bt20[, duration := year2 - year1]
 
 # group Marine invertebrates/plants in with All
+btall[, taxa_mod2 := taxa_mod]
+btall[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
+
 bt3[, taxa_mod2 := taxa_mod]
 bt3[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
 
@@ -293,6 +314,18 @@ bt10[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
 bt20[, taxa_mod2 := taxa_mod]
 bt20[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
 
+# sign of temperature change
+signneg11 <- function(x){ # assign 0 a sign of 1 so that there are only 2 levels
+  out <- sign(x)
+  out[out == 0] <- 1
+  return(out)
+}
+btall[, tsign := signneg11(tempchange)]
+bt3[, tsign := signneg11(tempchange)]
+bt5[, tsign := signneg11(tempchange)]
+bt10[, tsign := signneg11(tempchange)]
+bt20[, tsign := signneg11(tempchange)]
+
 #######################
 ## Transformations
 
@@ -300,19 +333,46 @@ bt20[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
 # transformation for 2 categories. Eq. 1 in Douma & Weedon 2019 MEE
 transform01 <- function(x) (x * (length(x) - 1) + 0.5) / (length(x))
 
-bt3[, ':='(Jtu.sc = transform01(Jtu), Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
-bt5[, ':='(Jtu.sc = transform01(Jtu), Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
-bt10[, ':='(Jtu.sc = transform01(Jtu), Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
-bt20[, ':='(Jtu.sc = transform01(Jtu), Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
+btall[, ':='(Jtu.sc = transform01(Jtu), Jne.sc = transform01(Jne), 
+           Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
+bt3[, ':='(Jtu.sc = transform01(Jtu), Jne.sc = transform01(Jne), 
+           Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
+bt5[, ':='(Jtu.sc = transform01(Jtu), Jne.sc = transform01(Jne), 
+           Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
+bt10[, ':='(Jtu.sc = transform01(Jtu), Jne.sc = transform01(Jne), 
+            Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
+bt20[, ':='(Jtu.sc = transform01(Jtu), Jne.sc = transform01(Jne), 
+            Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
 
 
 ### Log-transform some variables, then center and scale. 
+btall[, ':='(tempave.sc = scale(tempave),
+           tempave_metab.sc = scale(tempave_metab),
+           seas.sc = scale(seas),
+           microclim.sc = scale(log(microclim)),
+           tempchange.sc = scale(tempchange, center = TRUE), 
+           tempchange_abs.sc = scale(abs(tempchange), center = TRUE),
+           mass.sc = scale(log(mass_mean_weight)),
+           speed.sc = scale(log(speed_mean_weight+1)),
+           lifespan.sc = scale(log(lifespan_mean_weight)),
+           consumerfrac.sc = scale(consfrac),
+           endothermfrac.sc = scale(endofrac),
+           nspp.sc = scale(log(Nspp)),
+           thermal_bias.sc = scale(thermal_bias),
+           npp.sc = scale(log(npp)),
+           veg.sc = scale(log(veg+1)),
+           duration.sc = scale(duration),
+           durationlog.sc = scale(log(duration)))]
+btall[, human_bowler.sc := scale(log(human_bowler+1)), by = REALM2] # separate scaling by realm
+btall[REALM2 == 'TerrFresh', human_footprint.sc := scale(log(human_venter+1))]
+btall[REALM2 == 'Marine', human_footprint.sc := scale(log(human_halpern))]
+
 bt3[, ':='(tempave.sc = scale(tempave),
            tempave_metab.sc = scale(tempave_metab),
            seas.sc = scale(seas),
            microclim.sc = scale(log(microclim)),
-           tempchange.sc = scale(tempchange, center = TRUE), # do not center
-           tempchange_abs.sc = scale(abs(tempchange), center = TRUE), # do not center, so that 0 is still 0 temperature change
+           tempchange.sc = scale(tempchange, center = TRUE), 
+           tempchange_abs.sc = scale(abs(tempchange), center = TRUE),
            mass.sc = scale(log(mass_mean_weight)),
            speed.sc = scale(log(speed_mean_weight+1)),
            lifespan.sc = scale(log(lifespan_mean_weight)),
@@ -332,8 +392,8 @@ bt5[, ':='(tempave.sc = scale(tempave),
            tempave_metab.sc = scale(tempave_metab),
            seas.sc = scale(seas),
            microclim.sc = scale(log(microclim)),
-           tempchange.sc = scale(tempchange, center = TRUE), # do not center
-           tempchange_abs.sc = scale(abs(tempchange), center = TRUE), # do not center, so that 0 is still 0 temperature change
+           tempchange.sc = scale(tempchange, center = TRUE), 
+           tempchange_abs.sc = scale(abs(tempchange), center = TRUE), 
            mass.sc = scale(log(mass_mean_weight)),
            speed.sc = scale(log(speed_mean_weight+1)),
            lifespan.sc = scale(log(lifespan_mean_weight)),
@@ -353,8 +413,8 @@ bt10[, ':='(tempave.sc = scale(tempave),
            tempave_metab.sc = scale(tempave_metab),
            seas.sc = scale(seas),
            microclim.sc = scale(log(microclim)),
-           tempchange.sc = scale(tempchange, center = TRUE), # do not center
-           tempchange_abs.sc = scale(abs(tempchange), center = TRUE), # do not center, so that 0 is still 0 temperature change
+           tempchange.sc = scale(tempchange, center = TRUE), 
+           tempchange_abs.sc = scale(abs(tempchange), center = TRUE), 
            mass.sc = scale(log(mass_mean_weight)),
            speed.sc = scale(log(speed_mean_weight+1)),
            lifespan.sc = scale(log(lifespan_mean_weight)),
@@ -374,8 +434,8 @@ bt20[, ':='(tempave.sc = scale(tempave),
            tempave_metab.sc = scale(tempave_metab),
            seas.sc = scale(seas),
            microclim.sc = scale(log(microclim)),
-           tempchange.sc = scale(tempchange, center = TRUE), # do not center
-           tempchange_abs.sc = scale(abs(tempchange), center = TRUE), # do not center, so that 0 is still 0 temperature change
+           tempchange.sc = scale(tempchange, center = TRUE), 
+           tempchange_abs.sc = scale(abs(tempchange), center = TRUE), 
            mass.sc = scale(log(mass_mean_weight)),
            speed.sc = scale(log(speed_mean_weight+1)),
            lifespan.sc = scale(log(lifespan_mean_weight)),
@@ -393,6 +453,14 @@ bt20[REALM2 == 'Marine', human_footprint.sc := scale(log(human_halpern))]
 
 
 ## save the centering and scaling
+scalingall <- data.frame(center = t(t(sapply(btall, attr, 'scaled:center'))),
+                 scale = t(t(sapply(btall, attr, 'scaled:scale'))))
+scalingall$var <- rownames(scalingall)
+scalingall <- scalingall[!vapply(scalingall$center, is.null, TRUE) | !vapply(scalingall$scale, is.null, TRUE),]
+scalingall$center[vapply(scalingall$center, is.null, TRUE)] <- NA # turn null to NA
+scalingall$center <- vapply(scalingall$center, paste, collapse = ", ", character(1L)) # flatten list to character. not sure why it's a list.
+scalingall$scale <- vapply(scalingall$scale, paste, collapse = ", ", character(1L))
+
 scaling3 <- data.frame(center = t(t(sapply(bt3, attr, 'scaled:center'))),
                  scale = t(t(sapply(bt3, attr, 'scaled:scale'))))
 scaling3$var <- rownames(scaling3)
@@ -401,24 +469,24 @@ scaling3$center[vapply(scaling3$center, is.null, TRUE)] <- NA # turn null to NA
 scaling3$center <- vapply(scaling3$center, paste, collapse = ", ", character(1L)) # flatten list to character. not sure why it's a list.
 scaling3$scale <- vapply(scaling3$scale, paste, collapse = ", ", character(1L))
 
-scaling5 <- data.frame(center = t(t(sapply(bt3, attr, 'scaled:center'))),
-                 scale = t(t(sapply(bt3, attr, 'scaled:scale'))))
+scaling5 <- data.frame(center = t(t(sapply(bt5, attr, 'scaled:center'))),
+                 scale = t(t(sapply(bt5, attr, 'scaled:scale'))))
 scaling5$var <- rownames(scaling5)
 scaling5 <- scaling5[!vapply(scaling5$center, is.null, TRUE) | !vapply(scaling5$scale, is.null, TRUE),]
 scaling5$center[vapply(scaling5$center, is.null, TRUE)] <- NA # turn null to NA
 scaling5$center <- vapply(scaling5$center, paste, collapse = ", ", character(1L)) # flatten list to character. not sure why it's a list.
 scaling5$scale <- vapply(scaling5$scale, paste, collapse = ", ", character(1L))
 
-scaling10 <- data.frame(center = t(t(sapply(bt3, attr, 'scaled:center'))),
-                 scale = t(t(sapply(bt3, attr, 'scaled:scale'))))
+scaling10 <- data.frame(center = t(t(sapply(bt10, attr, 'scaled:center'))),
+                 scale = t(t(sapply(bt10, attr, 'scaled:scale'))))
 scaling10$var <- rownames(scaling10)
 scaling10 <- scaling10[!vapply(scaling10$center, is.null, TRUE) | !vapply(scaling10$scale, is.null, TRUE),]
 scaling10$center[vapply(scaling10$center, is.null, TRUE)] <- NA # turn null to NA
 scaling10$center <- vapply(scaling10$center, paste, collapse = ", ", character(1L)) # flatten list to character. not sure why it's a list.
 scaling10$scale <- vapply(scaling10$scale, paste, collapse = ", ", character(1L))
 
-scaling20 <- data.frame(center = t(t(sapply(bt3, attr, 'scaled:center'))),
-                 scale = t(t(sapply(bt3, attr, 'scaled:scale'))))
+scaling20 <- data.frame(center = t(t(sapply(bt20, attr, 'scaled:center'))),
+                 scale = t(t(sapply(bt20, attr, 'scaled:scale'))))
 scaling20$var <- rownames(scaling20)
 scaling20 <- scaling20[!vapply(scaling20$center, is.null, TRUE) | !vapply(scaling20$scale, is.null, TRUE),]
 scaling20$center[vapply(scaling20$center, is.null, TRUE)] <- NA # turn null to NA
@@ -426,23 +494,28 @@ scaling20$center <- vapply(scaling20$center, paste, collapse = ", ", character(1
 scaling20$scale <- vapply(scaling20$scale, paste, collapse = ", ", character(1L))
 
 ## save the transformations just entered above
+scalingall$log <- FALSE # whether variable was log-transformed before scaling
+scalingall$log[scalingall$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
+scalingall$plus <- 0 # whether anything was added to the variable before logtransforming
+scalingall$plus[scalingall$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
+
 scaling3$log <- FALSE # whether variable was log-transformed before scaling
-scaling3$log[scaling3$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'duration.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
+scaling3$log[scaling3$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
 scaling3$plus <- 0 # whether anything was added to the variable before logtransforming
 scaling3$plus[scaling3$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
 
 scaling5$log <- FALSE # whether variable was log-transformed before scaling
-scaling5$log[scaling5$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'duration.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
+scaling5$log[scaling5$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
 scaling5$plus <- 0 # whether anything was added to the variable before logtransforming
 scaling5$plus[scaling5$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
 
 scaling10$log <- FALSE # whether variable was log-transformed before scaling
-scaling10$log[scaling10$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'duration.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
+scaling10$log[scaling10$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
 scaling10$plus <- 0 # whether anything was added to the variable before logtransforming
 scaling10$plus[scaling10$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
 
 scaling20$log <- FALSE # whether variable was log-transformed before scaling
-scaling20$log[scaling20$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'duration.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
+scaling20$log[scaling20$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
 scaling20$plus <- 0 # whether anything was added to the variable before logtransforming
 scaling20$plus[scaling20$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
 ```
@@ -450,142 +523,186 @@ scaling20$plus[scaling20$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <-
 ## Dataset sizes
 
 ``` r
+btall[, .N]
+```
+
+    ## [1] 1236276
+
+``` r
 bt3[, .N]
 ```
 
-    ## [1] 30615
+    ## [1] 49227
 
 ``` r
 bt5[, .N]
 ```
 
-    ## [1] 54660
+    ## [1] 106321
 
 ``` r
 bt10[, .N]
 ```
 
-    ## [1] 97785
+    ## [1] 269633
 
 ``` r
 bt20[, .N]
 ```
 
-    ## [1] 93860
+    ## [1] 300050
+
+``` r
+btall[, length(unique(STUDY_ID)), by = REALM]
+```
+
+    ##          REALM  V1
+    ## 1: Terrestrial 168
+    ## 2:      Marine 130
+    ## 3:  Freshwater  21
 
 ``` r
 bt3[, length(unique(STUDY_ID)), by = REALM]
 ```
 
-    ##          REALM V1
-    ## 1:      Marine 95
-    ## 2: Terrestrial 84
-    ## 3:  Freshwater 19
+    ##          REALM  V1
+    ## 1:      Marine 113
+    ## 2: Terrestrial 105
+    ## 3:  Freshwater  19
 
 ``` r
 bt5[, length(unique(STUDY_ID)), by = REALM]
 ```
 
-    ##          REALM V1
-    ## 1:      Marine 74
-    ## 2: Terrestrial 65
-    ## 3:  Freshwater 18
+    ##          REALM  V1
+    ## 1:      Marine 105
+    ## 2: Terrestrial  94
+    ## 3:  Freshwater  18
 
 ``` r
 bt10[, length(unique(STUDY_ID)), by = REALM]
 ```
 
     ##          REALM V1
-    ## 1:      Marine 44
-    ## 2: Terrestrial 49
-    ## 3:  Freshwater  9
+    ## 1:      Marine 74
+    ## 2: Terrestrial 78
+    ## 3:  Freshwater 16
 
 ``` r
 bt20[, length(unique(STUDY_ID)), by = REALM]
 ```
 
     ##          REALM V1
-    ## 1:      Marine 12
-    ## 2: Terrestrial 23
-    ## 3:  Freshwater  5
+    ## 1:      Marine 36
+    ## 2: Terrestrial 36
+    ## 3:  Freshwater 10
+
+``` r
+btall[, length(unique(rarefyID)), by = REALM]
+```
+
+    ##          REALM    V1
+    ## 1: Terrestrial  3159
+    ## 2:      Marine 38451
+    ## 3:  Freshwater   645
 
 ``` r
 bt3[, length(unique(rarefyID)), by = REALM]
 ```
 
-    ##          REALM   V1
-    ## 1:      Marine 8709
-    ## 2: Terrestrial 1422
-    ## 3:  Freshwater   74
+    ##          REALM    V1
+    ## 1:      Marine 14140
+    ## 2: Terrestrial  2128
+    ## 3:  Freshwater   141
 
 ``` r
 bt5[, length(unique(rarefyID)), by = REALM]
 ```
 
-    ##          REALM   V1
-    ## 1:      Marine 4517
-    ## 2: Terrestrial  911
-    ## 3:  Freshwater   38
+    ##          REALM    V1
+    ## 1:      Marine 16501
+    ## 2: Terrestrial  1721
+    ## 3:  Freshwater   153
 
 ``` r
 bt10[, length(unique(rarefyID)), by = REALM]
 ```
 
-    ##          REALM   V1
-    ## 1:      Marine 1563
-    ## 2: Terrestrial  594
-    ## 3:  Freshwater   16
+    ##          REALM    V1
+    ## 1:      Marine 13978
+    ## 2: Terrestrial  1154
+    ## 3:  Freshwater   149
 
 ``` r
 bt20[, length(unique(rarefyID)), by = REALM]
 ```
 
-    ##          REALM  V1
-    ## 1:      Marine  94
-    ## 2: Terrestrial 392
-    ## 3:  Freshwater   8
+    ##          REALM   V1
+    ## 1:      Marine 5350
+    ## 2: Terrestrial  523
+    ## 3:  Freshwater   76
 
 ## Write out
 
 Only if file doesn’t yet exist
 
 ``` r
+if(!file.exists(here('output', 'turnover_w_covariates.csv.gz'))){
+  write.csv(btall[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
+                   Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
+                   tempave.sc, tempave_metab.sc, seas.sc, 
+                   microclim.sc, tempchange, tsign, tempchange.sc, tempchange_abs.sc,
+                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, 
+                   nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
+                   duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
+            gzfile(here('output', 'turnover_w_covariates.csv.gz')), row.names = FALSE)
+  write.csv(scalingall, here('output','turnover_w_covariates_scaling.csv'), row.names = FALSE)
+}
+
 if(!file.exists(here('output', 'turnover_w_covariates3.csv.gz'))){
-  write.csv(bt3[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
-                  tempave.sc, tempave_metab.sc, seas.sc, 
-                  microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
-                  mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
-                  duration.sc, human_bowler.sc, REALM2)], 
+  write.csv(bt3[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
+                   Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
+                   tempave.sc, tempave_metab.sc, seas.sc, 
+                   microclim.sc, tempchange, tsign, tempchange.sc, tempchange_abs.sc,
+                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, 
+                   nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
+                   duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
             gzfile(here('output', 'turnover_w_covariates3.csv.gz')), row.names = FALSE)
   write.csv(scaling3, here('output','turnover_w_covariates_scaling3.csv'), row.names = FALSE)
 }
 
 if(!file.exists(here('output', 'turnover_w_covariates5.csv.gz'))){
-  write.csv(bt5[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
-                  tempave.sc, tempave_metab.sc, seas.sc, 
-                  microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
-                  mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
-                  duration.sc, human_bowler.sc, REALM2)], 
+  write.csv(bt5[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
+                   Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
+                   tempave.sc, tempave_metab.sc, seas.sc, 
+                   microclim.sc, tempchange, tsign, tempchange.sc, tempchange_abs.sc,
+                   mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, 
+                   nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
+                   duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
             gzfile(here('output', 'turnover_w_covariates5.csv.gz')), row.names = FALSE)
   write.csv(scaling5, here('output','turnover_w_covariates_scaling5.csv'), row.names = FALSE)
 }
 
 if(!file.exists(here('output', 'turnover_w_covariates10.csv.gz'))){
-  write.csv(bt10[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
-                  tempave.sc, tempave_metab.sc, seas.sc, 
-                  microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
-                  mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
-                  duration.sc, human_bowler.sc, REALM2)], 
+  write.csv(bt10[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
+                    Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
+                    tempave.sc, tempave_metab.sc, seas.sc, 
+                    microclim.sc, tempchange, tsign, tempchange.sc, tempchange_abs.sc,
+                    mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, 
+                    nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
+                    duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
             gzfile(here('output', 'turnover_w_covariates10.csv.gz')), row.names = FALSE)
   write.csv(scaling10, here('output','turnover_w_covariates_scaling10.csv'), row.names = FALSE)
 }
 
 if(!file.exists(here('output', 'turnover_w_covariates20.csv.gz'))){
-  write.csv(bt20[,.(STUDY_ID, rarefyID, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, Jtu.sc, Jbeta.sc, Horn.sc, 
-                  tempave.sc, tempave_metab.sc, seas.sc, 
-                  microclim.sc, tempchange, tempchange.sc, tempchange_abs.sc,
-                  mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
-                  duration.sc, human_bowler.sc, REALM2)], 
+  write.csv(bt20[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
+                    Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
+                    tempave.sc, tempave_metab.sc, seas.sc, 
+                    microclim.sc, tempchange, tsign, tempchange.sc, tempchange_abs.sc,
+                    mass.sc, speed.sc, lifespan.sc, consumerfrac.sc, endothermfrac.sc, 
+                    nspp.sc, thermal_bias.sc, npp.sc, veg.sc,
+                    duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
             gzfile(here('output', 'turnover_w_covariates20.csv.gz')), row.names = FALSE)
   write.csv(scaling20, here('output','turnover_w_covariates_scaling20.csv'), row.names = FALSE)
 }
@@ -695,58 +812,58 @@ bt3[, summary(Jbeta)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.0000  0.3529  0.5000  0.5512  0.7500  1.0000
+    ##  0.0000  0.4000  0.5556  0.5798  0.7778  1.0000
 
 ``` r
 bt3[, summary(Jtu)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ##  0.0000  0.0000  0.3111  0.3509  0.5133  1.0000
+    ##  0.0000  0.0000  0.3448  0.3848  0.5926  1.0000
 
 ``` r
 bt3[, summary(Horn)]
 ```
 
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
-    ##  0.0000  0.0809  0.3016  0.4243  0.8089  1.0000     789
+    ##  0.0000  0.0987  0.3628  0.4591  0.8718  1.0000    1527
 
 ``` r
 # fraction 0 or 1
 bt3[, sum(Jbeta == 0)/.N]
 ```
 
-    ## [1] 0.02943002
+    ## [1] 0.02827716
 
 ``` r
 bt3[, sum(Jtu == 0)/.N]
 ```
 
-    ## [1] 0.2934509
+    ## [1] 0.271538
 
 ``` r
 bt3[!is.na(Horn), sum(Horn == 0)/.N]
 ```
 
-    ## [1] 0.004626836
+    ## [1] 0.005870021
 
 ``` r
 bt3[, sum(Jbeta == 1)/.N]
 ```
 
-    ## [1] 0.1099134
+    ## [1] 0.1290552
 
 ``` r
 bt3[, sum(Jtu == 1)/.N]
 ```
 
-    ## [1] 0.1099134
+    ## [1] 0.1290552
 
 ``` r
 bt3[!is.na(Horn), sum(Horn == 1)/.N]
 ```
 
-    ## [1] 0.1124187
+    ## [1] 0.1316771
 
 ``` r
 # histograms

@@ -31,10 +31,15 @@ signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, invers
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
 
 # Turnover and covariates assembled by turnover_vs_temperature_prep.Rmd
+trendsall <- fread(here('output', 'turnover_w_covariates.csv.gz'))
 trends3 <- fread(here('output', 'turnover_w_covariates3.csv.gz'))
 trends5 <- fread(here('output', 'turnover_w_covariates5.csv.gz'))
 trends10 <- fread(here('output', 'turnover_w_covariates10.csv.gz'))
 trends20 <- fread(here('output', 'turnover_w_covariates20.csv.gz'))
+
+# And the scaling factors
+scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv'))
+
 
 ```
 
@@ -953,6 +958,109 @@ p4 <- ggplot(slope5, aes(x=tempave_metab, y=Hornslope, ymin=HornslopeTu, ymax=Ho
 
 grid.arrange(p1, p2, p3, p4, ncol = 2)
 ```
+
+## Temperature*temperature slope*REALM*duration (Antao-style)
+```{r}
+#modTdTTRealmAllJtu <- readRDS('temp/modTdTTRealmAllJtu.rds') # uses duration and tempchange
+#modTdTTRealmDurscAllJtu <- readRDS('temp/modTdTTRealmDurscAllJtu.rds') # uses duration.sc and tempchange
+modTsdTTRealmAllJtu <- readRDS('temp/modTsdTTRealmAllJtu.rds') # uses duration and abs(tempchange)
+modTsdTTRealmDurscAllJtu <- readRDS('temp/modTsdTTRealmDurscAllJtu.rds') # uses duration.sc and abs(tempchange)
+```
+
+### AIC
+```{r}
+AIC(modTsdTTRealmAllJtu, modTsdTTRealmDurscAllJtu) - min(AIC(modTsdTTRealmAllJtu, modTsdTTRealmDurscAllJtu)$AIC)
+```
+
+### Print terms
+```{r, echo=FALSE}
+summary(modTsdTTRealmAllJtu)
+```
+
+### Plot the interaction
+```{r, echo = FALSE}
+# set up prediction frame
+newdatM <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration.sc = seq(-2, 2, length.out=10)))
+newdatM$REALM <- 'Marine'
+newdatM$STUDY_ID <- 1
+newdatM$rarefyID <- 1
+newdatM[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
+newdatM[, tempchange_abs := tempchange_abs.sc * scalingall[var == 'tempchange_abs.sc', scale] + scalingall[var == 'tempchange_abs.sc', center]]
+
+newdatT <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration.sc = seq(-2, 2, length.out=10)))
+newdatT$REALM <- 'Terrestrial'
+newdatT$STUDY_ID <- 1
+newdatT$rarefyID <- 1
+newdatT[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
+newdatT[, tempchange_abs := tempchange_abs.sc * scalingall[var == 'tempchange_abs.sc', scale] + scalingall[var == 'tempchange_abs.sc', center]]
+
+newdatF <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration.sc = seq(-2, 2, length.out=10)))
+newdatF$REALM <- 'Freshwater'
+newdatF$STUDY_ID <- 1
+newdatF$rarefyID <- 1
+newdatF[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
+newdatF[, tempchange_abs := tempchange_abs.sc * scalingall[var == 'tempchange_abs.sc', scale] + scalingall[var == 'tempchange_abs.sc', center]]
+
+
+# predict
+newdatM$Jtu.sc <- predict(modTsdTTRealmDurscAllJtu, newdata = newdatM, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE)
+newdatT$Jtu.sc <- predict(modTsdTTRealmDurscAllJtu, newdata = newdatT, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE)
+newdatF$Jtu.sc <- predict(modTsdTTRealmDurscAllJtu, newdata = newdatF, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE)
+
+# calculate slopes
+slopesM <- newdatM[, .(slope = coef(lm(Jtu.sc ~ duration.sc))[2]), by = .(tempave_metab, tempchange_abs)]
+slopesT <- newdatT[, .(slope = coef(lm(Jtu.sc ~ duration.sc))[2]), by = .(tempave_metab, tempchange_abs)]
+slopesF <- newdatF[, .(slope = coef(lm(Jtu.sc ~ duration.sc))[2]), by = .(tempave_metab, tempchange_abs)]
+
+# plot
+p1 <- ggplot(slopesM, aes(tempchange_abs, tempave_metab, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Marine') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p2 <- ggplot(slopesT, aes(tempchange_abs, tempave_metab, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Terrestrial') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p3 <- ggplot(slopesF, aes(tempchange_abs, tempave_metab, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Freshwater') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+
+p1
+p2
+p3
+```
+
 
 ## Compare models
 
