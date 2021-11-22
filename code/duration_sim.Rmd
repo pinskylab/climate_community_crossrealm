@@ -72,9 +72,8 @@ ggplot(slopes, aes(duration, slope2_abs)) +
 ```
 
 # Plot an example of true positives
-Dataset is 1000 timeseries of differing durations from 3 to 102 observations through time. The response variable is positively related to time (random slope 0.005 to 0.01) AND the explanatory variable (abs value of Gaussian) with Gaussian noise and an inverse-logit transform to constrain it to 0-1. The explanatory variables are time and the slope of a Gaussian time-series of the same durations. Time and explanatory variable should be related to the response.  
-Two-stage regressions have a false positive.  
-One-stage regression does not.  
+Dataset is 1000 timeseries of differing durations from 3 to 102 observations through time. The response variable is positively related to time (random slope 0.005 to 0.01, called 'tslope') AND the explanatory variable (abs value of Gaussian) with Gaussian noise and an inverse-logit transform to constrain it to 0-1. The explanatory variables are time and the slope of a Gaussian time-series of the same durations. Time and explanatory variable should be related to the response.  
+
 ```{r}
 set.seed(5)
 slope <- function(x){
@@ -87,147 +86,92 @@ slopese <- function(x){
 }
 
 dat <- data.table(tsid = rep(1:1000, rep(3:102, 1000/100)))
-dat[, ':='(obsid = 1:.N, tslope = runif(1, 0.005, 0.1), value2 = rnorm(.N), duration = .N), by = tsid] # add time counter, a random temporal slope for each tsid, and a random explanatory slope
+dat[, ':='(obsid = 1:.N, tslope = runif(1, 0.005, 0.1), value2 = rnorm(.N), duration = .N, e = rnorm(.N, 0, 0.1)), by = tsid] # add time counter, a random temporal slope for each tsid, a random explanatory variable, and error
 dat[, slope2_abs := abs(slope(value2)), by = tsid]
-dat[, ':='(value1.logit = obsid*tslope + 0.5*tslope*obsid*slope2_abs + rnorm(.N))] # value1 has a positive slope like dissimilarites and is on a logit scale. Positively related to slope2.
+dat[, ':='(value1.logit = obsid*tslope + 0.5*tslope*obsid*slope2_abs + e)] # value1 has a positive slope like dissimilarites and is on a logit scale. Positively related to slope2.
 dat[, value1 := exp(value1.logit)/(exp(value1.logit)+1)] # inverse-logit for value 1
 slopes <- dat[, .(slope1 = slope(value1), slope2_abs = unique(slope2_abs),
                   se1 = slopese(value1), duration = .N), by = tsid]
 
-print('CORRELATION TEST')
-slopes[, cor.test(slope1, slope2_abs)] # a problem with simple correlation in this example
-print('WEIGHTED REGRESSION')
-slopes[, summary(lm(slope1 ~ slope2_abs, weights = 1/se1))] # problem not solved by weighting
-print('WEIGHTED GLMM')
-slopes[, summary(glmmTMB(slope1 ~ slope2_abs, disp=~se1))] # not solved by glmmTMB and dispersion
-print('ONE-STAGE GLMM')
-dat[, summary(glmmTMB(value1 ~ obsid + obsid:slope2_abs + (obsid|tsid)))] # maybe addressed by a one-stage model
-
 ggplot(slopes, aes(slope2_abs, slope1, color = duration)) + geom_point() + geom_smooth()
-dat[, .(max = max(value1), duration = duration), by = tsid][, plot(duration, max)]
+ggplot(dat[, .(max = max(value1), duration = unique(duration), tslope = unique(tslope)), by = tsid], aes(duration, max, color = tslope)) +
+    geom_point() +
+    labs(title = 'Visualize the duration effect: maxes out at 1. Tslope is the slope vs. time')
 
 ```
 
 # False positive analysis
 Generate pairs of random time-series and correlate the slopes. Time-series have a fixed length or a variety of lengths from 3 to 102 steps. The response time-series is constrained 0-1. Do this many times to check for false-positive correlations using cor.test, a weighted linear regression, and a one-stage mixed-effects analysis with Gaussian or Beta errors.  
-```{r,message=FALSE, warning=FALSE }
-if(file.exists(here('output', 'simulated_ts.csv.gz'))){
+
+Only the one-stage regression with beta errors appears to have a reasonable false-positive rate.
+```{r,message=FALSE, warning=FALSE, results='hide', echo = FALSE}
+if(!file.exists(here('output', 'simulated_ts.csv.gz'))){
+    stop('Need to run duration_sim.R first.')
+} else {
     #cors <- fread(here('temp', 'simulated_ts_temp.csv.gz')) # the in-progress analysis
     cors <- fread(here('output', 'simulated_ts.csv.gz')) # the full analysis
-} else {
-    stop('Need to run duration_sim.R first.')
+    
+    ylims = c(-10, 0)
+    normparms <- cors[, .(mean = mean(lm.m), sd = sd(lm.m)), by = range] # parameters for Gaussian curves on each histogram
+    x <- seq(-1,1,length.out = 1000)
+    
+    cors[range == 0, hist(lm.m, breaks = 40, xlab = 'Correlation slopes', main = 'Range = 0', freq = FALSE)]; normparms[range == 0, lines(x, dnorm(x,mean, sd))]
+    cors[range == 9, hist(lm.m, breaks = 40, xlab = 'Correlation slopes', main = 'Range = 9', freq = FALSE)]; normparms[range == 9, lines(x, dnorm(x,mean, sd))]
+    cors[range == 24, hist(lm.m, breaks = 40, xlab = 'Correlation slopes', main = 'Range = 24', freq = FALSE)]; normparms[range == 24, lines(x, dnorm(x,mean, sd))]
+    cors[range == 49, hist(lm.m, breaks = 40, xlab = 'Correlation slopes', main = 'Range = 49', freq = FALSE)]; normparms[range == 49, lines(x, dnorm(x,mean, sd))]
+    cors[range == 99, hist(lm.m, breaks = 40, xlab = 'Correlation slopes', main = 'Range = 99', freq = FALSE)]; normparms[range == 99, lines(x, dnorm(x,mean, sd))]
+    
+    corsl <- melt(cors, id.vars = c('n', 'minduration', 'maxduration', 'name', 'range'), measure.vars = c('cor.p', 'cor.cor', 'lm.m', 'glmmwgt.p', 'glmmwgt.beta', 'glmmonegauss.p', 'glmmonegauss.beta', 'glmmonebeta.p', 'glmmonebeta.beta'))
+    
+    prop <- corsl[variable %in% c('cor.p', 'glmmwgt.p', 'glmmonegauss.p', 'glmmonebeta.p'), 
+                  .(nsims = sum(!is.na(value)), prop = sum(value < 0.05, na.rm=TRUE)/sum(!is.na(value), na.rm=TRUE)), by = c("range", "n", "variable")]
+    prop[, c("lower", "upper") := binomci(nsims*prop, nsims), by = .(range, n, variable)]
+    
+    ggplot(cors, aes(range, log10(cor.p), group = as.factor(n), color = as.factor(n))) +
+        geom_point() +
+        geom_smooth() +
+        labs(x = 'Range of durations', title = 'Correlation') +
+        lims(y = ylims) +
+        geom_abline(intercept = log10(0.05), slope = 0, linetype = 'dashed', color = 'red')
+    
+    dg = position_dodge(5)
+    ggplot(prop, aes(range, prop, group = variable, color = variable)) +
+        geom_line(position = dg) +
+        geom_point(position = dg) +
+        geom_errorbar(aes(ymin=lower, ymax=upper), width=.1, position = dg) +
+        labs(x = 'Range of durations', title = 'Overall comparison of false positive rates', y = 'Proportion false positive') +
+        lims(y = c(0,1)) +
+        geom_abline(intercept = 0.05, slope = 0, linetype = 'dashed', color = 'red') +
+        facet_grid(. ~ n)
 }
-```
-
-
-
-
-## Plot the results
-Only the one-stage regression with beta errors appears to have a reasonable false-positive rate.
-```{r, echo = FALSE, message = FALSE, results = 'hide'}
-ylims = c(-10, 0)
-normparms <- cors[, .(mean = mean(lm.m), sd = sd(lm.m)), by = range] # parameters for Gaussian curves on each histogram
-x <- seq(-1,1,length.out = 1000)
-
-cors[range == 0, hist(lm.m, breaks = 40, xlab = 'Correlation slopes', main = 'Range = 0', freq = FALSE)]; normparms[range == 0, lines(x, dnorm(x,mean, sd))]
-cors[range == 9, hist(lm.m, breaks = 40, xlab = 'Correlation slopes', main = 'Range = 9', freq = FALSE)]; normparms[range == 9, lines(x, dnorm(x,mean, sd))]
-cors[range == 24, hist(lm.m, breaks = 40, xlab = 'Correlation slopes', main = 'Range = 24', freq = FALSE)]; normparms[range == 24, lines(x, dnorm(x,mean, sd))]
-cors[range == 49, hist(lm.m, breaks = 40, xlab = 'Correlation slopes', main = 'Range = 49', freq = FALSE)]; normparms[range == 49, lines(x, dnorm(x,mean, sd))]
-cors[range == 99, hist(lm.m, breaks = 40, xlab = 'Correlation slopes', main = 'Range = 99', freq = FALSE)]; normparms[range == 99, lines(x, dnorm(x,mean, sd))]
-
-corsl <- melt(cors, id.vars = c('n', 'minduration', 'maxduration', 'name', 'range'), measure.vars = c('cor.p', 'cor.cor', 'lm.m', 'glmmwgt.p', 'glmmwgt.beta', 'glmmonegauss.p', 'glmmonegauss.beta', 'glmmonebeta.p', 'glmmonebeta.beta'))
-
-prop <- corsl[variable %in% c('cor.p', 'glmmwgt.p', 'glmmonegauss.p', 'glmmonebeta.p'), 
-              .(nsims = sum(!is.na(value)), prop = sum(value < 0.05, na.rm=TRUE)/sum(!is.na(value), na.rm=TRUE)), by = c("range", "n", "variable")]
-prop[, c("lower", "upper") := binomci(nsims*prop, nsims), by = .(range, n, variable)]
-
-ggplot(cors, aes(range, log10(cor.p), group = as.factor(n), color = as.factor(n))) +
-           geom_point() +
-           geom_smooth() +
-           labs(x = 'Range of durations', title = 'Correlation') +
-           lims(y = ylims) +
-           geom_abline(intercept = log10(0.05), slope = 0, linetype = 'dashed', color = 'red')
-
-dg = position_dodge(5)
-ggplot(prop, aes(range, prop, group = variable, color = variable)) +
-    geom_line(position = dg) +
-    geom_point(position = dg) +
-    geom_errorbar(aes(ymin=lower, ymax=upper), width=.1, position = dg) +
-    labs(x = 'Range of durations', title = 'Overall comparison of false positive rates', y = 'Proportion false positive') +
-    lims(y = c(0,1)) +
-    geom_abline(intercept = 0.05, slope = 0, linetype = 'dashed', color = 'red') +
-    facet_grid(. ~ n)
-
 ```
          
          
 # Power analysis
-NOT FINISHED  
-and not evaluated  
-
-Generate pairs of correlated time-series with error and correlate the slopes. Time-series have a fixed length or a variety of lengths from 3 to 102 steps. Do this many times to check for true positive rate with a one-stage mixed-effects analysis.  
+Generate pairs of correlated time-series (effect 0.1, 1, or 10) with error and correlate the slopes. Time-series have a fixed length (10) or a variety of lengths from (3 to 102 steps). Do this 100 times to check for true positive rate with a one-stage mixed-effects analysis.  
 ```{r, eval = FALSE}
-if(file.exists(here('output', 'simulated_ts_power.csv.gz'))){
-    corspower <- fread(here('output', 'simulated_ts_power.csv.gz'))
+if(!file.exists(here('temp', 'simulated_ts_temp_pow.csv.gz')) & !file.exists(here('output', 'simulated_ts_pow.csv.gz'))){
+    stop('Need to run duration_sim_pow.R first.')
 } else {
-    set.seed(5)
-    nreps <- 100 # number of datasets
+    corspower <- fread(here('temp', 'simulated_ts_temp_pow.csv.gz'))
+    #corspower <- fread(here('output', 'simulated_ts_pow.csv.gz'))
     
-    corspower <- data.table(n = 1000, minduration = rep(c(10,3), nreps), maxduration = rep(c(10, 102), nreps), beta = runif(2*nreps), glmmone.p = NA_real_, glmmone.beta = NA_real_) # holds the summaries from each dataset. use n = 1000 timeseries per dataset. beta is the true effect of slope2 on the response.
-    #corspower2 <- copy(corspower)
-    #corspower2[, n:=10000] # add another run with 10k timeseries per dataset
-    #corspower <- rbind(corspower, corspower2) 
-    #rm(corspower2)
+    corspowerl <- melt(corspower, id.vars = c('n', 'minduration', 'maxduration', 'name', 'range', 'effect'), measure.vars = c('lm.p', 'lm.m', 'glmmwgt.p', 'glmmwgt.beta', 'glmmonebeta.p', 'glmmonebeta.beta'))
     
-    pb <- txtProgressBar(min = 0, max = nrow(corspower), style = 3) # progress bar
+    proppower <- corspowerl[variable %in% c('lm.p', 'glmmwgt.p', 'glmmonebeta.p'), 
+                  .(nsims = sum(!is.na(value)), propdetect = sum(value < 0.05, na.rm=TRUE)/sum(!is.na(value), na.rm=TRUE)), by = c("range", "n", "variable", "effect")]
+    proppower[nsims >0, c("lower", "upper") := binomci(nsims*propdetect, nsims), by = .(range, n, variable, effect)]
     
-    for(i in 1:nrow(corspower)){
-        # make datasets with timeseries of all the same length
-        if(corspower[i, minduration == maxduration]){
-            len <- corspower[i, minduration]
-            dat <- data.table(tsid = rep(1:corspower[i,n], rep(len, corspower[i,n])), beta = corspower[i, beta])
-        }
-        
-        # variable length timeseries
-        if(corspower[i, minduration != maxduration]){
-            mind <- corspower[i, minduration]
-            maxd <- corspower[i, maxduration]
-            ndur <- maxd - mind + 1
-            dat <- data.table(tsid = rep(1:corspower[i,n], rep(mind:maxd, corspower[i,n]/ndur)))
-        }
-
-        # add response and explanatory variables
-        dat[, ':='(obsid = 1:.N, tslope = runif(1, 0.005, 0.1), value2 = rnorm(.N), duration = .N), by = tsid] # add time counter, a random temporal slope for each tsid, and a random explanatory slope
-        dat[, slope2_abs := abs(slope(value2)), by = tsid]
-        dat[, ':='(value1.logit = obsid*tslope + beta*tslope*obsid*slope2_abs + rnorm(.N))] # value1 has a positive slope like dissimilarities and is on a logit scale. Positively related to slope2.
-        dat[, value1 := exp(value1.logit)/(exp(value1.logit)+1)] # inverse logit-transform
-        dat[, value1 := exp(value1.logit)/(exp(value1.logit)+1)] # inverse-logit for value 1
-
-
-        # calc slopes
-        dat[, slope2_abs := abs(slope(value2)), by = tsid]
-        slopes <- dat[, .(slope1 = slope(value1), slope2_abs = unique(slope2_abs), se1 = slopese(value1)), by = tsid]
-        
-        # statistical tests
-        test <- slopes[, cor.test(slope1, slope2_abs)] # a pearson correlation
-        test2 <- slopes[, coef(lm(slope1 ~ slope2_abs))[2]] # a simple regression
-        test3 <- slopes[, summary(glmmTMB(slope1 ~ slope2_abs, disp=~se1))$coefficients$cond] # glmmTMB and dispersion
-        mod4 <- dat[, glmmTMB(value1 ~ obsid + obsid:slope2_abs + (obsid|tsid))] # the coef summary from a one-stage model
-        if(mod4$fit$convergence==0){ # if the one-stage model converged
-            test4 <- summary(mod4)$coefficients$cond
-            corspower[i, ':='(cor.p = test$p.value, cor.cor = test$estimate, lm.m = test2, glmmwgt.p = test3[2,4], glmmwgt.beta = test3[2,1], glmmone.p = test4[3,4], glmmone.beta = test4[3,1])]    
-        } else {  # if not converged
-            corspower[i, ':='(cor.p = test$p.value, cor.cor = test$estimate, lm.m = test2, glmmwgt.p = test3[2,4], glmmwgt.beta = test3[2,1], glmmone.p = NA, glmmone.beta = NA)]    
-        }
-        
-        setTxtProgressBar(pb, i)
-    }
-    close(pb)
-    
-    corspower[, name := paste0(minduration, '-', maxduration)]
-    corspower[, range := maxduration - minduration]
-    
-    write.csv(corspower, gzfile(here('output', 'simulated_ts_power.csv.gz')), row.names = FALSE)
+    dg = position_dodge(0.1)
+    ggplot(proppower, aes(effect, propdetect, group = variable, color = variable)) +
+        geom_line(position = dg) +
+        geom_point(position = dg) +
+        geom_errorbar(aes(ymin=lower, ymax=upper), width=.1, position = dg) +
+        labs(x = 'Effect size', title = 'Comparison of power', y = 'Proportion true positives') +
+        lims(y = c(0,1)) +
+        scale_x_log10() + 
+        geom_abline(intercept = 0.8, slope = 0, linetype = 'dashed', color = 'red') +
+        facet_grid(. ~ range, labeller = label_both)
 }
 ```
 
