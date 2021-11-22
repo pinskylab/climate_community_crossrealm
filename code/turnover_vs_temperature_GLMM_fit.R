@@ -3443,8 +3443,8 @@ if(fitmod == 'modTdTTRealmAllJtu'){
                        REALM:tempave_metab.sc:tempchange.sc:duration +
                        (duration|STUDY_ID/rarefyID), 
                    data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+                   dispformula = ~REALM) #, 
+                 #  control = glmmTMBControl(profile=TRUE))
     MATCHMOD <- TRUE
 }
 
@@ -3459,7 +3459,7 @@ if(fitmod == 'modTdTTRealmDurscAllJtu'){
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
                    dispformula = ~REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+                   control = glmmTMBControl(profile=TRUE))
     MATCHMOD <- TRUE
 }
 
@@ -3494,6 +3494,96 @@ if(fitmod == 'modTsdTTRealmDurscAllJtu'){
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
+
+
+# tsign:T:sdT:REALM:duration #########################
+if(fitmod == 'modTsdTTRealmtsignAllJtu'){
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration +
+                       REALM:duration +
+                       REALM:tsign:tempchange_abs.sc:duration + 
+                       REALM:tsign:tempave_metab.sc:duration +
+                       REALM:tsign:tempave_metab.sc:tempchange_abs.sc:duration +
+                       (duration|STUDY_ID/rarefyID), 
+                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# thermal_bias:T:sdT:REALM:duration #########################
+if(fitmod == 'modTsdTTRealmthermal_biasAllJtu'){
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration +
+                       REALM:duration +
+                       REALM:tempchange_abs.sc:duration + 
+                       REALM:tempave_metab.sc:duration +
+                       REALM:tempave_metab.sc:tempchange_abs.sc:duration +
+                       REALM:thermal_bias:tempchange_abs.sc:duration + 
+                       REALM:thermal_bias:tempave_metab.sc:duration +
+                       REALM:thermal_bias:tempave_metab.sc:tempchange_abs.sc:duration +
+                       (duration|STUDY_ID/rarefyID), 
+                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+
+# npp:T:sdT:REALM:duration #########################
+if(fitmod == 'modTsdTTRealmnppAllJtu'){
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration +
+                       REALM:duration +
+                       REALM:tempchange_abs.sc:duration + 
+                       REALM:tempave_metab.sc:duration +
+                       REALM:tempave_metab.sc:tempchange_abs.sc:duration +
+                       REALM:npp.sc:tempchange_abs.sc:duration + 
+                       REALM:npp.sc:tempave_metab.sc:duration +
+                       REALM:npp.sc:tempave_metab.sc:tempchange_abs.sc:duration +
+                       (duration|STUDY_ID/rarefyID), 
+                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# seas:T:sdT:REALM:duration #########################
+if(fitmod == 'modTsdTTRealmseasAllJtu'){
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration +
+                       REALM:duration +
+                       REALM:tempchange_abs.sc:duration + 
+                       REALM:tempave_metab.sc:duration +
+                       REALM:tempave_metab.sc:tempchange_abs.sc:duration +
+                       REALM:seas.sc:tempchange_abs.sc:duration + 
+                       REALM:seas.sc:tempave_metab.sc:duration +
+                       REALM:seas.sc:tempave_metab.sc:tempchange_abs.sc:duration +
+                       (duration|STUDY_ID/rarefyID), 
+                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# microclim:T:sdT:REALM:duration #########################
+if(fitmod == 'modTsdTTRealmmicroclimAllJtu'){
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration +
+                       REALM:duration +
+                       REALM:tempchange_abs.sc:duration + 
+                       REALM:tempave_metab.sc:duration +
+                       REALM:tempave_metab.sc:tempchange_abs.sc:duration +
+                       REALM:microclim.sc:tempchange_abs.sc:duration + 
+                       REALM:microclim.sc:tempave_metab.sc:duration +
+                       REALM:microclim.sc:tempave_metab.sc:tempchange_abs.sc:duration +
+                       (duration|STUDY_ID/rarefyID), 
+                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
 
 
 
