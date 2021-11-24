@@ -31,11 +31,12 @@ slopese <- function(x){
 
 
 
-# Simulations #############
+# Set up simulations #############
 set.seed(5)
 nreps <- 100 # number of datasets
+effects <- c(0.1, 10^(-2/3), 10^(-1/3), 1, 10) # effect sizes to simulate
 
-cors <- data.table(n = 1000, minduration = rep(c(10,3), nreps*3), maxduration = rep(c(10, 102), nreps*3), effect = rep(c(0.1, 1, 10), c(nreps*2, nreps*2, nreps*2)), 
+cors <- data.table(n = 1000, minduration = rep(c(10,3), nreps*length(effects)), maxduration = rep(c(10, 102), nreps*length(effects)), effect = rep(effects, rep(nreps*2, length(effects))), 
                    lm.p = NA_real_, lm.m = NA_real_,
                    glmmwgt.p = NA_real_, glmmwgt.beta = NA_real_,
                    glmmonebeta.p = NA_real_, glmmonebeta.beta = NA_real_) # holds the parameters for and summaries from each dataset. use n = 1000 timeseries per dataset.
@@ -44,12 +45,26 @@ cors <- data.table(n = 1000, minduration = rep(c(10,3), nreps*3), maxduration = 
 #cors <- rbind(cors, cors2) 
 #rm(cors2)
 
-cors[, name := paste0(minduration, '-', maxduration, '-', effect)]
+cors[, repID := 1:.N, by = .(n, minduration, maxduration, effect)] # to differentiate the rows for each replicate in a given parameter set
+cors[, name := paste0(minduration, '-', maxduration, '-', signif(effect,2))]
 cors[, range := maxduration - minduration]
 
+if(file.exists(here('output', 'simulated_ts_pow.csv.gz'))){ # check for previous set of simulations
+   corsold <- fread(here('temp', 'simulated_ts_temp_pow.csv.gz'))
+   if(!('repID' %in% names(corsold))){
+       corsold[, repID := 1:.N, by = .(n, minduration, maxduration, effect)] # add repID column if missing
+   }
+   corsnew <- merge(corsold, cors[, .(n, minduration, maxduration, effect, name, range, repID)], all = TRUE) # merge in the existing sims so that we add on rather than replace
+   cors <- corsnew
+}
 
-print(paste0(nrow(cors), ' simulations to make'))
-for(i in 1:nrow(cors)){
+cors[, todo := is.na(lm.p) | is.na(lm.m) | is.na(glmmwgt.p) | is.na(glmmwgt.beta) | is.na(glmmonebeta.p) | is.na(glmmonebeta.beta)] # mark rows to simulate (or re-sim if some model fits failed)
+
+    
+# Run simulations #######################
+print(paste0(cors[, sum(todo)], ' simulations to make'))
+rowstodo <- cors[, which(todo)]
+for(i in rowstodo){
     cat(i)
     
     # make datasets with timeseries of all the same length
@@ -93,9 +108,14 @@ for(i in 1:nrow(cors)){
 
     # write out temp file
     write.csv(cors, gzfile(here('temp', 'simulated_ts_temp_pow.csv.gz')), row.names = FALSE)
+    
+    print(warnings())
 }
 
 
 
 # write out full file ##################
+cors[, todo := NULL] # remove the todo column
 write.csv(cors, gzfile(here('output', 'simulated_ts_pow.csv.gz')), row.names = FALSE)
+
+print(Sys.time())
