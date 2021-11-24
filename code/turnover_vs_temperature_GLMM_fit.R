@@ -34,38 +34,19 @@ library(performance) # for R2
 
 # Turnover and covariates assembled by assemble_turnover_covariates.Rmd
 trendsall <- fread('output/turnover_w_covariates.csv.gz')
-trends5 <- fread('output/turnover_w_covariates5.csv.gz')
-trends10 <- fread('output/turnover_w_covariates10.csv.gz')
-trends20 <- fread('output/turnover_w_covariates20.csv.gz')
 
 trendsall[, tsign := as.factor(tsign)]
-trends5[, tsign := as.factor(tsign)]
-trends10[, tsign := as.factor(tsign)]
-trends20[, tsign := as.factor(tsign)]
 
 # Models ############################
 
 ## Choose dataset
 iallJtu <- trendsall[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
-i5Jtu <- trends5[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
-i10Jtu <- trends10[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
-i20Jtu <- trends20[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
-
-i5Jne <- trends5[, complete.cases(Jne.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
-i10Jne <- trends10[, complete.cases(Jne.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
-i20Jne <- trends20[, complete.cases(Jne.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
-
-i5Horn <- trends5[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
-i10Horn <- trends10[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
-i20Horn <- trends20[, complete.cases(Horn.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
-
-trends5Jtu <- trends5[i5Jtu,]
-trends5Horn <- trends5[i5Horn,]
 
 ## Compare variance structures with duration.sc ############################
 fixed <- 'Jtu.sc ~ duration.sc + REALM:duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + mass.sc:duration.sc + nspp.sc:duration.sc + seas.sc:duration.sc + microclim.sc:duration.sc + npp.sc:duration.sc + human_bowler.sc:REALM2:duration.sc'
 
 if(fitmod == 'modRFgauss10'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
     modRFgauss10 <- glmmTMB(formula(fixed), data = trends10[i10,], family = gaussian(), control = glmmTMBControl(profile=TRUE))
     summary(modRFgauss10)
@@ -78,6 +59,7 @@ if(fitmod == 'modRFgauss10'){
 
 
 if(fitmod == 'modRFbeta10'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
     modRFbeta10 <- glmmTMB(formula(fixed), data = trends10[i10,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add beta errors
     summary(modRFbeta10)
@@ -89,6 +71,7 @@ if(fitmod == 'modRFbeta10'){
 }
 
 if(fitmod == 'modRFrID10'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
     modRFrID10 <- glmmTMB(formula(paste(fixed, '+(1|rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
                          control = glmmTMBControl(profile=TRUE)) # add random effects
@@ -101,6 +84,7 @@ if(fitmod == 'modRFrID10'){
 }
 
 if(fitmod == 'modRF2lev10'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
     modRF2lev10 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
                           control = glmmTMBControl(profile=TRUE)) # add nested random effects
@@ -114,6 +98,7 @@ if(fitmod == 'modRF2lev10'){
 
 
 if(fitmod == 'modRFnestedRE10'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
     modRFnestedRE10 <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
                               control = glmmTMBControl(profile=TRUE)) # add nested random effects
@@ -127,6 +112,7 @@ if(fitmod == 'modRFnestedRE10'){
 
 
 if(fitmod == 'modRFslopeRE10'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
     modRFslopeRE10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
                              control = glmmTMBControl(profile=TRUE)) # add random slopes
@@ -140,6 +126,7 @@ if(fitmod == 'modRFslopeRE10'){
 
 
 if(fitmod == 'modRFslopeRE2lev10'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
     modRFslopeRE2lev10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
                                  control = glmmTMBControl(profile=TRUE)) # add random slopes
@@ -153,6 +140,7 @@ if(fitmod == 'modRFslopeRE2lev10'){
 
 
 if(fitmod == 'modRFdisp10'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
     modRFdisp10 <- glmmTMB(formula(fixed), data = trends10[i10,], family = beta_family(link = 'logit'), 
                           dispformula = ~nspp.sc, 
@@ -167,6 +155,7 @@ if(fitmod == 'modRFdisp10'){
 
 
 if(fitmod == 'modRF2levdisp10'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
     modRFdisp2levOnlyint10 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
                                      dispformula = ~nspp.sc, 
@@ -181,6 +170,7 @@ if(fitmod == 'modRF2levdisp10'){
 
 
 if(fitmod == 'modRFslopeRE2levdisp10'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
     modRFslopeRE2levdisp10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
                                      dispformula = ~nspp.sc, 
@@ -195,6 +185,7 @@ if(fitmod == 'modRFslopeRE2levdisp10'){
 
 
 if(fitmod == 'modRFslopeREdisp10'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
     modRFslopeREdisp10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
                                      dispformula = ~nspp.sc, 
@@ -209,6 +200,7 @@ if(fitmod == 'modRFslopeREdisp10'){
 
 
 if(fitmod == 'modRF2levdisprealm10'){ # 2 level RE, slope vs. duration, disp formula by realm
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
     modRF2levdisprealm10 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
                                            dispformula = ~nspp.sc+REALM, 
@@ -223,6 +215,7 @@ if(fitmod == 'modRF2levdisprealm10'){ # 2 level RE, slope vs. duration, disp for
 
 
 if(fitmod == 'modRFslopeRE2levdisprealm10'){    
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
     modRFslopeRE2levdisprealm10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
                                         dispformula = ~nspp.sc+REALM, 
@@ -236,85 +229,13 @@ if(fitmod == 'modRFslopeRE2levdisprealm10'){
 }
 
 
-## Compare variance structures with durationlog.sc ############################
-fixed <- 'Jtu.sc ~ durationlog.sc + REALM:durationlog.sc + tempchange_abs.sc:durationlog.sc + tempave_metab.sc:durationlog.sc + mass.sc:durationlog.sc + nspp.sc:durationlog.sc + seas.sc:durationlog.sc + microclim.sc:durationlog.sc + npp.sc:durationlog.sc + human_bowler.sc:REALM2:durationlog.sc'
-
-
-if(fitmod == 'modRFdurlog2levdisp10'){
-    print(paste(sum(i10), 'data points'))
-    modRFdurlog2levdisp10 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                                      dispformula = ~nspp.sc, 
-                                      control = glmmTMBControl(profile=TRUE))
-    summary(modRFdurlog2levdisp10)
-    saveRDS(modRFdurlog2levdisp10, file = 'temp/modRFdurlog2levdisp10.rds')
-    print('saved modRFdurlog2levdisp10.rds')
-    print(Sys.time())
-    print(performance::r2(modRFdurlog2levdisp10))
-    MATCHMOD <- TRUE
-}
-
-if(fitmod == 'modRFdurlogslopeRE2levdisp10'){
-    print(paste(sum(i10), 'data points'))
-    modRFdurlogslopeRE2levdisp10 <- glmmTMB(formula(paste(fixed, '+(durationlog.sc|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                                      dispformula = ~nspp.sc, 
-                                      control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    summary(modRFdurlogslopeRE2levdisp10)
-    saveRDS(modRFdurlogslopeRE2levdisp10, file = 'temp/modRFdurlogslopeRE2levdisp10.rds')
-    print('saved modRFdurlogslopeRE2levdisp10.rds')
-    print(Sys.time())
-    print(performance::r2(modRFdurlogslopeRE2levdisp10))
-    MATCHMOD <- TRUE
-}
-
-
-if(fitmod == 'modRFdurlogslopeREdisp10'){
-    print(paste(sum(i10), 'data points'))
-    modRFdurlogslopeREdisp10 <- glmmTMB(formula(paste(fixed, '+(durationlog.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                                  dispformula = ~nspp.sc, 
-                                  control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    summary(modRFdurlogslopeREdisp10)
-    saveRDS(modRFdurlogslopeREdisp10, file = 'temp/modRFdurlogslopeREdisp10.rds')
-    print('saved modRFdurlogslopeREdisp10.rds')
-    print(Sys.time())
-    print(performance::r2(modRFdurlogslopeREdisp10))
-    MATCHMOD <- TRUE
-}
-
-
-if(fitmod == 'modRFdurlog2levdisprealm10'){
-    print(paste(sum(i10), 'data points'))
-    modRFdurlog2levdisprealm10 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                                    dispformula = ~nspp.sc+REALM, 
-                                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    summary(modRFdurlog2levdisprealm10)
-    saveRDS(modRFdurlog2levdisprealm10, file = 'temp/modRFdurlog2levdisprealm10.rds')
-    print('saved modRFdurlog2levdisprealm10.rds')
-    print(Sys.time())
-    print(performance::r2(modRFdurlog2levdisprealm10))
-    MATCHMOD <- TRUE
-}
-
-
-if(fitmod == 'modRFdurlogslopeRE2levdisprealm10'){
-        print(paste(sum(i10), 'data points'))
-    modRFdurlogslopeRE2levdisprealm10 <- glmmTMB(formula(paste(fixed, '+(durationlog.sc|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                                           dispformula = ~nspp.sc+REALM, 
-                                           control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    summary(modRFdurlogslopeRE2levdisprealm10)
-    saveRDS(modRFdurlogslopeRE2levdisprealm10, file = 'temp/modRFdurlogslopeRE2levdisprealm10.rds')
-    print('saved modRFdurlogslopeRE2levdisprealm10.rds')
-    print(Sys.time())
-    print(performance::r2(modRFdurlogslopeRE2levdisprealm10))
-    MATCHMOD <- TRUE
-}
-
-
 
 # SINGLE FACTORS ############################
 # Realm:duration ############################
 
 
 if(fitmod == 'modRealm10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + REALM:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -324,6 +245,7 @@ if(fitmod == 'modRealm10Jtu'){
 }
 
 if(fitmod == 'modRealm10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + REALM:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -337,6 +259,7 @@ if(fitmod == 'modRealm10Horn'){
 
 
 if(fitmod == 'modT10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -346,6 +269,7 @@ if(fitmod == 'modT10Jtu'){
 }
 
 if(fitmod == 'modT10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -358,6 +282,7 @@ if(fitmod == 'modT10Horn'){
 
 
 if(fitmod == 'moddT10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -367,6 +292,7 @@ if(fitmod == 'moddT10Jtu'){
 }
 
 if(fitmod == 'moddT10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -379,6 +305,7 @@ if(fitmod == 'moddT10Horn'){
 # sdT:duration ############################
 
 if(fitmod == 'modsdT5Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
@@ -392,6 +319,7 @@ if(fitmod == 'modsdT5Horn'){
 # mass:duration #########################
 
 if(fitmod == 'modmass10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + 
                        mass.sc:duration.sc +
@@ -403,6 +331,7 @@ if(fitmod == 'modmass10Jtu'){
 }
 
 if(fitmod == 'modmass10Jne'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jne), 'data points'))
     mod <- glmmTMB(Jne.sc ~ duration.sc +
                        mass.sc:duration.sc +
@@ -415,6 +344,7 @@ if(fitmod == 'modmass10Jne'){
 
 
 if(fitmod == 'modmass10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc +
                        mass.sc:duration.sc +
@@ -429,6 +359,7 @@ if(fitmod == 'modmass10Horn'){
 # npp:duration #########################
 
 if(fitmod == 'modnpp10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc +
                        npp.sc:duration.sc +
@@ -440,6 +371,7 @@ if(fitmod == 'modnpp10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, li
 }
 
 if(fitmod == 'modnpp10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + 
                        npp.sc:duration.sc +
@@ -453,6 +385,7 @@ if(fitmod == 'modnpp10Horn'){
 # seas:duration #########################
 
 if(fitmod == 'modseas10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + 
                        seas.sc:duration.sc +
@@ -464,6 +397,7 @@ if(fitmod == 'modseas10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, l
 }
 
 if(fitmod == 'modseas10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + 
                        seas.sc:duration.sc +
@@ -477,6 +411,7 @@ if(fitmod == 'modseas10Horn'){
 # microclim:duration #########################
 
 if(fitmod == 'modmicroclim10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + 
                        microclim.sc:duration.sc +
@@ -488,6 +423,7 @@ if(fitmod == 'modmicroclim10Jtu'){ # trims out freshwater and >60 or <23.5 deg l
 }
 
 if(fitmod == 'modmicroclim10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + 
                        microclim.sc:duration.sc +
@@ -502,6 +438,7 @@ if(fitmod == 'modmicroclim10Horn'){
 # human:duration #########################
 
 if(fitmod == 'modhuman10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + 
                        human_bowler.sc:duration.sc +
@@ -513,6 +450,7 @@ if(fitmod == 'modhuman10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, 
 }
 
 if(fitmod == 'modhuman10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + 
                        human_bowler.sc:duration.sc +
@@ -528,6 +466,7 @@ if(fitmod == 'modhuman10Horn'){
 # T+REALM:duration ############################
 
 if(fitmod == 'modTRealm10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -538,6 +477,7 @@ if(fitmod == 'modTRealm10Jtu'){
 
 
 if(fitmod == 'modTRealm10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -550,6 +490,7 @@ if(fitmod == 'modTRealm10Horn'){
 # T+dT:duration ############################
 
 if(fitmod == 'modTdT10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                         data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -559,6 +500,7 @@ if(fitmod == 'modTdT10Jtu'){
 }
 
 if(fitmod == 'modTdT10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                         data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -570,6 +512,7 @@ if(fitmod == 'modTdT10Horn'){
 # T+sdT:duration ############################
 
 if(fitmod == 'modTsdT5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + 
                        tempave_metab.sc:duration.sc + 
@@ -581,6 +524,7 @@ if(fitmod == 'modTsdT5Jtu'){
 }
 
 if(fitmod == 'modTsdT5Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + 
                        tempave_metab.sc:duration.sc + 
@@ -596,6 +540,7 @@ if(fitmod == 'modTsdT5Horn'){
 
 
 if(fitmod == 'modTmass10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -605,6 +550,7 @@ if(fitmod == 'modTmass10Jtu'){
 }
 
 if(fitmod == 'modTmass10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -617,6 +563,7 @@ if(fitmod == 'modTmass10Horn'){
 
 
 if(fitmod == 'modTnpp10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -626,6 +573,7 @@ if(fitmod == 'modTnpp10Jtu'){
 }
 
 if(fitmod == 'modTnpp10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -637,6 +585,7 @@ if(fitmod == 'modTnpp10Horn'){
 # T+seas:duration ############################
 
 if(fitmod == 'modTseas10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -646,6 +595,7 @@ if(fitmod == 'modTseas10Jtu'){
 }
 
 if(fitmod == 'modTseas10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -657,6 +607,7 @@ if(fitmod == 'modTseas10Horn'){
 # T+microclim:duration ############################
 
 if(fitmod == 'modTmicroclim10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -666,6 +617,7 @@ if(fitmod == 'modTmicroclim10Jtu'){
 }
 
 if(fitmod == 'modTmicroclim10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -678,6 +630,7 @@ if(fitmod == 'modTmicroclim10Horn'){
 # T+human:duration ############################
 
 if(fitmod == 'modThuman10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -687,6 +640,7 @@ if(fitmod == 'modThuman10Jtu'){
 }
 
 if(fitmod == 'modThuman10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -700,6 +654,7 @@ if(fitmod == 'modThuman10Horn'){
 # dT+REALM:duration ############################
 
 if(fitmod == 'moddTRealm10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -709,6 +664,7 @@ if(fitmod == 'moddTRealm10Jtu'){
 }
 
 if(fitmod == 'moddTRealm10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -720,6 +676,7 @@ if(fitmod == 'moddTRealm10Horn'){
 # dT+mass:duration ############################
 
 if(fitmod == 'moddTmass10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -729,6 +686,7 @@ if(fitmod == 'moddTmass10Jtu'){
 }
 
 if(fitmod == 'moddTmass10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -740,6 +698,7 @@ if(fitmod == 'moddTmass10Horn'){
 # dT+npp:duration ############################
 
 if(fitmod == 'moddTnpp10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -749,6 +708,7 @@ if(fitmod == 'moddTnpp10Jtu'){
 }
 
 if(fitmod == 'moddTnpp10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -761,6 +721,7 @@ if(fitmod == 'moddTnpp10Horn'){
 # dT+seas:duration ############################
 
 if(fitmod == 'moddTseas10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -770,6 +731,7 @@ if(fitmod == 'moddTseas10Jtu'){
 }
 
 if(fitmod == 'moddTseas10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -781,6 +743,7 @@ if(fitmod == 'moddTseas10Horn'){
 # dT+microclim:duration ############################
 
 if(fitmod == 'moddTmicroclim10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -790,6 +753,7 @@ if(fitmod == 'moddTmicroclim10Jtu'){
 }
 
 if(fitmod == 'moddTmicroclim10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -801,6 +765,7 @@ if(fitmod == 'moddTmicroclim10Horn'){
 # dT+human:duration ############################
 
 if(fitmod == 'moddThuman10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -810,6 +775,7 @@ if(fitmod == 'moddThuman10Jtu'){
 }
 
 if(fitmod == 'moddThuman10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -822,6 +788,7 @@ if(fitmod == 'moddThuman10Horn'){
 # sdT+REALM:duration ############################
 
 if(fitmod == 'modsdTRealm5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
@@ -831,6 +798,7 @@ if(fitmod == 'modsdTRealm5Jtu'){
 }
 
 if(fitmod == 'modsdTRealm5Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
@@ -842,6 +810,7 @@ if(fitmod == 'modsdTRealm5Horn'){
 # sdT+mass:duration ############################
 
 if(fitmod == 'modsdTmass5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempchange.sc:duration.sc 
                    + (duration.sc||STUDY_ID/rarefyID), 
@@ -852,6 +821,7 @@ if(fitmod == 'modsdTmass5Jtu'){
 }
 
 if(fitmod == 'modsdTmass5Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
@@ -863,6 +833,7 @@ if(fitmod == 'modsdTmass5Horn'){
 # sdT+npp:duration ############################
 
 if(fitmod == 'modsdTnpp5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange.sc:duration.sc + 
                        (duration.sc||STUDY_ID/rarefyID), 
@@ -873,6 +844,7 @@ if(fitmod == 'modsdTnpp5Jtu'){
 }
 
 if(fitmod == 'modsdTnpp5Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
@@ -884,6 +856,7 @@ if(fitmod == 'modsdTnpp5Horn'){
 # sdT+seas:duration ############################
 
 if(fitmod == 'modsdTseas5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
@@ -893,6 +866,7 @@ if(fitmod == 'modsdTseas5Jtu'){
 }
 
 if(fitmod == 'modsdTseas5Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
@@ -904,6 +878,7 @@ if(fitmod == 'modsdTseas5Horn'){
 # sdT+microclim:duration ############################
 
 if(fitmod == 'modsdTmicroclim5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
@@ -913,6 +888,7 @@ if(fitmod == 'modsdTmicroclim5Jtu'){
 }
 
 if(fitmod == 'modsdTmicroclim5Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
@@ -924,6 +900,7 @@ if(fitmod == 'modsdTmicroclim5Horn'){
 # sdT+human:duration ############################
 
 if(fitmod == 'modsdThuman5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
@@ -933,6 +910,7 @@ if(fitmod == 'modsdThuman5Jtu'){
 }
 
 if(fitmod == 'modsdThuman5Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
@@ -946,6 +924,7 @@ if(fitmod == 'modsdThuman5Horn'){
 
 
 if(fitmod == 'modTdTRealm10Jtu'){ 
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc +
                        tempchange_abs.sc:duration.sc + 
@@ -958,6 +937,7 @@ if(fitmod == 'modTdTRealm10Jtu'){
 }
 
 if(fitmod == 'modTdTRealm10Jne'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jne), 'data points'))
     mod <- glmmTMB(Jne.sc ~ REALM:duration.sc +
                        tempchange_abs.sc:duration.sc + 
@@ -970,6 +950,7 @@ if(fitmod == 'modTdTRealm10Jne'){
 }
 
 if(fitmod == 'modTdTRealm10Horn'){ 
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ REALM:duration.sc +
                        tempchange_abs.sc:duration.sc + 
@@ -985,6 +966,7 @@ if(fitmod == 'modTdTRealm10Horn'){
 # T+dT:tsign:duration #########################
 
 if(fitmod == 'modTdTtsign10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ tempave_metab.sc:duration.sc + 
                        tsign:duration.sc +
@@ -997,6 +979,7 @@ if(fitmod == 'modTdTtsign10Jtu'){ # trims out freshwater and >60 or <23.5 deg la
 }
 
 if(fitmod == 'modTdTtsign10Jne'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jne), 'data points'))
     mod <- glmmTMB(Jne.sc ~ tempave_metab.sc:duration.sc + 
                        tsign:duration.sc +
@@ -1009,6 +992,7 @@ if(fitmod == 'modTdTtsign10Jne'){
 }
 
 if(fitmod == 'modTdTtsign10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ tempave_metab.sc:duration.sc + 
                        tsign:duration.sc +
@@ -1023,6 +1007,7 @@ if(fitmod == 'modTdTtsign10Horn'){
 # T+dT+mass:duration #########################
 
 if(fitmod == 'modTdTmass10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        mass.sc:duration.sc +
@@ -1034,6 +1019,7 @@ if(fitmod == 'modTdTmass10Jtu'){
 }
 
 if(fitmod == 'modTdTmass10Jne'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jne), 'data points'))
     mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        mass.sc:duration.sc +
@@ -1045,6 +1031,7 @@ if(fitmod == 'modTdTmass10Jne'){
 }
 
 if(fitmod == 'modTdTmass10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        mass.sc:duration.sc +
@@ -1058,6 +1045,7 @@ if(fitmod == 'modTdTmass10Horn'){
 # T+dT+npp:duration #########################
 
 if(fitmod == 'modTdTnpp10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        npp.sc:duration.sc +
@@ -1069,6 +1057,7 @@ if(fitmod == 'modTdTnpp10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat,
 }
 
 if(fitmod == 'modTdTnpp10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        npp.sc:duration.sc +
@@ -1082,6 +1071,7 @@ if(fitmod == 'modTdTnpp10Horn'){
 # T+dT+seas:duration #########################
 
 if(fitmod == 'modTdTseas10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        seas.sc:duration.sc +
@@ -1093,6 +1083,7 @@ if(fitmod == 'modTdTseas10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat
 }
 
 if(fitmod == 'modTdTseas10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        seas.sc:duration.sc +
@@ -1107,6 +1098,7 @@ if(fitmod == 'modTdTseas10Horn'){
 # T+dT+microclim:duration #########################
 
 if(fitmod == 'modTdTmicroclim10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        microclim.sc:duration.sc +
@@ -1118,6 +1110,7 @@ if(fitmod == 'modTdTmicroclim10Jtu'){ # trims out freshwater and >60 or <23.5 de
 }
 
 if(fitmod == 'modTdTmicroclim10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        microclim.sc:duration.sc +
@@ -1131,6 +1124,7 @@ if(fitmod == 'modTdTmicroclim10Horn'){
 # T+dT+human:duration #########################
 
 if(fitmod == 'modTdThuman10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        human_bowler.sc:duration.sc +
@@ -1141,6 +1135,7 @@ if(fitmod == 'modTdThuman10Jtu'){ # trims out freshwater and >60 or <23.5 deg la
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modTdThuman10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        human_bowler.sc:duration.sc +
@@ -1156,6 +1151,7 @@ if(fitmod == 'modTdThuman10Horn'){
 # T+sdT+REALM:duration #########################
 
 if(fitmod == 'modTsdTRealm5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc +
                        tempchange.sc:duration.sc + 
@@ -1168,6 +1164,7 @@ if(fitmod == 'modTsdTRealm5Jtu'){
 }
 
 if(fitmod == 'modTsdTRealm5Horn'){ # Horn
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ REALM:duration.sc +
                        tempchange.sc:duration.sc + 
@@ -1182,6 +1179,7 @@ if(fitmod == 'modTsdTRealm5Horn'){ # Horn
 # T+sdT+mass:duration #########################
 
 if(fitmod == 'modTsdTmass5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        mass.sc:duration.sc +
@@ -1193,6 +1191,7 @@ if(fitmod == 'modTsdTmass5Jtu'){
 }
 
 if(fitmod == 'modTsdTmass5Horn'){ # Horn
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        mass.sc:duration.sc +
@@ -1206,6 +1205,7 @@ if(fitmod == 'modTsdTmass5Horn'){ # Horn
 # T+sdT+npp:duration #########################
 
 if(fitmod == 'modTsdTnpp5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        npp.sc:duration.sc +
@@ -1217,6 +1217,7 @@ if(fitmod == 'modTsdTnpp5Jtu'){
 }
 
 if(fitmod == 'modTsdTnpp5Horn'){ # Horn
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        npp.sc:duration.sc +
@@ -1230,6 +1231,7 @@ if(fitmod == 'modTsdTnpp5Horn'){ # Horn
 # T+sdT+seas:duration #########################
 
 if(fitmod == 'modTsdTseas5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        seas.sc:duration.sc +
@@ -1241,6 +1243,7 @@ if(fitmod == 'modTsdTseas5Jtu'){
 }
 
 if(fitmod == 'modTsdTseas5Horn'){ # Horn
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        seas.sc:duration.sc +
@@ -1255,6 +1258,7 @@ if(fitmod == 'modTsdTseas5Horn'){ # Horn
 # T+sdT+microclim:duration #########################
 
 if(fitmod == 'modTsdTmicroclim5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        microclim.sc:duration.sc +
@@ -1266,6 +1270,7 @@ if(fitmod == 'modTsdTmicroclim5Jtu'){
 }
 
 if(fitmod == 'modTsdTmicroclim5Horn'){ # Horn
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        microclim.sc:duration.sc +
@@ -1279,6 +1284,7 @@ if(fitmod == 'modTsdTmicroclim5Horn'){ # Horn
 # T+sdT+human:duration #########################
 
 if(fitmod == 'modTsdThuman5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        human_bowler.sc:duration.sc +
@@ -1290,6 +1296,7 @@ if(fitmod == 'modTsdThuman5Jtu'){
 }
 
 if(fitmod == 'modTsdThuman5Horn'){ # Horn
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        human_bowler.sc:duration.sc +
@@ -1304,6 +1311,7 @@ if(fitmod == 'modTsdThuman5Horn'){ # Horn
 # T:REALM:duration ############################
 
 if(fitmod == 'modTxRealm10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -1313,6 +1321,7 @@ if(fitmod == 'modTxRealm10Jtu'){
 }
 
 if(fitmod == 'modTxRealm10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -1325,6 +1334,7 @@ if(fitmod == 'modTxRealm10Horn'){
 # T:dT:duration ############################
 
 if(fitmod == 'modTdTT10Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
@@ -1333,6 +1343,7 @@ if(fitmod == 'modTdTT10Jtu'){
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modTdTT10Jne'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Jne), 'data points'))
     mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jne,], family = beta_family(link = 'logit'), 
@@ -1341,6 +1352,7 @@ if(fitmod == 'modTdTT10Jne'){
     MATCHMOD <- TRUE
 }
 if(fitmod == 'modTdTT10Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
@@ -1352,6 +1364,7 @@ if(fitmod == 'modTdTT10Horn'){
 # T:sdT:duration ############################
 
 if(fitmod == 'modTsdTT5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc 
                    + tempave_metab.sc:duration.sc 
@@ -1364,6 +1377,7 @@ if(fitmod == 'modTsdTT5Jtu'){
 }
 
 if(fitmod == 'modTsdTT5Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc 
                    + tempave_metab.sc:duration.sc 
@@ -1378,6 +1392,7 @@ if(fitmod == 'modTsdTT5Horn'){
 
 # T:mass:duration ############################
 if(fitmod == 'modTxmass5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(nrow(trends5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        tempave_metab.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
@@ -1388,6 +1403,7 @@ if(fitmod == 'modTxmass5Jtu'){
 }
 
 if(fitmod == 'modTxmass5Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(nrow(trends5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
@@ -1398,6 +1414,7 @@ if(fitmod == 'modTxmass5Horn'){
 
 # T:npp:duration ############################
 if(fitmod == 'modTxnpp5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        tempave_metab.sc:npp.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
@@ -1408,6 +1425,7 @@ if(fitmod == 'modTxnpp5Jtu'){
 }
 
 if(fitmod == 'modTxnpp5Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:npp.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
@@ -1418,6 +1436,7 @@ if(fitmod == 'modTxnpp5Horn'){
 
 # T:seas:duration ############################
 if(fitmod == 'modTxseas5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        tempave_metab.sc:seas.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
@@ -1428,6 +1447,7 @@ if(fitmod == 'modTxseas5Jtu'){
 }
 
 if(fitmod == 'modTxseas5Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:seas.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
@@ -1438,6 +1458,7 @@ if(fitmod == 'modTxseas5Horn'){
 
 # T:microclim:duration ############################
 if(fitmod == 'modTxmicroclim5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
@@ -1447,6 +1468,7 @@ if(fitmod == 'modTxmicroclim5Jtu'){
 }
 
 if(fitmod == 'modTxmicroclim5Horn'){
+    if(MATCHMOD) stop('Model name matched more than one model!') 
     print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
@@ -1457,6 +1479,7 @@ if(fitmod == 'modTxmicroclim5Horn'){
 
 # T:human:duration ############################
 if(fitmod == 'modTxhuman5Jtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!') 
     print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
@@ -1466,7 +1489,8 @@ if(fitmod == 'modTxhuman5Jtu'){
 }
 
 if(fitmod == 'modTxhuman5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1478,7 +1502,8 @@ if(fitmod == 'modTxhuman5Horn'){
 # dT:REALM:duration ############################
 
 if(fitmod == 'moddTxRealm10Jtu'){
-    print(paste(sum(i10Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1487,7 +1512,8 @@ if(fitmod == 'moddTxRealm10Jtu'){
 }
 
 if(fitmod == 'moddTxRealm10Horn'){
-    print(paste(sum(i10Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1498,7 +1524,8 @@ if(fitmod == 'moddTxRealm10Horn'){
 # dT:tsign:duration #########################
 
 if(fitmod == 'moddTtsign10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
-    print(paste(sum(i10Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ tsign:duration.sc +
                        tempchange_abs.sc:tsign:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
@@ -1509,7 +1536,8 @@ if(fitmod == 'moddTtsign10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat
 }
 
 if(fitmod == 'moddTtsign10Jne'){
-    print(paste(sum(i10Jne), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i10Jne), 'data points'))
     mod <- glmmTMB(Jne.sc ~ tsign:duration.sc +
                        tempchange_abs.sc:tsign:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
@@ -1520,7 +1548,8 @@ if(fitmod == 'moddTtsign10Jne'){
 }
 
 if(fitmod == 'moddTtsign10Horn'){
-    print(paste(sum(i10Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ tsign:duration.sc +
                        tempchange_abs.sc:tsign:duration.sc +
                        (duration.sc|STUDY_ID/rarefyID), 
@@ -1533,7 +1562,8 @@ if(fitmod == 'moddTtsign10Horn'){
 
 # dT:mass:duration ############################
 if(fitmod == 'moddTxmass5Jtu'){
-    print(paste(sum(i5Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1542,7 +1572,8 @@ if(fitmod == 'moddTxmass5Jtu'){
 }
 
 if(fitmod == 'moddTxmass5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1552,7 +1583,8 @@ if(fitmod == 'moddTxmass5Horn'){
 
 # dT:npp:duration ############################
 if(fitmod == 'moddTxnpp5Jtu'){
-    print(paste(sum(i5Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + 
                        tempchange_abs.sc:npp.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
@@ -1562,7 +1594,8 @@ if(fitmod == 'moddTxnpp5Jtu'){
 }
 
 if(fitmod == 'moddTxnpp5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:npp.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1572,7 +1605,8 @@ if(fitmod == 'moddTxnpp5Horn'){
 
 # dT:seas:duration ############################
 if(fitmod == 'moddTxseas5Jtu'){
-    print(paste(sum(i5Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:seas.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1581,7 +1615,8 @@ if(fitmod == 'moddTxseas5Jtu'){
 }
 
 if(fitmod == 'moddTxseas5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:seas.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1591,7 +1626,8 @@ if(fitmod == 'moddTxseas5Horn'){
 
 # dT:microclim:duration ############################
 if(fitmod == 'moddTxmicroclim5Jtu'){
-    print(paste(sum(i5Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1600,7 +1636,8 @@ if(fitmod == 'moddTxmicroclim5Jtu'){
 }
 
 if(fitmod == 'moddTxmicroclim5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1610,7 +1647,8 @@ if(fitmod == 'moddTxmicroclim5Horn'){
 
 # dT:human:duration ############################
 if(fitmod == 'moddTxhuman5Jtu'){
-    print(paste(sum(i5Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1619,7 +1657,8 @@ if(fitmod == 'moddTxhuman5Jtu'){
 }
 
 if(fitmod == 'moddTxhuman5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1631,7 +1670,8 @@ if(fitmod == 'moddTxhuman5Horn'){
 # sdT:REALM:duration ############################
 
 if(fitmod == 'modsdTxRealm5Jtu'){
-    print(paste(sum(i5Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1640,7 +1680,8 @@ if(fitmod == 'modsdTxRealm5Jtu'){
 }
 
 if(fitmod == 'modsdTxRealm5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1650,7 +1691,8 @@ if(fitmod == 'modsdTxRealm5Horn'){
 
 # sdT:mass:duration ############################
 if(fitmod == 'modsdTxmass5Jtu'){
-    print(paste(sum(i5Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc 
                    + tempchange.sc:duration.sc + tempchange.sc:mass.sc:duration.sc 
                    + (duration.sc||STUDY_ID/rarefyID), 
@@ -1661,7 +1703,8 @@ if(fitmod == 'modsdTxmass5Jtu'){
 }
 
 if(fitmod == 'modsdTxmass5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1671,7 +1714,8 @@ if(fitmod == 'modsdTxmass5Horn'){
 
 # sdT:npp:duration ############################
 if(fitmod == 'modsdTxnpp5Jtu'){
-    print(paste(sum(i5Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange.sc:duration.sc + 
                        tempchange.sc:npp.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
@@ -1681,7 +1725,8 @@ if(fitmod == 'modsdTxnpp5Jtu'){
 }
 
 if(fitmod == 'modsdTxnpp5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:npp.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1691,7 +1736,8 @@ if(fitmod == 'modsdTxnpp5Horn'){
 
 # sdT:seas:duration ############################
 if(fitmod == 'modsdTxseas5Jtu'){
-    print(paste(sum(i5Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange.sc:duration.sc 
                    + tempchange.sc:seas.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
@@ -1701,7 +1747,8 @@ if(fitmod == 'modsdTxseas5Jtu'){
 }
 
 if(fitmod == 'modsdTxseas5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:seas.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1711,7 +1758,8 @@ if(fitmod == 'modsdTxseas5Horn'){
 
 # sdT:microclim:duration ############################
 if(fitmod == 'modsdTxmicroclim5Jtu'){
-    print(paste(sum(i5Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1720,7 +1768,8 @@ if(fitmod == 'modsdTxmicroclim5Jtu'){
 }
 
 if(fitmod == 'modsdTxmicroclim5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1730,7 +1779,8 @@ if(fitmod == 'modsdTxmicroclim5Horn'){
 
 # sdT:human:duration ############################
 if(fitmod == 'modsdTxhuman5Jtu'){
-    print(paste(sum(i5Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Jtu, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1739,7 +1789,8 @@ if(fitmod == 'modsdTxhuman5Jtu'){
 }
 
 if(fitmod == 'modsdTxhuman5Horn'){
-    print(paste(sum(i5Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i5Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
                    data = trends5Horn, family = beta_family(link = 'logit'), 
                    dispformula = ~nspp.sc+REALM, 
@@ -1753,7 +1804,8 @@ if(fitmod == 'modsdTxhuman5Horn'){
 
 # use tempchange like Antao
 if(fitmod == 'modTdTTRealmAllJtu'){
-    print(paste(sum(iallJtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration +
                        REALM:duration +
                        REALM:tempchange.sc:duration + 
@@ -1768,7 +1820,8 @@ if(fitmod == 'modTdTTRealmAllJtu'){
 
 # use tempchange like Antao. scale duration
 if(fitmod == 'modTdTTRealmDurscAllJtu'){
-    print(paste(sum(iallJtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc +
                        REALM:duration.sc +
                        REALM:tempchange.sc:duration.sc + 
@@ -1785,7 +1838,8 @@ if(fitmod == 'modTdTTRealmDurscAllJtu'){
 # T:sdT:REALM:duration #########################
 # use tempchange_abs (otherwise like Antao)
 if(fitmod == 'modTsdTTRealmAllJtu'){
-    print(paste(sum(iallJtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration +
                        REALM:duration +
                        REALM:tempchange_abs.sc:duration + 
@@ -1800,7 +1854,8 @@ if(fitmod == 'modTsdTTRealmAllJtu'){
 
 # use tempchange_abs
 if(fitmod == 'modTsdTTRealmDurscAllJtu'){
-    print(paste(sum(iallJtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc +
                        REALM:duration.sc +
                        REALM:tempchange_abs.sc:duration.sc + 
@@ -1816,7 +1871,8 @@ if(fitmod == 'modTsdTTRealmDurscAllJtu'){
 
 # tsign:T:sdT:REALM:duration #########################
 if(fitmod == 'modTsdTTRealmtsignAllJtu'){
-    print(paste(sum(iallJtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration +
                        REALM:duration +
                        REALM:tsign:tempchange_abs.sc:duration + 
@@ -1831,7 +1887,8 @@ if(fitmod == 'modTsdTTRealmtsignAllJtu'){
 
 # thermal_bias:T:sdT:REALM:duration #########################
 if(fitmod == 'modTsdTTRealmthermal_biasAllJtu'){
-    print(paste(sum(iallJtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration +
                        REALM:duration +
                        REALM:tempchange_abs.sc:duration + 
@@ -1851,7 +1908,8 @@ if(fitmod == 'modTsdTTRealmthermal_biasAllJtu'){
 
 # npp:T:sdT:REALM:duration #########################
 if(fitmod == 'modTsdTTRealmnppAllJtu'){
-    print(paste(sum(iallJtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration +
                        REALM:duration +
                        REALM:tempchange_abs.sc:duration + 
@@ -1870,7 +1928,8 @@ if(fitmod == 'modTsdTTRealmnppAllJtu'){
 
 # seas:T:sdT:REALM:duration #########################
 if(fitmod == 'modTsdTTRealmseasAllJtu'){
-    print(paste(sum(iallJtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration +
                        REALM:duration +
                        REALM:tempchange_abs.sc:duration + 
@@ -1889,7 +1948,8 @@ if(fitmod == 'modTsdTTRealmseasAllJtu'){
 
 # microclim:T:sdT:REALM:duration #########################
 if(fitmod == 'modTsdTTRealmmicroclimAllJtu'){
-    print(paste(sum(iallJtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration +
                        REALM:duration +
                        REALM:tempchange_abs.sc:duration + 
@@ -1900,6 +1960,25 @@ if(fitmod == 'modTsdTTRealmmicroclimAllJtu'){
                        REALM:microclim.sc:tempave_metab.sc:duration +
                        REALM:microclim.sc:tempave_metab.sc:tempchange_abs.sc:duration +
                        (duration|STUDY_ID/rarefyID), 
+                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
+                   dispformula = ~REALM, 
+                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+# taxamod2 (as RE):T:sdT:REALM:duration #########################
+if(fitmod == 'modTsdTTRealmTaxamod2REAllJtu'){
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(Jtu.sc ~ duration +
+                       REALM:duration +
+                       REALM:tempchange_abs.sc:duration + 
+                       REALM:tempave_metab.sc:duration +
+                       REALM:tempave_metab.sc:tempchange_abs.sc:duration +
+                       (duration|STUDY_ID/rarefyID) +
+                       (REALM:tempchange_abs.sc:duration|taxa_mod2) + # add taxamod2 as random effects
+                       (REALM:tempave_metab.sc:duration|taxa_mod2) +
+                       (REALM:tempave_metab.sc:tempchange_abs.sc:duration|taxa_mod2), 
                    data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
                    dispformula = ~REALM, 
                    control = glmmTMBControl(profile=TRUE)) # add dispersion formula
@@ -1917,7 +1996,8 @@ if(fitmod == 'modTsdTTRealmmicroclimAllJtu'){
 if(fitmod == 'modAntaoTdTTRealm10'){ # trims out freshwater and >60 or <23.5 deg lat, like Antao et al. 2020
     i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
                         complete.cases(Jtu.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    print(paste(sum(i10), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i10), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        tempave_metab.sc:tempchange.sc:duration.sc + 
                        REALM:duration.sc +
@@ -1933,7 +2013,8 @@ if(fitmod == 'modAntaoTdTTRealm10'){ # trims out freshwater and >60 or <23.5 deg
 if(fitmod == 'modAntaoTdTTRealm10Jne'){
     i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
                         complete.cases(Jne.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    print(paste(sum(i10), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i10), 'data points'))
     mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        tempave_metab.sc:tempchange.sc:duration.sc + 
                        REALM:duration.sc +
@@ -1949,7 +2030,8 @@ if(fitmod == 'modAntaoTdTTRealm10Jne'){
 if(fitmod == 'modAntaoTdTTRealm10Horn'){
     i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
                         complete.cases(Horn.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    print(paste(sum(i10), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i10), 'data points'))
     mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
                        tempave_metab.sc:tempchange.sc:duration.sc + 
                        REALM:duration.sc +
@@ -1966,7 +2048,8 @@ if(fitmod == 'modAntaoTdTTRealm10Horn'){
 # DREDGE FULL MODELS #########################
 if(fitmod == 'dredge5Jtu'){
     require(MuMIn)
-    print(paste(nrow(trends5Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(nrow(trends5Jtu), 'data points'))
     modfull <- glmmTMB(formula(paste(fixed, '+(duration.sc||STUDY_ID/rarefyID)')), 
                        data = trends5Jtu, 
                        family = beta_family(link = 'logit'), 
@@ -1984,7 +2067,8 @@ if(fitmod == 'dredge5Jtu'){
 # Null models ############################
 
 if(fitmod == 'modNull10Jtu'){
-    print(paste(sum(i10Jtu), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i10Jtu), 'data points'))
     mod <- glmmTMB(Jtu.sc ~ 1 +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Jtu,], 
@@ -1996,7 +2080,8 @@ if(fitmod == 'modNull10Jtu'){
 
 
 if(fitmod == 'modNull10Horn'){
-    print(paste(sum(i10Horn), 'data points'))
+    if(MATCHMOD) stop('Model name matched more than one model!') 
+	print(paste(sum(i10Horn), 'data points'))
     mod <- glmmTMB(Horn.sc ~ 1 +
                        (duration.sc|STUDY_ID/rarefyID), 
                    data = trends10[i10Horn,], 
