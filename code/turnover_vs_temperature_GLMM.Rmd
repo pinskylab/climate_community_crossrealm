@@ -47,58 +47,27 @@ scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv'))
 # Summary stats
 ## Examine how many data points are available
 ### Just turnover and non-zero tempchange
-#### 3-years
 ```{r sample size all}
-cat('Overall # dissimilarities: ', nrow(trends3), '\n')
-cat('# studies: ', trends3[, length(unique(STUDY_ID))], '\n')
-cat('# timeseries: ', trends3[, length(unique(rarefyID))], '\n')
-trends3[!duplicated(rarefyID), table(REALM)]
-trends3[!duplicated(rarefyID), table(taxa_mod)]
-trends3[!duplicated(rarefyID), table(taxa_mod, REALM)]
-```
-#### 5-years
-```{r sample size all}
-cat('Overall # dissimilarities: ', nrow(trends5), '\n')
-cat('# studies: ', trends5[, length(unique(STUDY_ID))], '\n')
-cat('# timeseries: ', trends5[, length(unique(rarefyID))], '\n')
-trends5[!duplicated(rarefyID), table(REALM)]
-trends5[!duplicated(rarefyID), table(taxa_mod)]
-trends5[!duplicated(rarefyID), table(taxa_mod, REALM)]
-```
-
-#### 10-years
-```{r sample size all}
-cat('Overall # dissimilarities: ', nrow(trends10), '\n')
-cat('# studies: ', trends10[, length(unique(STUDY_ID))], '\n')
-cat('# timeseries: ', trends10[, length(unique(rarefyID))], '\n')
-trends10[!duplicated(rarefyID), table(REALM)]
-trends10[!duplicated(rarefyID), table(taxa_mod)]
-trends10[!duplicated(rarefyID), table(taxa_mod, REALM)]
-```
-
-#### 20-years
-```{r sample size all}
-cat('Overall # dissimilarities: ', nrow(trends20), '\n')
-cat('# studies: ', trends20[, length(unique(STUDY_ID))], '\n')
-cat('# timeseries: ', trends20[, length(unique(rarefyID))], '\n')
-trends20[!duplicated(rarefyID), table(REALM)]
-trends20[!duplicated(rarefyID), table(taxa_mod)]
-trends20[!duplicated(rarefyID), table(taxa_mod, REALM)]
+cat('Overall # dissimilarities: ', nrow(trendsall), '\n')
+cat('# studies: ', trendsall[, length(unique(STUDY_ID))], '\n')
+cat('# timeseries: ', trendsall[, length(unique(rarefyID))], '\n')
+trendsall[!duplicated(rarefyID), table(REALM)]
+trendsall[!duplicated(rarefyID), table(taxa_mod)]
+trendsall[!duplicated(rarefyID), table(taxa_mod, REALM)]
 ```
 
 ### With all covariates
 Use Bowler for human impact
-#### 3-year
 ```{r sample size Jtu covariates}
 # the cases we can compare
-apply(trends3[, .(Jtu.sc, REALM, tempave_metab.sc, seas.sc, microclim.sc, tempchange.sc, mass.sc, speed.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
-i <- trends3[, complete.cases(Jtu.sc, tempave_metab.sc, seas.sc, microclim.sc, tempchange.sc, mass.sc, speed.sc, consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
+apply(trendsall[, .(Jtu.sc, REALM, tempave_metab.sc, seas.sc, microclim.sc, tempchange.sc, mass.sc, speed.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
+i <- trendsall[, complete.cases(Jtu.sc, tempave_metab.sc, seas.sc, microclim.sc, tempchange.sc, mass.sc, speed.sc, consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
 cat('Overall # dissimilarities: ', sum(i), '\n')
-cat('# studies: ', trends3[i, length(unique(STUDY_ID))], '\n')
-cat('# timeseries: ', trends3[i, length(unique(rarefyID))], '\n')
-trends3[i & !duplicated(rarefyID), table(REALM)]
-trends3[i & !duplicated(rarefyID), table(taxa_mod)]
-trends3[i & !duplicated(rarefyID), table(taxa_mod, REALM)]
+cat('# studies: ', trendsall[i, length(unique(STUDY_ID))], '\n')
+cat('# timeseries: ', trendsall[i, length(unique(rarefyID))], '\n')
+trendsall[i & !duplicated(rarefyID), table(REALM)]
+trendsall[i & !duplicated(rarefyID), table(taxa_mod)]
+trendsall[i & !duplicated(rarefyID), table(taxa_mod, REALM)]
 ```
 
 # Models
@@ -113,73 +82,6 @@ Try combinations of
 Did not try random intercept for compID (for overdispersion), since had trouble converging.
 Use a full set of fixed effects and choose the RE with lowest AIC.
 Many of the 3- and 5-year models with random slopes had singular convergence issues.
-
-### 3-years
-Best is beta errors, durationlog.sc, intercepts for STUDY_ID and rarefyID, variance scaled to nspp + realm.
-Models with slopes didn't converge.
-We haven't dealt with potential testing on the boundary issues here. Note that a number of models with random slopes did not converge.
-```{r choose variance structure, echo=FALSE}
-# comment out the ones that didn't converge (see log files from fitting)
-mods3 <- vector('list', length = 17)
-i = 1
-if(file.exists(here('temp', 'modRFgauss3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFgauss3.rds')); names(mods3)[i] <- 'modRFgauss3'; i = i+1}
-if(file.exists(here('temp', 'modRFbeta3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFbeta3.rds')); names(mods3)[i] <- 'modRFbeta3'; i = i+1}
-if(file.exists(here('temp', 'modRFrID3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFrID3.rds')); names(mods3)[i] <- 'modRFrID3'; i = i+1}
-if(file.exists(here('temp', 'modRF2lev3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRF2lev3.rds')); names(mods3)[i] <- 'modRF2lev3'; i = i+1}
-if(file.exists(here('temp', 'modRFnestedRE3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFnestedRE3.rds')); names(mods3)[i] <- 'modRFnestedRE3'; i = i+1}
-#if(file.exists(here('temp', 'modRFslopeRE3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFslopeRE3.rds')); names(mods3)[i] <- 'modRFslopeRE3'; i = i+1}
-# if(file.exists(here('temp', 'modRFslopeRE2lev3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFslopeRE2lev3.rds')); names(mods3)[i] <- 'modRFslopeRE2lev3'; i = i+1}
-if(file.exists(here('temp', 'modRFdisp3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFdisp3.rds')); names(mods3)[i] <- 'modRFdisp3'; i = i+1}
-if(file.exists(here('temp', 'modRF2levdisp3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRF2levdisp3.rds')); names(mods3)[i] <- 'modRF2levdisp3'; i = i+1}
-# if(file.exists(here('temp', 'modRFslopeRE2levdisp3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisp3.rds')); names(mods3)[i] <- 'modRFslopeRE2levdisp3'; i = i+1}
-#if(file.exists(here('temp', 'modRFslopeREdisp3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFslopeREdisp3.rds')); names(mods3)[i] <- 'modRFslopeREdisp3'; i = i+1}
-if(file.exists(here('temp', 'modRF2levdisprealm3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRF2levdisprealm3.rds')); names(mods3)[i] <- 'modRF2levdisprealm3'; i = i+1}
-# if(file.exists(here('temp', 'modRFslopeRE2levdisprealm3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisprealm3.rds')); names(mods3)[i] <- 'modRFslopeRE2levdisprealm3'; i = i+1}
-
-# with log duration
-if(file.exists(here('temp', 'modRFdurlog2levdisp3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFdurlog2levdisp3.rds')); names(mods3)[i] <- 'modRFdurlog2levdisp3'; i = i+1}
-# if(file.exists(here('temp', 'modRFdurlogslopeRE2levdisp3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFdurlogslopeRE2levdisp3.rds')); names(mods3)[i] <- 'modRFdurlogslopeRE2levdisp3'; i = i+1} # convergence error
-# if(file.exists(here('temp', 'modRFdurlogslopeREdisp3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFdurlogslopeREdisp3.rds')); names(mods3)[i] <- 'modRFdurlogslopeREdisp3'; i = i+1} # convergence error
-if(file.exists(here('temp', 'modRFdurlog2levdisprealm3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFdurlog2levdisprealm3.rds')); names(mods3)[i] <- 'modRFdurlog2levdisprealm3'; i = i+1}
-# if(file.exists(here('temp', 'modRFdurlogslopeRE2levdisprealm3.rds'))){ mods3[[i]] <- readRDS(here('temp', 'modRFdurlogslopeRE2levdisprealm3.rds')); names(mods3)[i] <- 'modRFdurlogslopeRE2levdisprealm3'; i = i+1} # convergence error
-
-
-modes <- sapply(X = mods3, FUN = mode)
-aics <- sapply(X = mods3[modes == 'list'], FUN = AIC)
-aics - min(aics)
-```
-
-### 5-years
-Best is beta errors, duration.sc, slope & intercepts for STUDY_ID and rarefyID, variance scaled to nspp + realm.
-We haven't dealt with potential testing on the boundary issues here. Note that a number of models with random slopes did not converge.
-```{r choose variance structure, echo=FALSE}
-mods5 <- vector('list', length = 12)
-i = 1
-if(file.exists(here('temp', 'modRFgauss5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFgauss5.rds')); names(mods5)[i] <- 'modRFgauss5'; i = i+1}
-if(file.exists(here('temp', 'modRFbeta5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFbeta5.rds')); names(mods5)[i] <- 'modRFbeta5'; i = i+1}
-if(file.exists(here('temp', 'modRFrID5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFrID5.rds')); names(mods5)[i] <- 'modRFrID5'; i = i+1}
-if(file.exists(here('temp', 'modRF2lev5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRF2lev5.rds')); names(mods5)[i] <- 'modRF2lev5'; i = i+1}
-if(file.exists(here('temp', 'modRFnestedRE5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFnestedRE5.rds')); names(mods5)[i] <- 'modRFnestedRE5'; i = i+1}
-#if(file.exists(here('temp', 'modRFslopeRE5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFslopeRE5.rds')); names(mods5)[i] <- 'modRFslopeRE5'; i = i+1}
-if(file.exists(here('temp', 'modRFslopeRE2lev5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFslopeRE2lev5.rds')); names(mods5)[i] <- 'modRFslopeRE2lev5'; i = i+1}
-if(file.exists(here('temp', 'modRFdisp5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFdisp5.rds')); names(mods5)[i] <- 'modRFdisp5'; i = i+1}
-if(file.exists(here('temp', 'modRF2levdisp5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRF2levdisp5.rds')); names(mods5)[i] <- 'modRF2levdisp5'; i = i+1}
-if(file.exists(here('temp', 'modRFslopeRE2levdisp5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisp5.rds')); names(mods5)[i] <- 'modRFslopeRE2levdisp5'; i = i+1}
-#if(file.exists(here('temp', 'modRFslopeREdisp5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFslopeREdisp5.rds')); names(mods5)[i] <- 'modRFslopeREdisp5'; i = i+1}
-if(file.exists(here('temp', 'modRF2levdisprealm5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRF2levdisprealm5.rds')); names(mods5)[i] <- 'modRF2levdisprealm5'; i = i+1}
-if(file.exists(here('temp', 'modRFslopeRE2levdisprealm5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisprealm5.rds')); names(mods5)[i] <- 'modRFslopeRE2levdisprealm5'; i = i+1}
-
-# with log duration
-if(file.exists(here('temp', 'modRFdurlog2levdisp5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFdurlog2levdisp5.rds')); names(mods5)[i] <- 'modRFdurlog2levdisp5'; i = i+1}
-# if(file.exists(here('temp', 'modRFdurlogslopeRE2levdisp5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFdurlogslopeRE2levdisp5.rds')); names(mods5)[i] <- 'modRFdurlogslopeRE2levdisp5'; i = i+1} # convergence error
-# if(file.exists(here('temp', 'modRFdurlogslopeREdisp5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFdurlogslopeREdisp5.rds')); names(mods5)[i] <- 'modRFdurlogslopeREdisp5'; i = i+1} # convergence error
-if(file.exists(here('temp', 'modRFdurlog2levdisprealm5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFdurlog2levdisprealm5.rds')); names(mods5)[i] <- 'modRFdurlog2levdisprealm5'; i = i+1}
-# if(file.exists(here('temp', 'modRFdurlogslopeRE2levdisprealm5.rds'))){ mods5[[i]] <- readRDS(here('temp', 'modRFdurlogslopeRE2levdisprealm5.rds')); names(mods5)[i] <- 'modRFdurlogslopeRE2levdisprealm5'; i = i+1} # convergence error
-
-modes <- sapply(X = mods5, FUN = mode)
-aics <- sapply(X = mods5[modes == 'list'], FUN = AIC)
-aics - min(aics)
-```
 
 ### 10-years
 This chooses beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp + realm.
@@ -213,58 +115,13 @@ aics <- sapply(X = mods10[modes == 'list'], FUN = AIC)
 aics - min(aics)
 ```
 
-### 20-years
-This chooses beta errors, random slopes (duration.sc) & intercepts for STUDY_ID and rarefyID, and variance scaled to nspp + realm.
-We haven't dealt with potential testing on the boundary issues here.
-```{r choose variance structure, echo=FALSE}
-mods20 <- vector('list', length = 17)
-i = 1
-if(file.exists(here('temp', 'modRFgauss20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFgauss20.rds')); names(mods20)[i] <- 'modRFgauss20'; i = i+1}
-if(file.exists(here('temp', 'modRFbeta20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFbeta20.rds')); names(mods20)[i] <- 'modRFbeta20'; i = i+1}
-if(file.exists(here('temp', 'modRFrID20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFrID20.rds')); names(mods20)[i] <- 'modRFrID20'; i = i+1}
-if(file.exists(here('temp', 'modRF2lev20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRF2lev20.rds')); names(mods20)[i] <- 'modRF2lev20'; i = i+1}
-if(file.exists(here('temp', 'modRFnestedRE20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFnestedRE20.rds')); names(mods20)[i] <- 'modRFnestedRE20'; i = i+1}
-if(file.exists(here('temp', 'modRFslopeRE20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFslopeRE20.rds')); names(mods20)[i] <- 'modRFslopeRE20'; i = i+1}
-if(file.exists(here('temp', 'modRFslopeRE2lev20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFslopeRE2lev20.rds')); names(mods20)[i] <- 'modRFslopeRE2lev20'; i = i+1}
-if(file.exists(here('temp', 'modRFdisp20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFdisp20.rds')); names(mods20)[i] <- 'modRFdisp20'; i = i+1}
-if(file.exists(here('temp', 'modRF2levdisp20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRF2levdisp20.rds')); names(mods20)[i] <- 'modRF2levdisp20'; i = i+1}
-if(file.exists(here('temp', 'modRFslopeRE2levdisp20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisp20.rds')); names(mods20)[i] <- 'modRFslopeRE2levdisp20'; i = i+1}
-# if(file.exists(here('temp', 'modRFslopeREdisp20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFslopeREdisp20.rds')); names(mods20)[i] <- 'modRFslopeREdisp20'; i = i+1}
-if(file.exists(here('temp', 'modRF2levdisprealm20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRF2levdisprealm20.rds')); names(mods20)[i] <- 'modRF2levdisprealm20'; i = i+1}
-if(file.exists(here('temp', 'modRFslopeRE2levdisprealm20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFslopeRE2levdisprealm20.rds')); names(mods20)[i] <- 'modRFslopeRE2levdisprealm20'; i = i+1}
-
-# with log duration
-if(file.exists(here('temp', 'modRFdurlog2levdisp20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFdurlog2levdisp20.rds')); names(mods20)[i] <- 'modRFdurlog2levdisp20'; i = i+1}
-if(file.exists(here('temp', 'modRFdurlogslopeRE2levdisp20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFdurlogslopeRE2levdisp20.rds')); names(mods20)[i] <- 'modRFdurlogslopeRE2levdisp20'; i = i+1}
-# if(file.exists(here('temp', 'modRFdurlogslopeREdisp20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFdurlogslopeREdisp20.rds')); names(mods20)[i] <- 'modRFdurlogslopeREdisp20'; i = i+1} # convergence error
-if(file.exists(here('temp', 'modRFdurlog2levdisprealm20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFdurlog2levdisprealm20.rds')); names(mods20)[i] <- 'modRFdurlog2levdisprealm20'; i = i+1}
-if(file.exists(here('temp', 'modRFdurlogslopeRE2levdisprealm20.rds'))){ mods20[[i]] <- readRDS(here('temp', 'modRFdurlogslopeRE2levdisprealm20.rds')); names(mods20)[i] <- 'modRFdurlogslopeRE2levdisprealm20'; i = i+1}
-
-modes <- sapply(X = mods20, FUN = mode)
-aics <- sapply(X = mods20[modes == 'list'], FUN = AIC)
-aics - min(aics)
-```
 
 ### Summary of the chosen model
-#### 3 years
-```{r, echo=FALSE}
-summary(mods3[[which(names(mods3)=='modRF2levdisprealm3')]])
-```
 
-#### 5 years
-```{r, echo=FALSE}
-summary(mods5[[which(names(mods5)=='modRFslopeRE2levdisprealm5')]])
-```
-
-#### 10 years
 ```{r, echo=FALSE}
 summary(mods10[[which(names(mods10)=='modRFslopeRE2levdisprealm10')]])
 ```
 
-#### 20 years
-```{r, echo=FALSE}
-summary(mods20[[which(names(mods20)=='modRFslopeRE2levdisprealm20')]])
-```
 
 ### Plot random effects
 No clear discontinuities. Looks ok.
@@ -337,17 +194,12 @@ testGeneric(res_RFslopeRE2levdisprealm10, summary = countNearOne, alternative = 
 ### Load the models
 ```{r temperature, temp slope and duration, eval=FALSE, echo=FALSE}
 # all years
-# modTdT3 <- readRDS('temp/modTdT3.rds')
-modTdT5 <- readRDS('temp/modTdT5.rds')
 modTdT10 <- readRDS('temp/modTdT10.rds')
-modTdT20 <- readRDS('temp/modTdT20.rds')
 ```
 
 ### Summary
 ```{r summary of TD mods, eval=FALSE, echo=FALSE}
-summary(modTdT5)
 summary(modTdT10)
-summary(modTdT20)
 ```
 
 
@@ -438,23 +290,15 @@ ggplot(newdat, aes(tempchange, Jtu, color = durationfac, group = durationfac)) +
 ## Temperature*temperature slope & duration models
 ### Load the models
 ```{r temperature by temp slope and duration, eval=FALSE, echo=FALSE}
-# modTdT3 <- readRDS('temp/modTdT3.rds')
-modTdTT5 <- readRDS('temp/modTdTT5.rds')
 modTdTT10 <- readRDS('temp/modTdTT10.rds')
-modTdTT20 <- readRDS('temp/modTdTT20.rds')
-
-modTdTT5Horn <- readRDS('temp/modTdTT5Horn.rds')
 modTdTT10Horn <- readRDS('temp/modTdTT10Horn.rds')
-modTdTT20Horn <- readRDS('temp/modTdTT20Horn.rds')
 ```
 
 ### Plot the response
 #### Set up and write to file
 Only run this once.
 ```{r, eval=FALSE, echo=FALSE}
-scaling5 <- fread('output/turnover_w_covariates_scaling5.csv') # the scalings
 scaling10 <- fread('output/turnover_w_covariates_scaling10.csv') # the scalings
-scaling20 <- fread('output/turnover_w_covariates_scaling20.csv') # the scalings
 
 # find a study in all 3 datasets to use as the random effect
 # ranef(modTdT20Horn))
@@ -466,23 +310,11 @@ vars <- data.frame(vars = c('tempchange_abs', 'tempave_metab'),
                    len =      c(100,  100),
                    discrete = c(F,    F),
                    stringsAsFactors = FALSE)
-basetab5 <- data.table(expand.grid(start = 1:4, end = 2:5, nspp.sc = 0, REALM = 'Terrestrial', STUDY_ID = 195L, rarefyID = '195_289043', tempchange_abs.sc = 0, tempave_metab.sc = 0)) # the base case
-basetab5[, duration := end - start]
-if(scaling5[var == 'duration.sc', log]) basetab5[, duration.sc := (log(duration) - scaling5[var == 'duration.sc', center])/scaling5[var == 'duration.sc', scale]]
-if(!scaling5[var == 'duration.sc', log]) basetab5[, duration.sc := (duration - scaling5[var == 'duration.sc', center])/scaling5[var == 'duration.sc', scale]]
-basetab5 <- basetab5[duration > 0, ]
-
 basetab10 <- data.table(expand.grid(start = 1:9, end = 2:10, nspp.sc = 0, REALM = 'Terrestrial', STUDY_ID = 195L, rarefyID = '195_289043', tempchange_abs.sc = 0, tempave_metab.sc = 0)) # the base case
 basetab10[, duration := end - start]
 if(scaling10[var == 'duration.sc', log]) basetab10[, duration.sc := (log(duration) - scaling10[var == 'duration.sc', center])/scaling10[var == 'duration.sc', scale]]
 if(!scaling10[var == 'duration.sc', log]) basetab10[, duration.sc := (duration - scaling10[var == 'duration.sc', center])/scaling10[var == 'duration.sc', scale]]
 basetab10 <- basetab10[duration > 0, ]
-
-basetab20 <- data.table(expand.grid(start = 1:19, end = 2:20, nspp.sc = 0, REALM = 'Terrestrial', STUDY_ID = 195L, rarefyID = '195_289043', tempchange_abs.sc = 0, tempave_metab.sc = 0)) # the base case
-basetab20[, duration := end - start]
-if(scaling20[var == 'duration.sc', log]) basetab20[, duration.sc := (log(duration) - scaling20[var == 'duration.sc', center])/scaling20[var == 'duration.sc', scale]]
-if(!scaling20[var == 'duration.sc', log]) basetab20[, duration.sc := (duration - scaling20[var == 'duration.sc', center])/scaling20[var == 'duration.sc', scale]]
-basetab20 <- basetab20[duration > 0, ]
 
 # make the data frames for each interaction to plot                
 for(j in 1:nrow(vars)){
@@ -511,34 +343,24 @@ for(j in 1:nrow(vars)){
     # merge with the rest of the columns
     expand.grid.df <- function(...) Reduce(function(...) merge(..., by=NULL), list(...)) # https://stackoverflow.com/questions/11693599/alternative-to-expand-grid-for-data-frames
     colnamestouse <- setdiff(colnames(basetab5), paste0(vars$vars[j], '.sc'))
-    thisdat5 <- expand.grid.df(thisdat, basetab5[, ..colnamestouse])
     thisdat10 <- expand.grid.df(thisdat, basetab10[, ..colnamestouse])
-    thisdat20 <- expand.grid.df(thisdat, basetab20[, ..colnamestouse])
-    
+
     # merge with the previous iterations
     if(j == 1){
-      newdat5 <- thisdat5
       newdat10 <- thisdat10
-      newdat20 <- thisdat20
     }
     if(j > 1){
         colstoadd <- setdiff(colnames(thisdat5), colnames(newdat5))
         for(toadd in colstoadd){
-            newdat5[[toadd]] <- NA
             newdat10[[toadd]] <- NA
-            newdat20[[toadd]] <- NA
         }
         
         colstoadd2 <- setdiff(colnames(newdat5), colnames(thisdat5))
         for(toadd in colstoadd2){
-            thisdat5[[toadd]] <- NA
             thisdat10[[toadd]] <- NA
-            thisdat20[[toadd]] <- NA
         }
         
-        newdat5 <- rbind(newdat5, thisdat5)
         newdat10 <- rbind(newdat10, thisdat10)
-        newdat20 <- rbind(newdat20, thisdat20)
     } 
 }
 
@@ -546,26 +368,10 @@ for(j in 1:nrow(vars)){
 logit <- function(p) return(log(p/(1-p)))
 invlogit <- function(x) return(1/(1+exp(-x)))
 
-coefs5 <- (summary(modTdTT5Horn)$coefficients) # get the model coefficients
 coefs10 <- (summary(modTdTT10Horn)$coefficients)
-coefs20 <- (summary(modTdTT20Horn)$coefficients)
 
-newdat5$Horn.sc <- predict(modTdTT5Horn, newdat = newdat5, type = 'response', se.fit = FALSE, re.form = NA) # make the predictions
 newdat10$Horn.sc <- predict(modTdTT10Horn, newdat = newdat10, type = 'response', se.fit = FALSE, re.form = NA)
-newdat20$Horn.sc <- predict(modTdTT20Horn, newdat = newdat20, type = 'response', se.fit = FALSE, re.form = NA)
 
-newdat5$Horn.sc.dTu <- invlogit(logit(newdat5$Horn.sc) + 
-                                  newdat5$tempchange_abs.sc * newdat5$duration.sc *
-                                  coefs5$cond[3,2]) # upper bound on tempchange coef
-newdat5$Horn.sc.dTl <- invlogit(logit(newdat5$Horn.sc) - 
-                                  newdat5$tempchange_abs.sc * newdat5$duration.sc *
-                                  coefs5$cond[3,2]) # lower bound on tempchange coef
-newdat5$Horn.sc.Tu <- invlogit(logit(newdat5$Horn.sc) + 
-                                 newdat5$tempave_metab.sc * newdat5$duration.sc *
-                                 coefs5$cond[4,2]) # upper bound on tempchange coef
-newdat5$Horn.sc.Tl <- invlogit(logit(newdat5$Horn.sc) - 
-                                 newdat5$tempave_metab.sc * newdat5$duration.sc *
-                                 coefs5$cond[4,2]) # lower bound on tempchange coef
 
 newdat10$Horn.sc.dTu <- invlogit(logit(newdat10$Horn.sc) + 
                                   newdat10$tempchange_abs.sc * newdat10$duration.sc *
@@ -580,207 +386,34 @@ newdat10$Horn.sc.Tl <- invlogit(logit(newdat10$Horn.sc) -
                                  newdat10$tempave_metab.sc * newdat10$duration.sc *
                                  coefs10$cond[4,2]) # lower bound on tempchange coef
 
-newdat20$Horn.sc.dTu <- invlogit(logit(newdat20$Horn.sc) + 
-                                  newdat20$tempchange_abs.sc * newdat20$duration.sc *
-                                  coefs20$cond[3,2]) # upper bound on tempchange coef
-newdat20$Horn.sc.dTl <- invlogit(logit(newdat20$Horn.sc) - 
-                                  newdat20$tempchange_abs.sc * newdat20$duration.sc *
-                                  coefs20$cond[3,2]) # lower bound on tempchange coef
-newdat20$Horn.sc.Tu <- invlogit(logit(newdat20$Horn.sc) + 
-                                 newdat20$tempave_metab.sc * newdat20$duration.sc *
-                                 coefs20$cond[4,2]) # upper bound on tempchange coef
-newdat20$Horn.sc.Tl <- invlogit(logit(newdat20$Horn.sc) - 
-                                 newdat20$tempave_metab.sc * newdat20$duration.sc *
-                                 coefs20$cond[4,2]) # lower bound on tempchange coef
-
 
 # write out
-write.csv(newdat5, 'temp/modTdTT5_preds.csv', row.names = FALSE)
 write.csv(newdat10, 'temp/modTdTT10_preds.csv', row.names = FALSE)
-write.csv(newdat20, 'temp/modTdTT20_preds.csv', row.names = FALSE)
 
 ```
 
 #### Plot
 ```{r}
 # load predictions
-newdat5 <- fread('temp/modTdTT5_preds.csv')
 newdat10 <- fread('temp/modTdTT10_preds.csv')
-newdat20 <- fread('temp/modTdTT20_preds.csv')
 
 # calc duration slope per temp:tempchange level
 slope <- function(duration, Horn.sc){
   mod <- lm(Horn.sc ~ duration)
   return(coef(mod)[2])
 }
-slope5 <- newdat5[, .(Hornslope = slope(duration, Horn.sc), 
-                      HornslopedTu = slope(duration, Horn.sc.dTu),
-                      HornslopedTl = slope(duration, Horn.sc.dTl), 
-                      HornslopeTu = slope(duration, Horn.sc.Tu),
-                      HornslopeTl = slope(duration, Horn.sc.Tl)), 
-                  by = .(tempchange_abs, tempave_metab)]
 slope10 <- newdat10[, .(Hornslope = slope(duration, Horn.sc), 
                       HornslopedTu = slope(duration, Horn.sc.dTu),
                       HornslopedTl = slope(duration, Horn.sc.dTl), 
                       HornslopeTu = slope(duration, Horn.sc.Tu),
                       HornslopeTl = slope(duration, Horn.sc.Tl)), 
                   by = .(tempchange_abs, tempave_metab)]
-slope20 <- newdat20[, .(Hornslope = slope(duration, Horn.sc), 
-                      HornslopedTu = slope(duration, Horn.sc.dTu),
-                      HornslopedTl = slope(duration, Horn.sc.dTl), 
-                      HornslopeTu = slope(duration, Horn.sc.Tu),
-                      HornslopeTl = slope(duration, Horn.sc.Tl)), 
-                  by = .(tempchange_abs, tempave_metab)]
 
-p1 <- ggplot(slope5, aes(x=tempchange_abs, y=Hornslope, ymin=HornslopedTu, ymax=HornslopedTl)) +
+p1 <- ggplot(slope10, aes(x=tempchange_abs, y=Hornslope, ymin=HornslopedTu, ymax=HornslopedTl)) +
   geom_line() + 
   geom_ribbon(alpha=0.2)
   
-p2 <- ggplot(slope5, aes(x=tempave_metab, y=Hornslope, ymin=HornslopeTu, ymax=HornslopeTl)) +
-  geom_line() +
-  geom_ribbon(alpha=0.2)
-
-grid.arrange(p1, p2, ncol = 2)
-```
-
-## Temperature+REALM : duration models
-### Load the models
-```{r, eval=FALSE, echo=FALSE}
-modTRealm5Jtu <- readRDS('temp/modTRealm5Jtu.rds')
-modTRealm5Horn <- readRDS('temp/modTRealm5Horn.rds')
-```
-
-### Plot the response
-#### Set up and write to file
-Only run this once.
-```{r, eval=FALSE, echo=FALSE}
-scaling5 <- fread('output/turnover_w_covariates_scaling5.csv') # the scalings
-
-# find a study in all 3 datasets to use as the random effect
-# ranef(modTdTTRealm5Horn))
-
-# set up the variables to plot
-vars <- data.frame(vars = c('tempave_metab'),
-                   min =      c(-10), 
-                   max =      c(40),
-                   len =      c(100),
-                   discrete = c(F),
-                   stringsAsFactors = FALSE)
-basetab5 <- data.table(expand.grid(start = 1:4, end = 2:5, nspp.sc = 0, REALM = c('Terrestrial', 'Freshwater', 'Marine'), STUDY_ID = 195L, rarefyID = '195_289043', tempchange_abs.sc = 0, tempave_metab.sc = 0)) # the base case
-basetab5[, duration := end - start]
-if(scaling5[var == 'duration.sc', log]) basetab5[, duration.sc := (log(duration) - scaling5[var == 'duration.sc', center])/scaling5[var == 'duration.sc', scale]]
-if(!scaling5[var == 'duration.sc', log]) basetab5[, duration.sc := (duration - scaling5[var == 'duration.sc', center])/scaling5[var == 'duration.sc', scale]]
-basetab5 <- basetab5[duration > 0, ]
-
-# make the data frames for each interaction to plot                
-for(j in 1:nrow(vars)){
-    # set up the main effects
-    if(scaling5[var == paste0(vars$vars[j], '.sc'), log]){
-        thisdat <- data.frame(new = 10^seq(log10(vars$min[j]), log10(vars$max[j]), length.out = vars$len[j]),
-                              var = vars$vars[j], stringsAsFactors = FALSE)
-    } 
-    if(!scaling5[var == paste0(vars$vars[j], '.sc'), log]){
-        thisdat <- data.frame(new = seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
-                              var = vars$vars[j], stringsAsFactors = FALSE)
-    }
-    names(thisdat) <- c(vars$vars[j], 'var')
-    
-    # scale the variable
-    cent <- scaling5[var == paste0(vars$vars[j], '.sc'), center]
-    scl <- scaling5[var == paste0(vars$vars[j], '.sc'), scale]
-    lg <- scaling5[var == paste0(vars$vars[j], '.sc'), log]
-    plus <- scaling5[var == paste0(vars$vars[j], '.sc'), plus]
-    if(is.null(cent)) cent <- 0
-    if(!is.null(cent) & !is.null(scl)){
-        if(lg) thisdat[[paste0(vars$var[j], '.sc')]] <- (log(thisdat[[vars$vars[j]]] + plus) - cent)/scl
-        if(!lg) thisdat[[paste0(vars$var[j], '.sc')]] <- (thisdat[[vars$var[j]]] - cent)/scl
-    }
-    
-    # merge with the rest of the columns
-    expand.grid.df <- function(...) Reduce(function(...) merge(..., by=NULL), list(...)) # https://stackoverflow.com/questions/11693599/alternative-to-expand-grid-for-data-frames
-    colnamestouse <- setdiff(colnames(basetab5), paste0(vars$vars[j], '.sc'))
-    thisdat5 <- expand.grid.df(thisdat, basetab5[, ..colnamestouse])
-    
-    # merge with the previous iterations
-    if(j == 1){
-      newdat5 <- thisdat5
-    }
-    if(j > 1){
-        colstoadd <- setdiff(colnames(thisdat5), colnames(newdat5))
-        for(toadd in colstoadd){
-            newdat5[[toadd]] <- NA
-        }
-        
-        colstoadd2 <- setdiff(colnames(newdat5), colnames(thisdat5))
-        for(toadd in colstoadd2){
-            thisdat5[[toadd]] <- NA
-        }
-        
-        newdat5 <- rbind(newdat5, thisdat5)
-    } 
-}
-newdat5 <- as.data.table(newdat5)
-
-# predict (takes a few minutes on Annotate)
-logit <- function(p) return(log(p/(1-p)))
-invlogit <- function(x) return(1/(1+exp(-x)))
-
-coefs5Jtu <- summary(modTdTRealm5Jtu)$coefficients$cond # get the model coefficients and SE
-terms5Jtu <- rownames(coefs5Jtu)
-
-newdat5[, Jtu.sc := predict(modTdTRealm5Jtu, newdat = newdat5, type = 'response', 
-                            se.fit = FALSE, re.form = NA)] # make the predictions
-
-newdat5[, Jtu.sc.Tu := invlogit(logit(Jtu.sc) + 
-                                 tempave_metab.sc * duration.sc *
-                                 coefs5Jtu[terms5Jtu == 'duration.sc:tempave_metab.sc',2])] # upper bound on T coef
-newdat5[, Jtu.sc.Tl := invlogit(logit(Jtu.sc) - 
-                                 tempave_metab.sc * duration.sc *
-                                 coefs5Jtu[terms5Jtu == 'duration.sc:tempave_metab.sc',2])]
-
-## Horn
-coefs5Horn <- summary(modTdTRealm5Horn)$coefficients$cond # get the model coefficients and SE
-terms5Horn <- rownames(coefs5Horn)
-
-newdat5[, Horn.sc := predict(modTdTRealm5Horn, newdat = newdat5, type = 'response', 
-                             se.fit = FALSE, re.form = NA)] # make the predictions
-
-newdat5[, Horn.sc.Tu := invlogit(logit(Horn.sc) + 
-                                 tempave_metab.sc * duration.sc *
-                                 coefs5Horn[terms5Horn == 'duration.sc:tempave_metab.sc',2])] # upper bound on T coef
-newdat5[, Horn.sc.Tl := invlogit(logit(Horn.sc) - 
-                                 tempave_metab.sc * duration.sc *
-                                 coefs5Horn[terms5Horn == 'duration.sc:tempave_metab.sc',2])]
-
-
-# write out
-write.csv(newdat5, 'temp/modTRealm5_preds.csv', row.names = FALSE)
-
-```
-
-#### Plot
-```{r}
-# load predictions
-newdat5 <- fread('temp/modTRealm5_preds.csv')
-
-# calc duration slope per temp:tempchange level
-slope <- function(duration, diss){
-  mod <- lm(diss ~ duration)
-  return(coef(mod)[2])
-}
-slope5 <- newdat5[, .(Jtuslope = slope(duration, Jtu.sc), 
-                      JtuslopeTu = slope(duration, Jtu.sc.Tu),
-                      JtuslopeTl = slope(duration, Jtu.sc.Tl),
-                      Hornslope = slope(duration, Horn.sc), 
-                      HornslopeTu = slope(duration, Horn.sc.Tu),
-                      HornslopeTl = slope(duration, Horn.sc.Tl)), 
-                  by = .(tempave_metab)]
-
-p1 <- ggplot(slope5, aes(x=tempave_metab, y=Jtuslope, ymin=JtuslopeTu, ymax=JtuslopeTl)) +
-  geom_line() +
-  geom_ribbon(alpha=0.2)
-
-p2 <- ggplot(slope5, aes(x=tempave_metab, y=Hornslope, ymin=HornslopeTu, ymax=HornslopeTl)) +
+p2 <- ggplot(slope10, aes(x=tempave_metab, y=Hornslope, ymin=HornslopeTu, ymax=HornslopeTl)) +
   geom_line() +
   geom_ribbon(alpha=0.2)
 
@@ -961,7 +594,7 @@ grid.arrange(p1, p2, p3, p4, ncol = 2)
 
 ## Temperature*temperature slope*REALM*duration (Antao-style)
 ```{r}
-#modTdTTRealmAllJtu <- readRDS('temp/modTdTTRealmAllJtu.rds') # uses duration and tempchange
+modTdTTRealmAllJtu <- readRDS('temp/modTdTTRealmAllJtu.rds') # uses duration and tempchange
 #modTdTTRealmDurscAllJtu <- readRDS('temp/modTdTTRealmDurscAllJtu.rds') # uses duration.sc and tempchange
 modTsdTTRealmAllJtu <- readRDS('temp/modTsdTTRealmAllJtu.rds') # uses duration and abs(tempchange)
 modTsdTTRealmDurscAllJtu <- readRDS('temp/modTsdTTRealmDurscAllJtu.rds') # uses duration.sc and abs(tempchange)
@@ -1003,9 +636,9 @@ newdatF[, tempchange_abs := tempchange_abs.sc * scalingall[var == 'tempchange_ab
 
 
 # predict
-newdatM$Jtu.sc <- predict(modTsdTTRealmDurscAllJtu, newdata = newdatM, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE)
-newdatT$Jtu.sc <- predict(modTsdTTRealmDurscAllJtu, newdata = newdatT, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE)
-newdatF$Jtu.sc <- predict(modTsdTTRealmDurscAllJtu, newdata = newdatF, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE)
+newdatM$Jtu.sc <- predict(modTsdTTRealmDurscAllJtu, newdata = newdatM, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdatT$Jtu.sc <- predict(modTsdTTRealmDurscAllJtu, newdata = newdatT, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdatF$Jtu.sc <- predict(modTsdTTRealmDurscAllJtu, newdata = newdatF, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
 
 # calculate slopes
 slopesM <- newdatM[, .(slope = coef(lm(Jtu.sc ~ duration.sc))[2]), by = .(tempave_metab, tempchange_abs)]
@@ -1062,465 +695,115 @@ p3
 ```
 
 
-## Compare models
 
-### Load the models
-```{r, echo=FALSE}
-modnames <- c('modNull', 'modRealm', 'modT', 'moddT', 'modsdT', 'modmass', 'modnpp', 'modseas', 'modmicroclim', 'modhuman', 'modTdT', 'modTRealm', 'modTmass', 'modTnpp', 'modTseas', 'modTmicroclim', 'modThuman', 'moddTRealm', 'moddTtsign', 'moddTmass', 'moddTnpp', 'moddTseas', 'moddTmicroclim', 'moddThuman', 'modsdTRealm', 'modsdTmass', 'modsdTnpp', 'modsdTseas', 'modsdTmicroclim', 'modsdThuman', 'modTdTRealm', 'modTdTtsign', 'modTdTmass', 'modTdTnpp', 'modTdTseas', 'modTdTmicroclim', 'modTdThuman', 'modTdTT', 'modTsdTT', 'modTxRealm', 'modTxmass', 'modTxnpp', 'modTxseas', 'modTxmicroclim', 'modTxhuman', 'moddTxRealm', 'moddTxmass', 'moddTxnpp', 'moddTxseas', 'moddTxmicroclim', 'moddTxhuman', 'modsdTxRealm', 'modsdTxmass', 'modsdTxnpp', 'modsdTxseas', 'modsdTxmicroclim', 'modsdTxhuman')
-
-# 5 yrs Jtu
-mods5Jtu <- vector('list', length = length(modnames))
-names(mods5Jtu) <- paste0(modnames, '5Jtu')
-for(i in 1:length(mods5Jtu)){
-  if(file.exists(here('temp', paste0(names(mods5Jtu)[i], '.rds')))){ 
-    mods5Jtu[[i]] <- readRDS(here('temp', paste0(names(mods5Jtu)[i], '.rds')))
-  }
-}
-
-# 5 yrs Jne
-
-# 5 yrs Horn
-mods5Horn <- vector('list', length = length(modnames))
-names(mods5Horn) <- paste0(modnames, '5Horn')
-for(i in 1:length(mods5Horn)){
-  if(file.exists(here('temp', paste0(names(mods5Horn)[i], '.rds')))){ 
-    mods5Horn[[i]] <- readRDS(here('temp', paste0(names(mods5Horn)[i], '.rds')))
-  }
-}
-
-# # 10 yrs Jtu
-# mods10Jtu <- vector('list', length = length(modnames))
-# names(mods10Jtu) <- paste0(modnames, '10Jtu')
-# for(i in 1:length(mods10Jtu)){
-#   if(file.exists(here('temp', paste0(names(mods10Jtu)[i], '.rds')))){ 
-#     mods10Jtu[[i]] <- readRDS(here('temp', paste0(names(mods10Jtu)[i], '.rds')))
-#   }
-# }
-# 
-# # 10 yrs Jne
-# 
-# 
-# # 10 yrs Horn
-# mods10Horn <- vector('list', length = length(modnames))
-# names(mods10Horn) <- paste0(modnames, '10Horn')
-# for(i in 1:length(mods10Horn)){
-#   if(file.exists(here('temp', paste0(names(mods10Horn)[i], '.rds')))){ 
-#     mods10Horn[[i]] <- readRDS(here('temp', paste0(names(mods10Horn)[i], '.rds')))
-#   }
-# }
-# # 20 yrs Jtu
-# mods20Jtu <- vector('list', length = length(modnames))
-# names(mods20Jtu) <- paste0(modnames, '20Jtu')
-# for(i in 1:length(mods20Jtu)){
-#   if(file.exists(here('temp', paste0(names(mods20Jtu)[i], '.rds')))){ 
-#     mods20Jtu[[i]] <- readRDS(here('temp', paste0(names(mods20Jtu)[i], '.rds')))
-#   }
-# }
-# 
-# # 20 yrs Horn
-# mods20Horn <- vector('list', length = length(modnames))
-# names(mods20Horn) <- paste0(modnames, '20Horn')
-# for(i in 1:length(mods20Horn)){
-#   if(file.exists(here('temp', paste0(names(mods20Horn)[i], '.rds')))){ 
-#     mods20Horn[[i]] <- readRDS(here('temp', paste0(names(mods20Horn)[i], '.rds')))
-#   }
-# }
-```
-
-### AIC
-#### Jtu
-##### 5 years
-```{r, echo=FALSE}
-checkconv <- function(x){
-  if(is.null(x)){
-    return(-1) # if nothing fit
-  } else {
-    return(x$fit$convergence) # otherwise return convergence code. 0 is converged.
-  }
-}
-nobs <- sapply(mods5Jtu, FUN = function(x) x$modelInfo$nobs)
-nulls <- sapply(X = mods5Jtu, FUN = is.null)
-conv <- sapply(mods5Jtu, FUN = checkconv)
-good <- !nulls & conv == 0
-if(sum(nulls) >0){
-  print(paste0('Did not fit: ', paste0(names(mods5Jtu)[nulls], collapse = ', ')))
-}
-if(sum(conv<=0) != length(conv)){
-  print(paste0('Did not converge: ', paste0(names(mods5Jtu)[conv > 0], collapse = ', ')))
-}
-if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
-aics <- sapply(X = mods5Jtu[good], FUN = AIC)
-daics <- data.frame(num=(1:length(aics))[good], daic=aics - min(aics))
-daics[daics[,2] < 5 | grepl('Null', rownames(daics)), ] # print null and dAIC<4
-```
-###### sdT vs. dT
+## Environment*Temperature*temperature slope*REALM*duration (Antao+)
 ```{r}
-daics[grepl('moddT5|modsdT5', rownames(daics)), ] # print signed and abs tempchange
-```
+modTsdTTRealmnppAllJtu <- readRDS('temp/modTsdTTRealmnppAllJtu.rds') # has npp
+modTsdTTRealmmicroclimAllJtu <- readRDS('temp/modTsdTTRealmmicroclimAllJtu.rds') # has microclimates
 
-##### 10 years
-```{r, echo=FALSE}
-nobs <- sapply(mods10Jtu, FUN = function(x) x$modelInfo$nobs)
-modes <- sapply(X = mods10Jtu, FUN = mode)
-conv <- sapply(mods10Jtu, FUN = function(x) return(x$fit$convergence))
-good <- modes == 'list' & conv == 0
-if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
-if(sum(conv==0) != length(conv)){
-  print(paste0('Did not converge: ', paste0(names(mods10Jtu)[conv != 0], collapse = ', ')))
-}
-if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
-aics <- sapply(X = mods10Jtu[good], FUN = AIC)
-cbind((1:length(aics))[good], aics - min(aics))
-```
-
-##### 20 years
-```{r, echo=FALSE}
-nobs <- sapply(mods20Jtu, FUN = function(x) x$modelInfo$nobs)
-modes <- sapply(X = mods20Jtu, FUN = mode)
-conv <- sapply(mods20Jtu, FUN = function(x) return(x$fit$convergence))
-good <- modes == 'list' & conv == 0
-if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
-if(sum(conv==0) != length(conv)){
-  print(paste0('Did not converge: ', paste0(names(mods20Jtu)[conv != 0], collapse = ', ')))
-}
-if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
-aics <- sapply(X = mods20Jtu[good], FUN = AIC)
-cbind((1:length(aics))[good], aics - min(aics))
-```
-
-#### Horn
-##### 5 years
-```{r, echo=FALSE}
-checkconv <- function(x){
-  if(is.null(x)){
-    return(-1)
-  } else {
-    return(x$fit$convergence)
-  }
-}
-nobs <- sapply(mods5Horn, FUN = function(x) x$modelInfo$nobs)
-nulls <- sapply(X = mods5Horn, FUN = is.null)
-conv <- sapply(mods5Horn, FUN = checkconv)
-good <- !nulls & conv == 0
-if(sum(nulls) >0){
-  print(paste0('Did not fit: ', paste0(names(mods5Horn)[nulls], collapse = ', ')))
-}
-if(sum(conv==0) != length(conv)){
-  print(paste0('Did not converge: ', paste0(names(mods5Horn)[conv > 0], collapse = ', ')))
-}
-if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
-aics <- sapply(X = mods5Horn[good], FUN = AIC)
-daics <- data.frame(num=(1:length(aics))[good], daic=aics - min(aics))
-daics[daics[,2] < 5 | grepl('Null', rownames(daics)), ] # print null and dAIC<4
-```
-###### sdT vs. dT
-```{r}
-daics[grepl('moddT5|modsdT5', rownames(daics)), ] # print signed and abs tempchange
-```
-
-##### 10 years
-```{r, echo=FALSE}
-nobs <- sapply(mods10Horn, FUN = function(x) x$modelInfo$nobs)
-modes <- sapply(X = mods10Horn, FUN = mode)
-conv <- sapply(mods10Horn, FUN = function(x) return(x$fit$convergence))
-good <- modes == 'list' & conv == 0
-if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
-if(sum(conv==0) != length(conv)){
-  print(paste0('Did not converge: ', paste0(names(mods10Horn)[conv != 0], collapse = ', ')))
-}
-if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
-aics <- sapply(X = mods10Horn[good], FUN = AIC)
-t(t(aics - min(aics)))
-```
-
-##### 20 years
-```{r, echo=FALSE}
-nobs <- sapply(mods20Horn, FUN = function(x) x$modelInfo$nobs)
-modes <- sapply(X = mods20Horn, FUN = mode)
-conv <- sapply(mods20Horn, FUN = function(x) return(x$fit$convergence))
-good <- modes == 'list' & conv == 0
-if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
-if(sum(conv==0) != length(conv)){
-  print(paste0('Did not converge: ', paste0(names(mods20Horn)[conv != 0], collapse = ', ')))
-}
-if(!all(unlist(nobs[good]) == nobs[good][1])) print('NOT ALL THE SAME! AIC is meaningless')
-aics <- sapply(X = mods20Horn[good], FUN = AIC)
-t(t(aics - min(aics)))
+summary(modTsdTTRealmnppAllJtu)
+summary(modTsdTTRealmmicroclimAllJtu)
 ```
 
 
-## Full models w/ duration interactions
-### Load the models
-```{r durint, echo=FALSE}
-if(file.exists('temp/modDurIntTdTSeMiNPNspMaHu5yrJtu.rds')){
-  modDurInt5yrJtu <- readRDS('temp/modDurIntTdTSeMiNPNspMaHu5yrJtu.rds')
-  # needed because model fit with trends[i,]
-  trends[, maxyr := max(c(year1, year2)), by = rarefyID]
-  rowkeep <- trends[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc,
-                                     seas.sc, microclim.sc, npp.sc, mass.sc, human_bowler.sc, nspp.sc) &
-                      year1 > maxyr - 5 &
-                      year2 > maxyr - 5] # trim to complete cases in the last 5 years
-  rkeep <- trends[rowkeep, .(nyrs = length(unique(c(year1, year2)))), by = rarefyID][nyrs == 5, rarefyID] # find timeseries with exactly 5 years
-  i <- trends[, rowkeep & rarefyID %in% rkeep]
-  
-  trends[i, tempchangeTS_abs := abs(median(tempchange/duration)), by = rarefyID] # Thiel-Sen estimator of the abs(slope): median of all pairwise differences
-}
+
+### Plot the interaction for high and low environment values
+Only for marine since no significant effect in other realms.
+```{r, echo = FALSE}
+# set up prediction frame
+newdat1 <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration = 1:10))
+newdat1$npp.sc <- -2 # low value (2 SD below the mean)
+newdat1$microclim.sc <- -2
+newdat1$REALM <- 'Marine'
+newdat1$STUDY_ID <- 1
+newdat1$rarefyID <- 1
+newdat1[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
+newdat1[, tempchange_abs := tempchange_abs.sc * scalingall[var == 'tempchange_abs.sc', scale] + scalingall[var == 'tempchange_abs.sc', center]]
+
+newdat2 <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration = 1:10))
+newdat2$npp.sc <- 2 # high value (2 SD above the mean)
+newdat2$microclim.sc <- 2
+newdat2$REALM <- 'Marine'
+newdat2$STUDY_ID <- 1
+newdat2$rarefyID <- 1
+newdat2[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
+newdat2[, tempchange_abs := tempchange_abs.sc * scalingall[var == 'tempchange_abs.sc', scale] + scalingall[var == 'tempchange_abs.sc', center]]
+
+# predict
+newdat1$Jtu.sc.npp <- predict(modTsdTTRealmnppAllJtu, newdata = newdat1, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdat2$Jtu.sc.npp <- predict(modTsdTTRealmnppAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdat1$Jtu.sc.microclim <- predict(modTsdTTRealmmicroclimAllJtu, newdata = newdat1, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdat2$Jtu.sc.microclim <- predict(modTsdTTRealmmicroclimAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+
+# calculate slopes
+slopes1 <- newdat1[, .(slope_npp = coef(lm(Jtu.sc.npp ~ duration))[2],
+                       slope_microclim = coef(lm(Jtu.sc.microclim ~ duration))[2]), by = .(tempave_metab, tempchange_abs)]
+slopes2 <- newdat2[, .(slope_npp = coef(lm(Jtu.sc.npp ~ duration))[2],
+                       slope_microclim = coef(lm(Jtu.sc.microclim ~ duration))[2]), by = .(tempave_metab, tempchange_abs)]
+
+# plot
+p1 <- ggplot(slopes1, aes(tempchange_abs, tempave_metab, z = slope_npp)) +
+    geom_raster(aes(fill = slope_npp)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Low NPP') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p2 <- ggplot(slopes2, aes(tempchange_abs, tempave_metab, z = slope_npp)) +
+    geom_raster(aes(fill = slope_npp)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'High NPP') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p3 <- ggplot(slopes1, aes(tempchange_abs, tempave_metab, z = slope_microclim)) +
+    geom_raster(aes(fill = slope_microclim)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Low microclimate') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p4 <- ggplot(slopes2, aes(tempchange_abs, tempave_metab, z = slope_microclim)) +
+    geom_raster(aes(fill = slope_microclim)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'High microclimate') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+
+p1
+p2
+p3
+p4
 ```
 
-### Summary
-```{r summary durint, echo=FALSE}
-if(exists('modDurInt5yrJut')) summary(modDurInt5yrJtu)
-```
-
-### DHARMa model evaluation
-#### Simulate residuals
-```{r, echo=FALSE}
-## run the if(FALSE) part by hand if needed (e.g., the first time)
-if(FALSE) {
-  res_DurInt5yrJtu <- simulateResiduals(modDurInt5yrJtu, n = 250)
-  
-  saveRDS(res_DurInt5yrJtu, file = 'temp/res_DurInt5yrJtu.rds')
-} else {
-  if(file.exists(here('temp', 'res_DurInt5yrJtu.rds'))) res_DurInt5yrJtu <- readRDS(here('temp', 'res_DurInt5yrJtu.rds'))
-}
-```
-
-#### Plot residuals
-```{r, echo=FALSE}
-if(exists('res_DurInt5yrJtu')){
-  plot(res_DurInt5yrJtu)
-  plotResiduals(res_DurInt5yrJtu, trends$duration.sc[i], xlab = 'duration.sc', main = '')
-  plotResiduals(res_DurInt5yrJtu, form=trends$REALM[i], xlab = 'REALM', main = '')
-  plotResiduals(res_DurInt5yrJtu, form=trends$tempchangeTS_abs[i], xlab = 'tempchangeTS_abs', main = '')
-  plotResiduals(res_DurInt5yrJtu, trends$tempave_metab.sc[i], xlab = 'tempave_metab.sc', main = '')
-  plotResiduals(res_DurInt5yrJtu, trends$seas.sc[i], xlab = 'seas.sc', main = '')
-  plotResiduals(res_DurInt5yrJtu, trends$microclim.sc[i], xlab = 'microclim.sc', main = '')
-  plotResiduals(res_DurInt5yrJtu, trends$npp.sc[i], xlab = 'npp.sc', main = '')
-  plotResiduals(res_DurInt5yrJtu, trends$nspp.sc[i], xlab = 'nspp.sc', main = '')
-  plotResiduals(res_DurInt5yrJtu, trends$mass.sc[i], xlab = 'mass.sc', main = '')
-  plotResiduals(res_DurInt5yrJtu, form=trends$human_bowler.sc[i], xlab = 'human_bowler.sc', main = '')
-}
-```
 
 
-#### Overdispersion
-```{r, echo=FALSE}
-if(exists('res_DurInt5yrJtu')){
-  testDispersion(res_DurInt5yrJtu)
-}
-
-```
-
-#### Near-zero-inflation
-Zero values have been transformed to slightly >0, so can't test zero-inflation directly
-```{r, echo=FALSE,}
-countNearZero <- function(x) sum(x < 0.0001)
-
-if(exists('res_DurInt5yrJtu')){
-  testGeneric(res_DurInt5yrJtu, summary = countNearZero, alternative = 'greater')
-}
-
-```
-
-#### Near-one-inflation
-```{r, echo=FALSE, eval=FALSE}
-countNearOne <- function(x) sum(x > 0.9999)
-
-if(exists('res_DurInt5yrJtu')){
-  testGeneric(res_DurInt5yrJtu, summary = countNearOne, alternative = 'greater')
-}
-```
-
-### Interactions
-#### Set up and write to file
-Only run this once
-```{r, eval = FALSE, echo=FALSE}
-scaling <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # the scalings
-
-# set up the interactions to plot. min and max on a raw scale.
-ints <- data.frame(vars = c('tempchangeTS_abs', 'tempave_metab', 'seas', 'microclim', 
-                            'npp', 'nspp', 'mass',
-                            'human_bowler', 'human_bowler'),
-                   min =      c(0,   -10, 0,   0.1,   0.5,  1,    1,   0,   0), 
-                   max =      c(1,   40,  15,  6,   5000, 1000, 1e8, 10,  10),
-                   len =      c(100, 100, 100, 100, 100,  100,  100, 100, 100),
-                   discrete = c(F,   F,   F,   F,   F,    F,    F,   F,   F),
-                   REALM = c(rep('Terrestrial', 8), 'Marine'),
-                   REALM2 = c(rep('TerrFresh', 8), 'Marine'),
-                   stringsAsFactors = FALSE)
-baseall <- trends[, .(type = 'all', 
-                      tempchangeTS_abs = mean(tempchangeTS_abs, na.rm=TRUE), 
-                      tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
-                      seas.sc = mean(seas.sc, na.rm=TRUE), 
-                      microclim.sc = mean(microclim.sc, na.rm=TRUE), 
-                      npp.sc = mean(npp.sc, na.rm=TRUE), 
-                      nspp.sc = mean(nspp.sc, na.rm=TRUE),
-                      mass.sc = mean(mass.sc, na.rm=TRUE), 
-                      human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
-baseterr <- trends[REALM == 'Terrestrial', 
-                   .(type = 'Terrestrial', 
-                     tempchangeTS_abs = mean(tempchangeTS_abs, na.rm=TRUE), 
-                     tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
-                     seas.sc = mean(seas.sc, na.rm=TRUE), 
-                     microclim.sc = mean(microclim.sc, na.rm=TRUE), 
-                     npp.sc = mean(npp.sc, na.rm=TRUE), 
-                     nspp.sc = baseall$nspp.sc, # keep this the same across all
-                     mass.sc = mean(mass.sc, na.rm=TRUE), 
-                     human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
-basemar <- trends[REALM == 'Marine', 
-                  .(type = 'Marine',
-                    tempchangeTS_abs = mean(tempchangeTS_abs, na.rm=TRUE), 
-                    tempave_metab.sc = mean(tempave_metab.sc, na.rm=TRUE), 
-                    seas.sc = mean(seas.sc, na.rm=TRUE), 
-                    microclim.sc = mean(microclim.sc, na.rm=TRUE), 
-                    npp.sc = mean(npp.sc, na.rm=TRUE), 
-                    nspp.sc = baseall$nspp.sc,
-                    mass.sc = mean(mass.sc, na.rm=TRUE), 
-                    human_bowler.sc = mean(human_bowler.sc, na.rm=TRUE))]
-basetab <- rbind(baseall, baseterr, basemar)
-basetab[, ':='(STUDY_ID = trends[i, STUDY_ID][1], rarefyID = trends[i, rarefyID][1])] # pick the first RE level in the dataframe
-
-# make the data frames for each interaction to plot                
-for(j in 1:nrow(ints)){
-  # set up a grid of temperature trends and the interacting variable
-  if(ints$vars[j] == 'tempchangeTS_abs'){ # this one isn't in scaling, since made anew for each model based on duration
-    intvars <- list(duration = seq(1, 5, length.out = 100), 
-                    new = seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
-                    var = ints$vars[j])
-  } else {
-    log <- scaling$log[scaling$var == paste0(ints$vars[j], '.sc')]
-    plus <- scaling$plus[scaling$var == paste0(ints$vars[j], '.sc')]
-    if(log) intvars <- list(duration = seq(1, 5, length.out = 100), 
-                                    new = exp(seq(log(ints$min[j]+plus), log(ints$max[j]+plus), length.out = ints$len[j])),
-                                    var = ints$vars[j])
-    if(!log) intvars <- list(duration = seq(1, 5, length.out = 100), 
-                                     new = seq(ints$min[j], ints$max[j], length.out = ints$len[j]),
-                                     var = ints$vars[j])
-  }
-  names(intvars) <- c('duration', ints$vars[j], 'var')
-  thisdat <- expand.grid(intvars)
-  
-  # scale the interacting variable
-  if(ints$vars[j] != 'tempchangeTS_abs'){ # this one isn't in scaling, since made anew for each model based on duration0
-    cent <- scaling$center[scaling$var == paste0(ints$vars[j], '.sc')]
-    scl <- scaling$scale[scaling$var == paste0(ints$vars[j], '.sc')]
-    log <- scaling$log[scaling$var == paste0(ints$vars[j], '.sc')]
-    plus <- scaling$plus[scaling$var == paste0(ints$vars[j], '.sc')]
-    if(log) thisdat[[paste0(ints$var[j], '.sc')]] <- (log(thisdat[[ints$vars[j]]] + plus) - cent)/scl
-    if(!log) thisdat[[paste0(ints$var[j], '.sc')]] <- (thisdat[[ints$var[j]]] - cent)/scl
-  }
-  
-  # merge with the rest of the columns
-  # use realm-specific averages for human impacts
-  colnamestouse <- setdiff(colnames(basetab), c(ints$var[j], paste0(ints$var[j], '.sc')))
-  if(ints$vars[j] != 'human_bowler'){
-    thisdat <- cbind(thisdat, basetab[type == 'all', ..colnamestouse])
-  }
-  if(ints$vars[j] == 'human_bowler' & ints$REALM[j] == 'Terrestrial'){
-    thisdat <- cbind(thisdat, basetab[type == 'Terrestrial', ..colnamestouse])
-  }
-  if(ints$vars[j] == 'human_bowler' & ints$REALM[j] == 'Marine'){
-    thisdat <- cbind(thisdat, basetab[type == 'Marine', ..colnamestouse])
-  }
-  
-  # add realm
-  thisdat$REALM <- ints$REALM[j]
-  thisdat$REALM2 <- ints$REALM2[j]
-  
-  # add plotting information
-  if(ints$vars[j] != 'tempchangeTS_abs'){
-    thisdat$log <- scaling$log[scaling$var == paste0(ints$vars[j], '.sc')]
-  } else {
-    thisdat$log <- FALSE
-  }
-  thisdat$discrete <- ints$discrete[j]
-  
-  # merge with the previous iterations
-  if(j == 1) newdat <- thisdat
-  if(j > 1){
-    colstoadd <- setdiff(colnames(thisdat), colnames(newdat))
-    for(toadd in colstoadd){
-      newdat[[toadd]] <- NA
-    }
-    
-    colstoadd2 <- setdiff(colnames(newdat), colnames(thisdat))
-    for(toadd in colstoadd2){
-      thisdat[[toadd]] <- NA
-    }
-    
-    newdat <- rbind(newdat, thisdat)
-  } 
-}
-
-# character so that new levels can be added
-newdat$REALM <- as.character(newdat$REALM)
-newdat$REALM2 <- as.character(newdat$REALM2)
-newdat$var <- as.character(newdat$var)
-
-# add extra rows so that all factor levels are represented (for predict.lme to work, not sure about predict.glmmTMB)
-newdat <- rbind(newdat[1:6, ], newdat)
-newdat$REALM[1:6] <- c('Marine', 'Marine', 'Freshwater', 'Freshwater', 'Terrestrial', 'Terrestrial')
-newdat$REALM2[1:6] <- c('Marine', 'Marine', 'TerrFresh', 'TerrFresh', 'TerrFresh', 'TerrFresh')
-newdat$tempchange[1:6] <- c(-0.2, 0.2, -0.2, 0.2, -0.2, 0.2)
-newdat$var[1:6] <- 'test'
-
-# scale the duration
-cent <- scaling$center[scaling$var == 'duration.sc']
-scl <- scaling$scale[scaling$var == 'duration.sc']
-newdat$duration.sc <- (log(newdat$duration)-cent)/scl
-
-# write out
-write.csv(newdat, 'temp/newdata_interactions_DurInt.csv', row.names = FALSE)
-
-```
-
-Now go run on the command line
-```
-nohup code/turnover_vs_temperature_GLMM_pred.R temp/modDurIntTdTSeMiNPNspMaHu5yrJtu.rds temp/newdata_interactions_DurInt.csv temp/modDurIntTdTSeMiNPNspMaHu5yrJtu_preds_interactions.rds >logs/turnover_vs_temperature_GLMMmodDurIntTdTSeMiNPNspMaHu5yrJtu_pred_interactions.Rout &
-```
-
-#### Load and plot
-```{r, fig.width = 9, fig.height = 8, echo=FALSE}
-newdatint <- readRDS(here('temp', 'modDurIntTdTSeMiNPNspMaHu5yrJtu_preds_interactions.rds'))
-newdatint[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # set factor order
-newdatint[, REALM2 := factor(REALM2, levels = c('TerrFresh', 'Marine'))] # set factor order
-
-ylims = c(0.2, 0.65)
-
-# prep the plots
-ints <- unique(newdatint[ ,.(var, REALM2, log, discrete)])
-ints <- ints[ints$var != 'test', ] # remove the extra rows
-intplots <- vector('list', nrow(ints))
-for(j in 1:length(intplots)){
-  subs <- newdatint$var == ints$var[j]
-  xvar <- 'duration'
-  title <- ints$var[j]
-  if(ints$var[j] %in% c('human_bowler')){
-    subs <- newdatint$var == ints$var[j] & newdatint$tempchange > 0 & newdatint$REALM2 == ints$REALM2[j]
-    title <- paste0('human:', ints$REALM2[j])
-  } 
-  
-  thisplot <- ggplot(newdatint[subs, ], 
-                     aes_string(x = xvar, y = 'pred', 
-                                group = ints$var[j], 
-                                color = ints$var[j])) +
-    geom_line() +
-    #coord_cartesian(ylim = ylims) +
-    theme(legend.title = element_text(size = 8), 
-          legend.text = element_text(size = 6),
-          legend.key.width = unit(0.1, 'inch')) +
-    labs(title = title)
-  if(ints$log[j] & !ints$discrete[j]){
-    intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'log')
-  }
-  if(!ints$log[j] & !ints$discrete[j]){
-    intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'identity')
-  }
-  if(ints$discrete[j]){
-    intplots[[j]] <- thisplot + scale_color_brewer(palette = "Dark2")
-  }
-}
-
-grid.arrange(grobs = intplots, ncol = 3)
-
-```
