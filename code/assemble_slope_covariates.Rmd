@@ -6,6 +6,7 @@ output:
     toc_depth: 3
 ---
 Uses slope of dissimilarity vs. time from calc_turnover.Rmd.
+This is input to turnover_vs_temperature_MEmodels.Rmd
 
 ```{r setup}
 if(Sys.info()['nodename'] == 'annotate.sebs.rutgers.edu'){
@@ -169,6 +170,24 @@ scaling$plus[scaling$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
 
 ```
 
+## Identify core sets of studies
+Sets of studies that are all present in a few different durations (e.g., 3, 5, 10 year durations)
+```{r core studies}
+core3min3_5min3_10min3char <- Reduce(intersect, list(btlong[measure == 'Jtu' & duration_group=='3min3', rarefyID],
+                                          btlong[measure == 'Jtu' & duration_group=='5min3', rarefyID],
+                                          btlong[measure == 'Jtu' & duration_group=='10min3', rarefyID])) # syntax from https://www.r-bloggers.com/2012/06/intersect-for-multiple-vectors-in-r/
+core3min3_5min3_10min3_20min3char <- Reduce(intersect, list(btlong[measure == 'Jtu' & duration_group=='3min3', rarefyID],
+                                          btlong[measure == 'Jtu' & duration_group=='5min3', rarefyID],
+                                          btlong[measure == 'Jtu' & duration_group=='10min3', rarefyID],
+                                          btlong[measure == 'Jtu' & duration_group=='20min3', rarefyID]))
+length(core3min3_5min3_10min3_20min3char)
+length(core3min3_5min3_10min3char)
+
+bt[, core3min3_5min3_10min3 := FALSE]
+bt[rarefyID %in% core3min3_5min3_10min3char & duration_group %in% c('3min3', '5min3', '10min3'), core3min3_5min3_10min3 := TRUE]
+bt[, core3min3_5min3_10min3_20min3 := FALSE]
+bt[rarefyID %in% core3min3_5min3_10min3_20min3char, core3min3_5min3_10min3_20min3 := TRUE]
+```
 
 ## Write out
 Only if file doesn't yet exist
@@ -176,6 +195,7 @@ Only if file doesn't yet exist
 if(!file.exists(here('output', 'slope_w_covariates.csv.gz'))){
   write.csv(bt[,.(STUDY_ID, rarefyID, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, 
                   duration_group, duration, 
+                  core3min3_5min3_10min3, core3min3_5min3_10min3_20min3,
                   disstrend, trendse, measure, 
                   tempave.sc, tempave_metab.sc, seas.sc, 
                   microclim.sc, temptrend, temptrend.sc, temptrend_abs.sc,

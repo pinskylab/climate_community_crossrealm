@@ -5,6 +5,8 @@ output:
 
 ---
 # Prep
+Uses output from assemble_slope_covariates.Rmd
+
 ```{r setup, echo = FALSE}
 library(data.table) # for handling large datasets
 library(ggplot2) # for some plotting
@@ -43,6 +45,9 @@ trends[, tsign := sign(temptrend)]
 scl <- scaling$scale[scaling$var == 'nspp.sc']
 cent <- scaling$center[scaling$var == 'nspp.sc']
 trends[, nspp := exp(nspp.sc*scl+cent)]
+
+trends[, duration_factor := as.factor(year2 - year1 + 1)]
+
 ```
 
 # Summary stats
@@ -72,6 +77,8 @@ trends[i & !duplicated(rarefyID), table(taxa_mod, REALM)]
 ```
 
 # Models
+These models have a high false positive rate if fit to datasets with timeseries of different durations (see duration_sim.Rmd).
+
 ## Choose the variance structure for mixed effects models
 Try combinations of
 
@@ -621,75 +628,209 @@ summary(modslopeTtrendTaveHorn10)
 ```
 
 
-## Antao-style models
+## Antao-style models of temptrend by standardized duration
+Fit to core dataset of the same rarefyIDs across durations (3,5,10) or to all durations and all datasets. Use an interaction with duration so that coefficients can differ.
 ```{r}
-#randef <- '+(0 + temptrend.sc|taxa_mod) +(1|taxa_mod/STUDY_ID)' # won't converge
-randef <- '+(1|STUDY_ID)'
-disp <- '~trendse*REALM'
-cont <- glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3))
+if(file.exists(here('temp', 'modAntaoJtu3_5_10min3.rds'))){
+  modAntaoJtu3_5_10min3 <- readRDS(here('temp','modAntaoJtu3_5_10min3.rds'))
+} else {
+  modAntaoJtu3_5_10min3 <- glmmTMB(disstrend ~ 0 + duration_factor:REALM + 
+                                     duration_factor:tempave_metab.sc:REALM + 
+                                     duration_factor:temptrend.sc:REALM + 
+                                     duration_factor:temptrend.sc:tempave_metab.sc:REALM +
+                                     (1|duration_factor/taxa_mod2/STUDY_ID),
+                                   disp = ~trendse*REALM + duration_factor*REALM,
+                                   data = trends[measure == 'Jtu' & core3min3_5min3_10min3 == TRUE,],
+                                   control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modAntaoJtu3_5_10min3, file = here('temp','modAntaoJtu3_5_10min3.rds'))
+}
 
-fixed0 <- 'disstrend ~ 0 + tempave.sc:REALM + temptrend.sc:REALM + temptrend.sc:tempave.sc:REALM' # like Antao. No turnover at no temptrend.
-fixed1 <- 'disstrend ~ 0 + REALM + tempave.sc:REALM + temptrend.sc:REALM + temptrend.sc:tempave.sc:REALM' # allow turnover at no temptrend.
-trendsAllJtu <- trends[complete.cases(disstrend, tempave.sc, temptrend.sc) & 
-                       measure == 'Jtu' & duration_group == 'All' &
-                         REALM %in% c('Marine', 'Terrestrial') &
-                         rarefyID_y >= 23.5 & rarefyID_y <= 60, ]
-trends5Jtu <- trends[complete.cases(disstrend, tempave.sc, temptrend.sc) & 
-                       measure == 'Jtu' & duration_group == '5', ]
+if(file.exists(here('temp', 'modAntaoJtu3_5_10_20min3.rds'))){
+  modAntaoJtu3_5_10_20min3 <- readRDS(here('temp','modAntaoJtu3_5_10_20min3.rds'))
+} else {
+  modAntaoJtu3_5_10_20min3 <- glmmTMB(disstrend ~ 0 + duration_factor:REALM + 
+                                        duration_factor:tempave_metab.sc:REALM + 
+                                        duration_factor:temptrend.sc:REALM + 
+                                        duration_factor:temptrend.sc:tempave_metab.sc:REALM +
+                                        (1|duration_factor/taxa_mod2/STUDY_ID),
+                                      disp = ~trendse*REALM + duration_factor*REALM,
+                                      data = trends[measure == 'Jtu' & core3min3_5min3_10min3_20min3 == TRUE,],
+                                      control = glmmTMBControl(optCtrl=list(iter.max=1e4,eval.max=1e4)))
+  saveRDS(modAntaoJtu3_5_10_20min3, file = here('temp','modAntaoJtu3_5_10_20min3.rds'))
+}
 
-# Fit for Jtu (closest to Antao) all years
-modAntaoAllJtu <- glmmTMB(formula(paste(fixed0, randef)),
-                           data = trendsAllJtu, disp = formula(disp),
-                         control = cont) # with an intercept
+if(file.exists(here('temp', 'modAntaoJtu3_5_10min3All.rds'))){
+  modAntaoJtu3_5_10min3All <- readRDS(here('temp','modAntaoJtu3_5_10min3All.rds'))
+} else {
+  modAntaoJtu3_5_10min3All <- glmmTMB(disstrend ~ 0 + duration_factor:REALM + # all datasets, not sure the core
+                                        duration_factor:tempave_metab.sc:REALM +
+                                        duration_factor:temptrend.sc:REALM +
+                                        duration_factor:temptrend.sc:tempave_metab.sc:REALM +
+                                        (1|duration_factor/taxa_mod2/STUDY_ID),
+                                      disp = ~trendse*REALM + duration_factor*REALM,
+                                      data = trends[measure == 'Jtu' & duration_group %in% paste0(c(3,5,10), 'min3'),],
+                                      control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modAntaoJtu3_5_10min3All, file = here('temp','modAntaoJtu3_5_10min3All.rds'))
+}
 
-# Fit for Jtu 5 years (standardized duration)
-modAntao5Jtu <- glmmTMB(formula(paste(fixed0, randef)),
-                           data = trends5Jtu, disp = formula(disp),
-                         control = cont)
-modAntaoWInt5Jtu <- glmmTMB(formula(paste(fixed1, randef)),
-                           data = trends5Jtu, disp = formula(disp),
-                         control = cont) # with an intercept
+if(file.exists(here('temp', 'modAntaoJtu3_5_10_20min3All.rds'))){
+  modAntaoJtu3_5_10_20min3All <- readRDS(here('temp','modAntaoJtu3_5_10_20min3All.rds'))
+} else {
+  modAntaoJtu3_5_10_20min3All <- glmmTMB(disstrend ~ 0 + duration_factor:REALM + # all datasets, not sure the core
+                                           duration_factor:tempave_metab.sc:REALM +
+                                           duration_factor:temptrend.sc:REALM +
+                                           duration_factor:temptrend.sc:tempave_metab.sc:REALM +
+                                           (1|duration_factor/taxa_mod2/STUDY_ID),
+                                         disp = ~trendse*REALM + duration_factor*REALM,
+                                         data = trends[measure == 'Jtu' & duration_group %in% paste0(c(3,5,10,20), 'min3'),],
+                                         control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modAntaoJtu3_5_10_20min3All, file = here('temp','modAntaoJtu3_5_10_20min3All.rds'))
+}
 
+summary(modAntaoJtu3_5_10min3)
+#summary(modAntaoJtuXmin3)
 
+```
 
-summary(modAntaoAllJtu)
-summary(modAntao5Jtu)
-summary(modAntaoWInt5Jtu)
+### Plot coefficients
+```{r, echo = FALSE}
+coefs <- fixef(modAntaoJtu3_5_10min3)$cond
+iM <- grep('REALMMarine:tempave_metab.sc:temptrend.sc', names(coefs))
+dursM <- as.numeric(gsub('duration_factor|:REALMMarine:tempave_metab.sc:temptrend.sc', '', names(coefs)[iM]))
+iT <- grep('REALMTerrestrial:tempave_metab.sc:temptrend.sc', names(coefs))
+dursT <- as.numeric(gsub('duration_factor|:REALMTerrestrial:tempave_metab.sc:temptrend.sc', '', names(coefs)[iT]))
+par(mfrow=c(1,2))
+plot(dursM, coefs[iM], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = "Marine core3-5-10min3")
+abline(h =0, lty = 2)
+plot(dursT, coefs[iT], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = 'Terrestrial core3-5-10min3')
+abline(h =0, lty = 2)
+
+# coefs <- fixef(modAntaoJtu3_5_10_20min3)$cond
+# iM <- grep('REALMMarine:tempave_metab.sc:temptrend.sc', names(coefs))
+# dursM <- as.numeric(gsub('duration_factor|:REALMMarine:tempave_metab.sc:temptrend.sc', '', names(coefs)[iM]))
+# iT <- grep('REALMTerrestrial:tempave_metab.sc:temptrend.sc', names(coefs))
+# dursT <- as.numeric(gsub('duration_factor|:REALMTerrestrial:tempave_metab.sc:temptrend.sc', '', names(coefs)[iT]))
+# par(mfrow=c(1,2))
+# plot(dursM, coefs[iM], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = "Marine core3-5-10-20min3")
+# abline(h =0, lty = 2)
+# plot(dursT, coefs[iT], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = 'Terrestrial core3-5-10-20min3')
+# abline(h =0, lty = 2)
+
+coefs <- fixef(modAntaoJtu3_5_10min3All)$cond
+iM <- grep('REALMMarine:tempave_metab.sc:temptrend.sc', names(coefs))
+dursM <- as.numeric(gsub('duration_factor|:REALMMarine:tempave_metab.sc:temptrend.sc', '', names(coefs)[iM]))
+iT <- grep('REALMTerrestrial:tempave_metab.sc:temptrend.sc', names(coefs))
+dursT <- as.numeric(gsub('duration_factor|:REALMTerrestrial:tempave_metab.sc:temptrend.sc', '', names(coefs)[iT]))
+par(mfrow=c(1,2))
+plot(dursM, coefs[iM], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = "Marine all 3-5-10min3")
+abline(h =0, lty = 2)
+plot(dursT, coefs[iT], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = 'Terrestrial all min3')
+abline(h =0, lty = 2)
+
+# coefs <- fixef(modAntaoJtu3_5_10_20min3All)$cond
+# iM <- grep('REALMMarine:tempave_metab.sc:temptrend_abs.sc', names(coefs))
+# dursM <- as.numeric(gsub('duration_factor|:REALMMarine:tempave_metab.sc:temptrend.sc', '', names(coefs)[iM]))
+# iT <- grep('REALMTerrestrial:tempave_metab.sc:temptrend.sc', names(coefs))
+# dursT <- as.numeric(gsub('duration_factor|:REALMTerrestrial:tempave_metab.sc:temptrend.sc', '', names(coefs)[iT]))
+# par(mfrow=c(1,2))
+# plot(dursM, coefs[iM], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = "Marine all 3-5-10-20min3")
+# abline(h =0, lty = 2)
+# plot(dursT, coefs[iT], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = 'Terrestrial all min3')
+# abline(h =0, lty = 2)
+
 ```
 
 
-### Simplify the Jtu model
+## Antao-style models of abs(temptrend) by standardized duration
+Fit to core dataset of the same rarefyIDs across durations (3,5,10) or to all durations and all datasets. Use an interaction with duration so that 
 ```{r}
-modAntaoGlobal5Jtu <- glmmTMB(disstrend ~ temptrend.sc*tempave_metab.sc*REALM +(1|taxa_mod/STUDY_ID),
-                           data = trends5Jtu, disp = formula(disp),
-                         control = cont) # with an intercep
-modAntaoevals5Jtu <- dredge(modAntaoGlobal5Jtu, evaluate = FALSE) # get the model calls
-length(modAntaoevals5Jtu) # how many to fit? 12
-modsAntao5Jtu <- mclapply(modAntaoevals5Jtu, eval, mc.cores = 25) # call in parallel
-ll <- sapply(modsAntao5Jtu, logLik)
-sum(is.na(ll)) # number that didn't converge
-keep <- !is.na(ll) # find models that converged (non-NA logLik)
-modAntaoevals5Jtu[!keep] # the models that didn't converge
-modselAntao5Jtu <- model.sel(modsAntao5Jtu[which(keep)], rank = 'AIC', fit = FALSE)
-modselAntao5Jtu[modselAntao5Jtu$delta < 4,]
-modavgAntao5Jtu <- model.avg(modsAntao5Jtu[which(keep)])
-summary(modavgAntao5Jtu)
-confint(modavgAntao5Jtu, full = TRUE)
-coefTable(modselAntao5Jtu[1,]) # coefficients from the top model
-importance(modavgAntao5Jtu) # relative variable importance
+if(file.exists(here('temp', 'modAntaoAbsJtu3_5_10min3.rds'))){
+  modAntaoAbsJtu3_5_10min3 <- readRDS(here('temp','modAntaoAbsJtu3_5_10min3.rds'))
+} else {
+  modAntaoAbsJtu3_5_10min3 <- glmmTMB(disstrend ~ 0 + duration_factor:REALM + 
+                                        duration_factor:tempave_metab.sc:REALM + 
+                                        duration_factor:temptrend_abs.sc:REALM + 
+                                        duration_factor:temptrend_abs.sc:tempave_metab.sc:REALM +
+                                        (1|duration_factor/taxa_mod2/STUDY_ID),
+                                      disp = ~trendse*REALM + duration_factor*REALM,
+                                      data = trends[measure == 'Jtu' & core3min3_5min3_10min3 == TRUE,],
+                                      control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modAntaoAbsJtu3_5_10min3, file = here('temp','modAntaoAbsJtu3_5_10min3.rds'))
+}
+
+# if(file.exists(here('temp', 'modAntaoAbsJtu3_5_10_20min3.rds'))){
+#   modAntaoAbsJtu3_5_10_20min3 <- readRDS(here('temp','modAntaoAbsJtu3_5_10_20min3.rds'))
+# } else {
+#   modAntaoAbsJtu3_5_10_20min3 <- glmmTMB(disstrend ~ 0 + duration_factor:REALM + 
+#                                         duration_factor:tempave_metab.sc:REALM + 
+#                                         duration_factor:temptrend_abs.sc:REALM + 
+#                                         duration_factor:temptrend_abs.sc:tempave_metab.sc:REALM +
+#                                         (1|duration_factor/taxa_mod2/STUDY_ID),
+#                                       disp = ~trendse*REALM + duration_factor*REALM,
+#                                       data = trends[measure == 'Jtu' & core3min3_5min3_10_20min3 == TRUE,],
+#                                       control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+#   saveRDS(modAntaoAbsJtu3_5_10_20min3, file = here('temp','modAntaoAbsJtu3_5_10_20min3.rds'))
+# }
+
+if(file.exists(here('temp', 'modAntaoAbsJtu3_5_10min3All.rds'))){
+  modAntaoAbsJtu3_5_10min3All <- readRDS(here('temp','modAntaoAbsJtu3_5_10min3All.rds'))
+} else {
+  modAntaoAbsJtu3_5_10min3All <- glmmTMB(disstrend ~ 0 + duration_factor:REALM + # all datasets, not sure the core
+                                        duration_factor:tempave_metab.sc:REALM +
+                                        duration_factor:temptrend_abs.sc:REALM +
+                                        duration_factor:temptrend_abs.sc:tempave_metab.sc:REALM +
+                                        (1|duration_factor/taxa_mod2/STUDY_ID),
+                                      disp = ~trendse*REALM + duration_factor*REALM,
+                                      data = trends[measure == 'Jtu' & duration_group %in% paste0(c(3,5,10), 'min3'),],
+                                      control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+  saveRDS(modAntaoAbsJtu3_5_10min3All, file = here('temp','modAntaoAbsJtu3_5_10min3All.rds'))
+}
+
+# modAntaoAbsJtuXmin3 <- glmmTMB(disstrend ~ 0 + REALM:duration_factor + 
+#                              tempave_metab.sc:REALM:duration_factor + 
+#                              temptrend_abs.sc:REALM:duration_factor + 
+#                              temptrend_abs.sc:tempave_metab.sc:REALM:duration_factor +
+#                          (1|duration_factor/taxa_mod2/STUDY_ID),
+#                          disp = ~trendse*REALM + REALM*duration_factor,
+#                          data = trends[measure == 'Jtu' & duration_group %in% paste0(3:20, 'min3'),],
+#                          control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)))
+
+summary(modAntaoAbsJtu3_5_10min3)
+# summary(modAntaoAbsJtuXmin3)
+
+```
+### Plot coefficients
+```{r}
+coefs <- fixef(modAntaoAbsJtu3_5_10min3)$cond
+iM <- grep('REALMMarine:tempave_metab.sc:temptrend_abs.sc', names(coefs))
+dursM <- as.numeric(gsub('duration_factor|:REALMMarine:tempave_metab.sc:temptrend_abs.sc', '', names(coefs)[iM]))
+iT <- grep('REALMTerrestrial:tempave_metab.sc:temptrend_abs.sc', names(coefs))
+dursT <- as.numeric(gsub('duration_factor|:REALMTerrestrial:tempave_metab.sc:temptrend_abs.sc', '', names(coefs)[iT]))
+par(mfrow=c(1,2))
+plot(dursM, coefs[iM], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = "Marine core3-10min3")
+abline(h =0, lty = 2)
+plot(dursT, coefs[iT], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = 'Terrestrial core3-10min3')
+abline(h =0, lty = 2)
+
+# coefs <- fixef(modAntaoJtuXmin3)$cond
+# iM <- grep('REALMMarine:tempave_metab.sc:temptrend_abs.sc', names(coefs))
+# dursM <- as.numeric(gsub('duration_factor|:REALMMarine:tempave_metab.sc:temptrend_abs.sc', '', names(coefs)[iM]))
+# iT <- grep('REALMTerrestrial:tempave_metab.sc:temptrend_abs.sc', names(coefs))
+# dursT <- as.numeric(gsub('duration_factor|:REALMTerrestrial:tempave_metab.sc:temptrend_abs.sc', '', names(coefs)[iT]))
+# par(mfrow=c(1,2))
+# plot(dursM, coefs[iM], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = "Marine all min3")
+# abline(h =0, lty = 2)
+# plot(dursT, coefs[iT], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = 'Terrestrial all min3')
+# abline(h =0, lty = 2)
 
 ```
 
-### Horn
-```{r}
-modAntao5Horn <- glmmTMB(formula(paste(fixed0, randef)),
-                           data = trends5Horn, disp = formula(disp),
-                         control = cont)
-modAntaoWInt5Horn <- glmmTMB(formula(paste(fixed1, randef)),
-                           data = trends5Horn, disp = formula(disp),
-                         control = cont)
+### Plot
+```{r plot antao}
 
 ```
+
+
 ## Main-effect models
 Try static covariates:
 
