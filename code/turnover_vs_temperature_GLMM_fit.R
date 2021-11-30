@@ -1,5 +1,6 @@
 #!/usr/bin/env Rscript
 
+#should be /usr/bin/Rscript --vanilla
 # Script to fit glmmTMB models
 # Set up to be run on the command line for one model at a time
 # Argument is model name to run (see below for options), e.g.
@@ -12,10 +13,13 @@
 args <- commandArgs(trailingOnly = TRUE)
 print(args)
 
-if (length(args)<1) stop("Have to specify a model to fit", call.=FALSE)
-if (length(args)>1) stop("Have to specify only 1 model to fit", call.=FALSE)
+if (length(args) < 1)
+    stop("Have to specify a model to fit", call. = FALSE)
+if (length(args) > 1)
+    stop("Have to specify only 1 model to fit", call. = FALSE)
 fitmod <- args[1]
-MATCHMOD <- FALSE # indicator to check if the argument matched a model name
+MATCHMOD <-
+    FALSE # indicator to check if the argument matched a model name
 
 # print basic info about the job ############################
 
@@ -40,15 +44,36 @@ trendsall[, tsign := as.factor(tsign)]
 # Models ############################
 
 ## Choose dataset
-iallJtu <- trendsall[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, durationlog.sc, mass.sc, nspp.sc, seas.sc, microclim.sc, npp.sc, human_bowler.sc)]
+iallJtu <-
+    trendsall[, complete.cases(
+        Jtu.sc,
+        tempchange_abs.sc,
+        REALM,
+        tempave_metab.sc,
+        durationlog.sc,
+        mass.sc,
+        nspp.sc,
+        seas.sc,
+        microclim.sc,
+        npp.sc,
+        human_bowler.sc
+    )]
 
 ## Compare variance structures with duration.sc ############################
-fixed <- 'Jtu.sc ~ duration.sc + REALM:duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + mass.sc:duration.sc + nspp.sc:duration.sc + seas.sc:duration.sc + microclim.sc:duration.sc + npp.sc:duration.sc + human_bowler.sc:REALM2:duration.sc'
+fixed <-
+    'Jtu.sc ~ duration.sc + REALM:duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + mass.sc:duration.sc + nspp.sc:duration.sc + seas.sc:duration.sc + microclim.sc:duration.sc + npp.sc:duration.sc + human_bowler.sc:REALM2:duration.sc'
 
-if(fitmod == 'modRFgauss10'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRFgauss10') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
-    modRFgauss10 <- glmmTMB(formula(fixed), data = trends10[i10,], family = gaussian(), control = glmmTMBControl(profile=TRUE))
+    modRFgauss10 <-
+        glmmTMB(
+            formula(fixed),
+            data = trends10[i10, ],
+            family = gaussian(),
+            control = glmmTMBControl(profile = TRUE)
+        )
     summary(modRFgauss10)
     saveRDS(modRFgauss10, file = 'temp/modRFgauss10.rds')
     print('saved modRFgauss10.rds')
@@ -58,10 +83,17 @@ if(fitmod == 'modRFgauss10'){
 }
 
 
-if(fitmod == 'modRFbeta10'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRFbeta10') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
-    modRFbeta10 <- glmmTMB(formula(fixed), data = trends10[i10,], family = beta_family(link = 'logit'), control = glmmTMBControl(profile=TRUE)) # add beta errors
+    modRFbeta10 <-
+        glmmTMB(
+            formula(fixed),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            control = glmmTMBControl(profile = TRUE)
+        ) # add beta errors
     summary(modRFbeta10)
     saveRDS(modRFbeta10, file = 'temp/modRFbeta10.rds')
     print('saved modRFbeta10.rds')
@@ -70,11 +102,17 @@ if(fitmod == 'modRFbeta10'){
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modRFrID10'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRFrID10') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
-    modRFrID10 <- glmmTMB(formula(paste(fixed, '+(1|rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                         control = glmmTMBControl(profile=TRUE)) # add random effects
+    modRFrID10 <-
+        glmmTMB(
+            formula(paste(fixed, '+(1|rarefyID)')),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            control = glmmTMBControl(profile = TRUE)
+        ) # add random effects
     summary(modRFrID10)
     saveRDS(modRFrID10, file = 'temp/modRFrID10.rds')
     print('saved modRDrID10.rds')
@@ -83,11 +121,17 @@ if(fitmod == 'modRFrID10'){
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modRF2lev10'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRF2lev10') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
-    modRF2lev10 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                          control = glmmTMBControl(profile=TRUE)) # add nested random effects
+    modRF2lev10 <-
+        glmmTMB(
+            formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            control = glmmTMBControl(profile = TRUE)
+        ) # add nested random effects
     summary(modRF2lev10)
     saveRDS(modRF2lev10, file = 'temp/modRF2lev10.rds')
     print('saved modRF2lev10.rds')
@@ -97,11 +141,19 @@ if(fitmod == 'modRF2lev10'){
 }
 
 
-if(fitmod == 'modRFnestedRE10'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRFnestedRE10') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
-    modRFnestedRE10 <- glmmTMB(formula(paste(fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                              control = glmmTMBControl(profile=TRUE)) # add nested random effects
+    modRFnestedRE10 <-
+        glmmTMB(
+            formula(paste(
+                fixed, '+(1|taxa_mod2/STUDY_ID/rarefyID)'
+            )),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            control = glmmTMBControl(profile = TRUE)
+        ) # add nested random effects
     summary(modRFnestedRE10)
     saveRDS(modRFnestedRE10, file = 'temp/modRFnestedRE10.rds')
     print('saved modRFnestedRE10.rds')
@@ -111,11 +163,19 @@ if(fitmod == 'modRFnestedRE10'){
 }
 
 
-if(fitmod == 'modRFslopeRE10'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRFslopeRE10') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
-    modRFslopeRE10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                             control = glmmTMBControl(profile=TRUE)) # add random slopes
+    modRFslopeRE10 <-
+        glmmTMB(
+            formula(
+                paste(fixed, '+(duration.sc|taxa_mod2/STUDY_ID/rarefyID)')
+            ),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            control = glmmTMBControl(profile = TRUE)
+        ) # add random slopes
     summary(modRFslopeRE10)
     saveRDS(modRFslopeRE10, file = 'temp/modRFslopeRE10.rds')
     print('saved modRFslopeRE10.rds')
@@ -125,11 +185,19 @@ if(fitmod == 'modRFslopeRE10'){
 }
 
 
-if(fitmod == 'modRFslopeRE2lev10'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRFslopeRE2lev10') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
-    modRFslopeRE2lev10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                                 control = glmmTMBControl(profile=TRUE)) # add random slopes
+    modRFslopeRE2lev10 <-
+        glmmTMB(
+            formula(paste(
+                fixed, '+(duration.sc|STUDY_ID/rarefyID)'
+            )),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            control = glmmTMBControl(profile = TRUE)
+        ) # add random slopes
     summary(modRFslopeRE2lev10)
     saveRDS(modRFslopeRE2lev10, file = 'temp/modRFslopeRE2lev10.rds')
     print('saved modRFslopeRE2lev10.rds')
@@ -139,12 +207,18 @@ if(fitmod == 'modRFslopeRE2lev10'){
 }
 
 
-if(fitmod == 'modRFdisp10'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRFdisp10') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
-    modRFdisp10 <- glmmTMB(formula(fixed), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                          dispformula = ~nspp.sc, 
-                          control = glmmTMBControl(profile=TRUE))
+    modRFdisp10 <-
+        glmmTMB(
+            formula(fixed),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc,
+            control = glmmTMBControl(profile = TRUE)
+        )
     summary(modRFdisp10)
     saveRDS(modRFdisp10, file = 'temp/modRFdisp10.rds')
     print('saved modRFdisp10.rds')
@@ -154,12 +228,19 @@ if(fitmod == 'modRFdisp10'){
 }
 
 
-if(fitmod == 'modRF2levdisp10'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRF2levdisp10') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
-    modRFdisp2levOnlyint10 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                                     dispformula = ~nspp.sc, 
-                                     control = glmmTMBControl(profile=TRUE))
+    modRFdisp2levOnlyint10 <-
+        glmmTMB(
+            formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc,
+            control = glmmTMBControl(profile =
+                                         TRUE)
+        )
     summary(modRFdisp2levOnlyint10)
     saveRDS(modRFdisp2levOnlyint10, file = 'temp/modRFdisp2levOnlyint10.rds')
     print('saved modRFdisp2levOnlyint10.rds')
@@ -169,12 +250,21 @@ if(fitmod == 'modRF2levdisp10'){
 }
 
 
-if(fitmod == 'modRFslopeRE2levdisp10'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRFslopeRE2levdisp10') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
-    modRFslopeRE2levdisp10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                                     dispformula = ~nspp.sc, 
-                                     control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    modRFslopeRE2levdisp10 <-
+        glmmTMB(
+            formula(paste(
+                fixed, '+(duration.sc|STUDY_ID/rarefyID)'
+            )),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc,
+            control = glmmTMBControl(profile =
+                                         TRUE)
+        ) # add dispersion formula
     summary(modRFslopeRE2levdisp10)
     saveRDS(modRFslopeRE2levdisp10, file = 'temp/modRFslopeRE2levdisp10.rds')
     print('saved modRFslopeRE2levdisp10.rds')
@@ -184,12 +274,21 @@ if(fitmod == 'modRFslopeRE2levdisp10'){
 }
 
 
-if(fitmod == 'modRFslopeREdisp10'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRFslopeREdisp10') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
-    modRFslopeREdisp10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|taxa_mod2/STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                                     dispformula = ~nspp.sc, 
-                                     control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    modRFslopeREdisp10 <-
+        glmmTMB(
+            formula(
+                paste(fixed, '+(duration.sc|taxa_mod2/STUDY_ID/rarefyID)')
+            ),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc,
+            control = glmmTMBControl(profile =
+                                         TRUE)
+        ) # add dispersion formula
     summary(modRFslopeREdisp10)
     saveRDS(modRFslopeREdisp10, file = 'temp/modRFslopeREdisp10.rds')
     print('saved modRFslopeREdisp10.rds')
@@ -199,12 +298,20 @@ if(fitmod == 'modRFslopeREdisp10'){
 }
 
 
-if(fitmod == 'modRF2levdisprealm10'){ # 2 level RE, slope vs. duration, disp formula by realm
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRF2levdisprealm10') {
+    # 2 level RE, slope vs. duration, disp formula by realm
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
-    modRF2levdisprealm10 <- glmmTMB(formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                                           dispformula = ~nspp.sc+REALM, 
-                                           control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    modRF2levdisprealm10 <-
+        glmmTMB(
+            formula(paste(fixed, '+(1|STUDY_ID/rarefyID)')),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile =
+                                         TRUE)
+        ) # add dispersion formula
     summary(modRF2levdisprealm10)
     saveRDS(modRF2levdisprealm10, file = 'temp/modRF2levdisprealm10.rds')
     print('saved modRF2levdisprealm10.rds')
@@ -214,12 +321,21 @@ if(fitmod == 'modRF2levdisprealm10'){ # 2 level RE, slope vs. duration, disp for
 }
 
 
-if(fitmod == 'modRFslopeRE2levdisprealm10'){    
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRFslopeRE2levdisprealm10') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10), 'data points'))
-    modRFslopeRE2levdisprealm10 <- glmmTMB(formula(paste(fixed, '+(duration.sc|STUDY_ID/rarefyID)')), data = trends10[i10,], family = beta_family(link = 'logit'), 
-                                        dispformula = ~nspp.sc+REALM, 
-                                        control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    modRFslopeRE2levdisprealm10 <-
+        glmmTMB(
+            formula(paste(
+                fixed, '+(duration.sc|STUDY_ID/rarefyID)'
+            )),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile =
+                                         TRUE)
+        ) # add dispersion formula
     summary(modRFslopeRE2levdisprealm10)
     saveRDS(modRFslopeRE2levdisprealm10, file = 'temp/modRFslopeRE2levdisprealm10.rds')
     print('saved modRFslopeRE2levdisprealm10.rds')
@@ -234,23 +350,35 @@ if(fitmod == 'modRFslopeRE2levdisprealm10'){
 # Realm:duration ############################
 
 
-if(fitmod == 'modRealm10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRealm10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + REALM:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + REALM:duration.sc + (duration.sc |
+                                                            STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modRealm10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modRealm10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + REALM:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + REALM:duration.sc + (duration.sc |
+                                                             STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
@@ -258,206 +386,283 @@ if(fitmod == 'modRealm10Horn'){
 # T:duration ############################
 
 
-if(fitmod == 'modT10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modT10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                       STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modT10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modT10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                        STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # dT:duration ############################
 
 
-if(fitmod == 'moddT10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'moddT10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                        STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddT10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'moddT10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                         STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
 # sdT:duration ############################
 
-if(fitmod == 'modsdT5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modsdT5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 
 # mass:duration #########################
 
-if(fitmod == 'modmass10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modmass10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + 
-                       mass.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Jtu.sc ~ duration.sc +
+            mass.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Jtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modmass10Jne'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modmass10Jne') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jne), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ duration.sc +
-                       mass.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jne,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Jne.sc ~ duration.sc +
+            mass.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Jne, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
-if(fitmod == 'modmass10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modmass10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc +
-                       mass.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Horn.sc ~ duration.sc +
+            mass.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Horn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
 # npp:duration #########################
 
-if(fitmod == 'modnpp10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modnpp10Jtu') {
+    # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc +
-                       npp.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Jtu.sc ~ duration.sc +
+            npp.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Jtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modnpp10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modnpp10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + 
-                       npp.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Horn.sc ~ duration.sc +
+            npp.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Horn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # seas:duration #########################
 
-if(fitmod == 'modseas10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modseas10Jtu') {
+    # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + 
-                       seas.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Jtu.sc ~ duration.sc +
+            seas.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Jtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modseas10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modseas10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + 
-                       seas.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Horn.sc ~ duration.sc +
+            seas.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Horn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # microclim:duration #########################
 
-if(fitmod == 'modmicroclim10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modmicroclim10Jtu') {
+    # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + 
-                       microclim.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Jtu.sc ~ duration.sc +
+            microclim.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Jtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modmicroclim10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modmicroclim10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + 
-                       microclim.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Horn.sc ~ duration.sc +
+            microclim.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Horn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
 # human:duration #########################
 
-if(fitmod == 'modhuman10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modhuman10Jtu') {
+    # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + 
-                       human_bowler.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Jtu.sc ~ duration.sc +
+            human_bowler.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Jtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modhuman10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modhuman10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + 
-                       human_bowler.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Horn.sc ~ duration.sc +
+            human_bowler.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Horn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
@@ -465,73 +670,107 @@ if(fitmod == 'modhuman10Horn'){
 # T+SINGLE FACTORS ############################
 # T+REALM:duration ############################
 
-if(fitmod == 'modTRealm10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTRealm10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                             STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
-if(fitmod == 'modTRealm10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTRealm10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ REALM:duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                              STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
 # T+dT:duration ############################
 
-if(fitmod == 'modTdT10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdT10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                        data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                        dispformula = ~nspp.sc+REALM, 
-                        control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                                                       STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTdT10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdT10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                        data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                        dispformula = ~nspp.sc+REALM, 
-                        control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                                                        STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # T+sdT:duration ############################
 
-if(fitmod == 'modTsdT5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdT5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + 
-                       tempave_metab.sc:duration.sc + 
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange.sc:duration.sc +
+                tempave_metab.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTsdT5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdT5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + 
-                       tempave_metab.sc:duration.sc + 
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange.sc:duration.sc +
+                tempave_metab.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
@@ -539,113 +778,173 @@ if(fitmod == 'modTsdT5Horn'){
 # T+mass:duration ############################
 
 
-if(fitmod == 'modTmass10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTmass10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                                             STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTmass10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTmass10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                                              STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # T+npp:duration ############################
 
 
-if(fitmod == 'modTnpp10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTnpp10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                                            STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTnpp10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTnpp10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                                             STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # T+seas:duration ############################
 
-if(fitmod == 'modTseas10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTseas10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                                             STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTseas10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTseas10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                                              STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # T+microclim:duration ############################
 
-if(fitmod == 'modTmicroclim10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTmicroclim10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                                                  STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTmicroclim10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTmicroclim10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                                                   STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
 # T+human:duration ############################
 
-if(fitmod == 'modThuman10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modThuman10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                                                     STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modThuman10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modThuman10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + (duration.sc |
+                                                                                                      STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
@@ -653,269 +952,411 @@ if(fitmod == 'modThuman10Horn'){
 # dT+SINGLE FACTORS ############################
 # dT+REALM:duration ############################
 
-if(fitmod == 'moddTRealm10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'moddTRealm10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ REALM:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                              STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddTRealm10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'moddTRealm10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ REALM:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                               STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # dT+mass:duration ############################
 
-if(fitmod == 'moddTmass10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'moddTmass10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                              STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddTmass10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'moddTmass10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                               STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # dT+npp:duration ############################
 
-if(fitmod == 'moddTnpp10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'moddTnpp10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                             STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddTnpp10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'moddTnpp10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                              STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
 # dT+seas:duration ############################
 
-if(fitmod == 'moddTseas10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'moddTseas10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                              STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddTseas10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'moddTseas10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                               STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # dT+microclim:duration ############################
 
-if(fitmod == 'moddTmicroclim10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'moddTmicroclim10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                                   STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddTmicroclim10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'moddTmicroclim10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                                    STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # dT+human:duration ############################
 
-if(fitmod == 'moddThuman10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'moddThuman10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                                      STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddThuman10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'moddThuman10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                                       STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # sdT+SINGLE FACTORS ############################
 # sdT+REALM:duration ############################
 
-if(fitmod == 'modsdTRealm5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modsdTRealm5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ REALM:duration.sc + tempchange.sc:duration.sc + (duration.sc |
+                                                                          STUDY_ID / rarefyID),
+            data = trends5[i5Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modsdTRealm5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modsdTRealm5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ REALM:duration.sc + tempchange.sc:duration.sc + (duration.sc |
+                                                                           STUDY_ID / rarefyID),
+            data = trends5[i5Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # sdT+mass:duration ############################
 
-if(fitmod == 'modsdTmass5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modsdTmass5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempchange.sc:duration.sc 
-                   + (duration.sc||STUDY_ID/rarefyID), 
-                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempchange.sc:duration.sc
+            + (duration.sc || STUDY_ID / rarefyID),
+            data = trends5[i5Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modsdTmass5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modsdTmass5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc |
+                                                                                           STUDY_ID / rarefyID),
+            data = trends5[i5Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # sdT+npp:duration ############################
 
-if(fitmod == 'modsdTnpp5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modsdTnpp5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange.sc:duration.sc + 
-                       (duration.sc||STUDY_ID/rarefyID), 
-                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange.sc:duration.sc +
+                (duration.sc || STUDY_ID / rarefyID),
+            data = trends5[i5Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modsdTnpp5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modsdTnpp5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc |
+                                                                                          STUDY_ID / rarefyID),
+            data = trends5[i5Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # sdT+seas:duration ############################
 
-if(fitmod == 'modsdTseas5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modsdTseas5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc |
+                                                                                          STUDY_ID / rarefyID),
+            data = trends5[i5Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modsdTseas5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modsdTseas5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc |
+                                                                                           STUDY_ID / rarefyID),
+            data = trends5[i5Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # sdT+microclim:duration ############################
 
-if(fitmod == 'modsdTmicroclim5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modsdTmicroclim5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc |
+                                                                                               STUDY_ID / rarefyID),
+            data = trends5[i5Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modsdTmicroclim5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modsdTmicroclim5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc |
+                                                                                                STUDY_ID / rarefyID),
+            data = trends5[i5Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # sdT+human:duration ############################
 
-if(fitmod == 'modsdThuman5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modsdThuman5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc |
+                                                                                                  STUDY_ID / rarefyID),
+            data = trends5[i5Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modsdThuman5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modsdThuman5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange.sc:duration.sc + (duration.sc |
+                                                                                                   STUDY_ID / rarefyID),
+            data = trends5[i5Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
@@ -923,226 +1364,310 @@ if(fitmod == 'modsdThuman5Horn'){
 # T+dT+REALM:duration #########################
 
 
-if(fitmod == 'modTdTRealm10Jtu'){ 
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTRealm10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc +
-                       tempchange_abs.sc:duration.sc + 
-                       tempave_metab.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Jtu.sc ~ REALM:duration.sc +
+            tempchange_abs.sc:duration.sc +
+            tempave_metab.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Jtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTdTRealm10Jne'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTRealm10Jne') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jne), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ REALM:duration.sc +
-                       tempchange_abs.sc:duration.sc + 
-                       tempave_metab.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jne,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Jne.sc ~ REALM:duration.sc +
+            tempchange_abs.sc:duration.sc +
+            tempave_metab.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Jne, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTdTRealm10Horn'){ 
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTRealm10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc +
-                       tempchange_abs.sc:duration.sc + 
-                       tempave_metab.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Horn.sc ~ REALM:duration.sc +
+            tempchange_abs.sc:duration.sc +
+            tempave_metab.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Horn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
 # T+dT:tsign:duration #########################
 
-if(fitmod == 'modTdTtsign10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTtsign10Jtu') {
+    # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ tempave_metab.sc:duration.sc + 
-                       tsign:duration.sc +
-                       tempchange_abs.sc:tsign:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Jtu.sc ~ tempave_metab.sc:duration.sc +
+            tsign:duration.sc +
+            tempchange_abs.sc:tsign:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Jtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTdTtsign10Jne'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTtsign10Jne') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jne), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ tempave_metab.sc:duration.sc + 
-                       tsign:duration.sc +
-                       tempchange_abs.sc:tsign:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jne,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Jne.sc ~ tempave_metab.sc:duration.sc +
+            tsign:duration.sc +
+            tempchange_abs.sc:tsign:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Jne, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTdTtsign10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTtsign10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ tempave_metab.sc:duration.sc + 
-                       tsign:duration.sc +
-                       tempchange_abs.sc:tsign:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Horn.sc ~ tempave_metab.sc:duration.sc +
+            tsign:duration.sc +
+            tempchange_abs.sc:tsign:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Horn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # T+dT+mass:duration #########################
 
-if(fitmod == 'modTdTmass10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTmass10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       mass.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc +
+                mass.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTdTmass10Jne'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTmass10Jne') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jne), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       mass.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jne,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc +
+                mass.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends10[i10Jne, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTdTmass10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTmass10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       mass.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc +
+                mass.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # T+dT+npp:duration #########################
 
-if(fitmod == 'modTdTnpp10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTnpp10Jtu') {
+    # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       npp.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc +
+                npp.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTdTnpp10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTnpp10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       npp.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc +
+                npp.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # T+dT+seas:duration #########################
 
-if(fitmod == 'modTdTseas10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTseas10Jtu') {
+    # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       seas.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc +
+                seas.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTdTseas10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTseas10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       seas.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc +
+                seas.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
 # T+dT+microclim:duration #########################
 
-if(fitmod == 'modTdTmicroclim10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTmicroclim10Jtu') {
+    # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       microclim.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc +
+                microclim.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTdTmicroclim10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTmicroclim10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       microclim.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc +
+                microclim.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # T+dT+human:duration #########################
 
-if(fitmod == 'modTdThuman10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdThuman10Jtu') {
+    # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       human_bowler.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc +
+                human_bowler.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
-if(fitmod == 'modTdThuman10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdThuman10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       human_bowler.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc +
+                human_bowler.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
@@ -1150,651 +1675,969 @@ if(fitmod == 'modTdThuman10Horn'){
 # TsdT+SINGLE FACTORS ############################
 # T+sdT+REALM:duration #########################
 
-if(fitmod == 'modTsdTRealm5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdTRealm5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc +
-                       tempchange.sc:duration.sc + 
-                       tempave_metab.sc:duration.sc +
-                       (duration.sc||STUDY_ID/rarefyID), 
-                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Jtu.sc ~ REALM:duration.sc +
+            tempchange.sc:duration.sc +
+            tempave_metab.sc:duration.sc +
+            (duration.sc || STUDY_ID / rarefyID),
+        data = trends5[i5Jtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTsdTRealm5Horn'){ # Horn
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdTRealm5Horn') {
+    # Horn
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc +
-                       tempchange.sc:duration.sc + 
-                       tempave_metab.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Horn.sc ~ REALM:duration.sc +
+            tempchange.sc:duration.sc +
+            tempave_metab.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends5[i5Horn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # T+sdT+mass:duration #########################
 
-if(fitmod == 'modTsdTmass5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdTmass5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       mass.sc:duration.sc +
-                       (duration.sc||STUDY_ID/rarefyID), 
-                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc +
+                mass.sc:duration.sc +
+                (duration.sc || STUDY_ID / rarefyID),
+            data = trends5[i5Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTsdTmass5Horn'){ # Horn
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdTmass5Horn') {
+    # Horn
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       mass.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc +
+                mass.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends5[i5Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # T+sdT+npp:duration #########################
 
-if(fitmod == 'modTsdTnpp5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdTnpp5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       npp.sc:duration.sc +
-                       (duration.sc||STUDY_ID/rarefyID), 
-                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc +
+                npp.sc:duration.sc +
+                (duration.sc || STUDY_ID / rarefyID),
+            data = trends5[i5Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTsdTnpp5Horn'){ # Horn
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdTnpp5Horn') {
+    # Horn
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       npp.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc +
+                npp.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends5[i5Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # T+sdT+seas:duration #########################
 
-if(fitmod == 'modTsdTseas5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdTseas5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       seas.sc:duration.sc +
-                       (duration.sc||STUDY_ID/rarefyID), 
-                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc +
+                seas.sc:duration.sc +
+                (duration.sc || STUDY_ID / rarefyID),
+            data = trends5[i5Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTsdTseas5Horn'){ # Horn
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdTseas5Horn') {
+    # Horn
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       seas.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc +
+                seas.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends5[i5Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
 # T+sdT+microclim:duration #########################
 
-if(fitmod == 'modTsdTmicroclim5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdTmicroclim5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       microclim.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc +
+                microclim.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends5[i5Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTsdTmicroclim5Horn'){ # Horn
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdTmicroclim5Horn') {
+    # Horn
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       microclim.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc +
+                microclim.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends5[i5Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # T+sdT+human:duration #########################
 
-if(fitmod == 'modTsdThuman5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdThuman5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       human_bowler.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc +
+                human_bowler.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends5[i5Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTsdThuman5Horn'){ # Horn
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdThuman5Horn') {
+    # Horn
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       human_bowler.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc +
+                human_bowler.sc:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends5[i5Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # T INTERACTION WITH SINGLE FACTORS ############################
 # T:REALM:duration ############################
 
-if(fitmod == 'modTxRealm10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTxRealm10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc |
+                                                                                   STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTxRealm10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTxRealm10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Horn.sc ~ REALM:duration.sc + REALM:tempave_metab.sc:duration.sc + (duration.sc |
+                                                                                    STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
 # T:dT:duration ############################
 
-if(fitmod == 'modTdTT10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTT10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                                                                                        STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
-if(fitmod == 'modTdTT10Jne'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTT10Jne') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Jne), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jne,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+    mod <-
+        glmmTMB(
+            Jne.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                                                                                        STUDY_ID / rarefyID),
+            data = trends10[i10Jne, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
-if(fitmod == 'modTdTT10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTdTT10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange_abs.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                                                                                         STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # T:sdT:duration ############################
 
-if(fitmod == 'modTsdTT5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdTT5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc 
-                   + tempave_metab.sc:duration.sc 
-                   + tempave_metab.sc:tempchange.sc:duration.sc 
-                   + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <- glmmTMB(
+        Jtu.sc ~ duration.sc + tempchange.sc:duration.sc
+        + tempave_metab.sc:duration.sc
+        + tempave_metab.sc:tempchange.sc:duration.sc
+        + (duration.sc | STUDY_ID / rarefyID),
+        data = trends5Jtu,
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTsdTT5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTsdTT5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc 
-                   + tempave_metab.sc:duration.sc 
-                   + tempave_metab.sc:tempchange.sc:duration.sc 
-                   + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange.sc:duration.sc
+            + tempave_metab.sc:duration.sc
+            + tempave_metab.sc:tempchange.sc:duration.sc
+            + (duration.sc | STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 
 # T:mass:duration ############################
-if(fitmod == 'modTxmass5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTxmass5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(nrow(trends5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc +
+                tempave_metab.sc:mass.sc:duration.sc + (duration.sc |
+                                                            STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTxmass5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTxmass5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(nrow(trends5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + mass.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:mass.sc:duration.sc + (duration.sc |
+                                                                                                                                     STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # T:npp:duration ############################
-if(fitmod == 'modTxnpp5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTxnpp5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:npp.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc +
+                tempave_metab.sc:npp.sc:duration.sc + (duration.sc ||
+                                                           STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTxnpp5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTxnpp5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:npp.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + npp.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:npp.sc:duration.sc + (duration.sc |
+                                                                                                                                   STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # T:seas:duration ############################
-if(fitmod == 'modTxseas5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTxseas5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:seas.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc +
+                tempave_metab.sc:seas.sc:duration.sc + (duration.sc ||
+                                                            STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTxseas5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTxseas5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:seas.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + seas.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:seas.sc:duration.sc + (duration.sc |
+                                                                                                                                     STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # T:microclim:duration ############################
-if(fitmod == 'modTxmicroclim5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!')
+if (fitmod == 'modTxmicroclim5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:microclim.sc:duration.sc + (duration.sc |
+                                                                                                                                              STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTxmicroclim5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
+if (fitmod == 'modTxmicroclim5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:microclim.sc:duration.sc + (duration.sc |
+                                                                                                                                               STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # T:human:duration ############################
-if(fitmod == 'modTxhuman5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
+if (fitmod == 'modTxhuman5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
     print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:human_bowler.sc:duration.sc + (duration.sc |
+                                                                                                                                                    STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modTxhuman5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'modTxhuman5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Horn), 'data points'))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempave_metab.sc:duration.sc + tempave_metab.sc:human_bowler.sc:duration.sc + (duration.sc |
+                                                                                                                                                     STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # dT INTERACTION WITH SINGLE FACTORS ############################
 # dT:REALM:duration ############################
 
-if(fitmod == 'moddTxRealm10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'moddTxRealm10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i10Jtu), 'data points'))
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                    STUDY_ID / rarefyID),
+            data = trends10[i10Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddTxRealm10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'moddTxRealm10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i10Horn), 'data points'))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ REALM:duration.sc + REALM:tempchange_abs.sc:duration.sc + (duration.sc |
+                                                                                     STUDY_ID / rarefyID),
+            data = trends10[i10Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # dT:tsign:duration #########################
 
-if(fitmod == 'moddTtsign10Jtu'){ # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ tsign:duration.sc +
-                       tempchange_abs.sc:tsign:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'moddTtsign10Jtu') {
+    # trims out freshwater and >60 or <23.5 deg lat, like  et al. 2020
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i10Jtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ tsign:duration.sc +
+            tempchange_abs.sc:tsign:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Jtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddTtsign10Jne'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i10Jne), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ tsign:duration.sc +
-                       tempchange_abs.sc:tsign:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jne,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'moddTtsign10Jne') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i10Jne), 'data points'))
+    mod <- glmmTMB(
+        Jne.sc ~ tsign:duration.sc +
+            tempchange_abs.sc:tsign:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Jne, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddTtsign10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ tsign:duration.sc +
-                       tempchange_abs.sc:tsign:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'moddTtsign10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i10Horn), 'data points'))
+    mod <- glmmTMB(
+        Horn.sc ~ tsign:duration.sc +
+            tempchange_abs.sc:tsign:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Horn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
 # dT:mass:duration ############################
-if(fitmod == 'moddTxmass5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'moddTxmass5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:mass.sc:duration.sc + (duration.sc |
+                                                                                                                                      STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddTxmass5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'moddTxmass5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Horn), 'data points'))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:mass.sc:duration.sc + (duration.sc |
+                                                                                                                                       STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # dT:npp:duration ############################
-if(fitmod == 'moddTxnpp5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + 
-                       tempchange_abs.sc:npp.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'moddTxnpp5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc +
+                tempchange_abs.sc:npp.sc:duration.sc + (duration.sc ||
+                                                            STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddTxnpp5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:npp.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'moddTxnpp5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Horn), 'data points'))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:npp.sc:duration.sc + (duration.sc |
+                                                                                                                                     STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # dT:seas:duration ############################
-if(fitmod == 'moddTxseas5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:seas.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'moddTxseas5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:seas.sc:duration.sc + (duration.sc |
+                                                                                                                                      STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddTxseas5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:seas.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'moddTxseas5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Horn), 'data points'))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:seas.sc:duration.sc + (duration.sc |
+                                                                                                                                       STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # dT:microclim:duration ############################
-if(fitmod == 'moddTxmicroclim5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'moddTxmicroclim5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:microclim.sc:duration.sc + (duration.sc |
+                                                                                                                                                STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddTxmicroclim5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'moddTxmicroclim5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Horn), 'data points'))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:microclim.sc:duration.sc + (duration.sc |
+                                                                                                                                                 STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # dT:human:duration ############################
-if(fitmod == 'moddTxhuman5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'moddTxhuman5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:human_bowler.sc:duration.sc + (duration.sc |
+                                                                                                                                                      STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'moddTxhuman5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'moddTxhuman5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Horn), 'data points'))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange_abs.sc:duration.sc + tempchange_abs.sc:human_bowler.sc:duration.sc + (duration.sc |
+                                                                                                                                                       STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # sdT INTERACTION WITH SINGLE FACTORS ############################
 # sdT:REALM:duration ############################
 
-if(fitmod == 'modsdTxRealm5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ REALM:duration.sc + REALM:tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Jtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modsdTxRealm5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ REALM:duration.sc + REALM:tempchange.sc:duration.sc + (duration.sc |
+                                                                                STUDY_ID / rarefyID),
+            data = trends5[i5Jtu, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modsdTxRealm5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ REALM:duration.sc + REALM:tempchange.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5[i5Horn,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modsdTxRealm5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Horn), 'data points'))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ REALM:duration.sc + REALM:tempchange.sc:duration.sc + (duration.sc |
+                                                                                 STUDY_ID / rarefyID),
+            data = trends5[i5Horn, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # sdT:mass:duration ############################
-if(fitmod == 'modsdTxmass5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + mass.sc:duration.sc 
-                   + tempchange.sc:duration.sc + tempchange.sc:mass.sc:duration.sc 
-                   + (duration.sc||STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modsdTxmass5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration.sc + mass.sc:duration.sc
+        + tempchange.sc:duration.sc + tempchange.sc:mass.sc:duration.sc
+        + (duration.sc || STUDY_ID / rarefyID),
+        data = trends5Jtu,
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modsdTxmass5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:mass.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'modsdTxmass5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Horn), 'data points'))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + mass.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:mass.sc:duration.sc + (duration.sc |
+                                                                                                                               STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # sdT:npp:duration ############################
-if(fitmod == 'modsdTxnpp5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange.sc:duration.sc + 
-                       tempchange.sc:npp.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modsdTxnpp5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + npp.sc:duration.sc + tempchange.sc:duration.sc +
+                tempchange.sc:npp.sc:duration.sc + (duration.sc ||
+                                                        STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modsdTxnpp5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:npp.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'modsdTxnpp5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Horn), 'data points'))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + npp.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:npp.sc:duration.sc + (duration.sc |
+                                                                                                                             STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # sdT:seas:duration ############################
-if(fitmod == 'modsdTxseas5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange.sc:duration.sc 
-                   + tempchange.sc:seas.sc:duration.sc + (duration.sc||STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modsdTxseas5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + seas.sc:duration.sc + tempchange.sc:duration.sc
+            + tempchange.sc:seas.sc:duration.sc + (duration.sc ||
+                                                       STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modsdTxseas5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:seas.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'modsdTxseas5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Horn), 'data points'))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + seas.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:seas.sc:duration.sc + (duration.sc |
+                                                                                                                               STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # sdT:microclim:duration ############################
-if(fitmod == 'modsdTxmicroclim5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modsdTxmicroclim5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + microclim.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:microclim.sc:duration.sc + (duration.sc |
+                                                                                                                                        STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modsdTxmicroclim5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:microclim.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'modsdTxmicroclim5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Horn), 'data points'))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + microclim.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:microclim.sc:duration.sc + (duration.sc |
+                                                                                                                                         STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
 # sdT:human:duration ############################
-if(fitmod == 'modsdTxhuman5Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Jtu, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modsdTxhuman5Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Jtu), 'data points'))
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:human_bowler.sc:duration.sc + (duration.sc |
+                                                                                                                                              STUDY_ID / rarefyID),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modsdTxhuman5Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i5Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:human_bowler.sc:duration.sc + (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends5Horn, family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'modsdTxhuman5Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i5Horn), 'data points'))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + human_bowler.sc:duration.sc + tempchange.sc:duration.sc + tempchange.sc:human_bowler.sc:duration.sc + (duration.sc |
+                                                                                                                                               STUDY_ID / rarefyID),
+            data = trends5Horn,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        )
     MATCHMOD <- TRUE
 }
 
@@ -1803,185 +2646,228 @@ if(fitmod == 'modsdTxhuman5Horn'){
 # T:dT:REALM:duration like Antao #########################
 
 # use tempchange like Antao
-if(fitmod == 'modTdTTRealmAllJtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration +
-                       REALM:duration +
-                       REALM:tempchange.sc:duration + 
-                       REALM:tempave_metab.sc:duration +
-                       REALM:tempave_metab.sc:tempchange.sc:duration +
-                       (duration|STUDY_ID/rarefyID), 
-                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~REALM) #, 
-                 #  control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'modTdTTRealmAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange.sc:duration +
+            REALM:tempave_metab.sc:duration +
+            REALM:tempave_metab.sc:tempchange.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    ) #,
+    #  control = glmmTMBControl(profile=TRUE))
     MATCHMOD <- TRUE
 }
 
 # use tempchange like Antao. scale duration
-if(fitmod == 'modTdTTRealmDurscAllJtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc +
-                       REALM:duration.sc +
-                       REALM:tempchange.sc:duration.sc + 
-                       REALM:tempave_metab.sc:duration.sc +
-                       REALM:tempave_metab.sc:tempchange.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~REALM, 
-                   control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'modTdTTRealmDurscAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration.sc +
+            REALM:duration.sc +
+            REALM:tempchange.sc:duration.sc +
+            REALM:tempave_metab.sc:duration.sc +
+            REALM:tempave_metab.sc:tempchange.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    ) #,
+    # control = glmmTMBControl(profile=TRUE))
     MATCHMOD <- TRUE
 }
 
 
 # T:sdT:REALM:duration #########################
 # use tempchange_abs (otherwise like Antao)
-if(fitmod == 'modTsdTTRealmAllJtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration +
-                       REALM:duration +
-                       REALM:tempchange_abs.sc:duration + 
-                       REALM:tempave_metab.sc:duration +
-                       REALM:tempave_metab.sc:tempchange_abs.sc:duration +
-                       (duration|STUDY_ID/rarefyID), 
-                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
+if (fitmod == 'modTsdTTRealmAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange_abs.sc:duration +
+            REALM:tempave_metab.sc:duration +
+            REALM:tempave_metab.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    ) #,
+    # control = glmmTMBControl(profile = TRUE)) # add dispersion formula
+MATCHMOD <- TRUE
 }
 
-# use tempchange_abs
-if(fitmod == 'modTsdTTRealmDurscAllJtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc +
-                       REALM:duration.sc +
-                       REALM:tempchange_abs.sc:duration.sc + 
-                       REALM:tempave_metab.sc:duration.sc +
-                       REALM:tempave_metab.sc:tempchange_abs.sc:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+# use tempchange_abs and scaled duration
+if (fitmod == 'modTsdTTRealmDurscAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration.sc +
+            REALM:duration.sc +
+            REALM:tempchange_abs.sc:duration.sc +
+            REALM:tempave_metab.sc:duration.sc +
+            REALM:tempave_metab.sc:tempchange_abs.sc:duration.sc +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
 # tsign:T:sdT:REALM:duration #########################
-if(fitmod == 'modTsdTTRealmtsignAllJtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration +
-                       REALM:duration +
-                       REALM:tsign:tempchange_abs.sc:duration + 
-                       REALM:tsign:tempave_metab.sc:duration +
-                       REALM:tsign:tempave_metab.sc:tempchange_abs.sc:duration +
-                       (duration|STUDY_ID/rarefyID), 
-                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~REALM) #, 
-                 #  control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modTsdTTRealmtsignAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave_metab.sc:duration +
+            REALM:tsign:tempave_metab.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    ) #,
+    #  control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # thermal_bias:T:sdT:REALM:duration #########################
-if(fitmod == 'modTsdTTRealmthermal_biasAllJtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration +
-                       REALM:duration +
-                       REALM:tempchange_abs.sc:duration + 
-                       REALM:tempave_metab.sc:duration +
-                       REALM:tempave_metab.sc:tempchange_abs.sc:duration +
-                       REALM:thermal_bias.sc:duration + 
-                       REALM:thermal_bias.sc:tempchange_abs.sc:duration + 
-                       REALM:thermal_bias.sc:tempave_metab.sc:duration +
-                       REALM:thermal_bias.sc:tempave_metab.sc:tempchange_abs.sc:duration +
-                       (duration|STUDY_ID/rarefyID), 
-                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~REALM)#, 
-                   #control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modTsdTTRealmthermal_biasAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange_abs.sc:duration +
+            REALM:tempave_metab.sc:duration +
+            REALM:tempave_metab.sc:tempchange_abs.sc:duration +
+            REALM:thermal_bias.sc:duration +
+            REALM:thermal_bias.sc:tempchange_abs.sc:duration +
+            REALM:thermal_bias.sc:tempave_metab.sc:duration +
+            REALM:thermal_bias.sc:tempave_metab.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )#,
+    #control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
 # npp:T:sdT:REALM:duration #########################
-if(fitmod == 'modTsdTTRealmnppAllJtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration +
-                       REALM:duration +
-                       REALM:tempchange_abs.sc:duration + 
-                       REALM:tempave_metab.sc:duration +
-                       REALM:tempave_metab.sc:tempchange_abs.sc:duration +
-                       REALM:npp.sc:duration + 
-                       REALM:npp.sc:tempchange_abs.sc:duration + 
-                       REALM:npp.sc:tempave_metab.sc:duration +
-                       REALM:npp.sc:tempave_metab.sc:tempchange_abs.sc:duration +
-                       (duration|STUDY_ID/rarefyID), 
-                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modTsdTTRealmnppAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange_abs.sc:duration +
+            REALM:tempave_metab.sc:duration +
+            REALM:tempave_metab.sc:tempchange_abs.sc:duration +
+            REALM:npp.sc:duration +
+            REALM:npp.sc:tempchange_abs.sc:duration +
+            REALM:npp.sc:tempave_metab.sc:duration +
+            REALM:npp.sc:tempave_metab.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM#,
+        #control = glmmTMBControl(profile = TRUE)
+    ) 
     MATCHMOD <- TRUE
 }
 
 # seas:T:sdT:REALM:duration #########################
-if(fitmod == 'modTsdTTRealmseasAllJtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration +
-                       REALM:duration +
-                       REALM:tempchange_abs.sc:duration + 
-                       REALM:tempave_metab.sc:duration +
-                       REALM:tempave_metab.sc:tempchange_abs.sc:duration +
-                       REALM:seas.sc:duration + 
-                       REALM:seas.sc:tempchange_abs.sc:duration + 
-                       REALM:seas.sc:tempave_metab.sc:duration +
-                       REALM:seas.sc:tempave_metab.sc:tempchange_abs.sc:duration +
-                       (duration|STUDY_ID/rarefyID), 
-                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~REALM) #, 
-                  # control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modTsdTTRealmseasAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange_abs.sc:duration +
+            REALM:tempave_metab.sc:duration +
+            REALM:tempave_metab.sc:tempchange_abs.sc:duration +
+            REALM:seas.sc:duration +
+            REALM:seas.sc:tempchange_abs.sc:duration +
+            REALM:seas.sc:tempave_metab.sc:duration +
+            REALM:seas.sc:tempave_metab.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    ) #,
+    # control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # microclim:T:sdT:REALM:duration #########################
-if(fitmod == 'modTsdTTRealmmicroclimAllJtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration +
-                       REALM:duration +
-                       REALM:tempchange_abs.sc:duration + 
-                       REALM:tempave_metab.sc:duration +
-                       REALM:tempave_metab.sc:tempchange_abs.sc:duration +
-                       REALM:microclim.sc:duration + 
-                       REALM:microclim.sc:tempchange_abs.sc:duration + 
-                       REALM:microclim.sc:tempave_metab.sc:duration +
-                       REALM:microclim.sc:tempave_metab.sc:tempchange_abs.sc:duration +
-                       (duration|STUDY_ID/rarefyID), 
-                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modTsdTTRealmmicroclimAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange_abs.sc:duration +
+            REALM:tempave_metab.sc:duration +
+            REALM:tempave_metab.sc:tempchange_abs.sc:duration +
+            REALM:microclim.sc:duration +
+            REALM:microclim.sc:tempchange_abs.sc:duration +
+            REALM:microclim.sc:tempave_metab.sc:duration +
+            REALM:microclim.sc:tempave_metab.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM,
+        control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 # taxamod2 (as RE):T:sdT:REALM:duration #########################
-if(fitmod == 'modTsdTTRealmTaxamod2REAllJtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration +
-                       REALM:duration +
-                       REALM:tempchange_abs.sc:duration + 
-                       REALM:tempave_metab.sc:duration +
-                       REALM:tempave_metab.sc:tempchange_abs.sc:duration +
-                       (duration|STUDY_ID/rarefyID) +
-                       (REALM:tempchange_abs.sc:duration|taxa_mod2) + # add taxamod2 as random effects
-                       (REALM:tempave_metab.sc:duration|taxa_mod2) +
-                       (REALM:tempave_metab.sc:tempchange_abs.sc:duration|taxa_mod2), 
-                   data = trendsall[iallJtu,], family = beta_family(link = 'logit'), 
-                   dispformula = ~REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modTsdTTRealmTaxamod2REAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange_abs.sc:duration +
+            REALM:tempave_metab.sc:duration +
+            REALM:tempave_metab.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID) +
+            (REALM:tempchange_abs.sc:duration |
+                 taxa_mod2) + # add taxamod2 as random effects
+            (REALM:tempave_metab.sc:duration | taxa_mod2) +
+            (
+                REALM:tempave_metab.sc:tempchange_abs.sc:duration | taxa_mod2
+            ),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM#,
+        #control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
@@ -1993,117 +2879,174 @@ if(fitmod == 'modTsdTTRealmTaxamod2REAllJtu'){
 # try on Antao et al. 2020-style dataset
 # use tempchange, not tempchange_abs
 
-if(fitmod == 'modAntaoTdTTRealm10'){ # trims out freshwater and >60 or <23.5 deg lat, like Antao et al. 2020
-    i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                        complete.cases(Jtu.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i10), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange.sc:duration.sc + 
-                       REALM:duration.sc +
-                       tempchange.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modAntaoTdTTRealm10') {
+    # trims out freshwater and >60 or <23.5 deg lat, like Antao et al. 2020
+    i10 <-
+        trends10[, REALM != 'Freshwater' &
+                     abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                     complete.cases(Jtu.sc,
+                                    tempchange.sc,
+                                    REALM,
+                                    tempave_metab.sc,
+                                    durationlog.sc,
+                                    nspp.sc)]
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i10), 'data points'))
+    mod <-
+        glmmTMB(
+            Jtu.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc +
+                tempave_metab.sc:tempchange.sc:duration.sc +
+                REALM:duration.sc +
+                tempchange.sc:REALM:duration.sc +
+                tempave_metab.sc:REALM:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modAntaoTdTTRealm10Jne'){
-    i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                        complete.cases(Jne.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i10), 'data points'))
-    mod <- glmmTMB(Jne.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange.sc:duration.sc + 
-                       REALM:duration.sc +
-                       tempchange.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modAntaoTdTTRealm10Jne') {
+    i10 <-
+        trends10[, REALM != 'Freshwater' &
+                     abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                     complete.cases(Jne.sc,
+                                    tempchange.sc,
+                                    REALM,
+                                    tempave_metab.sc,
+                                    durationlog.sc,
+                                    nspp.sc)]
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i10), 'data points'))
+    mod <-
+        glmmTMB(
+            Jne.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc +
+                tempave_metab.sc:tempchange.sc:duration.sc +
+                REALM:duration.sc +
+                tempchange.sc:REALM:duration.sc +
+                tempave_metab.sc:REALM:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
-if(fitmod == 'modAntaoTdTTRealm10Horn'){
-    i10 <- trends10[, REALM != 'Freshwater' & abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
-                        complete.cases(Horn.sc, tempchange.sc, REALM, tempave_metab.sc, durationlog.sc, nspp.sc)]
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i10), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc + 
-                       tempave_metab.sc:tempchange.sc:duration.sc + 
-                       REALM:duration.sc +
-                       tempchange.sc:REALM:duration.sc + 
-                       tempave_metab.sc:REALM:duration.sc +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10,], family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM, 
-                   control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+if (fitmod == 'modAntaoTdTTRealm10Horn') {
+    i10 <-
+        trends10[, REALM != 'Freshwater' &
+                     abs(rarefyID_y) <= 60 & abs(rarefyID_y) >= 23.5 &
+                     complete.cases(Horn.sc,
+                                    tempchange.sc,
+                                    REALM,
+                                    tempave_metab.sc,
+                                    durationlog.sc,
+                                    nspp.sc)]
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i10), 'data points'))
+    mod <-
+        glmmTMB(
+            Horn.sc ~ duration.sc + tempchange.sc:duration.sc + tempave_metab.sc:duration.sc +
+                tempave_metab.sc:tempchange.sc:duration.sc +
+                REALM:duration.sc +
+                tempchange.sc:REALM:duration.sc +
+                tempave_metab.sc:REALM:duration.sc +
+                (duration.sc | STUDY_ID / rarefyID),
+            data = trends10[i10, ],
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
 # DREDGE FULL MODELS #########################
-if(fitmod == 'dredge5Jtu'){
+if (fitmod == 'dredge5Jtu') {
     require(MuMIn)
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(nrow(trends5Jtu), 'data points'))
-    modfull <- glmmTMB(formula(paste(fixed, '+(duration.sc||STUDY_ID/rarefyID)')), 
-                       data = trends5Jtu, 
-                       family = beta_family(link = 'logit'), 
-                       dispformula = ~nspp.sc+REALM, 
-                       control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(nrow(trends5Jtu), 'data points'))
+    modfull <-
+        glmmTMB(
+            formula(paste(
+                fixed, '+(duration.sc||STUDY_ID/rarefyID)'
+            )),
+            data = trends5Jtu,
+            family = beta_family(link = 'logit'),
+            dispformula = ~ nspp.sc + REALM,
+            control = glmmTMBControl(profile = TRUE)
+        ) # add dispersion formula
     print(summary(modfull))
     print(Sys.time())
     print('Starting dredge')
-    mod <- lapply(dredge(modfull, fixed = c('disp(nspp.sc)', 'disp(REALM)'),
-                  rank = 'AIC',
-                  evaluate = FALSE), eval)
+    mod <-
+        lapply(dredge(
+            modfull,
+            fixed = c('disp(nspp.sc)', 'disp(REALM)'),
+            rank = 'AIC',
+            evaluate = FALSE
+        ),
+        eval)
     MATCHMOD <- TRUE
 }
 
 # Null models ############################
 
-if(fitmod == 'modNull10Jtu'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i10Jtu), 'data points'))
-    mod <- glmmTMB(Jtu.sc ~ 1 +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Jtu,], 
-                   family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM,  # add dispersion formula
-                   control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'modNull10Jtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i10Jtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ 1 +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Jtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        # add dispersion formula
+        control = glmmTMBControl(profile = TRUE)
+    )
     MATCHMOD <- TRUE
 }
 
 
-if(fitmod == 'modNull10Horn'){
-    if(MATCHMOD) stop('Model name matched more than one model!') 
-	print(paste(sum(i10Horn), 'data points'))
-    mod <- glmmTMB(Horn.sc ~ 1 +
-                       (duration.sc|STUDY_ID/rarefyID), 
-                   data = trends10[i10Horn,], 
-                   family = beta_family(link = 'logit'), 
-                   dispformula = ~nspp.sc+REALM,  # add dispersion formula
-                   control = glmmTMBControl(profile=TRUE))
+if (fitmod == 'modNull10Horn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(i10Horn), 'data points'))
+    mod <- glmmTMB(
+        Horn.sc ~ 1 +
+            (duration.sc | STUDY_ID / rarefyID),
+        data = trends10[i10Horn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ nspp.sc + REALM,
+        # add dispersion formula
+        control = glmmTMBControl(profile = TRUE)
+    )
     MATCHMOD <- TRUE
 }
 
 
 # print and save results ############################
-if(MATCHMOD == FALSE) stop("Model name did not match anything", call.=FALSE)
-if(MATCHMOD){
+if (MATCHMOD == FALSE)
+    stop("Model name did not match anything", call. = FALSE)
+if (MATCHMOD) {
     print(summary(mod))
     saveRDS(mod, file = paste0('temp/', fitmod, '.rds'))
     print(paste0('saved ', fitmod, '.rds'))
     print(Sys.time())
-    if(!grepl('dredge', fitmod)){
+    print(warnings())
+    if (!grepl('dredge', fitmod)) {
         print(performance::r2(mod)) # run if not a dredge object
     }
 }
 
 print(warnings())
-
-print(paste('Ended', Sys.time(), sep =''))
+print(paste('Ended', Sys.time(), sep = ''))
