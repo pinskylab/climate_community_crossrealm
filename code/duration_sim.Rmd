@@ -149,12 +149,12 @@ if(!file.exists(here('output', 'simulated_ts.csv.gz'))){
          
 # Power analysis
 Generate pairs of correlated time-series (effect 0.1, 1, or 10) with error and correlate the slopes. Time-series have a fixed length (10) or a variety of lengths from (3 to 102 steps). Do this 100 times to check for true positive rate with a one-stage mixed-effects analysis.  
-```{r, eval = FALSE}
+```{r, echo = FALSE}
 if(!file.exists(here('temp', 'simulated_ts_temp_pow.csv.gz')) & !file.exists(here('output', 'simulated_ts_pow.csv.gz'))){
     stop('Need to run duration_sim_pow.R first.')
 } else {
-    corspower <- fread(here('temp', 'simulated_ts_temp_pow.csv.gz'))
-    #corspower <- fread(here('output', 'simulated_ts_pow.csv.gz'))
+    #corspower <- fread(here('temp', 'simulated_ts_temp_pow.csv.gz'))
+    corspower <- fread(here('output', 'simulated_ts_pow.csv.gz'))
     
     corspowerl <- melt(corspower, id.vars = c('n', 'minduration', 'maxduration', 'name', 'range', 'effect'), measure.vars = c('lm.p', 'lm.m', 'glmmwgt.p', 'glmmwgt.beta', 'glmmonebeta.p', 'glmmonebeta.beta'))
     
@@ -174,4 +174,6 @@ if(!file.exists(here('temp', 'simulated_ts_temp_pow.csv.gz')) & !file.exists(her
         facet_grid(. ~ range, labeller = label_both)
 }
 ```
+
+
 
