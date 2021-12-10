@@ -32,10 +32,6 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 
 # Turnover and covariates assembled by turnover_vs_temperature_prep.Rmd
 trendsall <- fread(here('output', 'turnover_w_covariates.csv.gz'))
-trends3 <- fread(here('output', 'turnover_w_covariates3.csv.gz'))
-trends5 <- fread(here('output', 'turnover_w_covariates5.csv.gz'))
-trends10 <- fread(here('output', 'turnover_w_covariates10.csv.gz'))
-trends20 <- fread(here('output', 'turnover_w_covariates20.csv.gz'))
 
 # And the scaling factors
 scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv'))
@@ -190,419 +186,21 @@ testGeneric(res_RFslopeRE2levdisprealm10, summary = countNearOne, alternative = 
 ```
 
 
-## Temperature, temperature slope & duration models
-### Load the models
-```{r temperature, temp slope and duration, eval=FALSE, echo=FALSE}
-# all years
-modTdT10 <- readRDS('temp/modTdT10.rds')
-```
-
-### Summary
-```{r summary of TD mods, eval=FALSE, echo=FALSE}
-summary(modTdT10)
-```
-
-
-
-### Plot the coefficients
-Not used
-```{r modTD coefs, eval=FALSE, echo=FALSE}
-
-coefs1 <- summary(modTDJtu)$coefficients$cond
-coefs2 <- summary(modTDJbeta)$coefficients$cond
-coefs3 <- summary(modTDHorn)$coefficients$cond
-
-varstoplot <- unique(c(rownames(coefs1), rownames(coefs2), rownames(coefs3)))
-varstoplot <- varstoplot[which(!grepl('Intercept', varstoplot) | grepl(':', varstoplot))] # vars to plot
-
-rows1_1 <- which(rownames(coefs1) %in% varstoplot) # rows in coefs
-rows1_2 <- which(rownames(coefs2) %in% varstoplot)
-rows1_3 <- which(rownames(coefs3) %in% varstoplot)
-xlims <- range(c(coefs1[rows1_1,1] - 1.96*coefs1[rows1_1,2], coefs1[rows1_1,1] + 1.96*coefs1[rows1_1,2], 
-                  coefs2[rows1_2,1] - 1.96*coefs2[rows1_2,2], coefs2[rows1_2,1] + 1.96*coefs2[rows1_2,2], 
-                  coefs3[rows1_3,1] - 1.96*coefs3[rows1_3,2], coefs3[rows1_3,1] + 1.96*coefs3[rows1_3,2]))
-
-cols <- brewer.pal(3, 'Dark2') # for Jtu, Jbeta and Horn models
-pchs <- c(16, 16, 16)
-offs <- c(0.1, 0, -0.1) # offset vertically for each model
-
-par(las = 1, mai = c(0.5, 4, 0.1, 0.1))
-
-plot(0,0, col = 'white', xlim = xlims, ylim = c(0.9,length(varstoplot)+0.1), yaxt='n', xlab = '', ylab ='')
-axis(2, at = length(varstoplot):1, labels = varstoplot, cex.axis = 0.7)
-abline(v = 0, col = 'grey', lty = 2)
-abline(h = 1:length(varstoplot), col = 'grey', lty = 3)
-for(i in 1:length(varstoplot)){
-  if(varstoplot[i] %in% rownames(coefs1)){
-    x = coefs1[rownames(coefs1) == varstoplot[i], 1] # the coef in col 1
-    se = coefs1[rownames(coefs1) == varstoplot[i], 2] # the SE in col 2
-    points(x, length(varstoplot) + 1 - i + offs[1], pch = pchs[1], col = cols[1])
-    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[1], length(varstoplot) + 1 - i + offs[1]), col = cols[1])
-  }
-  if(varstoplot[i] %in% rownames(coefs2)){
-    x = coefs2[rownames(coefs2) == varstoplot[i], 1]
-    se = coefs2[rownames(coefs2) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[2], pch = pchs[2], col = cols[2])
-    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[2], length(varstoplot) + 1 - i + offs[2]), col = cols[2])
-  }
-  if(varstoplot[i] %in% rownames(coefs3)){
-    x = coefs3[rownames(coefs3) == varstoplot[i], 1]
-    se = coefs3[rownames(coefs3) == varstoplot[i], 2]
-    points(x, length(varstoplot) + 1 - i + offs[3], pch = pchs[3], col = cols[3])
-    lines(x = c(x-1.96*se, x+1.96*se), y = c(length(varstoplot) + 1 - i + offs[3], length(varstoplot) + 1 - i + offs[3]), col = cols[3])
-  }
-}
-legend('bottomright', col = cols, pch = 16, lwd = 1, legend = c('Jtu', 'Jbeta', 'Horn'), cex = 0.5)
-```
-abs(tempchange) is in degC
-
-duration is in years
-
-### Plot the response
-Not used
-```{r plot TD response, eval=FALSE, echo=FALSE}
-if(!file.exists('temp/modTDJtu_preds.rds')) {
-  newdat <- expand.grid(duration = c(1, 50), tempchange = seq(0.01, 5, length.out = 5), 
-                      taxa_mod2 = NA, STUDY_ID = NA, rarefyID = NA,
-                      Nspp = 60) # no REs, ave number of species
-  scaling <- fread('output/turnover_w_covariates_scaling.csv')
-  cent <- scaling$center[scaling$var == 'tempchange_abs.sc'] # centering
-  scl <- scaling$scale[scaling$var == 'tempchange_abs.sc'] # scaling factor for tempchange
-  newdat$tempchange_abs.sc <- (abs(newdat$tempchange)-cent)/scl
-  cent <- scaling$center[scaling$var == 'nspp.sc'] # centering
-  scl <- scaling$scale[scaling$var == 'nspp.sc'] # scaling factor for tempchange
-  newdat$nspp.sc <- (log(newdat$Nspp) - cent)/scl
-  Jtu <- predict(modTDJtu, newdata = newdat, se.fit = TRUE, re.form = NA, type = 'response')
-  newdat$durationfac <- as.factor(newdat$duration)
-  newdat$Jtu <- Jtu$fit
-  newdat$Jtu.se <- Jtu$se.fit
-  
-  saveRDS(newdat, file = 'temp/modTDJtu_preds.rds')
-} else {
-  newdat <- readRDS('temp/modTDJtu_preds.rds')
-}
-
-ggplot(newdat, aes(tempchange, Jtu, color = durationfac, group = durationfac)) +
-  geom_line() +
-  geom_ribbon(aes(ymin=Jtu - 1.96*Jtu.se, ymax=Jtu + 1.96*Jtu.se), alpha = 0.1, linetype = 'blank')
-```
-
-## Temperature*temperature slope & duration models
-### Load the models
-```{r temperature by temp slope and duration, eval=FALSE, echo=FALSE}
-modTdTT10 <- readRDS('temp/modTdTT10.rds')
-modTdTT10Horn <- readRDS('temp/modTdTT10Horn.rds')
-```
-
-### Plot the response
-#### Set up and write to file
-Only run this once.
-```{r, eval=FALSE, echo=FALSE}
-scaling10 <- fread('output/turnover_w_covariates_scaling10.csv') # the scalings
-
-# find a study in all 3 datasets to use as the random effect
-# ranef(modTdT20Horn))
-
-# set up the variables to plot
-vars <- data.frame(vars = c('tempchange_abs', 'tempave_metab'),
-                   min =      c(0,    -10), 
-                   max =      c(0.7,    40),
-                   len =      c(100,  100),
-                   discrete = c(F,    F),
-                   stringsAsFactors = FALSE)
-basetab10 <- data.table(expand.grid(start = 1:9, end = 2:10, nspp.sc = 0, REALM = 'Terrestrial', STUDY_ID = 195L, rarefyID = '195_289043', tempchange_abs.sc = 0, tempave_metab.sc = 0)) # the base case
-basetab10[, duration := end - start]
-if(scaling10[var == 'duration.sc', log]) basetab10[, duration.sc := (log(duration) - scaling10[var == 'duration.sc', center])/scaling10[var == 'duration.sc', scale]]
-if(!scaling10[var == 'duration.sc', log]) basetab10[, duration.sc := (duration - scaling10[var == 'duration.sc', center])/scaling10[var == 'duration.sc', scale]]
-basetab10 <- basetab10[duration > 0, ]
-
-# make the data frames for each interaction to plot                
-for(j in 1:nrow(vars)){
-    # set up the main effects
-    if(scaling5[var == paste0(vars$vars[j], '.sc'), log]){
-        thisdat <- data.frame(new = 10^seq(log10(vars$min[j]), log10(vars$max[j]), length.out = vars$len[j]),
-                              var = vars$vars[j], stringsAsFactors = FALSE)
-    } 
-    if(!scaling5[var == paste0(vars$vars[j], '.sc'), log]){
-        thisdat <- data.frame(new = seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
-                              var = vars$vars[j], stringsAsFactors = FALSE)
-    }
-    names(thisdat) <- c(vars$vars[j], 'var')
-    
-    # scale the variable
-    cent <- scaling5[var == paste0(vars$vars[j], '.sc'), center]
-    scl <- scaling5[var == paste0(vars$vars[j], '.sc'), scale]
-    lg <- scaling5[var == paste0(vars$vars[j], '.sc'), log]
-    plus <- scaling5[var == paste0(vars$vars[j], '.sc'), plus]
-    if(is.null(cent)) cent <- 0
-    if(!is.null(cent) & !is.null(scl)){
-        if(lg) thisdat[[paste0(vars$var[j], '.sc')]] <- (log(thisdat[[vars$vars[j]]] + plus) - cent)/scl
-        if(!lg) thisdat[[paste0(vars$var[j], '.sc')]] <- (thisdat[[vars$var[j]]] - cent)/scl
-    }
-    
-    # merge with the rest of the columns
-    expand.grid.df <- function(...) Reduce(function(...) merge(..., by=NULL), list(...)) # https://stackoverflow.com/questions/11693599/alternative-to-expand-grid-for-data-frames
-    colnamestouse <- setdiff(colnames(basetab5), paste0(vars$vars[j], '.sc'))
-    thisdat10 <- expand.grid.df(thisdat, basetab10[, ..colnamestouse])
-
-    # merge with the previous iterations
-    if(j == 1){
-      newdat10 <- thisdat10
-    }
-    if(j > 1){
-        colstoadd <- setdiff(colnames(thisdat5), colnames(newdat5))
-        for(toadd in colstoadd){
-            newdat10[[toadd]] <- NA
-        }
-        
-        colstoadd2 <- setdiff(colnames(newdat5), colnames(thisdat5))
-        for(toadd in colstoadd2){
-            thisdat10[[toadd]] <- NA
-        }
-        
-        newdat10 <- rbind(newdat10, thisdat10)
-    } 
-}
-
-# predict (takes a few minutes on Annotate)
-logit <- function(p) return(log(p/(1-p)))
-invlogit <- function(x) return(1/(1+exp(-x)))
-
-coefs10 <- (summary(modTdTT10Horn)$coefficients)
-
-newdat10$Horn.sc <- predict(modTdTT10Horn, newdat = newdat10, type = 'response', se.fit = FALSE, re.form = NA)
-
-
-newdat10$Horn.sc.dTu <- invlogit(logit(newdat10$Horn.sc) + 
-                                  newdat10$tempchange_abs.sc * newdat10$duration.sc *
-                                  coefs10$cond[3,2]) # upper bound on tempchange coef
-newdat10$Horn.sc.dTl <- invlogit(logit(newdat10$Horn.sc) - 
-                                  newdat10$tempchange_abs.sc * newdat10$duration.sc *
-                                  coefs10$cond[3,2]) # lower bound on tempchange coef
-newdat10$Horn.sc.Tu <- invlogit(logit(newdat10$Horn.sc) + 
-                                 newdat10$tempave_metab.sc * newdat10$duration.sc *
-                                 coefs10$cond[4,2]) # upper bound on tempchange coef
-newdat10$Horn.sc.Tl <- invlogit(logit(newdat10$Horn.sc) - 
-                                 newdat10$tempave_metab.sc * newdat10$duration.sc *
-                                 coefs10$cond[4,2]) # lower bound on tempchange coef
-
-
-# write out
-write.csv(newdat10, 'temp/modTdTT10_preds.csv', row.names = FALSE)
-
-```
-
-#### Plot
-```{r}
-# load predictions
-newdat10 <- fread('temp/modTdTT10_preds.csv')
-
-# calc duration slope per temp:tempchange level
-slope <- function(duration, Horn.sc){
-  mod <- lm(Horn.sc ~ duration)
-  return(coef(mod)[2])
-}
-slope10 <- newdat10[, .(Hornslope = slope(duration, Horn.sc), 
-                      HornslopedTu = slope(duration, Horn.sc.dTu),
-                      HornslopedTl = slope(duration, Horn.sc.dTl), 
-                      HornslopeTu = slope(duration, Horn.sc.Tu),
-                      HornslopeTl = slope(duration, Horn.sc.Tl)), 
-                  by = .(tempchange_abs, tempave_metab)]
-
-p1 <- ggplot(slope10, aes(x=tempchange_abs, y=Hornslope, ymin=HornslopedTu, ymax=HornslopedTl)) +
-  geom_line() + 
-  geom_ribbon(alpha=0.2)
-  
-p2 <- ggplot(slope10, aes(x=tempave_metab, y=Hornslope, ymin=HornslopeTu, ymax=HornslopeTl)) +
-  geom_line() +
-  geom_ribbon(alpha=0.2)
-
-grid.arrange(p1, p2, ncol = 2)
-```
-
-## Temperature+temperature slope+REALM : duration models
-### Load the models
-```{r, eval=FALSE, echo=FALSE}
-modTdTRealm5Jtu <- readRDS('temp/modTdTRealm5Jtu.rds')
-modTdTRealm5Horn <- readRDS('temp/modTdTRealm5Horn.rds')
-```
-
-### Plot the response
-#### Set up and write to file
-Only run this once.
-```{r, eval=FALSE, echo=FALSE}
-scaling5 <- fread('output/turnover_w_covariates_scaling5.csv') # the scalings
-
-# find a study in all 3 datasets to use as the random effect
-# ranef(modTdTTRealm5Horn))
-
-# set up the variables to plot
-vars <- data.frame(vars = c('tempchange_abs', 'tempave_metab'),
-                   min =      c(0,    -10), 
-                   max =      c(0.7,    40),
-                   len =      c(100,  100),
-                   discrete = c(F,    F),
-                   stringsAsFactors = FALSE)
-basetab5 <- data.table(expand.grid(start = 1:4, end = 2:5, nspp.sc = 0, REALM = c('Terrestrial', 'Freshwater', 'Marine'), STUDY_ID = 195L, rarefyID = '195_289043', tempchange_abs.sc = 0, tempave_metab.sc = 0)) # the base case
-basetab5[, duration := end - start]
-if(scaling5[var == 'duration.sc', log]) basetab5[, duration.sc := (log(duration) - scaling5[var == 'duration.sc', center])/scaling5[var == 'duration.sc', scale]]
-if(!scaling5[var == 'duration.sc', log]) basetab5[, duration.sc := (duration - scaling5[var == 'duration.sc', center])/scaling5[var == 'duration.sc', scale]]
-basetab5 <- basetab5[duration > 0, ]
-
-# make the data frames for each interaction to plot                
-for(j in 1:nrow(vars)){
-    # set up the main effects
-    if(scaling5[var == paste0(vars$vars[j], '.sc'), log]){
-        thisdat <- data.frame(new = 10^seq(log10(vars$min[j]), log10(vars$max[j]), length.out = vars$len[j]),
-                              var = vars$vars[j], stringsAsFactors = FALSE)
-    } 
-    if(!scaling5[var == paste0(vars$vars[j], '.sc'), log]){
-        thisdat <- data.frame(new = seq(vars$min[j], vars$max[j], length.out = vars$len[j]),
-                              var = vars$vars[j], stringsAsFactors = FALSE)
-    }
-    names(thisdat) <- c(vars$vars[j], 'var')
-    
-    # scale the variable
-    cent <- scaling5[var == paste0(vars$vars[j], '.sc'), center]
-    scl <- scaling5[var == paste0(vars$vars[j], '.sc'), scale]
-    lg <- scaling5[var == paste0(vars$vars[j], '.sc'), log]
-    plus <- scaling5[var == paste0(vars$vars[j], '.sc'), plus]
-    if(is.null(cent)) cent <- 0
-    if(!is.null(cent) & !is.null(scl)){
-        if(lg) thisdat[[paste0(vars$var[j], '.sc')]] <- (log(thisdat[[vars$vars[j]]] + plus) - cent)/scl
-        if(!lg) thisdat[[paste0(vars$var[j], '.sc')]] <- (thisdat[[vars$var[j]]] - cent)/scl
-    }
-    
-    # merge with the rest of the columns
-    expand.grid.df <- function(...) Reduce(function(...) merge(..., by=NULL), list(...)) # https://stackoverflow.com/questions/11693599/alternative-to-expand-grid-for-data-frames
-    colnamestouse <- setdiff(colnames(basetab5), paste0(vars$vars[j], '.sc'))
-    thisdat5 <- expand.grid.df(thisdat, basetab5[, ..colnamestouse])
-    
-    # merge with the previous iterations
-    if(j == 1){
-      newdat5 <- thisdat5
-    }
-    if(j > 1){
-        colstoadd <- setdiff(colnames(thisdat5), colnames(newdat5))
-        for(toadd in colstoadd){
-            newdat5[[toadd]] <- NA
-        }
-        
-        colstoadd2 <- setdiff(colnames(newdat5), colnames(thisdat5))
-        for(toadd in colstoadd2){
-            thisdat5[[toadd]] <- NA
-        }
-        
-        newdat5 <- rbind(newdat5, thisdat5)
-    } 
-}
-newdat5 <- as.data.table(newdat5)
-
-# predict (takes a few minutes on Annotate)
-logit <- function(p) return(log(p/(1-p)))
-invlogit <- function(x) return(1/(1+exp(-x)))
-
-coefs5Jtu <- summary(modTdTRealm5Jtu)$coefficients$cond # get the model coefficients and SE
-terms5Jtu <- rownames(coefs5Jtu)
-
-newdat5[, Jtu.sc := predict(modTdTRealm5Jtu, newdat = newdat5, type = 'response', 
-                            se.fit = FALSE, re.form = NA)] # make the predictions
-
-newdat5[, Jtu.sc.dTu := invlogit(logit(Jtu.sc) + 
-                                      tempchange_abs.sc * duration.sc *
-                                      coefs5Jtu[terms5Jtu == 
-                                                  'duration.sc:tempchange_abs.sc',2])] # upper bound on dT coef
-newdat5[, Jtu.sc.dTl := invlogit(logit(Jtu.sc) - 
-                                  tempchange_abs.sc * duration.sc *
-                                  coefs5Jtu[terms5Jtu == 'duration.sc:tempchange_abs.sc',2])] # lower bound
-
-newdat5[, Jtu.sc.Tu := invlogit(logit(Jtu.sc) + 
-                                 tempave_metab.sc * duration.sc *
-                                 coefs5Jtu[terms5Jtu == 'duration.sc:tempave_metab.sc',2])] # upper bound on T coef
-newdat5[, Jtu.sc.Tl := invlogit(logit(Jtu.sc) - 
-                                 tempave_metab.sc * duration.sc *
-                                 coefs5Jtu[terms5Jtu == 'duration.sc:tempave_metab.sc',2])]
-
-## Horn
-coefs5Horn <- summary(modTdTRealm5Horn)$coefficients$cond # get the model coefficients and SE
-terms5Horn <- rownames(coefs5Horn)
-
-newdat5[, Horn.sc := predict(modTdTRealm5Horn, newdat = newdat5, type = 'response', 
-                             se.fit = FALSE, re.form = NA)] # make the predictions
-
-newdat5[, Horn.sc.dTu := invlogit(logit(Horn.sc) + 
-                                      tempchange_abs.sc * duration.sc *
-                                      coefs5Horn[terms5Horn == 
-                                                  'duration.sc:tempchange_abs.sc',2])] # upper bound on dT coef
-newdat5[, Horn.sc.dTl := invlogit(logit(Horn.sc) - 
-                                  tempchange_abs.sc * duration.sc *
-                                  coefs5Horn[terms5Horn == 'duration.sc:tempchange_abs.sc',2])] # lower bound
-
-newdat5[, Horn.sc.Tu := invlogit(logit(Horn.sc) + 
-                                 tempave_metab.sc * duration.sc *
-                                 coefs5Horn[terms5Horn == 'duration.sc:tempave_metab.sc',2])] # upper bound on T coef
-newdat5[, Horn.sc.Tl := invlogit(logit(Horn.sc) - 
-                                 tempave_metab.sc * duration.sc *
-                                 coefs5Horn[terms5Horn == 'duration.sc:tempave_metab.sc',2])]
-
-
-# write out
-write.csv(newdat5, 'temp/modTdTRealm5_preds.csv', row.names = FALSE)
-
-```
-
-#### Plot
-```{r}
-# load predictions
-newdat5 <- fread('temp/modTdTRealm5_preds.csv')
-
-# calc duration slope per temp:tempchange level
-slope <- function(duration, diss){
-  mod <- lm(diss ~ duration)
-  return(coef(mod)[2])
-}
-slope5 <- newdat5[, .(Jtuslope = slope(duration, Jtu.sc), 
-                      JtuslopedTu = slope(duration, Jtu.sc.dTu),
-                      JtuslopedTl = slope(duration, Jtu.sc.dTl), 
-                      JtuslopeTu = slope(duration, Jtu.sc.Tu),
-                      JtuslopeTl = slope(duration, Jtu.sc.Tl),
-                      Hornslope = slope(duration, Horn.sc), 
-                      HornslopedTu = slope(duration, Horn.sc.dTu),
-                      HornslopedTl = slope(duration, Horn.sc.dTl), 
-                      HornslopeTu = slope(duration, Horn.sc.Tu),
-                      HornslopeTl = slope(duration, Horn.sc.Tl)), 
-                  by = .(tempchange_abs, tempave_metab)]
-
-p1 <- ggplot(slope5, aes(x=tempchange_abs, y=Jtuslope, ymin=JtuslopedTu, ymax=JtuslopedTl)) +
-  geom_line() + 
-  geom_ribbon(alpha=0.2)
-  
-p2 <- ggplot(slope5, aes(x=tempave_metab, y=Jtuslope, ymin=JtuslopeTu, ymax=JtuslopeTl)) +
-  geom_line() +
-  geom_ribbon(alpha=0.2)
-
-p3 <- ggplot(slope5, aes(x=tempchange_abs, y=Hornslope, ymin=HornslopedTu, ymax=HornslopedTl)) +
-  geom_line() + 
-  geom_ribbon(alpha=0.2)
-  
-p4 <- ggplot(slope5, aes(x=tempave_metab, y=Hornslope, ymin=HornslopeTu, ymax=HornslopeTl)) +
-  geom_line() +
-  geom_ribbon(alpha=0.2)
-
-grid.arrange(p1, p2, p3, p4, ncol = 2)
-```
-
 ## Temperature*temperature slope*REALM*duration (Antao-style)
+Compare with duration scaled vs. not and with abs(tempchange) vs. tempchange
 ```{r}
 modTdTTRealmAllJtu <- readRDS('temp/modTdTTRealmAllJtu.rds') # uses duration and tempchange
-#modTdTTRealmDurscAllJtu <- readRDS('temp/modTdTTRealmDurscAllJtu.rds') # uses duration.sc and tempchange
+modTdTTRealmDurscAllJtu <- readRDS('temp/modTdTTRealmDurscAllJtu.rds') # uses duration.sc and tempchange
 modTsdTTRealmAllJtu <- readRDS('temp/modTsdTTRealmAllJtu.rds') # uses duration and abs(tempchange)
 modTsdTTRealmDurscAllJtu <- readRDS('temp/modTsdTTRealmDurscAllJtu.rds') # uses duration.sc and abs(tempchange)
 ```
 
 ### AIC
+Clearly chooses un-scaled duration and abs(tempchange)
 ```{r}
-AIC(modTsdTTRealmAllJtu, modTsdTTRealmDurscAllJtu) - min(AIC(modTsdTTRealmAllJtu, modTsdTTRealmDurscAllJtu)$AIC)
+aics <- AIC(modTdTTRealmAllJtu, modTdTTRealmDurscAllJtu, modTsdTTRealmAllJtu, modTsdTTRealmDurscAllJtu)
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics
 ```
 
 ### Print terms
@@ -613,21 +211,21 @@ summary(modTsdTTRealmAllJtu)
 ### Plot the interaction
 ```{r, echo = FALSE}
 # set up prediction frame
-newdatM <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration.sc = seq(-2, 2, length.out=10)))
+newdatM <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration = seq(1, 10, length.out=10)))
 newdatM$REALM <- 'Marine'
 newdatM$STUDY_ID <- 1
 newdatM$rarefyID <- 1
 newdatM[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
 newdatM[, tempchange_abs := tempchange_abs.sc * scalingall[var == 'tempchange_abs.sc', scale] + scalingall[var == 'tempchange_abs.sc', center]]
 
-newdatT <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration.sc = seq(-2, 2, length.out=10)))
+newdatT <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration = seq(1, 10, length.out=10)))
 newdatT$REALM <- 'Terrestrial'
 newdatT$STUDY_ID <- 1
 newdatT$rarefyID <- 1
 newdatT[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
 newdatT[, tempchange_abs := tempchange_abs.sc * scalingall[var == 'tempchange_abs.sc', scale] + scalingall[var == 'tempchange_abs.sc', center]]
 
-newdatF <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration.sc = seq(-2, 2, length.out=10)))
+newdatF <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration = seq(1, 10, length.out=10)))
 newdatF$REALM <- 'Freshwater'
 newdatF$STUDY_ID <- 1
 newdatF$rarefyID <- 1
@@ -636,14 +234,14 @@ newdatF[, tempchange_abs := tempchange_abs.sc * scalingall[var == 'tempchange_ab
 
 
 # predict
-newdatM$Jtu.sc <- predict(modTsdTTRealmDurscAllJtu, newdata = newdatM, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdatT$Jtu.sc <- predict(modTsdTTRealmDurscAllJtu, newdata = newdatT, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdatF$Jtu.sc <- predict(modTsdTTRealmDurscAllJtu, newdata = newdatF, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdatM$Jtu.sc <- predict(modTsdTTRealmAllJtu, newdata = newdatM, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdatT$Jtu.sc <- predict(modTsdTTRealmAllJtu, newdata = newdatT, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdatF$Jtu.sc <- predict(modTsdTTRealmAllJtu, newdata = newdatF, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
 
 # calculate slopes
-slopesM <- newdatM[, .(slope = coef(lm(Jtu.sc ~ duration.sc))[2]), by = .(tempave_metab, tempchange_abs)]
-slopesT <- newdatT[, .(slope = coef(lm(Jtu.sc ~ duration.sc))[2]), by = .(tempave_metab, tempchange_abs)]
-slopesF <- newdatF[, .(slope = coef(lm(Jtu.sc ~ duration.sc))[2]), by = .(tempave_metab, tempchange_abs)]
+slopesM <- newdatM[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange_abs)]
+slopesT <- newdatT[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange_abs)]
+slopesF <- newdatF[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange_abs)]
 
 # plot
 p1 <- ggplot(slopesM, aes(tempchange_abs, tempave_metab, z = slope)) +
@@ -698,111 +296,264 @@ p3
 
 ## Environment*Temperature*temperature slope*REALM*duration (Antao+)
 ```{r}
+modTsdTTRealmtsignAllJtu <- readRDS('temp/modTsdTTRealmtsignAllJtu.rds') # has npp
 modTsdTTRealmnppAllJtu <- readRDS('temp/modTsdTTRealmnppAllJtu.rds') # has npp
+modTsdTTRealmseasAllJtu <- readRDS('temp/modTsdTTRealmseasAllJtu.rds') # has npp
 modTsdTTRealmmicroclimAllJtu <- readRDS('temp/modTsdTTRealmmicroclimAllJtu.rds') # has microclimates
-
-summary(modTsdTTRealmnppAllJtu)
-summary(modTsdTTRealmmicroclimAllJtu)
 ```
 
+### Tsign summary
+```{r}
+summary(modTsdTTRealmtsignAllJtu)
 
-
-### Plot the interaction for high and low environment values
-Only for marine since no significant effect in other realms.
+```
+### Plot temperature sign effect
 ```{r, echo = FALSE}
 # set up prediction frame
-newdat1 <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration = 1:10))
-newdat1$npp.sc <- -2 # low value (2 SD below the mean)
-newdat1$microclim.sc <- -2
-newdat1$REALM <- 'Marine'
-newdat1$STUDY_ID <- 1
-newdat1$rarefyID <- 1
-newdat1[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
-newdat1[, tempchange_abs := tempchange_abs.sc * scalingall[var == 'tempchange_abs.sc', scale] + scalingall[var == 'tempchange_abs.sc', center]]
+newdatM <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange = seq(-0.8, 0.8, length.out = 100), duration = seq(1, 10, length.out=10)))
+newdatM$REALM <- 'Marine'
+newdatM$STUDY_ID <- 1
+newdatM$rarefyID <- 1
+newdatM[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
+newdatM[, tempchange_abs.sc := (abs(tempchange) - scalingall[var == 'tempchange_abs.sc', center])/scalingall[var == 'tempchange_abs.sc', scale]]
+newdatM[, tsign := sign(tempchange)]
+newdatM[tsign == 0, tsign := 1]
 
-newdat2 <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration = 1:10))
-newdat2$npp.sc <- 2 # high value (2 SD above the mean)
-newdat2$microclim.sc <- 2
-newdat2$REALM <- 'Marine'
-newdat2$STUDY_ID <- 1
-newdat2$rarefyID <- 1
-newdat2[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
-newdat2[, tempchange_abs := tempchange_abs.sc * scalingall[var == 'tempchange_abs.sc', scale] + scalingall[var == 'tempchange_abs.sc', center]]
+newdatT <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange = seq(-0.8, 0.8, length.out = 100), duration = seq(1, 10, length.out=10)))
+newdatT$REALM <- 'Terrestrial'
+newdatT$STUDY_ID <- 1
+newdatT$rarefyID <- 1
+newdatT[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
+newdatT[, tempchange_abs.sc := (abs(tempchange) - scalingall[var == 'tempchange_abs.sc', center])/scalingall[var == 'tempchange_abs.sc', scale]]
+newdatT[, tsign := sign(tempchange)]
+newdatT[tsign == 0, tsign := 1]
+
+newdatF <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange = seq(-0.8, 0.8, length.out = 100), duration = seq(1, 10, length.out=10)))
+newdatF$REALM <- 'Freshwater'
+newdatF$STUDY_ID <- 1
+newdatF$rarefyID <- 1
+newdatF[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
+newdatF[, tempchange_abs.sc := (abs(tempchange) - scalingall[var == 'tempchange_abs.sc', center])/scalingall[var == 'tempchange_abs.sc', scale]]
+newdatF[, tsign := sign(tempchange)]
+newdatF[tsign == 0, tsign := 1]
+
 
 # predict
-newdat1$Jtu.sc.npp <- predict(modTsdTTRealmnppAllJtu, newdata = newdat1, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdat2$Jtu.sc.npp <- predict(modTsdTTRealmnppAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdat1$Jtu.sc.microclim <- predict(modTsdTTRealmmicroclimAllJtu, newdata = newdat1, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdat2$Jtu.sc.microclim <- predict(modTsdTTRealmmicroclimAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdatM$Jtu.sc <- predict(modTsdTTRealmtsignAllJtu, newdata = newdatM, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdatT$Jtu.sc <- predict(modTsdTTRealmtsignAllJtu, newdata = newdatT, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdatF$Jtu.sc <- predict(modTsdTTRealmtsignAllJtu, newdata = newdatF, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
 
 # calculate slopes
-slopes1 <- newdat1[, .(slope_npp = coef(lm(Jtu.sc.npp ~ duration))[2],
-                       slope_microclim = coef(lm(Jtu.sc.microclim ~ duration))[2]), by = .(tempave_metab, tempchange_abs)]
-slopes2 <- newdat2[, .(slope_npp = coef(lm(Jtu.sc.npp ~ duration))[2],
-                       slope_microclim = coef(lm(Jtu.sc.microclim ~ duration))[2]), by = .(tempave_metab, tempchange_abs)]
+slopesM <- newdatM[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange, tsign)]
+slopesT <- newdatT[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange, tsign)]
+slopesF <- newdatF[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange, tsign)]
+
 
 # plot
-p1 <- ggplot(slopes1, aes(tempchange_abs, tempave_metab, z = slope_npp)) +
-    geom_raster(aes(fill = slope_npp)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Low NPP') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-p2 <- ggplot(slopes2, aes(tempchange_abs, tempave_metab, z = slope_npp)) +
-    geom_raster(aes(fill = slope_npp)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'High NPP') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-p3 <- ggplot(slopes1, aes(tempchange_abs, tempave_metab, z = slope_microclim)) +
-    geom_raster(aes(fill = slope_microclim)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Low microclimate') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-p4 <- ggplot(slopes2, aes(tempchange_abs, tempave_metab, z = slope_microclim)) +
-    geom_raster(aes(fill = slope_microclim)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'High microclimate') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
+p1 <- ggplot(slopesM, aes(tempchange, tempave_metab, z = slope)) +
+  geom_raster(aes(fill = slope)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Marine') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+p2 <- ggplot(slopesT, aes(tempchange, tempave_metab, z = slope)) +
+  geom_raster(aes(fill = slope)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Terrestrial') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+p3 <- ggplot(slopesF, aes(tempchange, tempave_metab, z = slope)) +
+  geom_raster(aes(fill = slope)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Freshwater') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
 
 p1
 p2
 p3
-p4
+```
+
+#### Difference in slopes
+These plots subtract the cooling slopes from the warming slopes.  
+Plots need to be improved, I think because pixel spacing isn't even. Getting strange patterns near 0 temperature change.
+```{r, echo = FALSE}
+#difference in slopes
+slopesMdiff <- slopesM[tsign== -1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_cooling = slope)]
+slopesMdiff <- merge(slopesMdiff, slopesM[tsign == 1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_warming = slope)]) # round to allow merging
+slopesMdiff[, slope := slope_warming - slope_cooling]
+
+slopesTdiff <- slopesT[tsign== -1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_cooling = slope)]
+slopesTdiff <- merge(slopesTdiff, slopesT[tsign == 1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_warming = slope)]) # round to allow merging
+slopesTdiff[, slope := slope_warming - slope_cooling]
+
+slopesFdiff <- slopesF[tsign== -1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_cooling = slope)]
+slopesFdiff <- merge(slopesFdiff, slopesF[tsign == 1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_warming = slope)]) # round to allow merging
+slopesFdiff[, slope := slope_warming - slope_cooling]
+
+p1 <- ggplot(slopesMdiff, aes(tempchange_abs, tempave_metab, z = slope)) +
+  geom_raster(aes(fill = slope)) +
+  labs(x = 'Temperature change magnitude (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Marine') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Difference in Jtu slope (warming - cooling)') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+p2 <- ggplot(slopesTdiff, aes(tempchange_abs, tempave_metab, z = slope)) +
+  geom_raster(aes(fill = slope)) +
+  labs(x = 'Temperature change magnitude (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Terrestrial') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Difference in Jtu slope (warming - cooling)') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+p3 <- ggplot(slopesFdiff, aes(tempchange_abs, tempave_metab, z = slope)) +
+  geom_raster(aes(fill = slope)) +
+  labs(x = 'Temperature change magnitude (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Freshwater') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Difference in Jtu slope (warming - cooling)') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+p1
+p2
+p3
+```
+
+### AIC
+```{r}
+aics <- AIC(modTsdTTRealmAllJtu, modTsdTTRealmtsignAllJtu, modTsdTTRealmnppAllJtu, modTsdTTRealmseasAllJtu, modTsdTTRealmmicroclimAllJtu)
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics
+```
+
+### Microclimate summary
+```{r}
+summary(modTsdTTRealmmicroclimAllJtu)
+
+```
+
+### Plot the interaction for high and low microclimates
+```{r, echo = FALSE}
+# set up prediction frame
+newdat1 <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs = seq(0, 0.8, length.out = 100), duration = 1:10, REALM = c('Marine', 'Terrestrial'), microclim.sc = c(-2, 2)))
+newdat1$STUDY_ID <- 1
+newdat1$rarefyID <- 1
+newdat1[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
+newdat1[, tempchange_abs.sc := (tempchange_abs - scalingall[var == 'tempchange_abs.sc', center]) / scalingall[var == 'tempchange_abs.sc', scale]]
+
+# predict
+newdat1$Jtu.sc.microclim <- predict(modTsdTTRealmmicroclimAllJtu, newdata = newdat1, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+
+# calculate slopes
+slopes1 <- newdat1[, .(slope_microclim = coef(lm(Jtu.sc.microclim ~ duration))[2]), by = .(tempave_metab, tempchange_abs, microclim.sc, REALM)]
+
+# plot
+p1 <- ggplot(slopes1, aes(tempchange_abs, tempave_metab, z = slope_microclim)) +
+  geom_raster(aes(fill = slope_microclim)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Few (left) or many (right) microclimates') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+  facet_grid(row = vars(REALM), col = vars(microclim.sc)) +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+
+p1
+```
+
+### Plot the microclimate effect
+Only for marine since no significant effect in other realms.
+```{r, echo = FALSE}
+# set up prediction frame
+newdat2 <- data.table(expand.grid(tempave_metab = c(5, 30), tempchange_abs = seq(0, 0.6, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial'), microclim.sc = c(-2, 2)))
+newdat2[, ':='(npp.sc = microclim.sc, seas.sc = microclim.sc)]
+newdat2$STUDY_ID <- 1
+newdat2$rarefyID <- 1
+newdat2[, tempave_metab.sc := (tempave_metab - scalingall[var == 'tempave_metab.sc', center]) / scalingall[var == 'tempave_metab.sc', scale]]
+newdat2[, tempchange_abs.sc := (tempchange_abs - scalingall[var == 'tempchange_abs.sc', center]) / scalingall[var == 'tempchange_abs.sc', scale]]
+newdat2[, microclim := microclim.sc * scalingall[var == 'microclim.sc', scale] + scalingall[var == 'microclim.sc', center]]
+newdat2[, npp := npp.sc * scalingall[var == 'npp.sc', scale] + scalingall[var == 'npp.sc', center]]
+newdat2[, seas := seas.sc * scalingall[var == 'seas.sc', scale] + scalingall[var == 'seas.sc', center]]
+
+# predict
+newdat2$Jtu.sc.microclim <- predict(modTsdTTRealmmicroclimAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdat2$Jtu.sc.npp <- predict(modTsdTTRealmnppAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdat2$Jtu.sc.seas <- predict(modTsdTTRealmseasAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+
+# calculate slopes
+slopes2 <- newdat2[, .(slope_microclim = coef(lm(Jtu.sc.microclim ~ duration))[2],
+                       slope_npp = coef(lm(Jtu.sc.npp ~ duration))[2],
+                       slope_seas = coef(lm(Jtu.sc.seas ~ duration))[2]), 
+                   by = .(tempave_metab, tempchange_abs, microclim, npp, seas, REALM)]
+
+# normal slopes to 0
+zeros <- slopes2[tempchange_abs == 0, .(tempave_metab, microclim, npp, seas, REALM, 
+                                        slope_microclim0 = slope_microclim, slope_npp0 = slope_npp, slope_seas0 = slope_seas)]
+slopes2 <- merge(slopes2, zeros, all.x = TRUE)
+slopes2[, ':='(slope_microclim.n = slope_microclim - slope_microclim0, slope_npp.n = slope_npp - slope_npp0, slope_seas.n = slope_seas - slope_seas0)]
+
+# plot
+p1 <- ggplot(slopes2, aes(tempchange_abs, slope_microclim.n, color = microclim, group = microclim)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM), rows = vars(tempave_metab))
+p2 <- ggplot(slopes2, aes(tempchange_abs, slope_npp.n, color = npp, group = npp)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM), rows = vars(tempave_metab))
+p3 <- ggplot(slopes2, aes(tempchange_abs, slope_seas.n, color = seas, group = seas)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM), rows = vars(tempave_metab))
+p1
+p2
+p3
 ```
 
 
