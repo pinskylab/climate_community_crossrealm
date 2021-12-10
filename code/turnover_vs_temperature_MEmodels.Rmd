@@ -799,8 +799,15 @@ summary(modAntaoAbsJtu3_5_10min3)
 # summary(modAntaoAbsJtuXmin3)
 
 ```
-### Plot coefficients
+
+### Compare
 ```{r}
+AIC(modAntaoAbsJtu3_5_10min3, modAntaoJtu3_5_10min3) - min(AIC(modAntaoAbsJtu3_5_10min3, modAntaoJtu3_5_10min3))
+AIC(modAntaoAbsJtu3_5_10min3All, modAntaoJtu3_5_10min3All) - min(AIC(modAntaoAbsJtu3_5_10min3All, modAntaoJtu3_5_10min3All))
+```
+
+### Plot coefficients
+```{r, echo = FALSE}
 coefs <- fixef(modAntaoAbsJtu3_5_10min3)$cond
 iM <- grep('REALMMarine:tempave_metab.sc:temptrend_abs.sc', names(coefs))
 dursM <- as.numeric(gsub('duration_factor|:REALMMarine:tempave_metab.sc:temptrend_abs.sc', '', names(coefs)[iM]))
@@ -810,6 +817,17 @@ par(mfrow=c(1,2))
 plot(dursM, coefs[iM], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = "Marine core3-10min3")
 abline(h =0, lty = 2)
 plot(dursT, coefs[iT], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = 'Terrestrial core3-10min3')
+abline(h =0, lty = 2)
+
+coefs <- fixef(modAntaoAbsJtu3_5_10min3All)$cond
+iM <- grep('REALMMarine:tempave_metab.sc:temptrend_abs.sc', names(coefs))
+dursM <- as.numeric(gsub('duration_factor|:REALMMarine:tempave_metab.sc:temptrend_abs.sc', '', names(coefs)[iM]))
+iT <- grep('REALMTerrestrial:tempave_metab.sc:temptrend_abs.sc', names(coefs))
+dursT <- as.numeric(gsub('duration_factor|:REALMTerrestrial:tempave_metab.sc:temptrend_abs.sc', '', names(coefs)[iT]))
+par(mfrow=c(1,2))
+plot(dursM, coefs[iM], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = "Marine all 3-10min3")
+abline(h =0, lty = 2)
+plot(dursT, coefs[iT], type = 'l', xlab = 'Time series duration', ylab = 'AveTemp:TempTrend interaction', main = 'Terrestrial all 3-10min3')
 abline(h =0, lty = 2)
 
 # coefs <- fixef(modAntaoJtuXmin3)$cond
