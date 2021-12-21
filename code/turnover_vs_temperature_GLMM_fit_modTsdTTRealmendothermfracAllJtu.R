@@ -8,6 +8,8 @@
 # (this works if code is executable, e.g., chmod u+x turnover_vs_temperature_GLMM_fit.R)
 # (otherwise using nohup Rscript ...)
 
+options(nwarnings = 10000) # print (nearly) all
+
 # Read command line arguments ############
 
 args <- commandArgs(trailingOnly = TRUE)

@@ -40,6 +40,7 @@ library(performance) # for R2
 trendsall <- fread('output/turnover_w_covariates.csv.gz')
 
 trendsall[, tsign := as.factor(tsign)]
+trendsall[, rarefyID_y_abs := abs(rarefyID_y)]
 
 # Models ############################
 
@@ -362,6 +363,44 @@ if (fitmod == 'modRealmAllJtu') {
     MATCHMOD <- TRUE
 }
 
+# latitude:sdT:REALM:duration #########################
+# use lat instead of T
+if (fitmod == 'modLatsdTTRealmAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange_abs.sc:duration +
+            REALM:rarefyID_y:duration +
+            REALM:rarefyID_y:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+# use abs(lat) instead of T
+if (fitmod == 'modabsLatsdTTRealmAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange_abs.sc:duration +
+            REALM:rarefyID_y_abs:duration +
+            REALM:rarefyID_y_abs:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
 
 # T:dT/sdT:REALM INTERACTION WITH SINGLE FACTORS ########################
 # T:dT:REALM:duration like Antao #########################
@@ -427,28 +466,6 @@ if (fitmod == 'modTsdTTRealmAllJtu') {
     # control = glmmTMBControl(profile = TRUE)) # add dispersion formula
 MATCHMOD <- TRUE
 }
-
-# latitude:sdT:REALM:duration #########################
-# use lat instead of T
-if (fitmod == 'modLatsdTTRealmAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:rarefyID_y:duration +
-            REALM:rarefyID_y:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
-    ) #,
-    # control = glmmTMBControl(profile = TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-
 
 # use tempchange_abs and scaled duration
 if (fitmod == 'modTsdTTRealmDurscAllJtu') {
