@@ -38,6 +38,7 @@ library(performance) # for R2
 
 # Turnover and covariates assembled by assemble_turnover_covariates.Rmd
 trendsall <- fread('output/turnover_w_covariates.csv.gz')
+trendsall[, tsign := as.factor(tsign)]
 
 # Models ############################
 
@@ -53,7 +54,7 @@ iallJtu <-
 
 
 
-# thermal_bias:T:sdT:REALM:duration #########################
+# thermal_bias:tsign:T:sdT:REALM:duration #########################
 if (fitmod == 'modTsdTTRealmAllJtu_thermal_biasdata') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -72,6 +73,24 @@ if (fitmod == 'modTsdTTRealmAllJtu_thermal_biasdata') {
 }
 
 
+if (fitmod == 'modTsdTTRealmtsignAllJtu_thermal_biasdata') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave_metab.sc:duration +
+            REALM:tsign:tempave_metab.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM)
+    MATCHMOD <- TRUE
+}
+
+
 if (fitmod == 'modTsdTTRealmthermal_biasAllJtu_thermal_biasdata') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -82,10 +101,10 @@ if (fitmod == 'modTsdTTRealmthermal_biasAllJtu_thermal_biasdata') {
             REALM:tempchange_abs.sc:duration +
             REALM:tempave_metab.sc:duration +
             REALM:tempave_metab.sc:tempchange_abs.sc:duration +
-            REALM:thermal_bias.sc:duration +
-            REALM:thermal_bias.sc:tempchange_abs.sc:duration +
-            REALM:thermal_bias.sc:tempave_metab.sc:duration +
-            REALM:thermal_bias.sc:tempave_metab.sc:tempchange_abs.sc:duration +
+            REALM:thermal_bias.sc:tsign:duration +
+            REALM:thermal_bias.sc:tsign:tempchange_abs.sc:duration +
+            REALM:thermal_bias.sc:tsign:tempave_metab.sc:duration +
+            REALM:thermal_bias.sc:tsign:tempave_metab.sc:tempchange_abs.sc:duration +
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),

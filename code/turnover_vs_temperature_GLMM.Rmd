@@ -25,7 +25,25 @@ options(width=500) # turn off most text wrapping
 signedsqrt = function(x) sign(x)*sqrt(abs(x))
 signedsq = function(x) sign(x) * x^2
 signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, inverse = signedsq)
+scaleme <- function(x, nm){
+  if(!(nm %in% scalingall[,var])) stop('nm not found in scalingall')
+  if(scalingall[var==nm, log]){
+    x.sc <- (log(x + scalingall[var==nm, plus]) - scalingall[var == nm, center]) / scalingall[var == nm, scale]  
+  } else {
+    x.sc <- (x  + scalingall[var==nm, plus] - scalingall[var == nm, center]) / scalingall[var == nm, scale]
+  }
+  return(x.sc)
+}
 
+unscaleme <- function(x.sc, nm){
+  if(!(nm %in% scalingall[,var])) stop('nm not found in scalingall')
+  if(scalingall[var==nm, log]){
+    x <- exp(x.sc * scalingall[var == nm, scale] + scalingall[var == nm, center]) - scalingall[var==nm, plus]
+  } else {
+    x <- x.sc * scalingall[var == nm, scale] + scalingall[var == nm, center] - scalingall[var==nm, plus]
+  }
+  return(x)
+}
 
 # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
@@ -208,43 +226,34 @@ aics
 summary(modTsdTTRealmAllJtu)
 ```
 
+### Make or load the interaction prediction
+```{r, echo = FALSE}
+if(file.exists(here('temp', 'slopes_TsdTTRealm.rds'))){
+  slopes <- readRDS(here('temp', 'slopes_TsdTTRealm.rds'))
+  print('Loaded predictions from file')
+} else {
+  print('Making predictions from scratch')
+  
+  # set up prediction frame
+  newdat <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration = seq(1, 10, length.out=10), REALM = c('Marine', 'Terrestrial', 'Freshwater')))
+  newdat$STUDY_ID <- 1
+  newdat$rarefyID <- 1
+  newdat[, tempave_metab := unscaleme(tempave_metab.sc, 'tempave_metab.sc')]
+  newdat[, tempchange_abs := unscaleme(tempchange_abs.sc, 'tempchange_abs.sc')]
+  
+  # predict
+  newdat$Jtu.sc <- predict(modTsdTTRealmAllJtu, newdata = newdat, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+  
+  # calculate slopes
+  slopes <- newdat[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange_abs, REALM)]
+  
+  saveRDS(slopes, file = here('temp', 'slopes_TsdTTRealm.rds'))
+}
+```
+
 ### Plot the interaction
 ```{r, echo = FALSE}
-# set up prediction frame
-newdatM <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration = seq(1, 10, length.out=10)))
-newdatM$REALM <- 'Marine'
-newdatM$STUDY_ID <- 1
-newdatM$rarefyID <- 1
-newdatM[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
-newdatM[, tempchange_abs := tempchange_abs.sc * scalingall[var == 'tempchange_abs.sc', scale] + scalingall[var == 'tempchange_abs.sc', center]]
-
-newdatT <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration = seq(1, 10, length.out=10)))
-newdatT$REALM <- 'Terrestrial'
-newdatT$STUDY_ID <- 1
-newdatT$rarefyID <- 1
-newdatT[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
-newdatT[, tempchange_abs := tempchange_abs.sc * scalingall[var == 'tempchange_abs.sc', scale] + scalingall[var == 'tempchange_abs.sc', center]]
-
-newdatF <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration = seq(1, 10, length.out=10)))
-newdatF$REALM <- 'Freshwater'
-newdatF$STUDY_ID <- 1
-newdatF$rarefyID <- 1
-newdatF[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
-newdatF[, tempchange_abs := tempchange_abs.sc * scalingall[var == 'tempchange_abs.sc', scale] + scalingall[var == 'tempchange_abs.sc', center]]
-
-
-# predict
-newdatM$Jtu.sc <- predict(modTsdTTRealmAllJtu, newdata = newdatM, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdatT$Jtu.sc <- predict(modTsdTTRealmAllJtu, newdata = newdatT, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdatF$Jtu.sc <- predict(modTsdTTRealmAllJtu, newdata = newdatF, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-
-# calculate slopes
-slopesM <- newdatM[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange_abs)]
-slopesT <- newdatT[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange_abs)]
-slopesF <- newdatF[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange_abs)]
-
-# plot
-p1 <- ggplot(slopesM, aes(tempchange_abs, tempave_metab, z = slope)) +
+p1 <- ggplot(slopes[REALM=='Marine'], aes(tempchange_abs, tempave_metab, z = slope)) +
     geom_raster(aes(fill = slope)) +
     labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Marine') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
@@ -258,7 +267,7 @@ p1 <- ggplot(slopesM, aes(tempchange_abs, tempave_metab, z = slope)) +
           legend.text=element_text(size= 12),
           legend.title=element_text(size= 18),
           legend.title.align = 1)
-p2 <- ggplot(slopesT, aes(tempchange_abs, tempave_metab, z = slope)) +
+p2 <- ggplot(slopes[REALM=='Terrestrial'], aes(tempchange_abs, tempave_metab, z = slope)) +
     geom_raster(aes(fill = slope)) +
     labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Terrestrial') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
@@ -272,7 +281,7 @@ p2 <- ggplot(slopesT, aes(tempchange_abs, tempave_metab, z = slope)) +
           legend.text=element_text(size= 12),
           legend.title=element_text(size= 18),
           legend.title.align = 1)
-p3 <- ggplot(slopesF, aes(tempchange_abs, tempave_metab, z = slope)) +
+p3 <- ggplot(slopes[REALM=='Freshwater'], aes(tempchange_abs, tempave_metab, z = slope)) +
     geom_raster(aes(fill = slope)) +
     labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Freshwater') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
@@ -291,64 +300,104 @@ p1
 p2
 p3
 ```
+#### Are endotherms common at high tempave_metab on land?
+Endotherms are very common at higher temperatures on land.
+```{r, echo = FALSE}
+trendsall[!is.na(tempave_metab.sc), .(mean = round(mean(unscaleme(endothermfrac.sc, 'endothermfrac.sc')),2), sd = signif(sd(unscaleme(endothermfrac.sc, 'endothermfrac.sc')),2)), by = .(REALM, tempG20 = unscaleme(tempave_metab.sc, 'tempave_metab.sc') > 20 )]
+```
 
+#### Which species are common in each quadrant?
+```{r}
+trendsall[!is.na(tempave_metab.sc), table(taxa_mod2, REALM, unscaleme(tempave_metab.sc, 'tempave_metab.sc') > 20)]
+```
+## Latitude or temperature?
+Compare temperature vs. latitude in an interaction with abs(tempchange)
+```{r}
+modTsdTTRealmAllJtu <- readRDS('temp/modTsdTTRealmAllJtu.rds') # uses temperature
+modLatsdTTRealmAllJtu <- readRDS('temp/modLatsdTTRealmAllJtu.rds') # uses latitude
+```
+
+### AIC
+Clearly chooses temperature.
+```{r}
+aics <- AIC(modTsdTTRealmAllJtu, modLatsdTTRealmAllJtu)
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics
+```
 
 
 ## Environment*Temperature*temperature slope*REALM*duration (Antao+)
-```{r}
+```{r, echo = FALSE}
 modTsdTTRealmtsignAllJtu <- readRDS('temp/modTsdTTRealmtsignAllJtu.rds') # has npp
 modTsdTTRealmnppAllJtu <- readRDS('temp/modTsdTTRealmnppAllJtu.rds') # has npp
 modTsdTTRealmseasAllJtu <- readRDS('temp/modTsdTTRealmseasAllJtu.rds') # has npp
 modTsdTTRealmmicroclimAllJtu <- readRDS('temp/modTsdTTRealmmicroclimAllJtu.rds') # has microclimates
+modTsdTTRealmhumanAllJtu <- readRDS('temp/modTsdTTRealmhumanAllJtu.rds') # has human impact
+modTsdTTRealmmassAllJtu <- readRDS('temp/modTsdTTRealmmassAllJtu.rds') # has mass
 ```
 
-### Tsign summary
+### Tsign effects
 ```{r}
-summary(modTsdTTRealmtsignAllJtu)
+fixef(modTsdTTRealmtsignAllJtu)
 
 ```
-### Plot temperature sign effect
+#### Make or load temperature sign effect
 ```{r, echo = FALSE}
-# set up prediction frame
-newdatM <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange = seq(-0.8, 0.8, length.out = 100), duration = seq(1, 10, length.out=10)))
-newdatM$REALM <- 'Marine'
-newdatM$STUDY_ID <- 1
-newdatM$rarefyID <- 1
-newdatM[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
-newdatM[, tempchange_abs.sc := (abs(tempchange) - scalingall[var == 'tempchange_abs.sc', center])/scalingall[var == 'tempchange_abs.sc', scale]]
-newdatM[, tsign := sign(tempchange)]
-newdatM[tsign == 0, tsign := 1]
+if(file.exists(here('temp', 'slopesM_tsign.rds')) & file.exists(here('temp', 'slopesT_tsign.rds')) & file.exists(here('temp', 'slopesF_tsign.rds'))){
+  slopesM <- readRDS(here('temp', 'slopesM_tsign.rds'))
+  slopesT <- readRDS(here('temp', 'slopesT_tsign.rds'))
+  slopesF <- readRDS(here('temp', 'slopesF_tsign.rds'))
+  print('Loaded tsign predictions from file')
+} else {
+  print('Making tsign predictions from scratch')
+  
+  # set up prediction frame
+  newdatM <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange = seq(-0.8, 0.8, length.out = 100), duration = seq(1, 10, length.out=10)))
+  newdatM$REALM <- 'Marine'
+  newdatM$STUDY_ID <- 1
+  newdatM$rarefyID <- 1
+  newdatM[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
+  newdatM[, tempchange_abs.sc := (abs(tempchange) - scalingall[var == 'tempchange_abs.sc', center])/scalingall[var == 'tempchange_abs.sc', scale]]
+  newdatM[, tsign := sign(tempchange)]
+  newdatM[tsign == 0, tsign := 1]
+  
+  newdatT <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange = seq(-0.8, 0.8, length.out = 100), duration = seq(1, 10, length.out=10)))
+  newdatT$REALM <- 'Terrestrial'
+  newdatT$STUDY_ID <- 1
+  newdatT$rarefyID <- 1
+  newdatT[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
+  newdatT[, tempchange_abs.sc := (abs(tempchange) - scalingall[var == 'tempchange_abs.sc', center])/scalingall[var == 'tempchange_abs.sc', scale]]
+  newdatT[, tsign := sign(tempchange)]
+  newdatT[tsign == 0, tsign := 1]
+  
+  newdatF <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange = seq(-0.8, 0.8, length.out = 100), duration = seq(1, 10, length.out=10)))
+  newdatF$REALM <- 'Freshwater'
+  newdatF$STUDY_ID <- 1
+  newdatF$rarefyID <- 1
+  newdatF[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
+  newdatF[, tempchange_abs.sc := (abs(tempchange) - scalingall[var == 'tempchange_abs.sc', center])/scalingall[var == 'tempchange_abs.sc', scale]]
+  newdatF[, tsign := sign(tempchange)]
+  newdatF[tsign == 0, tsign := 1]
+  
+  
+  # predict
+  newdatM$Jtu.sc <- predict(modTsdTTRealmtsignAllJtu, newdata = newdatM, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+  newdatT$Jtu.sc <- predict(modTsdTTRealmtsignAllJtu, newdata = newdatT, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+  newdatF$Jtu.sc <- predict(modTsdTTRealmtsignAllJtu, newdata = newdatF, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+  
+  # calculate slopes
+  slopesM <- newdatM[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange, tsign)]
+  slopesT <- newdatT[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange, tsign)]
+  slopesF <- newdatF[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange, tsign)]
+  
+  saveRDS(slopesM, file = here('temp', 'slopesM_tsign.rds'))
+  saveRDS(slopesT, file = here('temp', 'slopesT_tsign.rds'))
+  saveRDS(slopesF, file = here('temp', 'slopesF_tsign.rds'))
+}
+```
 
-newdatT <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange = seq(-0.8, 0.8, length.out = 100), duration = seq(1, 10, length.out=10)))
-newdatT$REALM <- 'Terrestrial'
-newdatT$STUDY_ID <- 1
-newdatT$rarefyID <- 1
-newdatT[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
-newdatT[, tempchange_abs.sc := (abs(tempchange) - scalingall[var == 'tempchange_abs.sc', center])/scalingall[var == 'tempchange_abs.sc', scale]]
-newdatT[, tsign := sign(tempchange)]
-newdatT[tsign == 0, tsign := 1]
-
-newdatF <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange = seq(-0.8, 0.8, length.out = 100), duration = seq(1, 10, length.out=10)))
-newdatF$REALM <- 'Freshwater'
-newdatF$STUDY_ID <- 1
-newdatF$rarefyID <- 1
-newdatF[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
-newdatF[, tempchange_abs.sc := (abs(tempchange) - scalingall[var == 'tempchange_abs.sc', center])/scalingall[var == 'tempchange_abs.sc', scale]]
-newdatF[, tsign := sign(tempchange)]
-newdatF[tsign == 0, tsign := 1]
-
-
-# predict
-newdatM$Jtu.sc <- predict(modTsdTTRealmtsignAllJtu, newdata = newdatM, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdatT$Jtu.sc <- predict(modTsdTTRealmtsignAllJtu, newdata = newdatT, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdatF$Jtu.sc <- predict(modTsdTTRealmtsignAllJtu, newdata = newdatF, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-
-# calculate slopes
-slopesM <- newdatM[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange, tsign)]
-slopesT <- newdatT[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange, tsign)]
-slopesF <- newdatF[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange, tsign)]
-
-
+#### Plot tsign effects
+```{r, echo = FALSE}
 # plot
 p1 <- ggplot(slopesM, aes(tempchange, tempave_metab, z = slope)) +
   geom_raster(aes(fill = slope)) +
@@ -464,20 +513,28 @@ p3
 
 ### AIC
 ```{r}
-aics <- AIC(modTsdTTRealmAllJtu, modTsdTTRealmtsignAllJtu, modTsdTTRealmnppAllJtu, modTsdTTRealmseasAllJtu, modTsdTTRealmmicroclimAllJtu)
+aics <- AIC(modTsdTTRealmAllJtu, modTsdTTRealmtsignAllJtu, modTsdTTRealmnppAllJtu, 
+            modTsdTTRealmseasAllJtu, modTsdTTRealmmicroclimAllJtu,
+            modTsdTTRealmhumanAllJtu, modTsdTTRealmmassAllJtu)
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics
 ```
 
 ### Microclimate summary
 ```{r}
-summary(modTsdTTRealmmicroclimAllJtu)
+fixef(modTsdTTRealmmicroclimAllJtu)
 
 ```
 
-### Plot the interaction for high and low microclimates
+#### Make or load the microclimate interaction
 ```{r, echo = FALSE}
-# set up prediction frame
+if(file.exists(here('temp', 'slopes_microclim1.rds'))){
+  slopes1 <- readRDS(here('temp', 'slopes_microclim1.rds'))
+  print('Loaded microclim predictions from file')
+} else {
+  print('Making microclim predictions from scratch')
+  
+  # set up prediction frame
 newdat1 <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs = seq(0, 0.8, length.out = 100), duration = 1:10, REALM = c('Marine', 'Terrestrial'), microclim.sc = c(-2, 2)))
 newdat1$STUDY_ID <- 1
 newdat1$rarefyID <- 1
@@ -490,6 +547,14 @@ newdat1$Jtu.sc.microclim <- predict(modTsdTTRealmmicroclimAllJtu, newdata = newd
 # calculate slopes
 slopes1 <- newdat1[, .(slope_microclim = coef(lm(Jtu.sc.microclim ~ duration))[2]), by = .(tempave_metab, tempchange_abs, microclim.sc, REALM)]
 
+  saveRDS(slopes1, file = here('temp', 'slopes_microclim1.rds'))
+
+}
+```
+
+
+#### Plot the microclimate interaction by realm
+```{r, echo = FALSE}
 # plot
 p1 <- ggplot(slopes1, aes(tempchange_abs, tempave_metab, z = slope_microclim)) +
   geom_raster(aes(fill = slope_microclim)) +
@@ -510,51 +575,183 @@ p1 <- ggplot(slopes1, aes(tempchange_abs, tempave_metab, z = slope_microclim)) +
 p1
 ```
 
-### Plot the microclimate effect
-Only for marine since no significant effect in other realms.
+### Make the microclimate, seasonality, npp, human, and mass interaction effects
+
 ```{r, echo = FALSE}
-# set up prediction frame
+
+if(file.exists(here('temp', 'slopes_interactions2.rds'))){
+  slopes2 <- readRDS(here('temp', 'slopes_interactions2.rds'))
+  print('Loaded interaction predictions from file')
+} else {
+  print('Making interaction predictions from scratch')
+  
+  # set up prediction frame
 newdat2 <- data.table(expand.grid(tempave_metab = c(5, 30), tempchange_abs = seq(0, 0.6, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial'), microclim.sc = c(-2, 2)))
-newdat2[, ':='(npp.sc = microclim.sc, seas.sc = microclim.sc)]
+newdat2[, ':='(npp.sc = microclim.sc, seas.sc = microclim.sc, 
+               human_bowler.sc = microclim.sc, mass.sc = microclim.sc)]
 newdat2$STUDY_ID <- 1
 newdat2$rarefyID <- 1
-newdat2[, tempave_metab.sc := (tempave_metab - scalingall[var == 'tempave_metab.sc', center]) / scalingall[var == 'tempave_metab.sc', scale]]
-newdat2[, tempchange_abs.sc := (tempchange_abs - scalingall[var == 'tempchange_abs.sc', center]) / scalingall[var == 'tempchange_abs.sc', scale]]
-newdat2[, microclim := microclim.sc * scalingall[var == 'microclim.sc', scale] + scalingall[var == 'microclim.sc', center]]
-newdat2[, npp := npp.sc * scalingall[var == 'npp.sc', scale] + scalingall[var == 'npp.sc', center]]
-newdat2[, seas := seas.sc * scalingall[var == 'seas.sc', scale] + scalingall[var == 'seas.sc', center]]
+newdat2[, tempave_metab.sc := scaleme(tempave_metab, 'tempave_metab.sc')]
+newdat2[, tempchange_abs.sc := scaleme(tempchange_abs, 'tempchange_abs.sc')]
+newdat2[, microclim := unscaleme(microclim.sc, 'microclim.sc')]
+newdat2[, npp := unscaleme(npp.sc, 'npp.sc')]
+newdat2[, seas := unscaleme(seas.sc, 'seas.sc')]
+newdat2[, human_bowler := unscaleme(human_bowler.sc, 'human_bowler.sc')]
+newdat2[, mass := unscaleme(mass.sc, 'mass.sc')]
 
 # predict
 newdat2$Jtu.sc.microclim <- predict(modTsdTTRealmmicroclimAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
 newdat2$Jtu.sc.npp <- predict(modTsdTTRealmnppAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
 newdat2$Jtu.sc.seas <- predict(modTsdTTRealmseasAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdat2$Jtu.sc.human <- predict(modTsdTTRealmhumanAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdat2$Jtu.sc.mass <- predict(modTsdTTRealmmassAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
 
 # calculate slopes
 slopes2 <- newdat2[, .(slope_microclim = coef(lm(Jtu.sc.microclim ~ duration))[2],
                        slope_npp = coef(lm(Jtu.sc.npp ~ duration))[2],
-                       slope_seas = coef(lm(Jtu.sc.seas ~ duration))[2]), 
-                   by = .(tempave_metab, tempchange_abs, microclim, npp, seas, REALM)]
+                       slope_seas = coef(lm(Jtu.sc.seas ~ duration))[2],
+                       slope_human = coef(lm(Jtu.sc.human ~ duration))[2],
+                       slope_mass = coef(lm(Jtu.sc.mass ~ duration))[2]), 
+                   by = .(tempave_metab, tempchange_abs, microclim, npp, seas, human_bowler, mass, REALM)]
 
 # normal slopes to 0
-zeros <- slopes2[tempchange_abs == 0, .(tempave_metab, microclim, npp, seas, REALM, 
-                                        slope_microclim0 = slope_microclim, slope_npp0 = slope_npp, slope_seas0 = slope_seas)]
+zeros <- slopes2[, .(slope_microclim0 = min(slope_microclim), 
+                     slope_npp0 = min(slope_npp), 
+                     slope_seas0 = min(slope_seas),
+                     slope_human0 = min(slope_human), 
+                     slope_mass0 = min(slope_mass)),
+                 by = .(tempave_metab, microclim, npp, seas, REALM)]
 slopes2 <- merge(slopes2, zeros, all.x = TRUE)
-slopes2[, ':='(slope_microclim.n = slope_microclim - slope_microclim0, slope_npp.n = slope_npp - slope_npp0, slope_seas.n = slope_seas - slope_seas0)]
+slopes2[, ':='(slope_microclim.n = slope_microclim - slope_microclim0, 
+               slope_npp.n = slope_npp - slope_npp0, 
+               slope_seas.n = slope_seas - slope_seas0,
+               slope_human.n = slope_human - slope_human0,
+               slope_mass.n = slope_mass - slope_mass0)]
 
+  saveRDS(slopes2, file = here('temp', 'slopes_interactions2.rds'))
+
+}
+
+```
+
+#### Plot the interactions (raw)
+```{r, echo = FALSE}
 # plot
-p1 <- ggplot(slopes2, aes(tempchange_abs, slope_microclim.n, color = microclim, group = microclim)) +
+p1 <- ggplot(slopes2, aes(tempchange_abs, slope_microclim, color = microclim, group = microclim)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
+p2 <- ggplot(slopes2, aes(tempchange_abs, slope_npp, color = npp, group = npp)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
+p3 <- ggplot(slopes2, aes(tempchange_abs, slope_seas, color = seas, group = seas)) +
     geom_line() +
     facet_grid(cols = vars(REALM), rows = vars(tempave_metab))
-p2 <- ggplot(slopes2, aes(tempchange_abs, slope_npp.n, color = npp, group = npp)) +
+p4 <- ggplot(slopes2, aes(tempchange_abs, slope_human, 
+                          color = human_bowler, group = human_bowler)) +
     geom_line() +
-    facet_grid(cols = vars(REALM), rows = vars(tempave_metab))
-p3 <- ggplot(slopes2, aes(tempchange_abs, slope_seas.n, color = seas, group = seas)) +
+    facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
+p5 <- ggplot(slopes2, aes(tempchange_abs, slope_mass, color = mass, group = mass)) +
     geom_line() +
-    facet_grid(cols = vars(REALM), rows = vars(tempave_metab))
+    facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
+
 p1
 p2
 p3
+p4
+p5
+```
+
+#### Plot the interactions (normalized)
+```{r, echo = FALSE}
+# plot
+p1 <- ggplot(slopes2, aes(tempchange_abs, slope_microclim.n, color = microclim, group = microclim)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
+p2 <- ggplot(slopes2, aes(tempchange_abs, slope_npp.n, color = npp, group = npp)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
+p3 <- ggplot(slopes2, aes(tempchange_abs, slope_seas.n, color = seas, group = seas)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM), rows = vars(tempave_metab))
+p4 <- ggplot(slopes2, aes(tempchange_abs, slope_human.n, 
+                          color = human_bowler, group = human_bowler)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
+p5 <- ggplot(slopes2, aes(tempchange_abs, slope_mass.n, color = mass, group = mass)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
+
+p1
+p2
+p3
+p4
+p5
+```
+
+
+## Thermal bias test
+Does the thermal bias of a community explain the proponsity to change when temperature changes?
+```{r, echo = FALSE}
+modTsdTTRealmAllJtu_thermal_biasdata <- readRDS('temp/modTsdTTRealmAllJtu_thermal_biasdata_test.rds') # has npp
+modTsdTTRealmthermal_biasAllJtu_thermal_biasdata <- readRDS('temp/modTsdTTRealmthermal_biasAllJtu_thermal_biasdata_test.rds') # has npp
+
+aics <- AIC(modTsdTTRealmAllJtu_thermal_biasdata, modTsdTTRealmthermal_biasAllJtu_thermal_biasdata)
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics
+```
+
+#### Thermal bias coefs
+```{r, echo = FALSE}
+fixef(modTsdTTRealmthermal_biasAllJtu_thermal_biasdata)
+```
+#### Make or load thermal bias effect
+```{r, echo = FALSE}
+if(file.exists(here('temp', 'slopes_thermal_bias.rds'))){
+  slopesTB <- readRDS(here('temp', 'slopes_thermal_bias.rds'))
+  print('Loaded thermal bias predictions from file')
+} else {
+  print('Making thermal bias predictions from scratch')
+  
+  # set up prediction frame
+  newdatTB <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs = seq(0, 0.8, length.out = 100), duration = seq(1, 10, length.out=10), REALM = c('Marine', 'Terrestrial', 'Freshwater'), thermal_bias.sc = c(-2, 2)))
+
+  newdatTB$STUDY_ID <- 1
+  newdatTB$rarefyID <- 1
+  newdatTB[, tempave_metab := unscaleme(tempave_metab.sc, 'tempave_metab.sc')]
+  newdatTB[, tempchange_abs.sc := scaleme(tempchange_abs, 'tempchange_abs.sc')]
+  newdatTB[, thermal_bias := unscaleme(thermal_bias.sc, 'thermal_bias.sc')]
+ 
+  # predict
+  newdatTB$Jtu.sc <- predict(modTsdTTRealmthermal_biasAllJtu_thermal_biasdata, newdata = newdatTB, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+  
+  # calculate slopes
+  slopesTB <- newdatTB[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange_abs, thermal_bias, REALM)]
+  
+  saveRDS(slopesTB, file = here('temp', 'slopes_thermal_bias.rds'))
+}
 ```
 
 
 
+#### Plot thermal bias effects
+Thermal bias is the Community Temperature Index minus the environmental temperature. Positive means that the species are adapted to warmer conditions than they are experiencing (and presumably are more tolerant of warming but less tolerant of cooling). 
+```{r, echo = FALSE, fig.height=8}
+# plot
+p1 <- ggplot(slopesTB, aes(tempchange_abs, tempave_metab, z = slope)) +
+  geom_raster(aes(fill = slope)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Negative (left) or positive (right) thermal bias') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+  facet_grid(row = vars(REALM), col = vars(thermal_bias)) +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+
+p1
+```
