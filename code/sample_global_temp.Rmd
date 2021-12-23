@@ -8,8 +8,15 @@ require(data.table)
 require(ncdf4)
 require(ggplot2)
 require(gridExtra)
+library(scales) # for defining signed sqrt axis transformation
+library(here)
 
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
+
+signedsqrt = function(x) sign(x)*sqrt(abs(x))
+signedsq = function(x) sign(x) * x^2
+signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, inverse = signedsq) # for plotting
+
 ```
 
 # Read in BioTime and temperature data
@@ -80,7 +87,8 @@ ggplot(ersstyr[YEAR == 1901,], aes(lon_ersst, lat_ersst, color = ersst)) + geom_
 
 # Pick 50000 locations globally and assign sets of years
 ```{r random locations}
-n = 50000 # number of locations to pick
+nloc = 50000 # number of locations to pick
+set.seed(1) # to ensure repeatability
 
 # function to calculate lat/lon grid area. size is in degrees (length of one side)
 llgridarea <- function(lat, lon, size){
@@ -96,18 +104,20 @@ llgridarea <- function(lat, lon, size){
 }
 
 # Pick locations weighted by area and assign a rarefyID/year1/year2 randomly
-crutslls <- crutsyr[!duplicated(cbind(lat_cruts, lon_cruts)), .(lat_cruts, lon_cruts)] # slow
+crutslls <- crutsyr[!duplicated(cbind(lat_cruts, lon_cruts)), .(lat_cruts, lon_cruts)] # get lat/lons.slow
 crutslls[, area := llgridarea(lat_cruts, lon_cruts, 0.5)] # calculate grid area
-crutslls <- crutslls[sample(1:.N, n, replace = TRUE, prob = area), ] # pick locations weighted by area
+crutslls <- crutslls[sample(1:.N, nloc, replace = TRUE, prob = area), ] # pick locations weighted by area
 crutslls <- cbind(crutslls, trends[REALM %in% c('Terrestrial', 'Freshwater'), 
-                                  ][sample(1:.N, n, replace = TRUE), .(rarefyID)])  # randomly assign rarefyIDs
+                                  ][sample(1:.N, nloc, replace = TRUE), .(rarefyID)])  # randomly assign rarefyIDs, which we will next use for deciding in which years to sample
+crutslls[, id := 1:.N] # add an id to keep each location sample separate
 crutsallyrs <- merge(crutslls, trends[, .(rarefyID, year1, year2)], by = 'rarefyID', allow.cartesian = TRUE) # merge in all the years for each rarefyID
 
 ersstllsall <- ersstyr[!duplicated(cbind(lat_ersst, lon_ersst)), .(lat_ersst, lon_ersst)]
 ersstllsall[, area := llgridarea(lat_ersst, lon_ersst, 2)]
-ersstlls <- ersstllsall[sample(1:.N, n, replace = TRUE, prob = area), ]
+ersstlls <- ersstllsall[sample(1:.N, nloc, replace = TRUE, prob = area), ]
 ersstlls <- cbind(ersstlls, trends[REALM == 'Marine', 
-                                  ][sample(1:.N, n, replace = TRUE), .(rarefyID)])  # randomly assign rarefyIDs
+                                  ][sample(1:.N, nloc, replace = TRUE), .(rarefyID)])  # randomly assign rarefyIDs
+ersstlls[, id := 1:.N]
 ersstallyrs <- merge(ersstlls, trends[, .(rarefyID, year1, year2)], by = 'rarefyID', allow.cartesian = TRUE) # merge in all the years for each rarefyID
 
 # Fill out with temperature
@@ -119,6 +129,7 @@ ersstallyrs <- merge(ersstallyrs, ersstyr[, .(lat_ersst, lon_ersst, year2 = YEAR
 ```
 
 ## Temperature change
+Calculate for each pair of years
 ```{r calc temp diff}
 # CRU TS
 crutsallyrs[, dcruts := cruts2 - cruts1]
@@ -129,6 +140,7 @@ ersstallyrs[, dersst := ersst2 - ersst1]
 ```
 
 ## Check zeros
+2% of locations are always frozen. Those are the only locations that have no temperature change through time.
 ```{r check zeros}
 ersstallyrs[(ersst1 < -1.79 & ersst2 < -1.79), .N]/nrow(ersstallyrs) # fraction of values that are always frozen
 ersstallyrs[dersst == 0, summary(ersst1)] # temperatures of locations that have no change in temperature
@@ -138,34 +150,39 @@ ersstallyrs[dersst == 0, summary(ersst1)] # temperatures of locations that have 
 
 ```
 
-## Merge and trim to 50k in each realm
+## Merge and calc Thiel-Sen slope of temperature vs. time
+Also remove the NA values. Leaves us with about 50k locations each on land and at sea.
 ```{r merge}
-tempchange <- rbind(crutsallyrs[sample(1:.N, size = n), 
-                                .(lat = lat_cruts, lon = lon_cruts, REALM = 'Terrestrial', tempchange = dcruts, year1, year2)],
-                    ersstallyrs[sample(1:.N, size = n), 
-                                .(lat = lat_ersst, lon = lon_ersst, REALM = 'Marine', tempchange = dersst, year1, year2)])
+tempchange <- rbind(crutsallyrs[, .(REALM = 'Terrestrial', tempchange = median(dcruts/(year2 - year1))), 
+                                by = id],
+                    ersstallyrs[, .(REALM = 'Marine', tempchange = median(dersst/(year2 - year1))), 
+                                by = id])
 
 tempchange[is.na(tempchange), .N] # some NA values
 tempchange <- tempchange[!is.na(tempchange), ] # remove them
+tempchange[, .N, by = REALM]
 ```
 
-# Summaries
+# Summaries of the rate of temperature change
+In degrees C per year
 ```{r summary}
 # degC/year
-tempchange[, .(mean = mean(tempchange/(year2 - year1)), se = sd(tempchange/(year2 - year1))/sqrt(.N)), by = REALM]
-trends[!is.na(tempchange), .(mean = mean(tempchange/(year2 - year1)), se = sd(tempchange/(year2 - year1))/sqrt(.N)), by = REALM2]
+tempchange[, .(mean = mean(tempchange), se = sd(tempchange)/sqrt(.N)), by = REALM]
+trends[!is.na(tempchange), .(mean = mean(tempchange), se = sd(tempchange)/sqrt(.N)), by = REALM2]
 ```
 
 # Plot
 ```{r plot, fig.width=8, fig.height=3}
 p1 <- ggplot(tempchange, aes(x = tempchange, fill = REALM)) +
     geom_density(alpha = 0.25) +
-    scale_x_continuous(limits = c(-5.5, 5.5)) +
+    scale_y_sqrt() +
+    scale_x_continuous(limits = c(-3, 3), trans = signedsqrttrans) +
     ggtitle('Random locations')
 
 p2 <- ggplot(trends[!is.na(tempchange), ], aes(x = tempchange, fill = REALM2)) +
     geom_density(alpha = 0.25) +
-    scale_x_continuous(limits = c(-5.5, 5.5)) +
+    scale_y_sqrt() +
+    scale_x_continuous(limits = c(-3, 3), trans = signedsqrttrans) +
     ggtitle('BioTime')
 
 grid.arrange(p1, p2, nrow = 1)
@@ -173,6 +190,8 @@ grid.arrange(p1, p2, nrow = 1)
 
 # Write out 
 ```{r write}
-write.csv(tempchange, file = gzfile('output/temperature_trends_sampled.csv.gz'), row.names = FALSE)
+write.csv(tempchange, file = gzfile(here('output', 'temperature_trends_sampled.csv.gz')), row.names = FALSE)
 
 ```
+
+
