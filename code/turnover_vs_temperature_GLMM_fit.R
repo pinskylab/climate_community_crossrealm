@@ -488,6 +488,27 @@ if (fitmod == 'modTsdTTRealmDurscAllJtu') {
 }
 
 
+# rawT:sdT:REALM:duration #########################
+# use tempave instead of tempave_metab
+if (fitmod == 'modrawTsdTTRealmAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange_abs.sc:duration +
+            REALM:tempave.sc:duration +
+            REALM:tempave.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+
 # tsign:T:sdT:REALM:duration #########################
 if (fitmod == 'modTsdTTRealmtsignAllJtu') {
     if (MATCHMOD)
