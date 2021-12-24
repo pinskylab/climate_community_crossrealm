@@ -6,6 +6,7 @@
 library(data.table) # for handling large datasets
 library(ggplot2) # for some plotting
 library(nlme) # for ME models
+library(glmmTMB) # for beta regression
 library(maps) # for map
 library(gridExtra) # to combine ggplots together
 library(grid) # to combine ggplots together
@@ -26,108 +27,55 @@ signedsq = function(x) sign(x) * x^2
 signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, inverse = signedsq)
 
 
-##############################
-## Figure 1: duration problem
-##############################
-# load raw BioTime
-load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians, which has all pairwise dissimilarities
-bt <- data.table(rarefied_beta_medians); rm(rarefied_beta_medians)
-bt[, year1 := as.numeric(year1)] # not sure why it gets read in as character
-bt[, year2 := as.numeric(year2)]
-bt[, dY := year2 - year1]
-bt[, Horn := 1-Hornsim] # convert similarity to dissimilarity
-bt[, Hornsim := NULL]
-
-# load biotime trends
-trends <- fread('output/slope_w_covariates.csv.gz')
-
-# load simulations
-cors <- fread(here('output', 'simulated_ts.csv.gz'))
-prop <- cors[, .(prop = sum(p < 0.05)/length(p), n = length(p)), by = .(range,n)]
-prop[, se := sqrt((prop * (1-prop))/n)]
-     
-# make plots of dissimilarity vs. duration with different durations plotted
-png(file = 'figures/fig1.png', width = 6, height = 6, units = 'in', res = 300)
-par(mfrow=c(2,2), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(1.9, 0.5, 0), tcl = -0.2, cex.axis = 0.8)
-
-# part a
-bt[rarefyID == '339_1085477', plot(dY, Jtu, xlab = 'Temporal difference (years)', ylab = 'Jaccard turnover', col = '#00000044', bty = 'l', ylim = c(0,1))]
-bt[rarefyID == '339_1085477', abline(lm(Jtu~dY), col = '#a6cee3', lwd = 3)]
-mod5 <- bt[rarefyID == '339_1085477' & dY <=5, lm(Jtu~dY)] # calc trendline
-preds <- data.table(dY = 1:20)
-preds$Jtu5 <- predict(mod5, preds)
-preds[dY <=10, lines(dY, Jtu5, col = '#b2df8a', lwd = 3)]
-
-# part a inset
-oldpar <- par()
-par(fig = c(0.05,0.3, 0.8, 1), new = T, mgp = c(0.7, 0.12, 0), cex.lab = 0.7, cex.axis = 0.5, tcl = -0.1)
-plot(-1, -1, xlim=c(0,20), ylim=c(0,1), xlab = 'Temporal difference', ylab = 'Tturnover', bty = 'l')
-abline(h = 1, lty= 2)
-segments(0,0,5,1, col = '#b2df8a', lwd = 3)
-segments(5,0,5,1, lty = 2)
-segments(0,0,20,1, col = '#a6cee3', lwd = 3)
-segments(20,0,20,1, lty = 2)
-
-par(oldpar) # go back to original figure settings
-par(mfg = c(1,2)) # start with top-right
-
-# part b
-prop[n==1000, plot(range, prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1))]
-prop[n==1000, error.bar(range, prop, lower = se, upper = se, length = 0.02)]
-prop[n==10000, points(range, prop, col = 'grey')]
-prop[n==10000, error.bar(range, prop, lower = se, upper = se, length = 0.02, col = 'grey')]
-abline(h = 0.05, lty = 2, col = 'red')
-
-# part c
-modgam <- trends[measure == 'Jtu' & duration_group == 'All', gam(disstrend~s(duration))]
-predsgam <- data.table(duration = 1:120)
-predsgam[, c('disstrend', 'se') := predict(modgam, newdata = predsgam, se.fit = TRUE)]
-
-trends[measure == 'Jtu' & duration_group == 'All', plot(duration, disstrend, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')]
-predsgam[, lines(duration, disstrend, col = 'red')]
-abline(h = 0, lty = 2)
-
-# part d
-plot(-1, -1, xlim = c(0,120), ylim = c(-0.04, 0.04), xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')
-predsgam[, polygon(c(duration, rev(duration)), c(disstrend+se, rev(disstrend - se)), col = '#00000044', border = NA)]
-predsgam[, lines(duration, disstrend, col = 'red')]
-abline(h = 0, lty = 2)
-
-dev.off()
+# from https://stackoverflow.com/questions/52297978/decrease-overal-legend-size-elements-and-text
+addSmallLegend <- function(myPlot, pointSize = 0.5, textSize = 3, spaceLegend = 0.1) {
+    newplot <- myPlot +
+        guides(shape = guide_legend(override.aes = list(size = pointSize)),
+               color = guide_legend(override.aes = list(size = pointSize))) +
+        theme(legend.title = element_text(size = textSize), 
+              legend.text  = element_text(size = textSize),
+              legend.key.size = unit(spaceLegend, "lines"))
+    return(newplot)
+}
 
 ####################
-## Figure 2: map
+## Figure 1: map
 ####################
 # load BioTime data
-trends <- fread('output/turnover_w_covariates.csv.gz')
+bt <- fread('output/turnover_w_covariates.csv.gz')
+trends <- readRDS('temp/trendstemp.rds') # the glmmTMB model fit for all trends
 
 # load sampled temperature trends
 temptrends <- fread('output/temperature_trends_sampled.csv.gz')
 
-# trim BT to >= 3 yrs
-trends <- trends[nyrBT >= 3, ]
-
-# make trends lists
+# make temperature trends data.table
 temptrends$type <- 'Global'
-temptrends <- temptrends[, .(trend, type, REALM)]
-trends$type <- 'BioTime'
-temptrends <- rbind(temptrends, trends[!is.na(temptrend), .(trend = temptrend, type, REALM)])
+temptrends <- temptrends[, .(tempchange, type, REALM)]
+bt$type <- 'BioTime'
+temptrends <- rbind(temptrends, bt[!is.na(tempchange), .(tempchange, type, REALM)])
 temptrends[REALM %in% c('Terrestrial', 'Freshwater'), REALM := 'Terrestrial & Freshwater']
 
-# make plot
+# make table of temporal trends by rarefyID
+# use the slopes that use all data points and all pairs
+trends <- trends[duration_group == 'All' & rarefyID %in% bt$rarefyID,]
+trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend')
+
+# make plot pieces
+# a) map
 world <- map_data('world')
 p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
     geom_polygon(fill = 'lightgray', color = 'white') +
-    geom_point(data = trends, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.5, alpha = 0.4)  +
+    geom_point(data = bt, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.5, alpha = 0.4)  +
     scale_color_brewer(palette="Set1", name = 'Realm') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
-          axis.text=element_text(size=12),
-          axis.title=element_text(size=16)) +
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8)) +
     labs(x = 'Longitude (°)', y = 'Latitude (°)', tag = 'A)')
 
-p2 <- ggplot(temptrends[REALM == 'Terrestrial & Freshwater'], aes(x = trend, fill = type)) +
+# b) temperature trends on land and freshwater
+p2 <- ggplot(temptrends[REALM == 'Terrestrial & Freshwater'], aes(x = tempchange, fill = type)) +
     geom_density(alpha = 0.25) +
     scale_y_sqrt() +
     scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans) +
@@ -136,10 +84,12 @@ p2 <- ggplot(temptrends[REALM == 'Terrestrial & Freshwater'], aes(x = trend, fil
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           legend.position = 'none',
-          axis.text=element_text(size=10),
-          axis.title=element_text(size=12))
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))
 
-p3 <- ggplot(temptrends[REALM == 'Marine'], aes(x = trend, fill = type)) +
+# c) temperature trends at sea
+p3 <- ggplot(temptrends[REALM == 'Marine'], aes(x = tempchange, fill = type)) +
     geom_density(alpha = 0.25) +
     scale_y_sqrt() +
     scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans) +
@@ -148,44 +98,62 @@ p3 <- ggplot(temptrends[REALM == 'Marine'], aes(x = trend, fill = type)) +
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           legend.position = c(0.8, 0.95),
-          axis.text=element_text(size=10),
-          axis.title=element_text(size=12))
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))
+p3 <- addSmallLegend(p3, pointSize = 0.7, spaceLegend = 0.15, textSize = 7)
 
-p4 <- ggplot(trends, aes(x = Jbetatrendrem0)) +
+# d) example of Jtu trend calculation
+p4 <- ggplot(bt[rarefyID=='339_1085477', .(dY = year2 - year1, Jtu.sc)], aes(dY, Jtu.sc)) +
+    geom_point(alpha = 0.3) +
+    geom_smooth(method = 'glm', method.args = list(family = beta_family(link='logit'))) + # a beta regression
+    labs(tag = 'D)', x = 'Year', y = 'Jaccard turnover') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))
+
+# e) distribution of Jtu trends
+p5 <- ggplot(trendsw, aes(x = Jtu)) +
     geom_density() +
     scale_y_sqrt() +
     scale_x_continuous(trans = signedsqrttrans) +
-    labs(tag = 'D)', x = 'Slope', title = 'Jaccard') +
+    labs(tag = 'E)', x = 'Slope', title = 'Jaccard') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           axis.text=element_text(size=8),
-          axis.title=element_text(size=12))
-
-p5 <- ggplot(trends, aes(x = Jbetatrendrem0, y = Jtutrendrem0)) +
-    geom_point(size = 0.1, alpha = 0.2) +
-    geom_abline(intercept = 0, slope = 1, color = 'grey') +
-    labs(tag = 'E)', x = 'Slope', y = 'Slope', title = 'Jaccard turnover vs. total') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=12),
+          axis.title=element_text(size=8),
           plot.title=element_text(size=8))
 
-p6 <- ggplot(trends[!is.na(Horntrendrem0),], aes(x = Jbetatrendrem0, y = Horntrendrem0)) +
+# Jtu vs. Jbeta trends
+p6 <- ggplot(trendsw, aes(x = Jbeta, y = Jtu)) +
     geom_point(size = 0.1, alpha = 0.2) +
     geom_abline(intercept = 0, slope = 1, color = 'grey') +
-    labs(tag = 'F)', x = 'Slope', y = 'Slope', title = 'H-M vs. Jaccard total') +
+    labs(tag = 'F)', x = 'Slope', y = 'Slope', title = 'Jaccard turnover vs. total') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           axis.text=element_text(size=8),
-          axis.title=element_text(size=12),
+          axis.title=element_text(size=8),
           plot.title=element_text(size=8))
 
-fig1 <- arrangeGrob(p1, p2, p3, p4, p5, p6, ncol = 6, 
-                   layout_matrix = rbind(c(1,1,1,1,1,1), c(2,2,2,3,3,3), c(4,4,5,5,6,6)),
+# Horn vs. Jtu trends
+p7 <- ggplot(trendsw[!is.na(Horn),], aes(x = Jtu, y = Horn)) +
+    geom_point(size = 0.1, alpha = 0.2) +
+    geom_abline(intercept = 0, slope = 1, color = 'grey') +
+    labs(tag = 'G)', x = 'Slope', y = 'Slope', title = 'H-M vs. Jaccard total') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))
+
+fig1 <- arrangeGrob(p1, p2, p3, p4, p5, p6, p7, ncol = 6, 
+                   layout_matrix = rbind(c(1,1,1,1,1,1), c(2,2,3,3,4,4), c(5,5,6,6,7,7)),
                    heights=c(unit(0.5, "npc"), unit(0.25, "npc"), unit(0.25, "npc")))
 
 ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in')
@@ -325,3 +293,74 @@ for(j in 1:length(intstoplot)){
 fig2 <- arrangeGrob(grobs = intplots, ncol = 2)
 
 ggsave('figures/fig3.png', fig2, width = 7, height = 6, units = 'in')
+
+
+
+##############################
+## Figure S1: duration problem
+##############################
+# load raw BioTime
+load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians, which has all pairwise dissimilarities
+bt <- data.table(rarefied_beta_medians); rm(rarefied_beta_medians)
+bt[, year1 := as.numeric(year1)] # not sure why it gets read in as character
+bt[, year2 := as.numeric(year2)]
+bt[, dY := year2 - year1]
+bt[, Horn := 1-Hornsim] # convert similarity to dissimilarity
+bt[, Hornsim := NULL]
+
+# load biotime trends
+trends <- fread('output/slope_w_covariates.csv.gz')
+
+# load simulations
+cors <- fread(here('output', 'simulated_ts.csv.gz'))
+prop <- cors[, .(prop = sum(p < 0.05)/length(p), n = length(p)), by = .(range,n)]
+prop[, se := sqrt((prop * (1-prop))/n)]
+
+# make plots of dissimilarity vs. duration with different durations plotted
+png(file = 'figures/fig1.png', width = 6, height = 6, units = 'in', res = 300)
+par(mfrow=c(2,2), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(1.9, 0.5, 0), tcl = -0.2, cex.axis = 0.8)
+
+# part a
+bt[rarefyID == '339_1085477', plot(dY, Jtu, xlab = 'Temporal difference (years)', ylab = 'Jaccard turnover', col = '#00000044', bty = 'l', ylim = c(0,1))]
+bt[rarefyID == '339_1085477', abline(lm(Jtu~dY), col = '#a6cee3', lwd = 3)]
+mod5 <- bt[rarefyID == '339_1085477' & dY <=5, lm(Jtu~dY)] # calc trendline
+preds <- data.table(dY = 1:20)
+preds$Jtu5 <- predict(mod5, preds)
+preds[dY <=10, lines(dY, Jtu5, col = '#b2df8a', lwd = 3)]
+
+# part a inset
+oldpar <- par()
+par(fig = c(0.05,0.3, 0.8, 1), new = T, mgp = c(0.7, 0.12, 0), cex.lab = 0.7, cex.axis = 0.5, tcl = -0.1)
+plot(-1, -1, xlim=c(0,20), ylim=c(0,1), xlab = 'Temporal difference', ylab = 'Tturnover', bty = 'l')
+abline(h = 1, lty= 2)
+segments(0,0,5,1, col = '#b2df8a', lwd = 3)
+segments(5,0,5,1, lty = 2)
+segments(0,0,20,1, col = '#a6cee3', lwd = 3)
+segments(20,0,20,1, lty = 2)
+
+par(oldpar) # go back to original figure settings
+par(mfg = c(1,2)) # start with top-right
+
+# part b
+prop[n==1000, plot(range, prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1))]
+prop[n==1000, error.bar(range, prop, lower = se, upper = se, length = 0.02)]
+prop[n==10000, points(range, prop, col = 'grey')]
+prop[n==10000, error.bar(range, prop, lower = se, upper = se, length = 0.02, col = 'grey')]
+abline(h = 0.05, lty = 2, col = 'red')
+
+# part c
+modgam <- trends[measure == 'Jtu' & duration_group == 'All', gam(disstrend~s(duration))]
+predsgam <- data.table(duration = 1:120)
+predsgam[, c('disstrend', 'se') := predict(modgam, newdata = predsgam, se.fit = TRUE)]
+
+trends[measure == 'Jtu' & duration_group == 'All', plot(duration, disstrend, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')]
+predsgam[, lines(duration, disstrend, col = 'red')]
+abline(h = 0, lty = 2)
+
+# part d
+plot(-1, -1, xlim = c(0,120), ylim = c(-0.04, 0.04), xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')
+predsgam[, polygon(c(duration, rev(duration)), c(disstrend+se, rev(disstrend - se)), col = '#00000044', border = NA)]
+predsgam[, lines(duration, disstrend, col = 'red')]
+abline(h = 0, lty = 2)
+
+dev.off()
