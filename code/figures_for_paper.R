@@ -55,17 +55,19 @@ bt$type <- 'BioTime'
 temptrends <- rbind(temptrends, bt[!is.na(tempchange), .(tempchange, type, REALM)])
 temptrends[REALM %in% c('Terrestrial', 'Freshwater'), REALM := 'Terrestrial & Freshwater']
 
-# make table of temporal trends by rarefyID
+# make table of temporal trends by STUDY_ID
 # use the slopes that use all data points and all pairs
 trends <- trends[duration_group == 'All' & rarefyID %in% bt$rarefyID,]
-trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend')
+trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend') # wide format for plotting
+trendsw[, STUDY_ID := vapply(strsplit(rarefyID,"_"), `[`, 1, FUN.VALUE=character(1))] # extract STUDY_ID from rarefyID
+trends_by_study <- trendsw[, .(Horn = mean(Horn, na.rm=TRUE), Jbeta = mean(Jbeta), Jtu = mean(Jtu)), by = STUDY_ID]
 
 # make plot pieces
 # a) map
 world <- map_data('world')
 p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
     geom_polygon(fill = 'lightgray', color = 'white') +
-    geom_point(data = bt, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.5, alpha = 0.4)  +
+    geom_point(data = bt, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.3, alpha = 0.4, shape = 16)  +
     scale_color_brewer(palette="Set1", name = 'Realm') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -76,7 +78,7 @@ p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
 
 # b) temperature trends on land and freshwater
 p2 <- ggplot(temptrends[REALM == 'Terrestrial & Freshwater'], aes(x = tempchange, fill = type)) +
-    geom_density(alpha = 0.25) +
+    geom_density(alpha = 0.4, color = NA) +
     scale_y_sqrt() +
     scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans) +
     labs(tag = 'B)', x = 'Temperature trend (°C/yr)', title = 'Terrestrial & Freshwater') +
@@ -84,13 +86,13 @@ p2 <- ggplot(temptrends[REALM == 'Terrestrial & Freshwater'], aes(x = tempchange
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           legend.position = 'none',
-          axis.text=element_text(size=8),
+          axis.text=element_text(size=7),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))
 
 # c) temperature trends at sea
 p3 <- ggplot(temptrends[REALM == 'Marine'], aes(x = tempchange, fill = type)) +
-    geom_density(alpha = 0.25) +
+    geom_density(alpha = 0.4, color = NA) +
     scale_y_sqrt() +
     scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans) +
     labs(tag = 'C)', x = 'Temperature trend (°C/yr)', title = 'Marine') +
@@ -105,7 +107,7 @@ p3 <- addSmallLegend(p3, pointSize = 0.7, spaceLegend = 0.15, textSize = 7)
 
 # d) example of Jtu trend calculation
 p4 <- ggplot(bt[rarefyID=='339_1085477', .(dY = year2 - year1, Jtu.sc)], aes(dY, Jtu.sc)) +
-    geom_point(alpha = 0.3) +
+    geom_point(alpha = 0.2, size = 0.5, shape = 16) +
     geom_smooth(method = 'glm', method.args = list(family = beta_family(link='logit'))) + # a beta regression
     labs(tag = 'D)', x = 'Year', y = 'Jaccard turnover') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -116,15 +118,16 @@ p4 <- ggplot(bt[rarefyID=='339_1085477', .(dY = year2 - year1, Jtu.sc)], aes(dY,
           plot.title=element_text(size=8))
 
 # e) distribution of Jtu trends
-p5 <- ggplot(trendsw, aes(x = Jtu)) +
-    geom_density() +
+p5 <- ggplot(trends_by_study, aes(x = Jtu)) +
+    geom_density(color = NA, alpha = 0.5, fill = 'grey') +
     scale_y_sqrt() +
+    geom_vline(xintercept = 0, linetype = 'dashed', size = 0.5) +
     scale_x_continuous(trans = signedsqrttrans) +
     labs(tag = 'E)', x = 'Slope', title = 'Jaccard') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
-          axis.text=element_text(size=8),
+          axis.text=element_text(size=7),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))
 
