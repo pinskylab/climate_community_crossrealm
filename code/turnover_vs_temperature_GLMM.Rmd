@@ -251,7 +251,7 @@ if(file.exists(here('temp', 'slopes_TsdTTRealm.rds'))){
 ```{r, echo = FALSE}
 p1 <- ggplot(slopes[REALM=='Marine'], aes(tempchange_abs, tempave_metab, z = slope)) +
     geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Marine') +
+    labs(x = 'Temperature change (degC per year)', y = 'Metabolic temperature (degC)', title = 'Marine') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
     theme(axis.text = element_text(size = 12), 
           axis.title = element_text(size = 14),
@@ -265,7 +265,7 @@ p1 <- ggplot(slopes[REALM=='Marine'], aes(tempchange_abs, tempave_metab, z = slo
           legend.title.align = 1)
 p2 <- ggplot(slopes[REALM=='Terrestrial'], aes(tempchange_abs, tempave_metab, z = slope)) +
     geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Terrestrial') +
+    labs(x = 'Temperature change (degC per year)', y = 'Metabolic temperature (degC)', title = 'Terrestrial') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
     theme(axis.text = element_text(size = 12), 
           axis.title = element_text(size = 14),
@@ -279,7 +279,7 @@ p2 <- ggplot(slopes[REALM=='Terrestrial'], aes(tempchange_abs, tempave_metab, z 
           legend.title.align = 1)
 p3 <- ggplot(slopes[REALM=='Freshwater'], aes(tempchange_abs, tempave_metab, z = slope)) +
     geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Freshwater') +
+    labs(x = 'Temperature change (degC per year)', y = 'Metabolic temperature (degC)', title = 'Freshwater') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
     theme(axis.text = element_text(size = 12), 
           axis.title = element_text(size = 14),
@@ -447,8 +447,8 @@ if(file.exists(here('temp', 'slopes_tsign.rds'))){
   newdattsign[, tsign := sign(tempchange)]
   newdattsign[tsign == 0, tsign := 1]
   # predict
-  newdattsign$Jtu.sc <- predict(modTsdTTRealmtsignAllJtu, newdata = newdattsign, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-
+  newdattsign$Jtu.sc <- predict(modTsdTTRealmtsignAllJtu, newdata = newdattsign, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response') # takes >1 hr if se.fit=TRUE
+  
   # calculate slopes
   slopestsign <- newdattsign[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange, tsign, REALM)]
   

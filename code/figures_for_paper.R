@@ -165,81 +165,60 @@ ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in')
 #########################
 ## Figure 2: main effects
 #########################
-trendsum <- fread('output/trendsummary.csv')
-newdat <- read.csv('output/maineffects.csv')
-newdat <- newdat[newdat$var == 'temptrend_abs',]
-aicsfromfull <- read.csv('output/aics_from_full.csv')
-aicsfromfull$row <- nrow(aicsfromfull):1
+# slopes for all timeseries
+bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
+trends <- readRDS('temp/trendstemp.rds') # the lm fit of dissimilarity vs. time, from calc_turnover.Rmd
+trends <- trends[duration_group == 'All' & measure == 'Jtu' & rarefyID %in% bt$rarefyID,] # use the slopes that use all data points and all pairs
+trends[, STUDY_ID := vapply(strsplit(rarefyID,"_"), `[`, 1, FUN.VALUE=character(1))] # extract STUDY_ID from rarefyID
+trends_by_study <- trends[, .(disstrend = mean(disstrend, na.rm=TRUE)), by = STUDY_ID] # average by studyID
+trends_by_study <- merge(trends_by_study, bt[!duplicated(STUDY_ID), .(STUDY_ID = as.character(STUDY_ID), REALM)]) # add REALM
+
+# predicted slopes from the model
+slopespred <- readRDS(here('temp', 'slopes_TsdTTRealm.rds'))
+slopespred <- slopespred[round(tempave_metab,1) %in% c(10.1, 30.2),]
+slopespred2 <- slopespred
+slopespred2[, tempchange := -tempchange_abs]
+slopespred <- rbind(slopespred[, .(tempave_metab, REALM, tempchange = tempchange_abs, slope)], slopespred2[, .(tempave_metab, REALM, tempchange, slope)])
+slopespredtsign <- readRDS(here('temp', 'slopes_tsign.rds'))
+slopespredtsign <- slopespredtsign[round(tempave_metab,1) %in% c(10.1, 30.2),]
 
 
-p1 <- ggplot(trendsum[text %in% c('Changing', 'Stable')], aes(text, ave, group = type, color = type)) +
-    geom_point(position = position_dodge(width = 0.25), size = 0.5) +
-    geom_errorbar(aes(ymin=ave-se, ymax=ave+se), width=.1, position = position_dodge(width = 0.25)) +
-    labs(x = '', y = 'Slope', title = 'Raw data', tag = 'A') +
-    geom_abline(intercept = 0, slope = 0, linetype = 'dashed') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          legend.position = 'none',
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=10)) +
-    coord_cartesian(ylim = c(0,0.04))
-
-
-
-cols = gg_color_hue(3)
-colors <- c("Jaccard turnover" = cols[3], "Jaccard total" = cols[2], "Horn-Morisita" = cols[1])
-
-p2 <- ggplot(newdat, aes(x = temptrend_abs)) +
-    geom_line(aes(y = predsJtu, color = 'Jaccard turnover')) +
-    geom_ribbon(aes(ymin = predsJtu - 1.96*SE_Jtu, ymax = predsJtu + 1.96*SE_Jtu), alpha = 0.2, fill = "black") +
-    geom_line(aes(y = predsJbeta, color = 'Jaccard total')) +
-    geom_ribbon(aes(ymin = predsJbeta - 1.96*SE_Jbeta, ymax = predsJbeta + 1.96*SE_Jbeta), alpha = 0.2, fill = "red") +
-    geom_line(aes(y = predsHorn, color = 'Horn-Morisita')) +
-    geom_ribbon(aes(ymin = predsHorn - 1.96*SE_Horn, ymax = predsHorn + 1.96*SE_Horn), alpha = 0.2, fill = "blue") +
-    theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm')) +
-    labs(tag = 'B', x = 'Temperature trend (°C/yr)', y = 'Slope', title = 'Model effect') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          legend.title=element_blank(),
-          legend.position='none',
-          axis.text=element_text(size=10),
-          axis.title=element_text(size=12)) +
-    scale_color_manual(values = colors)
-
-
-aicsfromfulllong <- reshape(aicsfromfull, direction = 'long',
-                            varying = c('dAIC_Jtu', 'dAIC_Jbeta', 'dAIC_Horn'),
-                            v.names = 'dAIC',
-                            idvar = 'mod',
-                            timevar = 'type',
-                            times = c('Jtu', 'Jbeta', 'Horn'))
-
-aicsfromfulllong$row[aicsfromfulllong$type == 'Jtu'] <- aicsfromfulllong$row[aicsfromfulllong$type == 'Jtu'] + 0.1
-aicsfromfulllong$row[aicsfromfulllong$type == 'Horn'] <- aicsfromfulllong$row[aicsfromfulllong$type == 'Horn'] - 0.1
-
-# plot
-p3 <- ggplot(aicsfromfulllong, aes(x = dAIC, y = row, group = type, color = type)) +
+# a) across realms
+p1 <- ggplot(trends_by_study, aes(x=disstrend, group = REALM, fill = REALM)) +
+    geom_density(color = NA, alpha = 0.25) +
+    scale_y_sqrt() +
     scale_x_continuous(trans = signedsqrttrans) +
-    scale_y_continuous(breaks = nrow(aicsfromfull):1, labels = aicsfromfull$mod) +
-    geom_vline(xintercept = 0, linetype = 'dashed', color = 'grey') + 
-    geom_hline(yintercept = nrow(aicsfromfull):1, linetype = 'dashed', color = 'grey', size = 0.2) + 
-    geom_point() +
+    labs(tag = 'A)', x = 'Slope', title = 'Jaccard') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
-          legend.title=element_blank(),
-          axis.text=element_text(size=6),
-          axis.title=element_text(size=12)) +
-    labs(tag = 'C', x = 'Change in AIC', y = '', title = 'Removing terms')
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
+
+# b) plot of change vs. dT
+p2 <- ggplot(slopespred, aes(tempchange, slope, color = factor(round(tempave_metab)), group = tempave_metab)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM))  +
+    labs(tag = 'B)', x = '|dT|') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
 
 
-fig2 <- arrangeGrob(p1, p2, p3, 
-                    ncol = 2, 
-                    layout_matrix = rbind(c(1,2), c(3,3)),
-                    heights=c(unit(0.5, "npc"), unit(0.5, "npc")))
-ggsave('figures/fig2.png', fig2, width = 6, height = 5, units = 'in')
+p2 <- ggplot(slopespredtsign, aes(tempchange, slope, color = factor(round(tempave_metab)), group = interaction(tempave_metab))) +
+    geom_line() +
+    facet_grid(cols = vars(REALM))  +
+    labs(tag = 'B)', x = '|dT|') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
 
 
 #########################
