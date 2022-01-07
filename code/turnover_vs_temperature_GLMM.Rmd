@@ -223,27 +223,33 @@ aics
 ```
 ### Metabolic temperature
 #### Make/load prediction
+Uses output from pred_GLMMmodTsdTTRealmAllJtu.R.
 ```{r, echo = FALSE}
 if(file.exists(here('temp', 'slopes_TsdTTRealm.rds'))){
   slopes <- readRDS(here('temp', 'slopes_TsdTTRealm.rds'))
   print('Loaded predictions from file')
 } else {
-  print('Making predictions from scratch')
+  print('Making predictions from pred_GLMMmodTsdTTRealmAllJtu.R output')
   
-  # set up prediction frame
-  newdat <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration = seq(1, 10, length.out=10), REALM = c('Marine', 'Terrestrial', 'Freshwater')))
-  newdat$STUDY_ID <- 1
-  newdat$rarefyID <- 1
-  newdat[, tempave_metab := unscaleme(tempave_metab.sc, 'tempave_metab.sc')]
-  newdat[, tempchange_abs := unscaleme(tempchange_abs.sc, 'tempchange_abs.sc')]
+  newdat <- readRDS(here('temp', 'preds_TsdTTRealm.rds')) # this also has slope.se
   
-  # predict
-  newdat$Jtu.sc <- predict(modTsdTTRealmAllJtu, newdata = newdat, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+  # calculate slopes and the SE of the slope from the amount the points don't fit a line
+  slopes <- newdat[, .(slope = coef(lm(Jtu.sc ~ duration))[2], slope.lm.se = sqrt(diag(vcov(lm(Jtu.sc ~ duration))))[2]), by = .(tempave_metab, tempchange_abs, REALM)]
+
+  # calculate SE on the slopes from the error in the points (but assumes points fit a line)  
+  source(here('code', 'util.R'))
+  coefs <- newdat[, ellipse.coefs(cbind(duration, Jtu.sc, Jtu.sc.se), alpha = 0.05), by = .(tempave_metab, tempchange_abs, REALM)]
+  xy <- coefs[, get.ellipse(a, b, c, d, e, f), by = .(tempave_metab, tempchange_abs, REALM)] # produces some NaNs
+  cis <- xy[, .(slope.ellipse.se = diff(range(x))/1.96/2), by = .(tempave_metab, tempchange_abs, REALM)] # the SE for the slope, converted from the 95% CI
+  slopes2 <- merge(slopes, cis)
   
-  # calculate slopes
-  slopes <- newdat[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange_abs, REALM)]
+  # sum the SE from the two sources
+  slopes2[, slope.ellipse.se_no0 := slope.ellipse.se]
+  slopes2[is.na(slope.ellipse.se), slope.ellipse.se_no0 := 0] # turn NaNs to zeros
+  slopes2[, slope.total.se := sqrt(slope.lm.se^2 + slope.ellipse.se_no0^2)]
+  slopes2[, slope.ellipse.se_no0 := NULL]
   
-  saveRDS(slopes, file = here('temp', 'slopes_TsdTTRealm.rds'))
+  saveRDS(slopes2, file = here('temp', 'slopes_TsdTTRealm.rds'))
 }
 ```
 
@@ -296,6 +302,53 @@ p1
 p2
 p3
 ```
+
+#### Plot confidence bounds
+Three approaches: 1) use the CI on the linear regression, or 2) use the SE on the points themselves assuming that the points fit a line, or 3) use the sum of the variances
+```{r, fig.height=8}
+# first approach:
+p1 <- ggplot(slopes[round(tempave_metab,1) %in% c(10.1, 30.2),], aes(tempchange_abs, slope, color = factor(round(tempave_metab)), group = tempave_metab)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope-1.96*slope.lm.se, ymax=slope+1.96*slope.lm.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM))  +
+    labs(x = '|dT|') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
+
+
+# SE of the points approach (ellipse)
+p2 <- ggplot(slopes2[round(tempave_metab,1) %in% c(10.1, 30.2),], aes(tempchange_abs, slope, color = factor(round(tempave_metab)), group = tempave_metab)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope-1.96*slope.ellipse.se, ymax=slope+1.96*slope.ellipse.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM))  +
+    labs(x = '|dT|') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
+
+# sum
+p3 <- ggplot(slopes2[round(tempave_metab,1) %in% c(10.1, 30.2),], aes(tempchange_abs, slope, color = factor(round(tempave_metab)), group = tempave_metab)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope-1.96*slope.total.se, ymax=slope+1.96*slope.total.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM))  +
+    labs(x = '|dT|') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
+
+grid.arrange(p1, p2, p3)
+```
+
 #### Are endotherms common at high tempave_metab on land?
 Endotherms are very common at higher temperatures on land.
 ```{r, echo = FALSE}

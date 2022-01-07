@@ -123,10 +123,10 @@ ggplot(slopes, aes(z, slope)) +
 slopes$slope.se # SE is up to  0.0025
 
 
-# 95% CI from SE on the individual points
+# 95% CI of the slope from SE on the individual points
 coefs <- newdat[, ellipse.coefs(cbind(x, fit, fit.se), alpha = 0.05), by = z]
 xy <- coefs[, get.ellipse(a, b, c, d, e, f), by = z]
-xy[, .(ellipseCI = diff(range(x))/1.96), by = z] # the 95% CI for the slope
+xy[, .(ellipseCI = diff(range(x))/1.96/2), by = z] # the SE for the slope, converted from the 95% CI
 
 
 # compare the ellipse CI and the lm CI
