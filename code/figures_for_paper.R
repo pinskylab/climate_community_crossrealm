@@ -183,7 +183,8 @@ slopespred <- readRDS(here('temp', 'slopes_TsdTTRealm.rds'))
 slopespred <- slopespred[round(tempave_metab,1) %in% c(10.1, 30.2),]
 slopespred2 <- slopespred
 slopespred2[, tempchange := -tempchange_abs]
-slopespred <- rbind(slopespred[, .(tempave_metab, REALM, tempchange = tempchange_abs, slope, slope.total.se)], slopespred2[, .(tempave_metab, REALM, tempchange, slope, slope.total.se)])
+slopespred <- rbind(slopespred[, .(tempave_metab, REALM, tempchange = tempchange_abs, slope, slope.se)], 
+                    slopespred2[, .(tempave_metab, REALM, tempchange, slope, slope.se)])
 slopespred[, tempave_metab := factor(as.character(round(tempave_metab)), levels = c('30', '10'))] # re-order factor for nicer plotting
 
 
@@ -206,7 +207,7 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = REALM, fill = REALM)) +
 p1 <- addSmallLegend(p1, pointSize = 1, spaceLegend = 0.15, textSize = 6)
 
 # b) plot of change vs. dT
-p2 <- ggplot(slopespred, aes(tempchange, slope, color = tempave_metab, group = tempave_metab, ymin=slope-1.96*slope.total.se, ymax=slope+1.96*slope.total.se)) +
+p2 <- ggplot(slopespred, aes(tempchange, slope, color = tempave_metab, group = tempave_metab, ymin=slope-slope.se, ymax=slope+slope.se)) +
     geom_line() +
     geom_ribbon(alpha = 0.25, color = NA, aes(fill = tempave_metab)) +
     facet_grid(cols = vars(REALM))  +
@@ -224,7 +225,6 @@ fig2 <- arrangeGrob(p1, p2, ncol = 5,
                     layout_matrix = matrix(c(1,1,2,2,2), nrow=1))
 
 ggsave('figures/fig2.png', fig2, width = 6, height = 3, units = 'in')
-
 
 #########################
 ## Figure 3: interactions

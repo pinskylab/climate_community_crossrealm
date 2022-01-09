@@ -19,6 +19,7 @@ library(scales) # for defining custom scales in ggplot
 library(DHARMa) # for model diagnostics
 library(here) # for relative paths
 library(performance) # for r2 calculations
+library(lavaan)
 
 options(width=500) # turn off most text wrapping
 
@@ -233,23 +234,12 @@ if(file.exists(here('temp', 'slopes_TsdTTRealm.rds'))){
   
   newdat <- readRDS(here('temp', 'preds_TsdTTRealm.rds')) # this also has slope.se
   
-  # calculate slopes and the SE of the slope from the amount the points don't fit a line
-  slopes <- newdat[, .(slope = coef(lm(Jtu.sc ~ duration))[2], slope.lm.se = sqrt(diag(vcov(lm(Jtu.sc ~ duration))))[2]), by = .(tempave_metab, tempchange_abs, REALM)]
+  # calculate slopes and SE of the slope using latent variables (since predictions have SE)
+  mods <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc\nJtu.sc ~~ ', mean(Jtu.sc.se), '*Jtu.sc'), data.frame(Jtu.sc, duration)))), by = .(tempave_metab, tempchange_abs, REALM)] # takes ~30 min
+ slopes <- mods[, parameterEstimates(mod[[1]]), by = .(tempave_metab, tempchange_abs, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', .(tempave_metab, tempchange_abs, REALM, slope = est, slope.se = se)] # extract the coefficients
 
-  # calculate SE on the slopes from the error in the points (but assumes points fit a line)  
-  source(here('code', 'util.R'))
-  coefs <- newdat[, ellipse.coefs(cbind(duration, Jtu.sc, Jtu.sc.se), alpha = 0.05), by = .(tempave_metab, tempchange_abs, REALM)]
-  xy <- coefs[, get.ellipse(a, b, c, d, e, f), by = .(tempave_metab, tempchange_abs, REALM)] # produces some NaNs
-  cis <- xy[, .(slope.ellipse.se = diff(range(x))/1.96/2), by = .(tempave_metab, tempchange_abs, REALM)] # the SE for the slope, converted from the 95% CI
-  slopes2 <- merge(slopes, cis)
-  
-  # sum the SE from the two sources
-  slopes2[, slope.ellipse.se_no0 := slope.ellipse.se]
-  slopes2[is.na(slope.ellipse.se), slope.ellipse.se_no0 := 0] # turn NaNs to zeros
-  slopes2[, slope.total.se := sqrt(slope.lm.se^2 + slope.ellipse.se_no0^2)]
-  slopes2[, slope.ellipse.se_no0 := NULL]
-  
-  saveRDS(slopes2, file = here('temp', 'slopes_TsdTTRealm.rds'))
+
+  saveRDS(slopes, file = here('temp', 'slopes_TsdTTRealm.rds'))
 }
 ```
 
@@ -321,7 +311,7 @@ p1 <- ggplot(slopes[round(tempave_metab,1) %in% c(10.1, 30.2),], aes(tempchange_
 
 
 # SE of the points approach (ellipse)
-p2 <- ggplot(slopes2[round(tempave_metab,1) %in% c(10.1, 30.2),], aes(tempchange_abs, slope, color = factor(round(tempave_metab)), group = tempave_metab)) +
+p2 <- ggplot(slopes[round(tempave_metab,1) %in% c(10.1, 30.2),], aes(tempchange_abs, slope, color = factor(round(tempave_metab)), group = tempave_metab)) +
     geom_line() +
     geom_pointrange(aes(ymin=slope-1.96*slope.ellipse.se, ymax=slope+1.96*slope.ellipse.se), alpha = 0.25) + 
     facet_grid(cols = vars(REALM))  +
@@ -334,7 +324,7 @@ p2 <- ggplot(slopes2[round(tempave_metab,1) %in% c(10.1, 30.2),], aes(tempchange
           plot.title=element_text(size=8))  
 
 # sum
-p3 <- ggplot(slopes2[round(tempave_metab,1) %in% c(10.1, 30.2),], aes(tempchange_abs, slope, color = factor(round(tempave_metab)), group = tempave_metab)) +
+p3 <- ggplot(slopes[round(tempave_metab,1) %in% c(10.1, 30.2),], aes(tempchange_abs, slope, color = factor(round(tempave_metab)), group = tempave_metab)) +
     geom_line() +
     geom_pointrange(aes(ymin=slope-1.96*slope.total.se, ymax=slope+1.96*slope.total.se), alpha = 0.25) + 
     facet_grid(cols = vars(REALM))  +
