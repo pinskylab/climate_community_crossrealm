@@ -229,57 +229,67 @@ ggsave('figures/fig2.png', fig2, width = 6, height = 3, units = 'in')
 #########################
 ## Figure 3: interactions
 #########################
-newdat <- fread('temp/interactions.csv')
+slopes2 <- readRDS(here('temp', 'slopes_interactions2.rds'))
 
-intstoplot <- c('tempave_metab', 'microclim', 'npp', 'human_bowler')
-titles <- c('Metabolic temperature', 'Microclimates', 'NPP', 'Human impacts')
-realms <- c(NA, NA, NA, 'TerrFresh')
-logs <- c(FALSE, FALSE, TRUE, FALSE)
-tags <- c('A', 'B', 'C', 'D')
-# prep the plots
-intplots <- vector('list', length(intstoplot))
-for(j in 1:length(intstoplot)){
-    subs <- newdat$var == intstoplot[j] & newdat$temptrend < 0 # select one side side
-    xvar <- 'temptrend_abs'
-    title <- titles[j]
-    if(intstoplot[j] %in% c('tsign')){
-        subs <- newdat$var == intstoplot[j]
-    } 
-    if(intstoplot[j] %in% c('thermal_bias')){
-        subs <- newdat$var == intstoplot[j]
-        xvar <- 'temptrend'
-    } 
-    if(intstoplot[j] %in% c('human_bowler')){
-        subs <- newdat$var == intstoplot[j] & newdat$temptrend < 0 & newdat$REALM2 == realms[j]
-    } 
-    
-    thisplot <- ggplot(newdat[subs, ], 
-                       aes_string(x = xvar, y = 'preds', 
-                                  group = intstoplot[j], 
-                                  color = intstoplot[j])) +
-        geom_line() +
-        coord_cartesian(ylim = c(-0.05, 0.4)) +
-        theme(plot.margin = unit(c(0.5,0,0.5,0), 'cm')) +
-        labs(title = title, y = 'Slope', x = 'Temperature trend (°C/yr)', tag = tags[j]) +
-        theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-              panel.background = element_blank(), axis.line = element_line(colour = "black"),
-              legend.key=element_blank(),
-              legend.title=element_blank(),
-              axis.text=element_text(size=10),
-              axis.title=element_text(size=12))
-    
-    if(logs[j]){
-        intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'log')
-    }
-    if(!logs[j]){
-        intplots[[j]] <- thisplot + scale_color_distiller(palette = "YlGnBu", trans = 'identity')
-    }
+p1 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_microclim, color = as.factor(signif(microclim,2)), group = microclim)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM)) +
+    labs(tag = 'A)', x = '|Temperage change| (°C/year)', y = 'Slope', color = 'Microclimate') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
 
-}
+p2 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_npp, color = as.factor(signif(npp,2)), group = npp)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM)) +
+    labs(tag = 'B)', x = '|Temperage change| (°C/year)', y = 'Slope', color = 'NPP         ') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
 
-fig2 <- arrangeGrob(grobs = intplots, ncol = 2)
+p3 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_seas, color = as.factor(signif(seas,2)), group = seas)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM)) +
+    labs(tag = 'C)', x = '|Temperage change| (°C/year)', y = 'Slope', color = 'Seasonality ') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
 
-ggsave('figures/fig3.png', fig2, width = 7, height = 6, units = 'in')
+p4 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_human, color = as.factor(signif(human_bowler,2)), group = human_bowler)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM)) +
+    labs(tag = 'D)', x = '|Temperage change| (°C/year)', y = 'Slope', color = 'Human       ') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
+
+p5 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_mass, color = as.factor(signif(mass, 2)), group = mass)) +
+    geom_line() +
+    facet_grid(cols = vars(REALM)) +
+    labs(tag = 'E)', x = '|Temperage change| (°C/year)', y = 'Slope', color = 'Mass        ') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
+
+
+fig3 <- arrangeGrob(p1, p2, p3, p4, p5, ncol = 1)
+
+ggsave('figures/fig3.png', fig3, width = 4, height = 8, units = 'in')
 
 
 
