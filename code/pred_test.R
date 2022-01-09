@@ -8,6 +8,7 @@
 library(glmmTMB)
 library(ggplot2)
 library(data.table)
+library(lavaan) # for the SEM trial
 
 # generate ellipse coefficients for the CI on the linear regression coefs, given a dataset
 # assumes dat has x in col 1, y in col 2, and SE of y in col 3
@@ -62,6 +63,8 @@ xy <- get.ellipse(coefs$a, coefs$b, coefs$c, coefs$d, coefs$e, coefs$f)
 plot(xy, xlab='slope', ylab='intercept') #
 range(xy$x) # the 95% CI for the slope
 
+
+
 ####################################################
 ## An example with some error
 
@@ -84,6 +87,8 @@ polygon(c(dat$x, rev(dat$x)), c(preds$fit+preds$se.fit, rev(preds$fit-preds$se.f
 coefs <- ellipse.coefs(dat, alpha = 0.05)
 xy <- get.ellipse(coefs$a, coefs$b, coefs$c, coefs$d, coefs$e, coefs$f)
 range(xy$x) # the 95% CI for the slope
+
+
 
 
 ######################################
@@ -112,7 +117,7 @@ ggplot(newdat, aes(x, fit, color = z, group = z)) +
     geom_point() +
     geom_pointrange(aes(ymin=fit-fit.se, ymax=fit+fit.se))
 
-# calculate slopes for each level of a
+# calculate slopes for each level of z
 # including SE from the amount that points don't fit a straight line
 slopes <- newdat[, .(slope = coef(lm(fit ~ x))[2], slope.se = sqrt(diag(vcov(lm(fit ~ x))))[2]), by = z]
 
@@ -123,7 +128,7 @@ ggplot(slopes, aes(z, slope)) +
 slopes$slope.se # SE is up to  0.0025
 
 
-# 95% CI of the slope from SE on the individual points
+# 95% CI of the slope from SE on the individual points (assuming they fit perfectly)
 coefs <- newdat[, ellipse.coefs(cbind(x, fit, fit.se), alpha = 0.05), by = z]
 xy <- coefs[, get.ellipse(a, b, c, d, e, f), by = z]
 xy[, .(ellipseCI = diff(range(x))/1.96/2), by = z] # the SE for the slope, converted from the 95% CI
@@ -131,4 +136,19 @@ xy[, .(ellipseCI = diff(range(x))/1.96/2), by = z] # the SE for the slope, conve
 
 # compare the ellipse CI and the lm CI
 # ellipse CI is much higher when the points fit a line well, but about equivalent otherwise
-merge(slopes[, .(z,slope.se)], xy[, .(ellipseCI = diff(range(x))/1.96), by = z])
+slopeSEsum <- merge(slopes[, .(z,slope, slope.se)], xy[, .(ellipseSE = diff(range(x))/1.96), by = z])
+slopeSEsum[, LMELslope.se := sqrt(slope.se^2 + ellipseSE^2)]
+
+
+# now try an SEM (one level of z)
+se <- newdat[z ==2, mean(fit.se)]
+code = paste0('fithat ~ x\nfithat =~ 1*fit\nfit ~~ ', se, '*fit')
+mod <- lavaan(code, newdat[z ==2, ])
+summary(mod) # SE is much higher than ellipse CI or lm CI!
+
+# now try an SEM (one level of z)
+mods <- newdat[, .(mod = list(lavaan(paste0('fithat ~ x\nfithat =~ 1*fi t\nfit ~~ ', mean(fit.se), '*fit'), data.frame(fit, x)))), by = z] # separate for each level of z
+ 
+# compare slope and SEs between LM, ellipse, LM+ellipse, and SEM (latent variable)
+slopeSEsum = merge(slopeSEsum, mods[, parameterEstimates(mod[[1]]), by = z][lhs == 'fithat' & op == '~' & rhs == 'x', .(z, SEMslope = est, SEMslope.se = se)])
+slopeSEsum
