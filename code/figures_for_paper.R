@@ -275,21 +275,10 @@ p4 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_human, co
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))  
 
-p5 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_mass, color = as.factor(signif(mass, 2)), group = mass)) +
-    geom_line() +
-    facet_grid(cols = vars(REALM)) +
-    labs(tag = 'E)', x = '|Temperage change| (°C/year)', y = 'Slope', color = 'Mass        ') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
 
+fig3 <- arrangeGrob(p1, p2, p3, p4, ncol = 1)
 
-fig3 <- arrangeGrob(p1, p2, p3, p4, p5, ncol = 1)
-
-ggsave('figures/fig3.png', fig3, width = 4, height = 8, units = 'in')
+ggsave('figures/fig3.png', fig3, width = 4, height = 6, units = 'in')
 
 
 
