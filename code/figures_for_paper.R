@@ -325,7 +325,7 @@ preds[dY <=10, lines(dY, Jtu5, col = '#b2df8a', lwd = 3)]
 mtext('A)', side = 3, line = -0.5, adj = -0.28)
 
 # part a inset
-oldpar <- par()
+oldpar <- par(no.readonly=TRUE)
 par(fig = c(0.05,0.3, 0.8, 1), new = T, mgp = c(0.7, 0.12, 0), cex.lab = 0.7, cex.axis = 0.5, tcl = -0.1)
 plot(-1, -1, xlim=c(0,20), ylim=c(0,1), xlab = 'Temporal difference', ylab = 'Tturnover', bty = 'l')
 abline(h = 1, lty= 2)
@@ -338,16 +338,19 @@ par(oldpar) # go back to original figure settings
 par(mfg = c(1,2)) # start with top-right
 
 # part b
-prop[variable == 'cor.p', plot(range, prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = '#a6cee3')]
-prop[variable == 'cor.p', error.bar(range, prop, lower = lower, upper = upper, length = 0.02, col = '#a6cee3')]
-prop[variable == 'glmmwgt.p', plot(range, prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = '#1f78b4')]
-prop[variable == 'glmmwgt.p', error.bar(range, prop, lower = lower, upper = upper, length = 0.02, col = '#1f78b4')]
-prop[variable == 'glmmonegauss.p', plot(range, prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = '#b2df8a')]
-prop[variable == 'glmmonegauss.p', error.bar(range, prop, lower = lower, upper = upper, length = 0.02, col = '#b2df8a')]
-prop[variable == 'glmmonebeta.p', plot(range, prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = '#33a02c')]
-prop[variable == 'glmmonebeta.p', error.bar(range, prop, lower = lower, upper = upper, length = 0.02, col = '#33a02c')]
+cols <- c('#a6cee3', '#1f78b4', '#b2df8a', '#33a02c')
+dg = c(-3, -1, 1, 3)
+prop[variable == 'cor.p', plot(range+dg[1], prop, xlab = 'Range of durations', ylab = 'Proportion false positive', xlim=c(0,102), ylim = c(0,1), col = cols[1], type = 'o', bty = 'l')]
+prop[variable == 'cor.p', error.bar(range+dg[1], prop, lower = prop-lower, upper = upper-prop, length = 0.02, col = cols[1])]
+prop[variable == 'glmmwgt.p', points(range+dg[2], prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = cols[2], type = 'o')]
+prop[variable == 'glmmwgt.p', error.bar(range+dg[2], prop, lower = prop-lower, upper = upper-prop, length = 0.02, col = cols[2])]
+prop[variable == 'glmmonegauss.p', points(range+dg[3], prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = cols[3], type = 'o')]
+prop[variable == 'glmmonegauss.p', error.bar(range+dg[3], prop, lower = prop-lower, upper = upper-prop, length = 0.02, col = cols[3])]
+prop[variable == 'glmmonebeta.p', points(range+dg[4], prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = cols[4], type = 'o')]
+prop[variable == 'glmmonebeta.p', error.bar(range+dg[4], prop, lower = prop-lower, upper = upper-prop, length = 0.02, col = cols[4])]
 abline(h = 0.05, lty = 2, col = 'red')
-mtext('B)', side = 3, line = 0, adj = -0.1)
+legend('topleft', legend = c('Pearson correlation', 'Two-stage ME', 'One-stage Gaussian ME', 'One-stage Beta ME'), col = cols, pch = 1, cex=0.5)
+mtext('B)', side = 3, line = -0.5, adj = -0.28)
 
 # part c
 modgam <- trends[measure == 'Jtu' & duration_group == 'All', gam(disstrend~s(duration))]
@@ -357,14 +360,14 @@ predsgam[, c('disstrend', 'se') := predict(modgam, newdata = predsgam, se.fit = 
 trends[measure == 'Jtu' & duration_group == 'All', plot(duration, disstrend, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')]
 predsgam[, lines(duration, disstrend, col = 'red')]
 abline(h = 0, lty = 2)
-mtext('C)', side = 3, line = 0, adj = -0.1)
+mtext('C)', side = 3, line = -0.5, adj = -0.28)
 
 # part d
 plot(-1, -1, xlim = c(0,120), ylim = c(-0.04, 0.04), xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')
 predsgam[, polygon(c(duration, rev(duration)), c(disstrend+se, rev(disstrend - se)), col = '#00000044', border = NA)]
 predsgam[, lines(duration, disstrend, col = 'red')]
 abline(h = 0, lty = 2)
-mtext('D)', side = 3, line = 0, adj = -0.1)
+mtext('D)', side = 3, line = -0.5, adj = -0.28)
 
 dev.off()
 
