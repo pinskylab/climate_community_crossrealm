@@ -38,6 +38,12 @@ addSmallLegend <- function(myPlot, pointSize = 0.5, textSize = 3, spaceLegend = 
     return(newplot)
 }
 
+# binomial ci
+binomci <- function(x, n){
+    out <- as.numeric(binom.test(x, n)$conf.int)
+    return(list(out[1], out[2]))
+}
+
 ####################
 ## Figure 1: map
 ####################
@@ -299,20 +305,24 @@ trends <- fread('output/slope_w_covariates.csv.gz')
 
 # load simulations
 cors <- fread(here('output', 'simulated_ts.csv.gz'))
-prop <- cors[, .(prop = sum(p < 0.05)/length(p), n = length(p)), by = .(range,n)]
-prop[, se := sqrt((prop * (1-prop))/n)]
+corsl <- melt(cors, id.vars = c('n', 'minduration', 'maxduration', 'name', 'range'), measure.vars = c('cor.p', 'cor.cor', 'lm.m', 'glmmwgt.p', 'glmmwgt.beta', 'glmmonegauss.p', 'glmmonegauss.beta', 'glmmonebeta.p', 'glmmonebeta.beta'))
+prop <- corsl[variable %in% c('cor.p', 'glmmwgt.p', 'glmmonegauss.p', 'glmmonebeta.p'), 
+              .(nsims = sum(!is.na(value)), prop = sum(value < 0.05, na.rm=TRUE)/sum(!is.na(value), na.rm=TRUE)), by = c("range", "n", "variable")]
+prop[, c("lower", "upper") := binomci(nsims*prop, nsims), by = .(range, n, variable)]
+
 
 # make plots of dissimilarity vs. duration with different durations plotted
-png(file = 'figures/fig1.png', width = 6, height = 6, units = 'in', res = 300)
+png(file = 'figures/figS1.png', width = 6, height = 6, units = 'in', res = 300)
 par(mfrow=c(2,2), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(1.9, 0.5, 0), tcl = -0.2, cex.axis = 0.8)
 
 # part a
-bt[rarefyID == '339_1085477', plot(dY, Jtu, xlab = 'Temporal difference (years)', ylab = 'Jaccard turnover', col = '#00000044', bty = 'l', ylim = c(0,1))]
+bt[rarefyID == '339_1085477', plot(dY, Jtu, xlab = 'Temporal difference (years)', ylab = 'Jaccard turnover dissimilarity', col = '#00000044', bty = 'l', ylim = c(0,1))]
 bt[rarefyID == '339_1085477', abline(lm(Jtu~dY), col = '#a6cee3', lwd = 3)]
 mod5 <- bt[rarefyID == '339_1085477' & dY <=5, lm(Jtu~dY)] # calc trendline
 preds <- data.table(dY = 1:20)
 preds$Jtu5 <- predict(mod5, preds)
 preds[dY <=10, lines(dY, Jtu5, col = '#b2df8a', lwd = 3)]
+mtext('A)', side = 3, line = -0.5, adj = -0.28)
 
 # part a inset
 oldpar <- par()
@@ -328,11 +338,16 @@ par(oldpar) # go back to original figure settings
 par(mfg = c(1,2)) # start with top-right
 
 # part b
-prop[n==1000, plot(range, prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1))]
-prop[n==1000, error.bar(range, prop, lower = se, upper = se, length = 0.02)]
-prop[n==10000, points(range, prop, col = 'grey')]
-prop[n==10000, error.bar(range, prop, lower = se, upper = se, length = 0.02, col = 'grey')]
+prop[variable == 'cor.p', plot(range, prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = '#a6cee3')]
+prop[variable == 'cor.p', error.bar(range, prop, lower = lower, upper = upper, length = 0.02, col = '#a6cee3')]
+prop[variable == 'glmmwgt.p', plot(range, prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = '#1f78b4')]
+prop[variable == 'glmmwgt.p', error.bar(range, prop, lower = lower, upper = upper, length = 0.02, col = '#1f78b4')]
+prop[variable == 'glmmonegauss.p', plot(range, prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = '#b2df8a')]
+prop[variable == 'glmmonegauss.p', error.bar(range, prop, lower = lower, upper = upper, length = 0.02, col = '#b2df8a')]
+prop[variable == 'glmmonebeta.p', plot(range, prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = '#33a02c')]
+prop[variable == 'glmmonebeta.p', error.bar(range, prop, lower = lower, upper = upper, length = 0.02, col = '#33a02c')]
 abline(h = 0.05, lty = 2, col = 'red')
+mtext('B)', side = 3, line = 0, adj = -0.1)
 
 # part c
 modgam <- trends[measure == 'Jtu' & duration_group == 'All', gam(disstrend~s(duration))]
@@ -342,11 +357,14 @@ predsgam[, c('disstrend', 'se') := predict(modgam, newdata = predsgam, se.fit = 
 trends[measure == 'Jtu' & duration_group == 'All', plot(duration, disstrend, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')]
 predsgam[, lines(duration, disstrend, col = 'red')]
 abline(h = 0, lty = 2)
+mtext('C)', side = 3, line = 0, adj = -0.1)
 
 # part d
 plot(-1, -1, xlim = c(0,120), ylim = c(-0.04, 0.04), xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')
 predsgam[, polygon(c(duration, rev(duration)), c(disstrend+se, rev(disstrend - se)), col = '#00000044', border = NA)]
 predsgam[, lines(duration, disstrend, col = 'red')]
 abline(h = 0, lty = 2)
+mtext('D)', side = 3, line = 0, adj = -0.1)
 
 dev.off()
+
