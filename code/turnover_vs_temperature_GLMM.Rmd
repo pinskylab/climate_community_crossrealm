@@ -19,7 +19,7 @@ library(scales) # for defining custom scales in ggplot
 library(DHARMa) # for model diagnostics
 library(here) # for relative paths
 library(performance) # for r2 calculations
-library(lavaan)
+library(lavaan) # for SEM models of slopes
 
 options(width=500) # turn off most text wrapping
 
@@ -793,54 +793,10 @@ p1
 if(file.exists(here('temp', 'slopes_interactions2.rds'))){
   slopes2 <- readRDS(here('temp', 'slopes_interactions2.rds'))
   print('Loaded interaction predictions from file')
+
 } else {
-  print('Making interaction predictions from scratch')
+  print('Need to run pred_GLMMmodTsdTTRealmCovariate.R')
   
-  # set up prediction frame
-newdat2 <- data.table(expand.grid(tempave_metab = c(5, 30), tempchange_abs = seq(0, 0.6, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial'), microclim.sc = c(-2, 2)))
-newdat2[, ':='(npp.sc = microclim.sc, seas.sc = microclim.sc, 
-               human_bowler.sc = microclim.sc, mass.sc = microclim.sc)]
-newdat2$STUDY_ID <- 1
-newdat2$rarefyID <- 1
-newdat2[, tempave_metab.sc := scaleme(tempave_metab, 'tempave_metab.sc')]
-newdat2[, tempchange_abs.sc := scaleme(tempchange_abs, 'tempchange_abs.sc')]
-newdat2[, microclim := unscaleme(microclim.sc, 'microclim.sc')]
-newdat2[, npp := unscaleme(npp.sc, 'npp.sc')]
-newdat2[, seas := unscaleme(seas.sc, 'seas.sc')]
-newdat2[, human_bowler := unscaleme(human_bowler.sc, 'human_bowler.sc')]
-newdat2[, mass := unscaleme(mass.sc, 'mass.sc')]
-
-# predict
-newdat2$Jtu.sc.microclim <- predict(modTsdTTRealmmicroclimAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdat2$Jtu.sc.npp <- predict(modTsdTTRealmnppAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdat2$Jtu.sc.seas <- predict(modTsdTTRealmseasAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdat2$Jtu.sc.human <- predict(modTsdTTRealmhumanAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdat2$Jtu.sc.mass <- predict(modTsdTTRealmmassAllJtu, newdata = newdat2, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-
-# calculate slopes
-slopes2 <- newdat2[, .(slope_microclim = coef(lm(Jtu.sc.microclim ~ duration))[2],
-                       slope_npp = coef(lm(Jtu.sc.npp ~ duration))[2],
-                       slope_seas = coef(lm(Jtu.sc.seas ~ duration))[2],
-                       slope_human = coef(lm(Jtu.sc.human ~ duration))[2],
-                       slope_mass = coef(lm(Jtu.sc.mass ~ duration))[2]), 
-                   by = .(tempave_metab, tempchange_abs, microclim, npp, seas, human_bowler, mass, REALM)]
-
-# normal slopes to 0
-zeros <- slopes2[, .(slope_microclim0 = min(slope_microclim), 
-                     slope_npp0 = min(slope_npp), 
-                     slope_seas0 = min(slope_seas),
-                     slope_human0 = min(slope_human), 
-                     slope_mass0 = min(slope_mass)),
-                 by = .(tempave_metab, microclim, npp, seas, REALM)]
-slopes2 <- merge(slopes2, zeros, all.x = TRUE)
-slopes2[, ':='(slope_microclim.n = slope_microclim - slope_microclim0, 
-               slope_npp.n = slope_npp - slope_npp0, 
-               slope_seas.n = slope_seas - slope_seas0,
-               slope_human.n = slope_human - slope_human0,
-               slope_mass.n = slope_mass - slope_mass0)]
-
-  saveRDS(slopes2, file = here('temp', 'slopes_interactions2.rds'))
-
 }
 
 ```
@@ -853,24 +809,28 @@ More response to changing temperatures with
 - higher NPP (or less response with low NPP) in the ocean
 - smaller body size in cold marine environments
 
-
+Error bars are 95% CIs
 ```{r, echo = FALSE}
 # plot
 p1 <- ggplot(slopes2, aes(tempchange_abs, slope_microclim, color = microclim, group = microclim)) +
     geom_line() +
+    geom_pointrange(aes(ymin=slope_microclim-1.96*slope_microclim.se, ymax=slope_microclim+1.96*slope_microclim.se), alpha = 0.25) + 
     facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
 p2 <- ggplot(slopes2, aes(tempchange_abs, slope_npp, color = npp, group = npp)) +
     geom_line() +
+    geom_pointrange(aes(ymin=slope_npp-1.96*slope_npp.se, ymax=slope_npp+1.96*slope_npp.se), alpha = 0.25) + 
     facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
 p3 <- ggplot(slopes2, aes(tempchange_abs, slope_seas, color = seas, group = seas)) +
     geom_line() +
+    geom_pointrange(aes(ymin=slope_seas-1.96*slope_seas.se, ymax=slope_seas+1.96*slope_seas.se), alpha = 0.25) + 
     facet_grid(cols = vars(REALM), rows = vars(tempave_metab))
-p4 <- ggplot(slopes2, aes(tempchange_abs, slope_human, 
-                          color = human_bowler, group = human_bowler)) +
+p4 <- ggplot(slopes2, aes(tempchange_abs, slope_human, color = human_bowler, group = human_bowler)) +
     geom_line() +
+    geom_pointrange(aes(ymin=slope_human-1.96*slope_human.se, ymax=slope_human+1.96*slope_human.se), alpha = 0.25) + 
     facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
 p5 <- ggplot(slopes2, aes(tempchange_abs, slope_mass, color = mass, group = mass)) +
     geom_line() +
+    geom_pointrange(aes(ymin=slope_mass-1.96*slope_mass.se, ymax=slope_mass+1.96*slope_mass.se), alpha = 0.25) + 
     facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
 
 p1
@@ -880,32 +840,6 @@ p4
 p5
 ```
 
-#### Plot the interactions (normalized)
-```{r, echo = FALSE}
-# plot
-p1 <- ggplot(slopes2, aes(tempchange_abs, slope_microclim.n, color = microclim, group = microclim)) +
-    geom_line() +
-    facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
-p2 <- ggplot(slopes2, aes(tempchange_abs, slope_npp.n, color = npp, group = npp)) +
-    geom_line() +
-    facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
-p3 <- ggplot(slopes2, aes(tempchange_abs, slope_seas.n, color = seas, group = seas)) +
-    geom_line() +
-    facet_grid(cols = vars(REALM), rows = vars(tempave_metab))
-p4 <- ggplot(slopes2, aes(tempchange_abs, slope_human.n, 
-                          color = human_bowler, group = human_bowler)) +
-    geom_line() +
-    facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
-p5 <- ggplot(slopes2, aes(tempchange_abs, slope_mass.n, color = mass, group = mass)) +
-    geom_line() +
-    facet_grid(cols = vars(REALM), rows = vars(tempave_metab), labeller = label_both)
-
-p1
-p2
-p3
-p4
-p5
-```
 
 
 ## Thermal bias test

@@ -1,5 +1,6 @@
 ## Make predictions data.frame from the baseline model
 ## From turnover_vs_temperature_GLMM.Rmd, but set up to run in the background
+## so that we can also calculate SEs
 
 library(data.table) # for handling large datasets
 library(glmmTMB, lib.loc = "/usr/lib64/R/library") # for ME models

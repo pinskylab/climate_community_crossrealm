@@ -236,8 +236,14 @@ ggsave('figures/fig2.png', fig2, width = 6, height = 3, units = 'in')
 ## Figure 3: interactions
 #########################
 slopes2 <- readRDS(here('temp', 'slopes_interactions2.rds'))
+slopes2[, ':='(microclim = as.factor(signif(microclim,2)),
+               npp = as.factor(signif(npp,2)),
+               seas = as.factor(signif(seas,2)),
+               human_bowler = as.factor(signif(human_bowler,2)))] # set as factors for plotting
 
-p1 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_microclim, color = as.factor(signif(microclim,2)), group = microclim)) +
+p1 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_microclim, color = microclim, fill = microclim, group = microclim,
+                                                 ymin=slope_microclim-slope_microclim.se,  ymax=slope_microclim+slope_microclim.se)) +
+    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
     labs(tag = 'A)', x = '|Temperage change| (°C/year)', y = 'Slope', color = 'Microclimate') +
@@ -248,7 +254,9 @@ p1 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_microclim
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))  
 
-p2 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_npp, color = as.factor(signif(npp,2)), group = npp)) +
+p2 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_npp, color = npp, fill = npp, group = npp,
+                                                 ymin=slope_npp-slope_npp.se,  ymax=slope_npp+slope_npp.se)) +
+    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
     labs(tag = 'B)', x = '|Temperage change| (°C/year)', y = 'Slope', color = 'NPP         ') +
@@ -259,7 +267,9 @@ p2 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_npp, colo
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))  
 
-p3 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_seas, color = as.factor(signif(seas,2)), group = seas)) +
+p3 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_seas, color = seas, fill = seas, group = seas,
+                                                 ymin=slope_seas-slope_seas.se,  ymax=slope_seas+slope_seas.se)) +
+    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
     labs(tag = 'C)', x = '|Temperage change| (°C/year)', y = 'Slope', color = 'Seasonality ') +
@@ -270,7 +280,9 @@ p3 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_seas, col
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))  
 
-p4 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_human, color = as.factor(signif(human_bowler,2)), group = human_bowler)) +
+p4 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_human, color = human_bowler, fill = human_bowler, group = human_bowler,
+                                                 ymin=slope_human-slope_human.se,  ymax=slope_human+slope_human.se)) +
+    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
     labs(tag = 'D)', x = '|Temperage change| (°C/year)', y = 'Slope', color = 'Human       ') +
