@@ -349,6 +349,23 @@ par(oldpar) # go back to original figure settings
 par(mfg = c(1,2)) # start with top-right
 
 # part b
+modgam <- trends[measure == 'Jtu' & duration_group == 'All', gam(disstrend~s(duration))] # gam fit
+predsgam <- data.table(duration = 1:120)
+predsgam[, c('disstrend', 'se') := predict(modgam, newdata = predsgam, se.fit = TRUE)]
+
+trends[measure == 'Jtu' & duration_group == 'All', plot(duration, disstrend, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')]
+predsgam[, lines(duration, disstrend, col = 'red')]
+abline(h = 0, lty = 2)
+mtext('B)', side = 3, line = -0.5, adj = -0.28)
+
+# part c
+plot(-1, -1, xlim = c(0,120), ylim = c(-0.04, 0.04), xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')
+predsgam[, polygon(c(duration, rev(duration)), c(disstrend+se, rev(disstrend - se)), col = '#00000044', border = NA)]
+predsgam[, lines(duration, disstrend, col = 'red')]
+abline(h = 0, lty = 2)
+mtext('C)', side = 3, line = -0.5, adj = -0.28)
+
+# part d
 cols <- c('#a6cee3', '#1f78b4', '#b2df8a', '#33a02c')
 dg = c(-3, -1, 1, 3)
 prop[variable == 'cor.p', plot(range+dg[1], prop, xlab = 'Range of durations', ylab = 'Proportion false positive', xlim=c(0,102), ylim = c(0,1), col = cols[1], type = 'o', bty = 'l')]
@@ -361,23 +378,6 @@ prop[variable == 'glmmonebeta.p', points(range+dg[4], prop, xlab = 'Range of dur
 prop[variable == 'glmmonebeta.p', error.bar(range+dg[4], prop, lower = prop-lower, upper = upper-prop, length = 0.02, col = cols[4])]
 abline(h = 0.05, lty = 2, col = 'red')
 legend('topleft', legend = c('Pearson correlation', 'Two-stage ME', 'One-stage Gaussian ME', 'One-stage Beta ME'), col = cols, pch = 1, cex=0.5)
-mtext('B)', side = 3, line = -0.5, adj = -0.28)
-
-# part c
-modgam <- trends[measure == 'Jtu' & duration_group == 'All', gam(disstrend~s(duration))]
-predsgam <- data.table(duration = 1:120)
-predsgam[, c('disstrend', 'se') := predict(modgam, newdata = predsgam, se.fit = TRUE)]
-
-trends[measure == 'Jtu' & duration_group == 'All', plot(duration, disstrend, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')]
-predsgam[, lines(duration, disstrend, col = 'red')]
-abline(h = 0, lty = 2)
-mtext('C)', side = 3, line = -0.5, adj = -0.28)
-
-# part d
-plot(-1, -1, xlim = c(0,120), ylim = c(-0.04, 0.04), xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')
-predsgam[, polygon(c(duration, rev(duration)), c(disstrend+se, rev(disstrend - se)), col = '#00000044', border = NA)]
-predsgam[, lines(duration, disstrend, col = 'red')]
-abline(h = 0, lty = 2)
 mtext('D)', side = 3, line = -0.5, adj = -0.28)
 
 dev.off()
