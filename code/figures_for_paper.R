@@ -177,8 +177,7 @@ trends <- fread('output/slope_w_covariates.csv.gz') # the lm fit of dissimilarit
 trends <- trends[duration_group == 'All' & measure == 'Jtu' & rarefyID %in% bt$rarefyID,] # use the slopes that use 5 years of data points (to standardize length)
 trends_by_study <- trends[, .(disstrend = mean(disstrend, na.rm=TRUE), temptrend = mean(temptrend, na.rm=TRUE)), by = .(STUDY_ID, REALM)] # average by studyID
 trends_by_study[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # re-order for nicer plotting
-trends_by_study[abs(temptrend)>0.2, text := '|d|t>0.2']
-trends_by_study[abs(temptrend)<0.01, text := '|d|t<0.01']
+
 
 ave_by_realm <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstrend)/sqrt(.N)), by = REALM]
 ave_by_realm[, offset := c(-0.1, 0, 0.1)] # amount to vertically dodge the lines in part a
