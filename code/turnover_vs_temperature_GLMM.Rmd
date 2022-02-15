@@ -1,7 +1,9 @@
 ---
 title: 'Community dissimilarity through time using beta models: Evaluate and plot models'
 output: 
-    github_document: default
+    github_document:
+        toc: true
+        toc_depth: 3
 
 ---
 # Prep
@@ -204,8 +206,21 @@ testGeneric(res_RFslopeRE2levdisprealm10, summary = countNearOne, alternative = 
 
 ```
 
+## Realm x duration
+Compare very basic models w/ and w/out realm as an explanatory factor for differences in turnover (proportion species/yr)
+```{r}
+modAllJtu <- readRDS('temp/modAllJtu.rds')
+modRealmAllJtu <- readRDS('temp/modRealmAllJtu.rds')
+```
 
-## Temperature*temperature slope*REALM*duration
+A model with REALM is worse than a model without (just looking at average slopes, no other covariates)
+```{r}
+aics <- AIC(modAllJtu, modRealmAllJtu)
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics
+```
+
+## Temperature x temperature slope x REALM x duration
 Compare with duration scaled vs. not, with abs(tempchange) vs. tempchange, and with metabolic vs. environmental temperature
 ```{r}
 modTdTTRealmAllJtu <- readRDS('temp/modTdTTRealmAllJtu.rds') # uses duration and tempchange
@@ -294,12 +309,11 @@ p3
 ```
 
 #### Plot confidence bounds
-Three approaches: 1) use the CI on the linear regression, or 2) use the SE on the points themselves assuming that the points fit a line, or 3) use the sum of the variances
+CIs are from a SEM fit to the trends.
 ```{r, fig.height=8}
-# first approach:
-p1 <- ggplot(slopes[round(tempave_metab,1) %in% c(10.1, 30.2),], aes(tempchange_abs, slope, color = factor(round(tempave_metab)), group = tempave_metab)) +
+ggplot(slopes[round(tempave_metab,1) %in% c(10.1, 30.2),], aes(tempchange_abs, slope, color = factor(round(tempave_metab)), group = tempave_metab)) +
     geom_line() +
-    geom_pointrange(aes(ymin=slope-1.96*slope.lm.se, ymax=slope+1.96*slope.lm.se), alpha = 0.25) + 
+    geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
     facet_grid(cols = vars(REALM))  +
     labs(x = '|dT|') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -309,34 +323,6 @@ p1 <- ggplot(slopes[round(tempave_metab,1) %in% c(10.1, 30.2),], aes(tempchange_
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))  
 
-
-# SE of the points approach (ellipse)
-p2 <- ggplot(slopes[round(tempave_metab,1) %in% c(10.1, 30.2),], aes(tempchange_abs, slope, color = factor(round(tempave_metab)), group = tempave_metab)) +
-    geom_line() +
-    geom_pointrange(aes(ymin=slope-1.96*slope.ellipse.se, ymax=slope+1.96*slope.ellipse.se), alpha = 0.25) + 
-    facet_grid(cols = vars(REALM))  +
-    labs(x = '|dT|') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
-
-# sum
-p3 <- ggplot(slopes[round(tempave_metab,1) %in% c(10.1, 30.2),], aes(tempchange_abs, slope, color = factor(round(tempave_metab)), group = tempave_metab)) +
-    geom_line() +
-    geom_pointrange(aes(ymin=slope-1.96*slope.total.se, ymax=slope+1.96*slope.total.se), alpha = 0.25) + 
-    facet_grid(cols = vars(REALM))  +
-    labs(x = '|dT|') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
-
-grid.arrange(p1, p2, p3)
 ```
 
 #### Are endotherms common at high tempave_metab on land?
@@ -458,7 +444,7 @@ aics
 ```
 
 
-## Covariate*Temperature*temperature slope*REALM*duration
+## Covariate x Temperature x temperature slope x REALM x duration
 ```{r, echo = FALSE}
 modTsdTTRealmtsignAllJtu <- readRDS('temp/modTsdTTRealmtsignAllJtu.rds') # has temperature change sign
 modTsdTTRealmnppAllJtu <- readRDS('temp/modTsdTTRealmnppAllJtu.rds') # has npp
@@ -558,6 +544,10 @@ These plots subtract the cooling slopes from the warming slopes.
 Plots need to be improved, I think because pixel spacing isn't even. Getting strange patterns near 0 temperature change.
 ```{r, echo = FALSE}
 #difference in slopes
+slopesM <- slopestsign[REALM=='Marine',]
+slopesT <- slopestsign[REALM=='Terrestrial',]
+slopesF <- slopestsign[REALM=='Freshwater',]
+
 slopesMdiff <- slopesM[tsign== -1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_cooling = slope)]
 slopesMdiff <- merge(slopesMdiff, slopesM[tsign == 1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_warming = slope)]) # round to allow merging
 slopesMdiff[, slope := slope_warming - slope_cooling]
