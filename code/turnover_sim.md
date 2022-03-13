@@ -14,9 +14,10 @@ Turnover simulations to test effect of duration
 ## Basic settings
 nburn = 1000 # length of burnin
 ngen = 100 # number of simulated generations
-nrep = 100 # number of replicates
+nrep = 5 # number of replicates
 nindiv = 100 # number of local individuals
 nsamp = 100 # number of local individuals sampled (if == nindiv, then sample all of them)
+prob = 0.1 # probability of replacing an individual from the regional pool rather than locally
 ```
 
 # Neutral simulation with an even metacommunity
@@ -32,51 +33,57 @@ simburnineven <- vector('list', nrep)
 simeven <- vector('list', nrep)
 names(simeven) <- 1:nrep
 for(i in 1:nrep){
-    simburnineven[[i]] <- untb(start = sample(metaeven, nindiv), prob = 0.1, D = 1, gens = nburn, keep = TRUE, meta = metaeven) # burnin
-    simeven[[i]] <- untb(start = simburnineven[[i]][nburn,], prob = 0.1, D=1, gens = ngen, keep = TRUE, meta = metaeven) # simulation
+    simburnineven[[i]] <- untb(start = as.count(sample(metaeven, nindiv)), prob = prob, D = 1, gens = nburn, keep = TRUE, meta = as.count(metaeven)) # burnin
+    simeven[[i]] <- untb(start = simburnineven[[i]][nburn,], prob = prob, D=1, gens = ngen, keep = TRUE, meta = as.count(metaeven)) # simulation
 }
 
 # plot an example from the first
-plot(species.count(simburnineven[[1]]), type = 'b', main = 'Burnin: num spp through time') # evaluate burnin
+plot(as.count(metaeven), main = 'Regional SAD')
 ```
 
 ![](turnover_sim_files/figure-gfm/sim%20even-1.png)<!-- -->
 
 ``` r
-matplot(species.table(simburnineven[[1]]), type='l', lty=1, main = 'Burnin: spp dynamics')
+plot(species.count(simburnineven[[1]]), type = 'b', main = 'Burnin: num spp through time') # evaluate burnin
 ```
 
 ![](turnover_sim_files/figure-gfm/sim%20even-2.png)<!-- -->
 
 ``` r
-plot(count(simburnineven[[1]][1,]), main = 'Burnin: Initial SAD')
+matplot(species.table(simburnineven[[1]]), type='l', lty=1, main = 'Burnin: spp dynamics')
 ```
 
 ![](turnover_sim_files/figure-gfm/sim%20even-3.png)<!-- -->
 
 ``` r
-plot(count(simburnineven[[1]][nburn,]), main = 'Burnin: Final SAD')
+plot(count(simburnineven[[1]][1,]), main = 'Burnin: Initial local SAD')
 ```
 
 ![](turnover_sim_files/figure-gfm/sim%20even-4.png)<!-- -->
 
 ``` r
-plot(species.count(simeven[[1]]), type = 'b', main = 'Sim: num spp through time')
+plot(count(simburnineven[[1]][nburn,]), main = 'Burnin: Final local SAD')
 ```
 
 ![](turnover_sim_files/figure-gfm/sim%20even-5.png)<!-- -->
 
 ``` r
-matplot(species.table(simeven[[1]]), type='l', lty=1, main = 'Sim: spp dynamics')
+plot(species.count(simeven[[1]]), type = 'b', main = 'Sim: num spp through time')
 ```
 
 ![](turnover_sim_files/figure-gfm/sim%20even-6.png)<!-- -->
 
 ``` r
-plot(count(simeven[[1]][ngen,]), main = 'Sim: Final SAD')
+matplot(species.table(simeven[[1]]), type='l', lty=1, main = 'Sim: spp dynamics')
 ```
 
 ![](turnover_sim_files/figure-gfm/sim%20even-7.png)<!-- -->
+
+``` r
+plot(count(simeven[[1]][ngen,]), main = 'Sim: Final local SAD')
+```
+
+![](turnover_sim_files/figure-gfm/sim%20even-8.png)<!-- -->
 
 Sample from each annual community and calculate slope of Jaccard
 dissimilarity among pairs of years for timeseries of 3:20 years.
@@ -101,9 +108,9 @@ for(i in 1:length(disteven)){
 }
 
 # calculate slopes. slow.
-yrslist <- 3:20
+yrslist <- 3:100
 for(yr in yrslist){
-  print(yr)
+  cat(yr)
   temp <- distlongeven[, calctrendnsampsall(dist, year1, year2, numyrs = yr, nsamps = 3, 
                                             measure = 'Jtu', duration_group = paste0(yr, 'min3')), by = rarefyID]
   if(yr == min(yrslist)) trendseven = temp[!is.na(disstrend), ] # make a new dataset if first iteration through
@@ -112,24 +119,7 @@ for(yr in yrslist){
 }
 ```
 
-    ## [1] 3
-    ## [1] 4
-    ## [1] 5
-    ## [1] 6
-    ## [1] 7
-    ## [1] 8
-    ## [1] 9
-    ## [1] 10
-    ## [1] 11
-    ## [1] 12
-    ## [1] 13
-    ## [1] 14
-    ## [1] 15
-    ## [1] 16
-    ## [1] 17
-    ## [1] 18
-    ## [1] 19
-    ## [1] 20
+    ## 3456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
 
 Plot all pairwise dissimilarities and dissimilarities vs. year 1 for an
 example
@@ -143,10 +133,12 @@ example
 # Neutral simulation with an uneven metacommunity
 
 Use BCI data as the metacommunity.
-![](turnover_sim_files/figure-gfm/sim%20SAD-1.png)<!-- -->![](turnover_sim_files/figure-gfm/sim%20SAD-2.png)<!-- -->![](turnover_sim_files/figure-gfm/sim%20SAD-3.png)<!-- -->![](turnover_sim_files/figure-gfm/sim%20SAD-4.png)<!-- -->![](turnover_sim_files/figure-gfm/sim%20SAD-5.png)<!-- -->![](turnover_sim_files/figure-gfm/sim%20SAD-6.png)<!-- -->![](turnover_sim_files/figure-gfm/sim%20SAD-7.png)<!-- -->
+![](turnover_sim_files/figure-gfm/sim%20SAD-1.png)<!-- -->![](turnover_sim_files/figure-gfm/sim%20SAD-2.png)<!-- -->![](turnover_sim_files/figure-gfm/sim%20SAD-3.png)<!-- -->![](turnover_sim_files/figure-gfm/sim%20SAD-4.png)<!-- -->![](turnover_sim_files/figure-gfm/sim%20SAD-5.png)<!-- -->![](turnover_sim_files/figure-gfm/sim%20SAD-6.png)<!-- -->![](turnover_sim_files/figure-gfm/sim%20SAD-7.png)<!-- -->![](turnover_sim_files/figure-gfm/sim%20SAD-8.png)<!-- -->
 
 Sample from them and calculate Jaccard dissimilarity among pairs of
 years.
+
+    ## 3456789101112131415161718192021222324252627282930313233343536373839404142434445464748495051525354555657585960616263646566676869707172737475767778798081828384858687888990919293949596979899100
 
 Plot all dissimilarities for an example
 
@@ -161,9 +153,7 @@ Plot all dissimilarities for an example
 Top row has an example from one replicate. Middle row shows slopes from
 all replicates. Bottom row is the average across all replicates. Left
 column is even metacommunity, right column is BCI metacommunity (a
-skewed SAD).  
-Notice that declining slope with duration *only* appears in the skewed
-SAD.
+skewed SAD).
 
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
     ## `geom_smooth()` using method = 'gam' and formula 'y ~ s(x, bs = "cs")'
