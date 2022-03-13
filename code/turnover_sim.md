@@ -13,7 +13,7 @@ Turnover simulations to test effect of duration
 ``` r
 ## Basic settings
 nburn = 1000 # length of burnin
-ngen = 100 # number of simulated generations
+ngen = 500 # number of simulated generations
 nrep = 5 # number of replicates
 nindiv = 100 # number of local individuals
 nsamp = 100 # number of local individuals sampled (if == nindiv, then sample all of them)
