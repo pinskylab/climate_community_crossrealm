@@ -175,22 +175,27 @@ ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in')
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
 trends <- fread('output/slope_w_covariates.csv.gz') # the lm fit of dissimilarity vs. time, from assemble_slope_covariates.Rmd
 trends <- trends[duration_group == 'All' & measure == 'Jtu' & rarefyID %in% bt$rarefyID,] # use the slopes that use 5 years of data points (to standardize length)
+trends[, REALM := factor(REALM, levels = c('Terrestrial', 'Marine', 'Freshwater'))] # re-order for nicer plotting in part B
 trends_by_study <- trends[, .(disstrend = mean(disstrend, na.rm=TRUE), temptrend = mean(temptrend, na.rm=TRUE)), by = .(STUDY_ID, REALM)] # average by studyID
-trends_by_study[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # re-order for nicer plotting
+trends_by_study[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # re-order for nicer plotting in part A
 
-
+# average slopes by realm
 ave_by_realm <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstrend)/sqrt(.N)), by = REALM]
 ave_by_realm[, offset := c(-0.1, 0, 0.1)] # amount to vertically dodge the lines in part a
 
+# max temptrend by realm, for plotting limits
+temptrend_by_realm <- trends[, .(maxabs = max(abs(temptrend), na.rm=TRUE)), by = REALM]
 
 # predicted slopes from the main model
 slopespred <- readRDS(here('temp', 'slopes_TsdTTRealm.rds'))
-slopespred <- slopespred[round(tempave_metab,1) %in% c(10.1, 30.2),]
+slopespred <- slopespred[round(tempave_metab,1) %in% c(10.1, 25.0),]
 slopespred2 <- slopespred
 slopespred2[, tempchange := -tempchange_abs]
 slopespred <- rbind(slopespred[, .(tempave_metab, REALM, tempchange = tempchange_abs, slope, slope.se)], 
                     slopespred2[, .(tempave_metab, REALM, tempchange, slope, slope.se)])
-slopespred[, tempave_metab := factor(as.character(round(tempave_metab)), levels = c('30', '10'))] # re-order factor for nicer plotting
+slopespred <- merge(slopespred, temptrend_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
+slopespred <- slopespred[tempchange > -maxabs & tempchange < maxabs, ] # trim to min & max by realm
+slopespred[, tempave_metab := factor(as.character(round(tempave_metab)), levels = c('25', '10'))] # re-order factor for nicer plotting
 
 
 # a) across realms
@@ -209,27 +214,28 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = REALM, fill = REALM)) +
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))  
-p1 <- addSmallLegend(p1, pointSize = 1, spaceLegend = 0.15, textSize = 6)
+p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
 
 # b) plot of change vs. dT
-p2 <- ggplot(slopespred, aes(tempchange, slope, color = tempave_metab, group = tempave_metab, ymin=slope-slope.se, ymax=slope+slope.se)) +
-    geom_line() +
-    geom_ribbon(alpha = 0.25, color = NA, aes(fill = tempave_metab)) +
-    facet_grid(cols = vars(REALM))  +
-    labs(tag = 'B)', x = 'Temperage change (°C/year)', fill = 'Average temperature (°C)', color = 'Average temperature (°C)') +
+p2 <- ggplot() +
+    geom_point(data = trends[!is.na(temptrend)], mapping = aes(temptrend, disstrend), show.legend = FALSE, color = '#000000', alpha = 0.1, stroke = 0) +
+    geom_line(data = slopespred, aes(tempchange, slope, color = tempave_metab, group = tempave_metab)) +
+    geom_ribbon(data = slopespred, alpha = 0.25, color = NA, aes(tempchange, slope, fill = tempave_metab, ymin=slope-slope.se, ymax=slope+slope.se)) +
+    facet_grid(cols = vars(REALM), scales = 'free')  +
+    labs(tag = 'B)', x = 'Temperage change (°C/year)', y = 'Turnover (proportion species/year)', fill = 'Average temperature (°C)', color = 'Average temperature (°C)') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
-          legend.position = c(0.3,0.15),
+          legend.position = c(0.8,0.15),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
+          plot.title=element_text(size=8)) +
+    scale_y_continuous(trans = signedsqrttrans, breaks = c(seq(-1,-0.2, by = 0.2), -0.1, 0, 0.1, seq(0.2, 1, by=0.2)))
+    
 p2 <- addSmallLegend(p2, pointSize = 1, spaceLegend = 0.15, textSize = 7)
+fig2 <- arrangeGrob(p1, p2, nrow = 2, heights = c(1,2))
 
-fig2 <- arrangeGrob(p1, p2, ncol = 5, 
-                    layout_matrix = matrix(c(1,1,2,2,2), nrow=1))
-
-ggsave('figures/fig2.png', fig2, width = 6, height = 3, units = 'in')
+ggsave('figures/fig2.png', fig2, width = 5, height = 4, units = 'in')
 
 #########################
 ## Figure 3: interactions
