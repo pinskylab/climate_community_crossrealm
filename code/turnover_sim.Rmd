@@ -91,8 +91,11 @@ calctrendnsampsall <- function(y, year1, year2, numyrs, nsamps,
 ```{r settings}
 ## Basic settings
 nburn = 1000 # length of burnin
-ngen = 100 # number of simulated generations
-nrep = 100 # number of replicates
+ngen = 500 # number of simulated generations
+nrep = 5 # number of replicates
+nindiv = 100 # number of local individuals
+nsamp = 100 # number of local individuals sampled (if == nindiv, then sample all of them)
+prob = 0.1 # probability of replacing an individual from the regional pool rather than locally
 
 ```
 
@@ -106,28 +109,28 @@ simburnineven <- vector('list', nrep)
 simeven <- vector('list', nrep)
 names(simeven) <- 1:nrep
 for(i in 1:nrep){
-    simburnineven[[i]] <- untb(start = sample(metaeven, 100), prob = 0.1, D = 1, gens = nburn, keep = TRUE, meta = metaeven) # burnin
-    simeven[[i]] <- untb(start = simburnineven[[i]][nburn,], prob = 0.1, D=1, gens = ngen, keep = TRUE, meta = metaeven) # simulation
+    simburnineven[[i]] <- untb(start = as.count(sample(metaeven, nindiv)), prob = prob, D = 1, gens = nburn, keep = TRUE, meta = as.count(metaeven)) # burnin
+    simeven[[i]] <- untb(start = simburnineven[[i]][nburn,], prob = prob, D=1, gens = ngen, keep = TRUE, meta = as.count(metaeven)) # simulation
 }
 
 # plot an example from the first
+plot(as.count(metaeven), main = 'Regional SAD')
 plot(species.count(simburnineven[[1]]), type = 'b', main = 'Burnin: num spp through time') # evaluate burnin
 matplot(species.table(simburnineven[[1]]), type='l', lty=1, main = 'Burnin: spp dynamics')
-plot(count(simburnineven[[1]][1,]), main = 'Burnin: Initial SAD')
-plot(count(simburnineven[[1]][1000,]), main = 'Burnin: Final SAD')
+plot(count(simburnineven[[1]][1,]), main = 'Burnin: Initial local SAD')
+plot(count(simburnineven[[1]][nburn,]), main = 'Burnin: Final local SAD')
 plot(species.count(simeven[[1]]), type = 'b', main = 'Sim: num spp through time')
 matplot(species.table(simeven[[1]]), type='l', lty=1, main = 'Sim: spp dynamics')
-plot(count(simeven[[1]][100,]), main = 'Sim: Final SAD')
+plot(count(simeven[[1]][ngen,]), main = 'Sim: Final local SAD')
 
 ```
 
 Sample from each annual community and calculate slope of Jaccard dissimilarity among pairs of years for timeseries of 3:20 years.
 ```{r sample even}
 # sample from the community
-nsamp = 20 # number of individuals sampled
 sampeven = lapply(simeven, FUN = function(x) t(apply(x, MARGIN = 1, FUN = sample, size = nsamp)))
 
-# calculate dissimilarity
+# calculate dissimilarity for all pairwise communities
 disteven <- lapply(sampeven, FUN = function(x) as.matrix(vegdist(tocommat(x), method='jaccard', binary=TRUE)))
 
 # convert to long format
@@ -143,13 +146,14 @@ for(i in 1:length(disteven)){
 }
 
 # calculate slopes. slow.
-yrslist <- 3:20
+yrslist <- 3:100
 for(yr in yrslist){
-    temp <- distlongeven[, calctrendnsampsall(dist, year1, year2, numyrs = yr, nsamps = 3, 
-                                              measure = 'Jtu', duration_group = paste0(yr, 'min3')), by = rarefyID]
-    if(yr == min(yrslist)) trendseven = temp[!is.na(disstrend), ] # make a new dataset if first iteration through
-    if(yr > min(yrslist)) trendseven = rbind(trendseven,temp[!is.na(disstrend), ]) # otherwise append
-    
+  cat(yr)
+  temp <- distlongeven[, calctrendnsampsall(dist, year1, year2, numyrs = yr, nsamps = 3, 
+                                            measure = 'Jtu', duration_group = paste0(yr, 'min3')), by = rarefyID]
+  if(yr == min(yrslist)) trendseven = temp[!is.na(disstrend), ] # make a new dataset if first iteration through
+  if(yr > min(yrslist)) trendseven = rbind(trendseven,temp[!is.na(disstrend), ]) # otherwise append
+  
 }
 ```
 
@@ -158,7 +162,7 @@ Plot all pairwise dissimilarities and dissimilarities vs. year 1 for an example
 p1 <- ggplot(distlongeven[rarefyID == 1, ], aes(year2 - year1 + 1, dist)) +
     geom_point() +
     geom_smooth() +
-    labs(title = 'All pairwise for #1')
+    labs(title = 'All pairwise for Simulation #1')
  
 p2 <- ggplot(distlongeven[year1 == 1], aes(year2, dist, group = rarefyID, color = rarefyID)) +
     geom_point() +
@@ -174,7 +178,7 @@ Use BCI data as the metacommunity.
 ```{r sim SAD, echo = FALSE}
 set.seed(5)
 data('BCI')
-metaSAD = colSums(BCI) # metacommunity
+metaSAD = rep(1:ncol(BCI), colSums(BCI)) # metacommunity
 
 # burnin
 simburninSAD <- vector('list', nrep)
@@ -183,26 +187,26 @@ names(simSAD) <- 1:nrep
 
 # simulation
 for(i in 1:nrep){
-    simburninSAD[[i]] <- untb(start = sample(metaSAD, 100), prob = 0.1, D = 1, gens = nburn, keep = TRUE, meta = metaSAD) # burnin
-    simSAD[[i]] <- untb(start = simburninSAD[[i]][nburn,], prob = 0.1, D=1, gens = ngen, keep = TRUE, meta = metaSAD) # simulation
+    simburninSAD[[i]] <- untb(start = as.count(sample(metaSAD, nindiv)), prob = prob, D = 1, gens = nburn, keep = TRUE, meta = as.count(metaSAD)) # burnin
+    simSAD[[i]] <- untb(start = simburninSAD[[i]][nburn,], prob = prob, D=1, gens = ngen, keep = TRUE, meta = as.count(metaSAD)) # simulation
 }
 
 
 # plots
+plot(as.count(metaSAD), main = 'Regional SAD')
 plot(species.count(simburninSAD[[1]]), type = 'b', main = 'Burnin: num spp through time') # evaluate burnin
 matplot(species.table(simburninSAD[[1]]), type='l', lty=1, main = 'Burnin: spp dynamics')
-plot(count(simburninSAD[[1]][1,]), main = 'Burnin: Initial SAD')
-plot(count(simburninSAD[[1]][1000,]), main = 'Burnin: Final SAD')
+plot(count(simburninSAD[[1]][1,]), main = 'Burnin: Initial local SAD')
+plot(count(simburninSAD[[1]][nburn,]), main = 'Burnin: Final local SAD')
 plot(species.count(simSAD[[1]]), type = 'b', main = 'Sim: num spp through time')
 matplot(species.table(simSAD[[1]]), type='l', lty=1, main = 'Sim: spp dynamics')
-plot(count(simSAD[[1]][100,]), main = 'Sim: Final SAD')
+plot(count(simSAD[[1]][ngen,]), main = 'Sim: Final local SAD')
 
 ```
 
-Sample from them and calculate Jaccard dissimilarity among pairs of years
+Sample from them and calculate Jaccard dissimilarity among pairs of years.  
 ```{r sample SAD, echo = FALSE}
 # sample from the community
-nsamp = 20 # number of individuals sampled
 sampSAD = lapply(simSAD, FUN = function(x) t(apply(x, MARGIN = 1, FUN = sample, size = nsamp)))
 
 # calculate dissimilarity
@@ -221,13 +225,14 @@ for(i in 1:length(distSAD)){
 }
 
 # calculate slopes. slow.
-yrslist <- 3:20
+yrslist <- 3:100
 for(yr in yrslist){
-    temp <- distlongSAD[, calctrendnsampsall(dist, year1, year2, numyrs = yr, nsamps = 3, 
-                                              measure = 'Jtu', duration_group = paste0(yr, 'min3')), by = rarefyID]
-    if(yr == min(yrslist)) trendsSAD = temp[!is.na(disstrend), ] # make a new dataset if first iteration through
-    if(yr > min(yrslist)) trendsSAD = rbind(trendsSAD,temp[!is.na(disstrend), ]) # otherwise append
-    
+  cat(yr)
+  temp <- distlongSAD[, calctrendnsampsall(dist, year1, year2, numyrs = yr, nsamps = 3, 
+                                           measure = 'Jtu', duration_group = paste0(yr, 'min3')), by = rarefyID]
+  if(yr == min(yrslist)) trendsSAD = temp[!is.na(disstrend), ] # make a new dataset if first iteration through
+  if(yr > min(yrslist)) trendsSAD = rbind(trendsSAD,temp[!is.na(disstrend), ]) # otherwise append
+  
 }
 ```
 
@@ -236,7 +241,7 @@ Plot all dissimilarities for an example
 p1 <- ggplot(distlongSAD[rarefyID == 1, ], aes(year2 - year1 + 1, dist)) +
     geom_point() +
     geom_smooth() +
-    labs(title = 'All pairwise for #1')
+    labs(title = 'All pairwise for Simulation #1')
  
 p2 <- ggplot(distlongSAD[year1 == 1], aes(year2, dist, group = rarefyID, color = rarefyID)) +
     geom_point() +
@@ -250,7 +255,6 @@ grid.arrange(p1, p2, ncol = 2)
 
 # Plot slope vs. duration
 Top row has an example from one replicate. Middle row shows slopes from all replicates. Bottom row is the average across all replicates. Left column is even metacommunity, right column is BCI metacommunity (a skewed SAD).  
-Notice that declining slope with duration _only_ appears in the skewed SAD.
 ```{r plot slopes, fig.height = 8, echo = FALSE}
 # examples
 p1 <- ggplot(trendseven[measure == 'Jtu' & rarefyID == 1], aes(year2 - year1 + 1, disstrend)) +

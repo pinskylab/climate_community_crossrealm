@@ -1,8 +1,6 @@
-## Making publication-ready figures
+# Making publication-ready figures
 
-#################
-# Functions
-#################
+### Functions -----------
 library(data.table) # for handling large datasets
 library(ggplot2) # for some plotting
 library(nlme) # for ME models
@@ -44,12 +42,19 @@ binomci <- function(x, n){
     return(list(out[1], out[2]))
 }
 
-####################
-## Figure 1: map
-####################
+### Dataset sizes ---------
+bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
+
+nrow(bt)
+bt[, .(N = length(unique(rarefyID))), by = REALM]
+bt[, length(unique(STUDY_ID))]
+bt[, length(unique(rarefyID)), by = taxa_mod2]
+
+
+#### Figure 1: map --------
 # load BioTime data
 bt <- fread('output/turnover_w_covariates.csv.gz')
-trends <- readRDS('temp/trendstemp.rds') # the glmmTMB model fit for all trends
+trends <- readRDS('temp/trendstemp.rds') # the slope for all trends
 
 # load sampled temperature trends
 temptrends <- fread('output/temperature_trends_sampled.csv.gz')
@@ -80,13 +85,15 @@ p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
           legend.key=element_blank(),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8)) +
-    labs(x = 'Longitude (°)', y = 'Latitude (°)', tag = 'A)')
+    labs(x = 'Longitude (°)', y = 'Latitude (°)', tag = 'A)') +
+    guides(color = guide_legend(override.aes = list(size=2)))
 
 # b) temperature trends on land and freshwater
 p2 <- ggplot(temptrends[REALM == 'Terrestrial & Freshwater'], aes(x = tempchange, fill = type)) +
     geom_density(alpha = 0.4, color = NA) +
     scale_y_sqrt() +
-    scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans) +
+    scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans, 
+                       breaks = c(-2, -1, -0.5, 0, 0.5, 1, 2)) +
     labs(tag = 'B)', x = 'Temperature trend (°C/yr)', title = 'Terrestrial & Freshwater') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -100,7 +107,8 @@ p2 <- ggplot(temptrends[REALM == 'Terrestrial & Freshwater'], aes(x = tempchange
 p3 <- ggplot(temptrends[REALM == 'Marine'], aes(x = tempchange, fill = type)) +
     geom_density(alpha = 0.4, color = NA) +
     scale_y_sqrt() +
-    scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans) +
+    scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans, 
+                       breaks = c(-2, -1, -0.5, 0, 0.5, 1, 2)) +
     labs(tag = 'C)', x = 'Temperature trend (°C/yr)', title = 'Marine') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -115,7 +123,7 @@ p3 <- addSmallLegend(p3, pointSize = 0.7, spaceLegend = 0.15, textSize = 7)
 p4 <- ggplot(bt[rarefyID=='339_1085477', .(dY = year2 - year1, Jtu.sc)], aes(dY, Jtu.sc)) +
     geom_point(alpha = 0.2, size = 0.5, shape = 16) +
     geom_smooth(method = 'glm', method.args = list(family = beta_family(link='logit'))) + # a beta regression
-    labs(tag = 'D)', x = 'Year', y = 'Jaccard turnover') +
+    labs(tag = 'D)', x = 'Temporal distance [years]', y = 'Turnover\n[proportion species]') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -128,8 +136,8 @@ p5 <- ggplot(trends_by_study, aes(x = Jtu)) +
     geom_density(color = NA, alpha = 0.5, fill = 'grey') +
     scale_y_sqrt() +
     geom_vline(xintercept = 0, linetype = 'dashed', size = 0.5) +
-    scale_x_continuous(trans = signedsqrttrans) +
-    labs(tag = 'E)', x = 'Slope', title = 'Jaccard') +
+    scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.05, 0, 0.05, 0.2, 0.4)) +
+    labs(tag = 'E)', x = 'Turnover\n[proportion species/year]', title = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -141,7 +149,8 @@ p5 <- ggplot(trends_by_study, aes(x = Jtu)) +
 p6 <- ggplot(trendsw, aes(x = Jbeta, y = Jtu)) +
     geom_point(size = 0.1, alpha = 0.2) +
     geom_abline(intercept = 0, slope = 1, color = 'grey') +
-    labs(tag = 'F)', x = 'Slope', y = 'Slope', title = 'Jaccard turnover vs. total') +
+    labs(tag = 'F)', x = expression(Delta * 'Dissimilarity'), 
+         y = 'Turnover\n[proportion species/year]', title = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -153,7 +162,7 @@ p6 <- ggplot(trendsw, aes(x = Jbeta, y = Jtu)) +
 p7 <- ggplot(trendsw[!is.na(Horn),], aes(x = Jtu, y = Horn)) +
     geom_point(size = 0.1, alpha = 0.2) +
     geom_abline(intercept = 0, slope = 1, color = 'grey') +
-    labs(tag = 'G)', x = 'Slope', y = 'Slope', title = 'H-M vs. Jaccard total') +
+    labs(tag = 'G)', x = 'Turnover\n[proportion species/year]', y = expression(Delta * 'Dissimilarity'), title = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -168,72 +177,79 @@ fig1 <- arrangeGrob(p1, p2, p3, p4, p5, p6, p7, ncol = 6,
 ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in')
 
 
-#########################
-## Figure 2: main effects
-#########################
+### Figure 2: main effects ---------
 # slopes for all timeseries
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
 trends <- fread('output/slope_w_covariates.csv.gz') # the lm fit of dissimilarity vs. time, from assemble_slope_covariates.Rmd
 trends <- trends[duration_group == 'All' & measure == 'Jtu' & rarefyID %in% bt$rarefyID,] # use the slopes that use 5 years of data points (to standardize length)
+trends[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting in part B
 trends_by_study <- trends[, .(disstrend = mean(disstrend, na.rm=TRUE), temptrend = mean(temptrend, na.rm=TRUE)), by = .(STUDY_ID, REALM)] # average by studyID
-trends_by_study[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # re-order for nicer plotting
+trends_by_study[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # re-order for nicer plotting in part A
 
-
+# average slopes by realm
 ave_by_realm <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstrend)/sqrt(.N)), by = REALM]
-ave_by_realm[, offset := c(-0.1, 0, 0.1)] # amount to vertically dodge the lines in part a
+ave_by_realm[, offset := c(-1, 0, 1)] # amount to vertically dodge the lines in part a
 
+# max temptrend by realm, for plotting limits
+temptrend_by_realm <- trends[, .(maxabs = max(abs(temptrend), na.rm=TRUE)), by = REALM]
 
 # predicted slopes from the main model
 slopespred <- readRDS(here('temp', 'slopes_TsdTTRealm.rds'))
-slopespred <- slopespred[round(tempave_metab,1) %in% c(10.1, 30.2),]
+slopespred <- slopespred[round(tempave_metab,1) %in% c(10.1, 25.0),]
 slopespred2 <- slopespred
 slopespred2[, tempchange := -tempchange_abs]
 slopespred <- rbind(slopespred[, .(tempave_metab, REALM, tempchange = tempchange_abs, slope, slope.se)], 
                     slopespred2[, .(tempave_metab, REALM, tempchange, slope, slope.se)])
-slopespred[, tempave_metab := factor(as.character(round(tempave_metab)), levels = c('30', '10'))] # re-order factor for nicer plotting
+slopespred <- merge(slopespred, temptrend_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
+slopespred <- slopespred[tempchange > -maxabs & tempchange < maxabs, ] # trim to min & max by realm
+slopespred[, tempave_metab := factor(as.character(round(tempave_metab)), levels = c('25', '10'))] # re-order factor for nicer plotting
 
 
 # a) across realms
 ht <- 6.3
 p1 <- ggplot(trends_by_study, aes(x=disstrend, group = REALM, fill = REALM)) +
     geom_density(color = NA, alpha = 0.25) +
-    scale_y_sqrt() +
-    scale_x_continuous(trans = signedsqrttrans) +
+    scale_y_sqrt(breaks = c(0.1, 1, 2, 6)) +
+    scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.1, -0.05, 0, 0.05, 0.1, 0.2, 0.4)) +
     geom_segment(data = ave_by_realm, aes(x=disstrend - 1.96*se, xend = disstrend + 1.96*se, y= ht+offset, yend = ht+offset, color = REALM), alpha = 1) +
     geom_segment(data = ave_by_realm, aes(x = disstrend, y = 0, xend = disstrend, yend = ht+offset, color = REALM), size=0.5, linetype = 'dashed') +
-    labs(tag = 'A)', x = 'Slope', y = 'Density', title = '') +
+    labs(tag = 'A)', x = 'Turnover [proportion species/year]', y = 'Density', title = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
-          legend.position = c(0.9, 0.9),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))  
-p1 <- addSmallLegend(p1, pointSize = 1, spaceLegend = 0.15, textSize = 6)
+p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
 
 # b) plot of change vs. dT
-p2 <- ggplot(slopespred, aes(tempchange, slope, color = tempave_metab, group = tempave_metab, ymin=slope-slope.se, ymax=slope+slope.se)) +
-    geom_line() +
-    geom_ribbon(alpha = 0.25, color = NA, aes(fill = tempave_metab)) +
-    facet_grid(cols = vars(REALM))  +
-    labs(tag = 'B)', x = 'Temperage change (°C/year)', fill = 'Average temperature (°C)', color = 'Average temperature (°C)') +
+p2 <- ggplot() +
+    geom_point(data = trends[!is.na(temptrend)], mapping = aes(temptrend, disstrend, size = duration), 
+               color = '#000000', alpha = 0.1, stroke = 0) +
+    geom_line(data = slopespred, aes(tempchange, slope, color = tempave_metab, group = tempave_metab)) +
+    geom_ribbon(data = slopespred, alpha = 0.25, color = NA, 
+                aes(tempchange, slope, fill = tempave_metab, ymin=slope-slope.se, ymax=slope+slope.se)) +
+    facet_grid(cols = vars(REALM), scales = 'free')  +
+    labs(tag = 'B)', x = 'Temperage change [°C/year]', y = 'Turnover [proportion species/year]', 
+         fill = 'Average temperature [°C]', 
+         color = 'Average temperature [°C]',
+         size = 'Duration [years]') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
-          legend.position = c(0.3,0.15),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
-p2 <- addSmallLegend(p2, pointSize = 1, spaceLegend = 0.15, textSize = 7)
+          plot.title=element_text(size=8)) +
+    scale_y_continuous(trans = signedsqrttrans, 
+                       breaks = c(seq(-1,-0.2, by = 0.2), -0.1, 0, 0.1, seq(0.2, 1, by=0.2))) +
+    scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50))
+    
+p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
+fig2 <- arrangeGrob(p1, p2, nrow = 2, heights = c(1,2))
 
-fig2 <- arrangeGrob(p1, p2, ncol = 5, 
-                    layout_matrix = matrix(c(1,1,2,2,2), nrow=1))
+ggsave('figures/fig2.png', fig2, width = 6, height = 4, units = 'in')
 
-ggsave('figures/fig2.png', fig2, width = 6, height = 3, units = 'in')
-
-#########################
-## Figure 3: interactions
-#########################
+### Figure 3: interactions ---------
 slopes2 <- readRDS(here('temp', 'slopes_interactions2.rds'))
 slopes2[, ':='(microclim = as.factor(signif(microclim,2)),
                npp = as.factor(signif(npp,2)),
@@ -299,9 +315,7 @@ ggsave('figures/fig3.png', fig3, width = 4, height = 6, units = 'in')
 
 
 
-##############################
-## Figure S1: duration problem
-##############################
+### Figure S1: duration problem ----------
 # load raw BioTime
 load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians, which has all pairwise dissimilarities
 bt <- data.table(rarefied_beta_medians); rm(rarefied_beta_medians)
