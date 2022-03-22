@@ -363,6 +363,43 @@ if (fitmod == 'modRealmAllJtu') {
     MATCHMOD <- TRUE
 }
 
+# dT/sdT:REALM:duration ##################
+# use tempchange
+if (fitmod == 'moddTRealmAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    ) #,
+    #  control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+if (fitmod == 'modsdTRealmAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    ) #,
+    #  control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+
 # latitude:sdT:REALM:duration #########################
 # use lat instead of T
 if (fitmod == 'modLatsdTTRealmAllJtu') {
