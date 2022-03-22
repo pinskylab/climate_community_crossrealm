@@ -223,22 +223,29 @@ aics
 ## Temperature x temperature slope x REALM x duration
 Compare with duration scaled vs. not, with abs(tempchange) vs. tempchange, and with metabolic vs. environmental temperature
 ```{r}
-modTdTTRealmAllJtu <- readRDS('temp/modTdTTRealmAllJtu.rds') # uses duration and tempchange
-modTdTTRealmDurscAllJtu <- readRDS('temp/modTdTTRealmDurscAllJtu.rds') # uses duration.sc and tempchange
-modTsdTTRealmAllJtu <- readRDS('temp/modTsdTTRealmAllJtu.rds') # uses duration and abs(tempchange)
-modTsdTTRealmDurscAllJtu <- readRDS('temp/modTsdTTRealmDurscAllJtu.rds') # uses duration.sc and abs(tempchange)
-modrawTsdTTRealmAllJtu <- readRDS('temp/modrawTsdTTRealmAllJtu.rds') # uses environmental temperature (duration and abs)
+modAllJtu <- readRDS(here('temp', 'modAllJtu.rds'))
+modTdTTRealmAllJtu <- readRDS(here('temp', 'modTdTTRealmAllJtu.rds')) # uses duration and tempchange
+modTdTTRealmDurscAllJtu <- readRDS(here('temp', 'modTdTTRealmDurscAllJtu.rds')) # uses duration.sc and tempchange
+modTsdTTRealmAllJtu <- readRDS(here('temp', 'modTsdTTRealmAllJtu.rds')) # uses duration and abs(tempchange)
+modTsdTTRealmDurscAllJtu <- readRDS(here('temp', 'modTsdTTRealmDurscAllJtu.rds')) # uses duration.sc and abs(tempchange)
+modrawTsdTTRealmAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmAllJtu.rds')) # uses environmental temperature (duration and abs)
 ```
 
 ### AIC
 Clearly chooses un-scaled duration and abs(tempchange). Also prefers environmental over metabolic temperature.
 ```{r}
-aics <- AIC(modTdTTRealmAllJtu, modTdTTRealmDurscAllJtu, modTsdTTRealmAllJtu, modTsdTTRealmDurscAllJtu, modrawTsdTTRealmAllJtu)
+# compare TsdTT models against null
+aics <- AIC(modAllJtu, modTdTTRealmAllJtu, modTdTTRealmDurscAllJtu, modTsdTTRealmAllJtu, modTsdTTRealmDurscAllJtu)
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics
+
+aics2 <- AIC(modAllJtu, modTsdTTRealmAllJtu, modrawTsdTTRealmAllJtu)
+aics2$dAIC <- aics2$AIC - min(aics2$AIC)
+aics2
+
 ```
 ### Metabolic temperature
-#### Make/load prediction
+#### Make/load the tempchange_abs prediction
 Uses output from pred_GLMMmodTsdTTRealmAllJtu.R.
 ```{r, echo = FALSE}
 if(file.exists(here('temp', 'slopes_TsdTTRealm.rds'))){
