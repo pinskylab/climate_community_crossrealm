@@ -191,17 +191,24 @@ ave_by_realm <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstre
 ave_by_realm[, offset := c(-1, 0, 1)] # amount to vertically dodge the lines in part a
 
 # max temptrend by realm, for plotting limits
-temptrend_by_realm <- trends[, .(maxabs = max(abs(temptrend), na.rm=TRUE)), by = REALM]
+temptrend_by_realm <- trends[, .(max = max(temptrend, na.rm=TRUE), min = min(temptrend, na.rm=TRUE)), by = REALM]
+
+# predicted slopes from the dT-only model
+slopespredTdTT <- readRDS(here('temp', 'slopes_TdTTRealm.rds'))
+slopespredTdTT <- slopespredTdTT[round(tempave_metab,1) %in% c(10.1, 25.0),]
+slopespredTdTT <- merge(slopespredTdTT, temptrend_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
+slopespredTdTT <- slopespredTdTT[tempchange > min & tempchange < max, ] # trim to min & max by realm
+slopespredTdTT[, tempave_metab := factor(as.character(round(tempave_metab)), levels = c('25', '10'))] # re-order factor for nicer plotting
 
 # predicted slopes from the main model
 slopespred <- readRDS(here('temp', 'slopes_TsdTTRealm.rds'))
 slopespred <- slopespred[round(tempave_metab,1) %in% c(10.1, 25.0),]
-slopespred2 <- slopespred
+slopespred2 <- slopespred # make the negative temperature change points
 slopespred2[, tempchange := -tempchange_abs]
 slopespred <- rbind(slopespred[, .(tempave_metab, REALM, tempchange = tempchange_abs, slope, slope.se)], 
-                    slopespred2[, .(tempave_metab, REALM, tempchange, slope, slope.se)])
+                    slopespred2[, .(tempave_metab, REALM, tempchange, slope, slope.se)]) # merge neg and pos temp change points
 slopespred <- merge(slopespred, temptrend_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
-slopespred <- slopespred[tempchange > -maxabs & tempchange < maxabs, ] # trim to min & max by realm
+slopespred <- slopespred[tempchange > min & tempchange < max, ] # trim to min & max by realm
 slopespred[, tempave_metab := factor(as.character(round(tempave_metab)), levels = c('25', '10'))] # re-order factor for nicer plotting
 
 
@@ -226,6 +233,7 @@ p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
 p2 <- ggplot() +
     geom_point(data = trends[!is.na(temptrend)], mapping = aes(temptrend, disstrend, size = duration), 
                color = '#000000', alpha = 0.1, stroke = 0) +
+    geom_line(data = slopespredTdTT, aes(tempchange, slope, color = tempave_metab, group = tempave_metab), linetype = 'dashed', alpha = 0.5) +
     geom_line(data = slopespred, aes(tempchange, slope, color = tempave_metab, group = tempave_metab)) +
     geom_ribbon(data = slopespred, alpha = 0.25, color = NA, 
                 aes(tempchange, slope, fill = tempave_metab, ymin=slope-slope.se, ymax=slope+slope.se)) +
