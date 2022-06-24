@@ -23,8 +23,8 @@ scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv'))
 modTsdTTRealmAllJtu <- readRDS('temp/modTsdTTRealmAllJtu.rds') # uses duration and abs(tempchange)
 
 
-# set up prediction frame
-newdat <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration = seq(1, 10, length.out=10), REALM = c('Marine', 'Terrestrial', 'Freshwater')))
+# set up prediction frame. tempchange_abs set so goes from 0 2.
+newdat <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.7953, 47, length.out = 100), duration = seq(1, 10, length.out=10), REALM = c('Marine', 'Terrestrial', 'Freshwater')))
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1
 newdat[, tempave_metab := unscaleme(tempave_metab.sc, 'tempave_metab.sc')]
