@@ -49,7 +49,7 @@ nrow(bt)
 bt[, .(N = length(unique(rarefyID))), by = REALM]
 bt[, length(unique(STUDY_ID))]
 bt[, length(unique(rarefyID)), by = taxa_mod2]
-
+bt[, range(duration+1)] # range of years sampled (2 to 119)
 
 #### Figure 1: map --------
 # load BioTime data
@@ -72,6 +72,10 @@ trends <- trends[duration_group == 'All' & rarefyID %in% bt$rarefyID,]
 trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend') # wide format for plotting
 trendsw[, STUDY_ID := vapply(strsplit(rarefyID,"_"), `[`, 1, FUN.VALUE=character(1))] # extract STUDY_ID from rarefyID
 trends_by_study <- trendsw[, .(Horn = mean(Horn, na.rm=TRUE), Jbeta = mean(Jbeta), Jtu = mean(Jtu)), by = STUDY_ID]
+
+# correlation across dissimilarity metrics
+trendsw[, cor.test(Jtu, Jbeta)]
+trendsw[, cor.test(Jtu, Horn)]
 
 # make plot pieces
 # a) map
@@ -145,12 +149,12 @@ p5 <- ggplot(trends_by_study, aes(x = Jtu)) +
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))
 
-# Jtu vs. Jbeta trends
-p6 <- ggplot(trendsw, aes(x = Jbeta, y = Jtu)) +
+# f) Jtu vs. Jbeta trends
+p6 <- ggplot(trendsw, aes(x = Jtu, y = Jbeta)) +
     geom_point(size = 0.1, alpha = 0.2) +
     geom_abline(intercept = 0, slope = 1, color = 'grey') +
-    labs(tag = 'F)', x = expression(Delta * 'Dissimilarity'), 
-         y = 'Turnover\n[proportion species/year]', title = '') +
+    labs(tag = 'F)', y = 'Total Jaccard', 
+         x = 'Turnover\n[prop spp/yr]', title = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -158,11 +162,11 @@ p6 <- ggplot(trendsw, aes(x = Jbeta, y = Jtu)) +
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))
 
-# Horn vs. Jtu trends
+# g) Horn vs. Jtu trends
 p7 <- ggplot(trendsw[!is.na(Horn),], aes(x = Jtu, y = Horn)) +
     geom_point(size = 0.1, alpha = 0.2) +
     geom_abline(intercept = 0, slope = 1, color = 'grey') +
-    labs(tag = 'G)', x = 'Turnover\n[proportion species/year]', y = expression(Delta * 'Dissimilarity'), title = '') +
+    labs(tag = 'G)', x = 'Turnover\n[prop spp/yr]', y = 'Horn-Morisita', title = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -232,9 +236,9 @@ p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
 # b) plot of change vs. dT
 p2 <- ggplot() +
     geom_point(data = trends[!is.na(temptrend)], mapping = aes(temptrend, disstrend, size = duration), 
-               color = '#000000', alpha = 0.1, stroke = 0) +
-    geom_line(data = slopespredTdTT, aes(tempchange, slope, color = tempave_metab, group = tempave_metab), linetype = 'dashed', alpha = 0.5) +
-    geom_line(data = slopespred, aes(tempchange, slope, color = tempave_metab, group = tempave_metab)) +
+             color='#000000', alpha = 0.1, stroke = 0) +
+    geom_line(data = slopespredTdTT, mapping=aes(tempchange, slope, color = tempave_metab, group = tempave_metab), linetype = 'dashed', alpha = 0.5) +
+    geom_line(data = slopespred, mapping=aes(tempchange, slope, color = tempave_metab, group = tempave_metab)) +
     geom_ribbon(data = slopespred, alpha = 0.25, color = NA, 
                 aes(tempchange, slope, fill = tempave_metab, ymin=slope-slope.se, ymax=slope+slope.se)) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
