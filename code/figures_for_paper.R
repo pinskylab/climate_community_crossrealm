@@ -42,6 +42,8 @@ binomci <- function(x, n){
     return(list(out[1], out[2]))
 }
 
+
+
 ### Dataset sizes ---------
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
 
@@ -50,6 +52,30 @@ bt[, .(N = length(unique(rarefyID))), by = REALM]
 bt[, length(unique(STUDY_ID))]
 bt[, length(unique(rarefyID)), by = taxa_mod2]
 bt[, range(duration+1)] # range of years sampled (2 to 119)
+
+
+
+
+
+#### Table 1 --------------
+modAllJtu <- readRDS(here('temp', 'modAllJtu.rds'))
+modRealmAllJtu <- readRDS('temp/modRealmAllJtu.rds')
+moddTRealmAllJtu <- readRDS(here('temp', 'moddTRealmAllJtu.rds')) # uses tempchange
+modTdTTRealmAllJtu <- readRDS(here('temp', 'modTdTTRealmAllJtu.rds')) # uses duration and tempchange
+modTsdTTRealmAllJtu <- readRDS(here('temp', 'modTsdTTRealmAllJtu.rds')) # uses duration and abs(tempchange)
+#modTsdTTRealmtsignAllJtu <- readRDS('temp/modTsdTTRealmtsignAllJtu.rds') # has temperature change sign
+
+# compare TsdTT models against null
+aics <- AIC(modAllJtu, modRealmAllJtu, moddTRealmAllJtu, modTdTTRealmAllJtu, modTsdTTRealmAllJtu)
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics
+
+write.csv(aics, here('figures', 'table1.csv'))
+
+
+
+
+
 
 #### Figure 1: map --------
 # load BioTime data
