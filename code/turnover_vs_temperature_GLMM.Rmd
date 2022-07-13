@@ -275,7 +275,7 @@ aics2
 ```
 ### Metabolic temperature
 #### Make/load the tempchange_abs and tempchange predictions
-Uses output from pred_GLMMmodTsdTTRealmAllJtu.R and pred_GLMMmodTdTTRealmAllJtu.R.
+Uses output from pred_GLMMmodTsdTTRealmAllJtu.R (abs) and pred_GLMMmodTdTTRealmAllJtu.R (not abs).
 ```{r, echo = FALSE}
 if(file.exists(here('temp', 'slopes_TdTTRealm.rds'))){
   slopesTdTT <- readRDS(here('temp', 'slopes_TdTTRealm.rds'))
@@ -462,33 +462,42 @@ trendsall[!is.na(tempave_metab.sc) & !duplicated(rarefyID), round(prop.table(tab
 
 ### Environmental temperature
 #### Make/load prediction
+Uses output from pred_GLMMmodrawTsdTTRealmAllJtu.R (abs) and pred_GLMMmodrawTdTTRealmAllJtu.R (not abs).
 ```{r, echo = FALSE}
 if(file.exists(here('temp', 'slopes_rawTsdTTRealm.rds'))){
-  slopesrawT <- readRDS(here('temp', 'slopes_rawTsdTTRealm.rds'))
+  slopesrawTsdTT <- readRDS(here('temp', 'slopes_rawTsdTTRealm.rds'))
   print('Loaded predictions from file')
 } else {
-  print('Making predictions from scratch')
+  print('Making predictions from pred_GLMMmodrawTsdTTRealmAllJtu.R output')
   
-  # set up prediction frame
-  newdat <- data.table(expand.grid(tempave = seq(0, 40, length.out = 100), tempchange_abs.sc = seq(-0.8, 20, length.out = 100), duration = seq(1, 10, length.out=10), REALM = c('Marine', 'Terrestrial', 'Freshwater')))
-  newdat$STUDY_ID <- 1
-  newdat$rarefyID <- 1
-  newdat[, tempave.sc := scaleme(tempave, 'tempave.sc')]
-  newdat[, tempchange_abs := unscaleme(tempchange_abs.sc, 'tempchange_abs.sc')]
+  newdat <- readRDS(here('temp', 'preds_rawTsdTTRealm.rds')) # this also has slope.se
   
-  # predict
-  newdat$Jtu.sc <- predict(modrawTsdTTRealmAllJtu, newdata = newdat, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+  # calculate slopes and SE of the slope using latent variables (since predictions have SE)
+  mods <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc\nJtu.sc ~~ ', mean(Jtu.sc.se), '*Jtu.sc'), data.frame(Jtu.sc, duration)))), by = .(tempave, tempchange_abs, REALM)] # takes ~30 min
+  slopesrawTsdTT <- mods[, parameterEstimates(mod[[1]]), by = .(tempave, tempchange_abs, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', .(tempave, tempchange_abs, REALM, slope = est, slope.se = se)] # extract the coefficients
   
-  # calculate slopes
-  slopesrawT <- newdat[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave, tempchange_abs, REALM)]
+  saveRDS(slopesrawTsdTT, file = here('temp', 'slopes_rawTsdTTRealm.rds'))
+}
+
+if(file.exists(here('temp', 'slopes_rawTdTTRealm.rds'))){
+  slopesrawTdTT <- readRDS(here('temp', 'slopes_rawTdTTRealm.rds'))
+  print('Loaded predictions from file')
+} else {
+  print('Making predictions from pred_GLMMmodrawTdTTRealmAllJtu.R output')
   
-  saveRDS(slopesrawT, file = here('temp', 'slopes_rawTsdTTRealm.rds'))
+  newdat <- readRDS(here('temp', 'preds_rawTdTTRealm.rds')) # this also has slope.se
+  
+  # calculate slopes and SE of the slope using latent variables (since predictions have SE)
+  mods <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc\nJtu.sc ~~ ', mean(Jtu.sc.se), '*Jtu.sc'), data.frame(Jtu.sc, duration)))), by = .(tempave, tempchange, REALM)] # takes ~30 min
+  slopesrawTdTT <- mods[, parameterEstimates(mod[[1]]), by = .(tempave, tempchange, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', .(tempave, tempchange, REALM, slope = est, slope.se = se)] # extract the coefficients
+  
+  saveRDS(slopesrawTdTT, file = here('temp', 'slopes_rawTdTTRealm.rds'))
 }
 ```
 
 #### Plot the interaction
 ```{r, echo = FALSE}
-p1 <- ggplot(slopesrawT[REALM=='Marine'], aes(tempchange_abs, tempave, z = slope)) +
+p1 <- ggplot(slopesrawTsdTT[REALM=='Marine'], aes(tempchange_abs, tempave, z = slope)) +
     geom_raster(aes(fill = slope)) +
     labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Marine') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
@@ -502,7 +511,7 @@ p1 <- ggplot(slopesrawT[REALM=='Marine'], aes(tempchange_abs, tempave, z = slope
           legend.text=element_text(size= 12),
           legend.title=element_text(size= 18),
           legend.title.align = 1)
-p2 <- ggplot(slopesrawT[REALM=='Terrestrial'], aes(tempchange_abs, tempave, z = slope)) +
+p2 <- ggplot(slopesrawTsdTT[REALM=='Terrestrial'], aes(tempchange_abs, tempave, z = slope)) +
     geom_raster(aes(fill = slope)) +
     labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Terrestrial') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
@@ -516,7 +525,7 @@ p2 <- ggplot(slopesrawT[REALM=='Terrestrial'], aes(tempchange_abs, tempave, z = 
           legend.text=element_text(size= 12),
           legend.title=element_text(size= 18),
           legend.title.align = 1)
-p3 <- ggplot(slopesrawT[REALM=='Freshwater'], aes(tempchange_abs, tempave, z = slope)) +
+p3 <- ggplot(slopesrawTsdTT[REALM=='Freshwater'], aes(tempchange_abs, tempave, z = slope)) +
     geom_raster(aes(fill = slope)) +
     labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Freshwater') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
@@ -552,14 +561,15 @@ trendsall[!is.na(tempave.sc) & !duplicated(rarefyID), round(prop.table(table(tax
 ## Latitude or temperature?
 Compare temperature vs. latitude in an interaction with abs(tempchange). Not very useful until we fit abs(latitude) model so that effects are mirrored at each pole.
 ```{r}
-modTsdTTRealmAllJtu <- readRDS('temp/modTsdTTRealmAllJtu.rds') # uses temperature
-modLatsdTTRealmAllJtu <- readRDS('temp/modLatsdTTRealmAllJtu.rds') # uses latitude
+modTsdTTRealmAllJtu <- readRDS(here('temp', 'modTsdTTRealmAllJtu.rds')) # uses temperature
+modrawTsdTTRealmAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmAllJtu.rds')) # uses environmental temperature
+modLatsdTTRealmAllJtu <- readRDS(here('temp', 'modLatsdTTRealmAllJtu.rds')) # uses latitude
 ```
 
 ### AIC
-Clearly chooses temperature.
+Clearly chooses environmental temperature.
 ```{r}
-aics <- AIC(modTsdTTRealmAllJtu, modLatsdTTRealmAllJtu)
+aics <- AIC(modTsdTTRealmAllJtu, modLatsdTTRealmAllJtu, modrawTsdTTRealmAllJtu)
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics
 ```

@@ -61,12 +61,12 @@ bt[, range(duration+1)] # range of years sampled (2 to 119)
 modAllJtu <- readRDS(here('temp', 'modAllJtu.rds'))
 modRealmAllJtu <- readRDS('temp/modRealmAllJtu.rds')
 moddTRealmAllJtu <- readRDS(here('temp', 'moddTRealmAllJtu.rds')) # uses tempchange
-modTdTTRealmAllJtu <- readRDS(here('temp', 'modTdTTRealmAllJtu.rds')) # uses duration and tempchange
-modTsdTTRealmAllJtu <- readRDS(here('temp', 'modTsdTTRealmAllJtu.rds')) # uses duration and abs(tempchange)
+modrawTdTTRealmAllJtu <- readRDS(here('temp', 'modrawTdTTRealmAllJtu.rds')) # uses duration and tempchange
+modrawTsdTTRealmAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmAllJtu.rds')) # uses duration and abs(tempchange)
 #modTsdTTRealmtsignAllJtu <- readRDS('temp/modTsdTTRealmtsignAllJtu.rds') # has temperature change sign
 
 # compare TsdTT models against null
-aics <- AIC(modAllJtu, modRealmAllJtu, moddTRealmAllJtu, modTdTTRealmAllJtu, modTsdTTRealmAllJtu)
+aics <- AIC(modAllJtu, modRealmAllJtu, moddTRealmAllJtu, modrawTdTTRealmAllJtu, modrawTsdTTRealmAllJtu)
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics
 
@@ -175,33 +175,8 @@ p5 <- ggplot(trends_by_study, aes(x = Jtu)) +
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))
 
-# f) Jtu vs. Jbeta trends
-p6 <- ggplot(trendsw, aes(x = Jtu, y = Jbeta)) +
-    geom_point(size = 0.1, alpha = 0.2) +
-    geom_abline(intercept = 0, slope = 1, color = 'grey') +
-    labs(tag = 'F)', y = 'Total Jaccard', 
-         x = 'Turnover\n[prop spp/yr]', title = '') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8))
-
-# g) Horn vs. Jtu trends
-p7 <- ggplot(trendsw[!is.na(Horn),], aes(x = Jtu, y = Horn)) +
-    geom_point(size = 0.1, alpha = 0.2) +
-    geom_abline(intercept = 0, slope = 1, color = 'grey') +
-    labs(tag = 'G)', x = 'Turnover\n[prop spp/yr]', y = 'Horn-Morisita', title = '') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8))
-
-fig1 <- arrangeGrob(p1, p2, p3, p4, p5, p6, p7, ncol = 6, 
-                   layout_matrix = rbind(c(1,1,1,1,1,1), c(2,2,3,3,4,4), c(5,5,6,6,7,7)),
+fig1 <- arrangeGrob(p1, p2, p3, p4, p5, ncol = 4, 
+                   layout_matrix = rbind(c(1,1,1,1), c(2,2,3,3), c(4,4,5,5)),
                    heights=c(unit(0.5, "npc"), unit(0.25, "npc"), unit(0.25, "npc")))
 
 ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in')
@@ -223,23 +198,23 @@ ave_by_realm[, offset := c(-1, 0, 1)] # amount to vertically dodge the lines in 
 # max temptrend by realm, for plotting limits
 temptrend_by_realm <- trends[, .(max = max(temptrend, na.rm=TRUE), min = min(temptrend, na.rm=TRUE)), by = REALM]
 
-# predicted slopes from the dT-only model
-slopespredTdTT <- readRDS(here('temp', 'slopes_TdTTRealm.rds'))
-slopespredTdTT <- slopespredTdTT[round(tempave_metab,1) %in% c(10.1, 25.0),]
+# predicted slopes from the dT model (not abs)
+slopespredTdTT <- readRDS(here('temp', 'slopes_rawTdTTRealm.rds'))
+slopespredTdTT <- slopespredTdTT[round(tempave,1) %in% c(10.1, 25.0),]
 slopespredTdTT <- merge(slopespredTdTT, temptrend_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
 slopespredTdTT <- slopespredTdTT[tempchange > min & tempchange < max, ] # trim to min & max by realm
-slopespredTdTT[, tempave_metab := factor(as.character(round(tempave_metab)), levels = c('25', '10'))] # re-order factor for nicer plotting
+slopespredTdTT[, tempave := factor(as.character(round(tempave)), levels = c('25', '10'))] # re-order factor for nicer plotting
 
-# predicted slopes from the main model
-slopespred <- readRDS(here('temp', 'slopes_TsdTTRealm.rds'))
-slopespred <- slopespred[round(tempave_metab,1) %in% c(10.1, 25.0),]
+# predicted slopes from the main model (tempchange_abs)
+slopespred <- readRDS(here('temp', 'slopes_rawTsdTTRealm.rds'))
+slopespred <- slopespred[round(tempave,1) %in% c(10.1, 25.0),]
 slopespred2 <- slopespred # make the negative temperature change points
 slopespred2[, tempchange := -tempchange_abs]
-slopespred <- rbind(slopespred[, .(tempave_metab, REALM, tempchange = tempchange_abs, slope, slope.se)], 
-                    slopespred2[, .(tempave_metab, REALM, tempchange, slope, slope.se)]) # merge neg and pos temp change points
+slopespred <- rbind(slopespred[, .(tempave, REALM, tempchange = tempchange_abs, slope, slope.se)], 
+                    slopespred2[, .(tempave, REALM, tempchange, slope, slope.se)]) # merge neg and pos temp change points
 slopespred <- merge(slopespred, temptrend_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
 slopespred <- slopespred[tempchange > min & tempchange < max, ] # trim to min & max by realm
-slopespred[, tempave_metab := factor(as.character(round(tempave_metab)), levels = c('25', '10'))] # re-order factor for nicer plotting
+slopespred[, tempave := factor(as.character(round(tempave)), levels = c('25', '10'))] # re-order factor for nicer plotting
 
 
 # a) across realms
@@ -263,10 +238,10 @@ p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
 p2 <- ggplot() +
     geom_point(data = trends[!is.na(temptrend)], mapping = aes(temptrend, disstrend, size = duration), 
              color='#000000', alpha = 0.1, stroke = 0) +
-    geom_line(data = slopespredTdTT, mapping=aes(tempchange, slope, color = tempave_metab, group = tempave_metab), linetype = 'dashed', alpha = 0.5) +
-    geom_line(data = slopespred, mapping=aes(tempchange, slope, color = tempave_metab, group = tempave_metab)) +
+    geom_line(data = slopespredTdTT, mapping=aes(tempchange, slope, color = tempave, group = tempave), linetype = 'dashed', alpha = 0.5) +
+    geom_line(data = slopespred, mapping=aes(tempchange, slope, color = tempave, group = tempave)) +
     geom_ribbon(data = slopespred, alpha = 0.25, color = NA, 
-                aes(tempchange, slope, fill = tempave_metab, ymin=slope-slope.se, ymax=slope+slope.se)) +
+                aes(tempchange, slope, fill = tempave, ymin=slope-slope.se, ymax=slope+slope.se)) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
     labs(tag = 'B)', x = 'Temperage change [°C/year]', y = 'Turnover [proportion species/year]', 
          fill = 'Average temperature [°C]', 
@@ -287,14 +262,16 @@ fig2 <- arrangeGrob(p1, p2, nrow = 2, heights = c(1,2))
 
 ggsave('figures/fig2.png', fig2, width = 6, height = 4, units = 'in')
 
+
+
 ### Figure 3: interactions ---------
-slopes2 <- readRDS(here('temp', 'slopes_interactions2.rds'))
+slopes2 <- readRDS(here('temp', 'slopes_rawinteractions2.rds'))
 slopes2[, ':='(microclim = as.factor(signif(microclim,2)),
                npp = as.factor(signif(npp,2)),
                seas = as.factor(signif(seas,2)),
                human_bowler = as.factor(signif(human_bowler,2)))] # set as factors for plotting
 
-p1 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_microclim, color = microclim, fill = microclim, group = microclim,
+p1 <- ggplot(slopes2[tempave == 30, ], aes(tempchange_abs, slope_microclim, color = microclim, fill = microclim, group = microclim,
                                                  ymin=slope_microclim-slope_microclim.se,  ymax=slope_microclim+slope_microclim.se)) +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
@@ -307,7 +284,7 @@ p1 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_microclim
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))  
 
-p2 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_npp, color = npp, fill = npp, group = npp,
+p2 <- ggplot(slopes2[tempave == 30, ], aes(tempchange_abs, slope_npp, color = npp, fill = npp, group = npp,
                                                  ymin=slope_npp-slope_npp.se,  ymax=slope_npp+slope_npp.se)) +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
@@ -320,7 +297,7 @@ p2 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_npp, colo
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))  
 
-p3 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_seas, color = seas, fill = seas, group = seas,
+p3 <- ggplot(slopes2[tempave == 30, ], aes(tempchange_abs, slope_seas, color = seas, fill = seas, group = seas,
                                                  ymin=slope_seas-slope_seas.se,  ymax=slope_seas+slope_seas.se)) +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
@@ -333,7 +310,7 @@ p3 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_seas, col
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))  
 
-p4 <- ggplot(slopes2[tempave_metab == 30, ], aes(tempchange_abs, slope_human, color = human_bowler, fill = human_bowler, group = human_bowler,
+p4 <- ggplot(slopes2[tempave == 30, ], aes(tempchange_abs, slope_human, color = human_bowler, fill = human_bowler, group = human_bowler,
                                                  ymin=slope_human-slope_human.se,  ymax=slope_human+slope_human.se)) +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
