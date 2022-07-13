@@ -1,13 +1,13 @@
 #!/usr/bin/Rscript --vanilla
 
 #should be /usr/bin/Rscript --vanilla
-# Script to fit glmmTMB model for modTsdTTRealmtsignAllJtu
+# Script to fit glmmTMB model for modrawTsdTTRealmTaxamod2REAllJtu
 # Set up to be run on the command line
-# nohup code/turnover_vs_temperature_GLMM_fit_modTsdTTRealmtsignAllJtu.R > logs/turnover_vs_temperature_GLMMmodTsdTTRealmtsignAllJtu.Rout &
-# (this works if code is executable, e.g., chmod u+x turnover_vs_temperature_GLMM_fit_modTsdTTRealmtsignAllJtu.R)
+# nohup code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmTaxamod2REAllJtu.R > logs/turnover_vs_temperature_GLMMmodrawTsdTTRealmTaxamod2REAllJtu.Rout &
+# (this works if code is executable, e.g., chmod u+x turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmTaxamod2REAllJtu.R)
 # (otherwise use nohup Rscript ...)
 
-fitmod <- 'modTsdTTRealmtsignAllJtu'
+fitmod <- 'modrawTsdTTRealmTaxamod2REAllJtu'
 
 MATCHMOD <- FALSE # indicator to check if the argument matched a model name
 
@@ -31,7 +31,7 @@ trendsall <- fread('output/turnover_w_covariates.csv.gz')
 
 trendsall[, tsign := as.factor(tsign)]
 
-# Models ############################
+# Model ############################
 
 ## Choose dataset
 iallJtu <-
@@ -50,23 +50,25 @@ iallJtu <-
     )]
 
 
-# tsign:T:sdT:REALM:duration #########################
-if (fitmod == 'modTsdTTRealmtsignAllJtu') {
+if (fitmod == 'modrawTsdTTRealmTaxamod2REAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             REALM:duration +
-            REALM:tsign:tempchange_abs.sc:duration +
-            REALM:tsign:tempave_metab.sc:duration +
-            REALM:tsign:tempave_metab.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
+            REALM:tempchange_abs.sc:duration +
+            REALM:tempave.sc:duration +
+            REALM:tempave.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID) +
+            (REALM:tempchange_abs.sc:duration|taxa_mod2) + # add taxamod2 as random effects
+            (REALM:tempave.sc:duration|taxa_mod2) +
+            (REALM:tempave.sc:tempchange_abs.sc:duration|taxa_mod2),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
-    ) #,
-    #  control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+        dispformula = ~ REALM#,
+        #control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
