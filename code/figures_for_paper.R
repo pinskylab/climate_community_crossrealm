@@ -11,7 +11,12 @@ library(grid) # to combine ggplots together
 library(RColorBrewer)
 library(scales) # for defining signed sqrt axis transformation
 library(here)
-library(mgcv) # for gam smoother
+if(Sys.info()[[4]]=='annotate.sebs.rutgers.edu'){ # for gam smoother
+    library(mgcv, lib.loc = '/usr/lib64/R/library') # when running on Annotate. Need to load 1.8-26, not 1.8-33.
+} else {
+    library(mgcv)
+}
+
 source(here('code', 'error.bar.R'))
 
 # produce ggplot-style colors
@@ -335,8 +340,40 @@ fig3 <- arrangeGrob(p1, p2, p3, p4, ncol = 1)
 ggsave('figures/fig3.png', fig3, width = 4, height = 6, units = 'in')
 
 
+### Figure S1: time-series start and end dates
+bt <- fread('output/turnover_w_covariates.csv.gz') # from assemble_turnover_covariates.Rmd
+btts <- bt[, .(year1 = min(year1), year2 = max(year2), nsamp = length(unique(c(year1, year2)))), by = .(rarefyID, STUDY_ID)] # summarize by time-series
 
-### Figure S1: duration problem ----------
+labpos <- -0.3 # horizontal position for the subfigure label
+
+png(file = 'figures/figS1.png', width = 6, height = 6, units = 'in', res = 300)
+par(mfrow=c(2,2), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(2.5, 0.5, 0), tcl = -0.2, cex.axis = 0.8)
+
+# part a: start dates
+btts[, hist(year1, main = '', xlab = '', col = 'grey')]
+mtext('Start year', side = 1, line = 1.5, cex=0.8)
+mtext('A)', side = 3, line = -0.5, adj = labpos)
+
+# part b: end dates
+btts[, hist(year2, main = '', xlab = '', col = 'grey')]
+mtext('End year', side = 1, line = 1.5, cex=0.8)
+mtext('B)', side = 3, line = -0.5, adj = labpos)
+
+# part c: durations
+btts[, hist(year2-year1+1, main = '', xlab = '', col = 'grey')]
+mtext('Number of years', side = 1, line = 1.5, cex=0.8)
+mtext('C)', side = 3, line = -0.5, adj = labpos)
+
+# part d: number of samples
+btts[, hist(nsamp, main = '', xlab = '', col = 'grey')]
+mtext('Number of samples', side = 1, line = 1.5, cex=0.8)
+mtext('D)', side = 3, line = -0.5, adj = labpos)
+
+dev.off()
+
+
+
+### Figure S2: duration problem ----------
 # load raw BioTime
 load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians, which has all pairwise dissimilarities
 bt <- data.table(rarefied_beta_medians); rm(rarefied_beta_medians)
@@ -347,7 +384,7 @@ bt[, Horn := 1-Hornsim] # convert similarity to dissimilarity
 bt[, Hornsim := NULL]
 
 # load biotime trends
-trends <- fread('output/slope_w_covariates.csv.gz')
+trends <- fread('output/slope_w_covariates.csv.gz') # need to recalc this file to include nyr=2 ts
 
 # load simulations
 cors <- fread(here('output', 'simulated_ts.csv.gz'))
@@ -358,7 +395,7 @@ prop[, c("lower", "upper") := binomci(nsims*prop, nsims), by = .(range, n, varia
 
 
 # make plots of dissimilarity vs. duration with different durations plotted
-png(file = 'figures/figS1.png', width = 6, height = 6, units = 'in', res = 300)
+png(file = 'figures/figS2.png', width = 6, height = 6, units = 'in', res = 300)
 par(mfrow=c(2,2), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(1.9, 0.5, 0), tcl = -0.2, cex.axis = 0.8)
 
 # part a
