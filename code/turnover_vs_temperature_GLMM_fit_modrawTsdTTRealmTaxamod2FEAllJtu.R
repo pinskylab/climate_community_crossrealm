@@ -1,16 +1,18 @@
 #!/usr/bin/Rscript --vanilla
 
-# Script to fit glmmTMB modrawTsdTTRealmseasAllJtu model
-# nohup code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmseasAllJtu.R > logs/turnover_vs_temperature_GLMMmodrawTsdTTRealmseasAllJtu.Rout &
-# (this works if code is executable, e.g., chmod u+x code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmseasAllJtu.R)
-# (otherwise using nohup Rscript ...)
+#should be /usr/bin/Rscript --vanilla
+# Script to fit glmmTMB model for modrawTsdTTRealmTaxamod2FEAllJtu
+# Set up to be run on the command line
+# nohup code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmTaxamod2FEAllJtu.R > logs/turnover_vs_temperature_GLMMmodrawTsdTTRealmTaxamod2FEAllJtu.Rout &
+# this works if code is executable, e.g., chmod u+x code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmTaxamod2FEAllJtu.R
+# (otherwise use nohup Rscript ...)
 
-fitmod <- 'modrawTsdTTRealmseasAllJtu'
+fitmod <- 'modrawTsdTTRealmTaxamod2FEAllJtu' # taxamod2 as a fixed effect interaction
+
 MATCHMOD <- FALSE # indicator to check if the argument matched a model name
 
 # print basic info about the job ############################
 
-print(paste('This is script turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmseasAllJtu.R'))
 print(paste('This is process #', Sys.getpid()))
 print(Sys.time())
 
@@ -29,7 +31,7 @@ trendsall <- fread('output/turnover_w_covariates.csv.gz')
 
 trendsall[, tsign := as.factor(tsign)]
 
-# Models ############################
+# Model ############################
 
 ## Choose dataset
 iallJtu <-
@@ -47,7 +49,8 @@ iallJtu <-
         human_bowler.sc
     )]
 
-if (fitmod == 'modrawTsdTTRealmseasAllJtu') {
+
+if (fitmod == 'modrawTsdTTRealmTaxamod2FEAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
@@ -57,24 +60,26 @@ if (fitmod == 'modrawTsdTTRealmseasAllJtu') {
             REALM:tempchange_abs.sc:duration +
             REALM:tempave.sc:duration +
             REALM:tempave.sc:tempchange_abs.sc:duration +
-            REALM:seas.sc:duration +
-            REALM:seas.sc:tempchange_abs.sc:duration +
-            REALM:seas.sc:tempave.sc:duration +
-            REALM:seas.sc:tempave.sc:tempchange_abs.sc:duration +
+            REALM:tempchange_abs.sc:duration:taxa_mod2 + # add taxamod2 as fixed effects
+            REALM:tempave.sc:duration:taxa_mod2 +
+            REALM:tempave.sc:tempchange_abs.sc:duration:taxa_mod2 +
             (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
+            data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM)
+        dispformula = ~ REALM#,
+        #control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
     MATCHMOD <- TRUE
 }
+
 
 # print and save results ############################
 if (MATCHMOD == FALSE)
     stop("Model name did not match anything", call. = FALSE)
 if (MATCHMOD) {
     print(summary(mod))
-    saveRDS(mod, file = paste0('temp/', fitmod, '.rds'))
-    print(paste0('saved ', fitmod, '.rds'))
+    saveRDS(mod, file = paste0('temp/', fitmod, '_test.rds'))
+    print(paste0('saved ', fitmod, '_test.rds'))
     print(Sys.time())
     print(warnings())
     if (!grepl('dredge', fitmod)) {

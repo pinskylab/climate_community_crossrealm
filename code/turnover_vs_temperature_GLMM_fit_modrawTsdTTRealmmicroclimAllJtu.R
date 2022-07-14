@@ -1,7 +1,7 @@
 #!/usr/bin/Rscript --vanilla
 
 # Script to fit glmmTMB modrawTsdTTRealmmicroclimAllJtu model
-# nohup code/turnover_vs_temperature_GLMM_fit_modTsdTTRealmmicroclimAllJtu.R > logs/turnover_vs_temperature_GLMMmodTsdTTRealmmicroclimAllJtu.Rout &
+# nohup code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmmicroclimAllJtu.R > logs/turnover_vs_temperature_GLMMmodrawTsdTTRealmmicroclimAllJtu.Rout &
 # (this works if code is executable, e.g., chmod u+x code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmmicroclimAllJtu.R)
 # (otherwise using nohup Rscript ...)
 
