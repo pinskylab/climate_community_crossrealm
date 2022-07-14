@@ -55,6 +55,12 @@ bt[, range(duration+1)] # range of years sampled (2 to 119)
 
 
 
+### Miscellaneous statistics -----------
+
+# correlation among mean/min/max temperature changes
+tempchanges <- fread('output/temperaturetrend_byrarefyID_by_year1_year2.csv.gz')
+tempchanges[, cor.test(temptrend, temptrend_max)]
+tempchanges[, cor.test(temptrend, temptrend_min)]
 
 
 #### Table 1 --------------

@@ -74,17 +74,27 @@ tail(dimnames(ersst)[[3]]) # should be 2020: good
 
 ```
 
-# Average temperature by year
+# Average, max, and min temperature by year
 ```{r}
 # CRU TS
 crutsmelt <- as.data.table(cruts, value.name='cruts') # reshape to long format
 crutsmelt[, YEAR := as.numeric(substr(time, 1,4))] # extract year
-crutsyr <- crutsmelt[, .(cruts = mean(cruts, na.rm=TRUE)), by = .(lat_cruts = as.numeric(lat_cruts), lon_cruts = as.numeric(lon_cruts), YEAR)]
+crutsyr <- crutsmelt[, .(cruts = mean(cruts, na.rm=TRUE), 
+                         cruts_min = min(cruts, na.rm=TRUE), 
+                         cruts_max = max(cruts, na.rm=TRUE)), 
+                     by = .(lat_cruts = as.numeric(lat_cruts), 
+                            lon_cruts = as.numeric(lon_cruts), 
+                            YEAR)]
 
 # ERSST
 ersstmelt <- as.data.table(ersst, value.name = 'ersst')
 ersstmelt[, YEAR := as.numeric(substr(time, 1,4))]
-ersstyr <- ersstmelt[, .(ersst = mean(ersst, na.rm=TRUE)), by = .(lat_ersst = as.numeric(lat_ersst), lon_ersst = as.numeric(lon_ersst), YEAR)]
+ersstyr <- ersstmelt[, .(ersst = mean(ersst, na.rm=TRUE),
+                         ersst_min = min(ersst, na.rm=TRUE),
+                         ersst_max = max(ersst, na.rm=TRUE)), 
+                     by = .(lat_ersst = as.numeric(lat_ersst), 
+                            lon_ersst = as.numeric(lon_ersst), 
+                            YEAR)]
 ersstyr[lon_ersst > 180, lon_ersst := lon_ersst - 360] # convert to -180 to 180
 
 ```
@@ -123,7 +133,8 @@ ggplot(ersstseas, aes(lon_ersst, lat_ersst, color = seas_ersst)) + geom_point(si
 ```
 
 
-# Calculate temperature change slope based on biotime year pair/lat/lon
+# Calculate temperature change slope 
+Base this on biotime year pair/lat/lon. Calculate for annual mean, min, and max temp.
 ```{r calc slope}
 # Set up lat/lon grid in bt
 btlong[, lat_cruts := floor(rarefyID_y*2)/2 + 0.25] # find nearest CRU TS lat and lon grid values (0.5)
@@ -133,13 +144,27 @@ btlong[, lat_ersst := floor((rarefyID_y - 1)*0.5 + 1)/0.5] # find nearest ERSST 
 btlong[, lon_ersst := floor((rarefyID_x + 1)*0.5 + 1)/0.5]
 
 # dataframe with all years
-btlongallyrs <- btlong[, .(year = seq(year1, year2)), by = .(rarefyID, year1, year2, lat_cruts, lon_cruts, lat_ersst, lon_ersst, REALM)]
-btlongallyrs <- merge(btlongallyrs, crutsyr[, .(year = YEAR, lat_cruts, lon_cruts, cruts)], all.x = TRUE)
-btlongallyrs <- merge(btlongallyrs, ersstyr[, .(year = YEAR, lat_ersst, lon_ersst, ersst)], all.x = TRUE, by = c('lon_ersst', 'lat_ersst', 'year'))
+btlongallyrs <- btlong[, .(year = seq(year1, year2)), 
+                       by = .(rarefyID, year1, year2, lat_cruts, 
+                              lon_cruts, lat_ersst, lon_ersst, REALM)]
+btlongallyrs <- merge(btlongallyrs, 
+                      crutsyr[, .(year = YEAR, lat_cruts, lon_cruts, cruts, cruts_min, cruts_max)], 
+                      all.x = TRUE)
+btlongallyrs <- merge(btlongallyrs, 
+                      ersstyr[, .(year = YEAR, lat_ersst, lon_ersst, ersst, ersst_min, ersst_max)], 
+                      all.x = TRUE, by = c('lon_ersst', 'lat_ersst', 'year'))
 
 # slopes
-tslopes_cruts <- btlongallyrs[!is.na(cruts), .(trend_cruts = coef(lm(cruts ~ year))[2]), by = .(rarefyID, year1, year2, lat_cruts, lon_cruts, REALM)]
-tslopes_ersst <- btlongallyrs[!is.na(ersst), .(trend_ersst = coef(lm(ersst ~ year))[2]), by = .(rarefyID, year1, year2, lat_ersst, lon_ersst, REALM)]
+tslopes_cruts <- btlongallyrs[!is.na(cruts), 
+                              .(trend_cruts = coef(lm(cruts ~ year))[2],
+                                trend_cruts_min = coef(lm(cruts_min ~ year))[2],
+                                trend_cruts_max = coef(lm(cruts_max ~ year))[2]), 
+                              by = .(rarefyID, year1, year2, lat_cruts, lon_cruts, REALM)]
+tslopes_ersst <- btlongallyrs[!is.na(ersst), 
+                              .(trend_ersst = coef(lm(ersst ~ year))[2],
+                                trend_ersst_min = coef(lm(ersst_min ~ year))[2],
+                                trend_ersst_max = coef(lm(ersst_max ~ year))[2]), 
+                              by = .(rarefyID, year1, year2, lat_ersst, lon_ersst, REALM)]
 tslopes <- merge(tslopes_cruts, tslopes_ersst, all = TRUE)
 
 ```
@@ -193,8 +218,11 @@ btsum <- merge(btsum, ersstseas, by = c('lat_ersst', 'lon_ersst'), all.x = TRUE)
 btsum <- merge(btsum, avecruts[, .(rarefyID, year1, year2, ave_cruts, ave_metab_cruts)], all.x = TRUE, by = c('rarefyID', 'year1', 'year2'))
 btsum <- merge(btsum, aveersst[, .(rarefyID, year1, year2, ave_ersst, ave_metab_ersst)], all.x = TRUE, by = c('rarefyID', 'year1', 'year2'))
 
-# merge in temperature tredd
-btsum <- merge(btsum, tslopes[, .(rarefyID, year1, year2, trend_cruts, trend_ersst)], all.x = TRUE, by = c('rarefyID', 'year1', 'year2'))
+# merge in temperature trends (mean, min, max)
+btsum <- merge(btsum, tslopes[, .(rarefyID, year1, year2, 
+                                  trend_cruts, trend_cruts_min, trend_cruts_max,
+                                  trend_ersst, trend_ersst_min, trend_ersst_max)], 
+               all.x = TRUE, by = c('rarefyID', 'year1', 'year2'))
 ```
 
 # Examine CRUTS vs. ERSST
@@ -226,10 +254,20 @@ btsum[REALM == 'Marine' & is.na(ave_ersst), ':='(tempave = ave_cruts, tempave_me
 btsum[REALM != 'Marine' & is.na(ave_cruts), ':='(tempave = ave_ersst, tempave_metab = ave_metab_ersst)] # fill missing non-marine with ERSST
 
 # temperature change
-btsum[ , temptrend := trend_cruts] # CRU TS for land and freshwater
-btsum[REALM == 'Marine', temptrend := trend_ersst] # ERSST for marine
-btsum[REALM == 'Marine' & is.na(trend_ersst), ':='(temptrend = trend_cruts)]
-btsum[REALM != 'Marine' & is.na(trend_cruts), ':='(temptrend = trend_ersst)]
+btsum[ , ':='(temptrend = trend_cruts,
+              temptrend_min = trend_cruts_min,
+              temptrend_max = trend_cruts_max)] # CRU TS for land and freshwater
+btsum[REALM == 'Marine', ':='(temptrend = trend_ersst,
+                              temptrend_min = trend_ersst_min,
+                              temptrend_max = trend_ersst_max)] # ERSST for marine
+btsum[REALM == 'Marine' & is.na(trend_ersst), # if marine but missing ERSST
+      ':='(temptrend = trend_cruts, 
+           temptrend_min = trend_cruts_min,
+           temptrend_max = trend_cruts_max)] 
+btsum[REALM != 'Marine' & is.na(trend_cruts), # not marine but missing CRU TS
+      ':='(temptrend = trend_ersst, 
+           temptrend_min = trend_ersst_min,
+           temptrend_max = trend_ersst_max)] 
 
 # seasonality
 btsum[, seas := seas_cruts]
@@ -238,7 +276,8 @@ btsum[REALM == 'Marine' & is.na(seas_ersst), ':='(seas = seas_cruts)]
 btsum[REALM != 'Marine' & is.na(seas_cruts), ':='(seas = seas_ersst)]
 
 # set column order and remove columns
-out <- btsum[, .(rarefyID, year1, year2, tempave, tempave_metab, temptrend, seas)]
+out <- btsum[, .(rarefyID, year1, year2, tempave, tempave_metab, 
+                 temptrend, temptrend_min, temptrend_max, seas)]
 
 # trim to unique rarefyID, year1, year2, combinations
 out <- out[!duplicated(out), ]
