@@ -218,7 +218,7 @@ slopespredTdTT[, tempave := factor(as.character(round(tempave)), levels = c('25'
 
 # predicted slopes from the main model (tempchange_abs)
 slopespred <- readRDS(here('temp', 'slopes_rawTsdTTRealm.rds'))
-slopespred <- slopespred[round(tempave,1) %in% c(10.1, 25.0),]
+slopespred <- slopespred[round(tempave,1) %in% c(10.1, 25.1),]
 slopespred2 <- slopespred # make the negative temperature change points
 slopespred2[, tempchange := -tempchange_abs]
 slopespred <- rbind(slopespred[, .(tempave, REALM, tempchange = tempchange_abs, slope, slope.se)], 
