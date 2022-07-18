@@ -6,7 +6,11 @@ output:
 Trims based on data quality, separates the data points to use for 3/5/10/20 year comparisons, and adds covariate data.
 
 ```{r setup}
+if(Sys.info()[[4]]=='annotate.sebs.rutgers.edu'){ # for gam smoother
 library('mgcv', lib.loc = '/usr/lib64/R/library') # when running on Annotate. Need to load 1.8-26, not 1.8-33.
+} else {
+  library(mgcv)
+}
 library(data.table)
 library(ggplot2)
 library(beanplot) # for beanplots

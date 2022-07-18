@@ -11,6 +11,6 @@ Here’s that taxonomic breakdown of the Biotime studies.
 This only works for the species-level taxa so far, but those do make up most of the records.
 
 
-From Michael Burrows, 21 May 2002
+From Michael Burrows, 21 May 2020
 
 1. stibysprealm.csv: Here is my STI data for all the BIOTIME species, including NAs for species that failed to fit Maxent models to OBIS/GBIF data, usually because of insufficient data. The percentile temperatures (X0, X10, … X100) are derived using Maxent predicted global distributions to extract data from average surface temperatures for land and ocean.

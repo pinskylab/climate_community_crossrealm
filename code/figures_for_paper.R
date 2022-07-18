@@ -53,10 +53,14 @@ binomci <- function(x, n){
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
 
 nrow(bt)
-bt[, .(N = length(unique(rarefyID))), by = REALM]
-bt[, length(unique(STUDY_ID))]
-bt[, length(unique(rarefyID)), by = taxa_mod2]
+bt[, length(unique(STUDY_ID))] # number of studies
+bt[, length(unique(rarefyID))] # number of timeseries
+bt[, length(unique(paste(rarefyID_x, rarefyID_y)))] # number of unique locations
+bt[, .(N = length(unique(rarefyID))), by = REALM] # numbers of time-series by realm
+bt[, length(unique(rarefyID)), by = taxa_mod2] # number of time-series by taxon group
+bt[, .(Nts = length(unique(rarefyID))), by = STUDY_ID][Nts >1, .N] # number of studies with >1 rarefyID
 bt[, range(duration+1)] # range of years sampled (2 to 119)
+
 
 
 
