@@ -5,10 +5,16 @@
 # run as
 # nohup Rscript --vanilla code/pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R > logs/pred_GLMMmodrawTsdTTRealmCovariateAllJtu.Rout &
 # or run by hand to, for example, start after the predictions have been made (line 93). would need to read the predictions in by hand.
+# set to run on Annotate
 
 
 print(paste('This is process #', Sys.getpid()))
 print(Sys.time())
+
+# needed to run this from the Annotate R console. Not needed in RStudio on Annotate. Not clear why.
+if(Sys.getenv('RSTUDIO')=='' & Sys.info()[[4]]=='annotate.sebs.rutgers.edu'){
+    dyn.load('/usr/local/lib64/libgfortran.so.5')
+}
 
 library(data.table) # for handling large datasets
 library(glmmTMB, lib.loc = "/usr/lib64/R/library") # for ME models
@@ -45,7 +51,7 @@ modrawTsdTTRealmhumanAllJtu <- readRDS('temp/modrawTsdTTRealmhumanAllJtu.rds') #
 print('models loaded')
 
 # set up prediction frame
-newdat <- data.table(expand.grid(tempave = c(0, 30), tempchange_abs = seq(0, 0.6, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial'), microclim.sc = c(-2, 2)))
+newdat <- data.table(expand.grid(tempave = c(0, 8, 10, 13, 30), tempchange_abs = seq(0, 0.6, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial'), microclim.sc = c(-2, 2)))
 newdat[, ':='(npp.sc = microclim.sc, seas.sc = microclim.sc, 
                human_bowler.sc = microclim.sc, mass.sc = microclim.sc)]
 newdat$STUDY_ID <- 1

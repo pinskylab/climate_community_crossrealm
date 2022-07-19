@@ -664,6 +664,7 @@ aics
 
 
 ## Covariate x Temperature x temperature slope x REALM x duration
+### Metabolic temperature models
 ```{r, echo = FALSE}
 modTsdTTRealmtsignAllJtu <- readRDS('temp/modTsdTTRealmtsignAllJtu.rds') # has temperature change sign
 modTsdTTRealmnppAllJtu <- readRDS('temp/modTsdTTRealmnppAllJtu.rds') # has npp
@@ -673,12 +674,12 @@ modTsdTTRealmhumanAllJtu <- readRDS('temp/modTsdTTRealmhumanAllJtu.rds') # has h
 modTsdTTRealmmassAllJtu <- readRDS('temp/modTsdTTRealmmassAllJtu.rds') # has mass
 ```
 
-### Tsign effects
+#### Tsign effects
 ```{r}
 fixef(modTsdTTRealmtsignAllJtu)
 
 ```
-#### Make or load temperature sign effect
+##### Make or load temperature sign effect
 ```{r, echo = FALSE}
 if(file.exists(here('temp', 'slopes_tsign.rds'))){
   slopestsign <- readRDS(here('temp', 'slopes_tsign.rds'))
@@ -704,7 +705,7 @@ if(file.exists(here('temp', 'slopes_tsign.rds'))){
 }
 ```
 
-#### Plot tsign effects
+##### Plot tsign effects
 Overall, the effects of warming and cooling at nearly equivalent.  
 More biodiversity change with warming in the ocean, consistent with the temperature effect (more change at higher temperatures).  
 More biodiversity change with cooling on land, consistent with the temperature effect (more change at lower tempeartures).  
@@ -758,7 +759,7 @@ p2
 p3
 ```
 
-#### Difference in slopes
+##### Difference in slopes
 These plots subtract the cooling slopes from the warming slopes.  
 Plots need to be improved, I think because pixel spacing isn't even. Getting strange patterns near 0 temperature change.
 ```{r, echo = FALSE}
@@ -826,7 +827,7 @@ p2
 p3
 ```
 
-### AIC among covariate models
+#### AIC among covariate models
 All covariate models are preferred over the baseline model.  
 Microclimates and mass are the preferred covariates.
 ```{r}
@@ -837,13 +838,13 @@ aics$dAIC <- aics$AIC - min(aics$AIC)
 aics
 ```
 
-### Microclimate summary
+#### Microclimate summary
 ```{r}
 fixef(modTsdTTRealmmicroclimAllJtu)
 
 ```
 
-#### Make or load the microclimate interaction
+##### Make or load the microclimate interaction
 ```{r, echo = FALSE}
 if(file.exists(here('temp', 'slopes_microclim1.rds'))){
   slopes1 <- readRDS(here('temp', 'slopes_microclim1.rds'))
@@ -870,7 +871,7 @@ slopes1 <- newdat1[, .(slope_microclim = coef(lm(Jtu.sc.microclim ~ duration))[2
 ```
 
 
-#### Plot the temperature interaction by realm for the microclimate model
+##### Plot the temperature interaction by realm for the microclimate model
 Microclimates affect the overall magnitude of change, but not the relationship between change and temperature.
 ```{r, echo = FALSE}
 # plot
@@ -893,9 +894,9 @@ p1 <- ggplot(slopes1, aes(tempchange_abs, tempave_metab, z = slope_microclim)) +
 p1
 ```
 
-### Seasonality summary
+#### Seasonality summary
 
-#### Make or load the seasonality interaction
+##### Make or load the seasonality interaction
 ```{r, echo = FALSE}
 if(file.exists(here('temp', 'slopes_seas1.rds'))){
   slopes1 <- readRDS(here('temp', 'slopes_seas1.rds'))
@@ -922,7 +923,7 @@ slopes1 <- newdat1[, .(slope_seas = coef(lm(Jtu.sc.seas ~ duration))[2]), by = .
 ```
 
 
-#### Plot the temperature interaction by realm for the seasonality model
+##### Plot the temperature interaction by realm for the seasonality model
 Seasonality affects the overall magnitude of change, but not the relationship between change and temperature.
 ```{r, echo = FALSE}
 # plot
@@ -944,9 +945,9 @@ p1 <- ggplot(slopes1, aes(tempchange_abs, tempave_metab, z = slope_seas)) +
 
 p1
 ```
-### Mass summary
+#### Mass summary
 
-#### Make or load the mass interaction
+##### Make or load the mass interaction
 ```{r, echo = FALSE}
 if(file.exists(here('temp', 'slopes_mass1.rds'))){
   slopes1 <- readRDS(here('temp', 'slopes_mass1.rds'))
@@ -973,7 +974,7 @@ slopes1 <- newdat1[, .(slope_mass = coef(lm(Jtu.sc.mass ~ duration))[2]), by = .
 ```
 
 
-#### Plot the temperature interaction by realm for the mass model
+##### Plot the temperature interaction by realm for the mass model
 Mass affect the overall magnitude of change, but not the relationship between change and temperature.
 ```{r, echo = FALSE}
 # plot
@@ -995,8 +996,8 @@ p1 <- ggplot(slopes1, aes(tempchange_abs, tempave_metab, z = slope_mass)) +
 
 p1
 ```
-### Interactions as lines
-#### Make the interaction effects
+#### Interactions as lines
+##### Load the interaction effects
 ```{r, echo = FALSE}
 
 if(file.exists(here('temp', 'slopes_interactions2.rds'))){
@@ -1010,7 +1011,7 @@ if(file.exists(here('temp', 'slopes_interactions2.rds'))){
 
 ```
 
-#### Plot the interactions (raw)
+##### Plot the interactions (raw)
 More response to changing temperatures with
 - less microclimate availability: thermal refugia are absent
 - more seasonality: may indicate that phenological shifts are common and easier
@@ -1050,6 +1051,57 @@ p5
 ```
 
 
+### Environmental temperature models
+```{r, echo = FALSE}
+modrawTsdTTRealmnppAllJtu <- readRDS('temp/modrawTsdTTRealmnppAllJtu.rds') # has npp
+modrawTsdTTRealmseasAllJtu <- readRDS('temp/modrawTsdTTRealmseasAllJtu.rds') # has seasonality
+modrawTsdTTRealmmicroclimAllJtu <- readRDS('temp/modrawTsdTTRealmmicroclimAllJtu.rds') # has microclimates
+modrawTsdTTRealmhumanAllJtu <- readRDS('temp/modrawTsdTTRealmhumanAllJtu.rds') # has human impact
+```
+
+#### Interactions as lines
+##### Load the interaction effects
+```{r, echo = FALSE}
+
+if(file.exists(here('temp', 'slopes_rawinteractions2.rds'))){
+  slopesraw2 <- readRDS(here('temp', 'slopes_rawinteractions2.rds'))
+  print('Loaded interaction predictions from file')
+
+} else {
+  print('Need to run pred_GLMMmodrawTsdTTRealmCovariate.R')
+  
+}
+
+```
+
+##### Plot the interactions (raw)
+More response to changing temperatures with...
+
+Error bars are 95% CIs
+```{r, echo = FALSE}
+# plot
+p1 <- ggplot(slopesraw2, aes(tempchange_abs, slope_microclim, color = microclim, group = microclim)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope_microclim-1.96*slope_microclim.se, ymax=slope_microclim+1.96*slope_microclim.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM), rows = vars(tempave), labeller = label_both)
+p2 <- ggplot(slopesraw2, aes(tempchange_abs, slope_npp, color = npp, group = npp)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope_npp-1.96*slope_npp.se, ymax=slope_npp+1.96*slope_npp.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM), rows = vars(tempave), labeller = label_both)
+p3 <- ggplot(slopesraw2, aes(tempchange_abs, slope_seas, color = seas, group = seas)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope_seas-1.96*slope_seas.se, ymax=slope_seas+1.96*slope_seas.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM), rows = vars(tempave))
+p4 <- ggplot(slopesraw2, aes(tempchange_abs, slope_human, color = human_bowler, group = human_bowler)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope_human-1.96*slope_human.se, ymax=slope_human+1.96*slope_human.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM), rows = vars(tempave), labeller = label_both)
+
+p1
+p2
+p3
+p4
+```
 
 ## Thermal bias test
 Does the thermal bias of a community explain the proponsity to change when temperature changes?
