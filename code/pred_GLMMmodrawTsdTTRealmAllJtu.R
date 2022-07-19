@@ -6,6 +6,15 @@ library(data.table) # for handling large datasets
 library(glmmTMB, lib.loc = "/usr/lib64/R/library") # for ME models
 library(here) # for relative paths
 
+scaleme <- function(x, nm){
+    if(!(nm %in% scalingall[,var])) stop('nm not found in scalingall')
+    if(scalingall[var==nm, log]){
+        x.sc <- (log(x + scalingall[var==nm, plus]) - scalingall[var == nm, center]) / scalingall[var == nm, scale]  
+    } else {
+        x.sc <- (x  + scalingall[var==nm, plus] - scalingall[var == nm, center]) / scalingall[var == nm, scale]
+    }
+    return(x.sc)
+}
 unscaleme <- function(x.sc, nm){
     if(!(nm %in% scalingall[,var])) stop('nm not found in scalingall')
     if(scalingall[var==nm, log]){
@@ -24,11 +33,11 @@ modrawTsdTTRealmAllJtu <- readRDS('temp/modrawTsdTTRealmAllJtu.rds') # uses dura
 
 
 # set up prediction frame. tempchange_abs set so goes from 0 2.
-newdat <- data.table(expand.grid(tempave.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs.sc = seq(-0.7953, 47, length.out = 100), duration = seq(1, 10, length.out=10), REALM = c('Marine', 'Terrestrial', 'Freshwater')))
+newdat <- data.table(expand.grid(tempave = seq(-20, 30, length.out = 100), tempchange_abs = seq(0, 2, length.out = 100), duration = seq(1, 10, length.out=10), REALM = c('Marine', 'Terrestrial', 'Freshwater')))
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1
-newdat[, tempave := unscaleme(tempave.sc, 'tempave.sc')]
-newdat[, tempchange_abs := unscaleme(tempchange_abs.sc, 'tempchange_abs.sc')]
+newdat[, tempave.sc := scaleme(tempave, 'tempave.sc')]
+newdat[, tempchange_abs.sc := scaleme(tempchange_abs, 'tempchange_abs.sc')]
 
 # predict
 preds <- predict(modrawTsdTTRealmAllJtu, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')

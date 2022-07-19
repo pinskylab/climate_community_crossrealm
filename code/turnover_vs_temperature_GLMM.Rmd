@@ -464,6 +464,7 @@ trendsall[!is.na(tempave_metab.sc) & !duplicated(rarefyID), round(prop.table(tab
 #### Make/load prediction
 Uses output from pred_GLMMmodrawTsdTTRealmAllJtu.R (abs) and pred_GLMMmodrawTdTTRealmAllJtu.R (not abs).
 ```{r, echo = FALSE}
+# using tempchange_abs
 if(file.exists(here('temp', 'slopes_rawTsdTTRealm.rds'))){
   slopesrawTsdTT <- readRDS(here('temp', 'slopes_rawTsdTTRealm.rds'))
   print('Loaded predictions from file')
@@ -479,6 +480,7 @@ if(file.exists(here('temp', 'slopes_rawTsdTTRealm.rds'))){
   saveRDS(slopesrawTsdTT, file = here('temp', 'slopes_rawTsdTTRealm.rds'))
 }
 
+# using tempchange
 if(file.exists(here('temp', 'slopes_rawTdTTRealm.rds'))){
   slopesrawTdTT <- readRDS(here('temp', 'slopes_rawTdTTRealm.rds'))
   print('Loaded predictions from file')
@@ -495,7 +497,76 @@ if(file.exists(here('temp', 'slopes_rawTdTTRealm.rds'))){
 }
 ```
 
-#### Plot the interaction
+#### Tempchange plots
+##### Interaction
+```{r, echo = FALSE}
+p1 <- ggplot(slopesrawTdTT[REALM=='Marine'], aes(tempchange, tempave, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Marine') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p2 <- ggplot(slopesrawTdTT[REALM=='Terrestrial'], aes(tempchange, tempave, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Terrestrial') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+p3 <- ggplot(slopesrawTdTT[REALM=='Freshwater'], aes(tempchange, tempave, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Freshwater') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -20, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 12),
+          legend.title=element_text(size= 18),
+          legend.title.align = 1)
+
+p1
+p2
+p3
+```
+
+##### Confidence bounds
+CIs are from a SEM fit to the trends.
+```{r, fig.height=8}
+ggplot(slopesrawTdTT[round(tempave,1) %in% c(10.0, 21.6),], aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM))  +
+    labs(x = 'dT [degC/yr]') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
+
+```
+
+#### tempchange_abs plots
+##### Interaction
 ```{r, echo = FALSE}
 p1 <- ggplot(slopesrawTsdTT[REALM=='Marine'], aes(tempchange_abs, tempave, z = slope)) +
     geom_raster(aes(fill = slope)) +
@@ -544,6 +615,23 @@ p1
 p2
 p3
 ```
+##### Confidence bounds
+CIs are from a SEM fit to the trends.
+```{r, fig.height=8}
+ggplot(slopesrawTsdTT[round(tempave,1) %in% c(10.0, 21.6),], aes(tempchange_abs, slope, color = factor(round(tempave)), group = tempave)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM))  +
+    labs(x = '|dT|') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
+
+```
+
 #### Are endotherms common at high tempave on land?
 tempG20 means temperature > 20degC. Endotherms are common at all environmental temperatures on land, not just high temperatures.
 ```{r, echo = FALSE}
