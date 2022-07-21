@@ -245,34 +245,56 @@ summary(moddTRealmAllJtu)
 
 
 ## Temperature x temperature slope x REALM x duration
-Compare with duration scaled vs. not, with abs(tempchange) vs. tempchange, and with metabolic vs. environmental temperature
 ```{r}
-modAllJtu <- readRDS(here('temp', 'modAllJtu.rds'))
+# simple
+modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # just duration
+modRealmAllJtu <- readRDS(here('temp', 'modRealmAllJtu.rds')) # realm
+moddTAllJtu <- readRDS(here('temp', 'moddTAllJtu.rds')) # tempchange
+modsdTAllJtu <- readRDS(here('temp', 'modsdTAllJtu.rds')) # tempchange_abs
+moddTRealmAllJtu <- readRDS(here('temp', 'moddTRealmAllJtu.rds')) # tempchange and realm
+modsdTRealmAllJtu <- readRDS(here('temp', 'modsdTRealmAllJtu.rds')) # tempchange_abs and realm
+
+
+# TdTTRealm; versions of duration, scaled duration, and tempchange vs. _abs
 modTdTTRealmAllJtu <- readRDS(here('temp', 'modTdTTRealmAllJtu.rds')) # uses duration and tempchange
 modTdTTRealmDurscAllJtu <- readRDS(here('temp', 'modTdTTRealmDurscAllJtu.rds')) # uses duration.sc and tempchange
 modTsdTTRealmAllJtu <- readRDS(here('temp', 'modTsdTTRealmAllJtu.rds')) # uses duration and abs(tempchange)
 modTsdTTRealmDurscAllJtu <- readRDS(here('temp', 'modTsdTTRealmDurscAllJtu.rds')) # uses duration.sc and abs(tempchange)
-modrawTsdTTRealmAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmAllJtu.rds')) # uses environmental temperature (duration and abs)
 
-# for comparison against previous models
-modRealmAllJtu <- readRDS('temp/modRealmAllJtu.rds')
-moddTRealmAllJtu <- readRDS(here('temp', 'moddTRealmAllJtu.rds')) # uses tempchange
+# environmental temperature
+modrawTdTTAllJtu <- readRDS(here('temp', 'modrawTdTTAllJtu.rds')) # tempave and tempchange
+modrawTsdTTAllJtu <- readRDS(here('temp', 'modrawTsdTTAllJtu.rds')) # tempave and tempchange_abs
+modrawTdTTRealmAllJtu <- readRDS(here('temp', 'modrawTdTTRealmAllJtu.rds')) # tempave and tempchange and realm
+modrawTsdTTRealmAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmAllJtu.rds')) # tempave and tempchange_abs and realm
+
 ```
 
 ### AIC
-Clearly chooses un-scaled duration and abs(tempchange). Also prefers environmental over metabolic temperature.
+#### Check whether duration should be scaled
+Clearly chooses un-scaled duration and abs(tempchange).
 ```{r}
-# compare TsdTT models against null
 aics <- AIC(modAllJtu, modTdTTRealmAllJtu, modTdTTRealmDurscAllJtu, modTsdTTRealmAllJtu, modTsdTTRealmDurscAllJtu, modRealmAllJtu, moddTRealmAllJtu)
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics
-
-# metabolic temperature vs. environmental temperature
+```
+#### Metabolic temperature vs. environmental temperature
+Prefers environmental over metabolic temperature.
+```{r}
 aics2 <- AIC(modAllJtu, modTsdTTRealmAllJtu, modrawTsdTTRealmAllJtu)
 aics2$dAIC <- aics2$AIC - min(aics2$AIC)
 aics2
-
 ```
+
+#### Compare among environmental temperature models
+```{r}
+aics3 <- AIC(modAllJtu, modRealmAllJtu, moddTAllJtu, modsdTAllJtu, # one var
+             moddTRealmAllJtu, modsdTRealmAllJtu,  # two vars with realm
+             modrawTdTTAllJtu, modrawTsdTTAllJtu, # two vars w/out realm
+             modrawTdTTRealmAllJtu, modrawTsdTTRealmAllJtu) # three vars
+aics3$dAIC <- aics3$AIC - min(aics3$AIC)
+aics3
+```
+
 ### Metabolic temperature
 #### Make/load the tempchange_abs and tempchange predictions
 Uses output from pred_GLMMmodTsdTTRealmAllJtu.R (abs) and pred_GLMMmodTdTTRealmAllJtu.R (not abs).
@@ -551,7 +573,9 @@ p3
 ##### Confidence bounds
 CIs are from a SEM fit to the trends.
 ```{r, fig.height=8}
-ggplot(slopesrawTdTT[round(tempave,1) %in% c(10.0, 21.6),], aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
+vals <- slopesrawTdTT[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
+ggplot(slopesrawTdTT[tempave %in% vals,], 
+       aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
     geom_line() +
     geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
     facet_grid(cols = vars(REALM))  +
@@ -618,7 +642,9 @@ p3
 ##### Confidence bounds
 CIs are from a SEM fit to the trends.
 ```{r, fig.height=8}
-ggplot(slopesrawTsdTT[round(tempave,1) %in% c(10.0, 21.6),], aes(tempchange_abs, slope, color = factor(round(tempave)), group = tempave)) +
+vals <- slopesrawTsdTT[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
+ggplot(slopesrawTsdTT[tempave %in% vals,], 
+       aes(tempchange_abs, slope, color = factor(round(tempave)), group = tempave)) +
     geom_line() +
     geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
     facet_grid(cols = vars(REALM))  +
@@ -671,7 +697,7 @@ modTsdTTRealmnppAllJtu <- readRDS('temp/modTsdTTRealmnppAllJtu.rds') # has npp
 modTsdTTRealmseasAllJtu <- readRDS('temp/modTsdTTRealmseasAllJtu.rds') # has seasonality
 modTsdTTRealmmicroclimAllJtu <- readRDS('temp/modTsdTTRealmmicroclimAllJtu.rds') # has microclimates
 modTsdTTRealmhumanAllJtu <- readRDS('temp/modTsdTTRealmhumanAllJtu.rds') # has human impact
-modTsdTTRealmmassAllJtu <- readRDS('temp/modTsdTTRealmmassAllJtu.rds') # has mass
+#modTsdTTRealmmassAllJtu <- readRDS('temp/modTsdTTRealmmassAllJtu.rds') # has mass
 ```
 
 #### Tsign effects
@@ -1053,10 +1079,25 @@ p5
 
 ### Environmental temperature models
 ```{r, echo = FALSE}
-modrawTsdTTRealmnppAllJtu <- readRDS('temp/modrawTsdTTRealmnppAllJtu.rds') # has npp
-modrawTsdTTRealmseasAllJtu <- readRDS('temp/modrawTsdTTRealmseasAllJtu.rds') # has seasonality
-modrawTsdTTRealmmicroclimAllJtu <- readRDS('temp/modrawTsdTTRealmmicroclimAllJtu.rds') # has microclimates
-modrawTsdTTRealmhumanAllJtu <- readRDS('temp/modrawTsdTTRealmhumanAllJtu.rds') # has human impact
+# simple to more complex models
+modRealmAllJtu <- readRDS(here('temp', 'modRealmAllJtu.rds')) # only realm
+moddTRealmAllJtu <- readRDS(here('temp', 'moddTRealmAllJtu.rds')) # tempchange and realm
+modrawTsdTTRealmAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmAllJtu.rds')) # uses environmental temperature, tempchange_abs, realm
+
+modrawTsdTTRealmnppAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmnppAllJtu.rds')) # has npp
+modrawTsdTTRealmseasAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmseasAllJtu.rds')) # has seasonality
+modrawTsdTTRealmmicroclimAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmmicroclimAllJtu.rds')) # has microclimates
+modrawTsdTTRealmhumanAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmhumanAllJtu.rds')) # has human impact
+
+
+```
+
+#### AIC
+```{r}
+aics <- AIC(modRealmAllJtu, moddTRealmAllJtu, modrawTsdTTRealmAllJtu, modrawTsdTTRealmnppAllJtu, modrawTsdTTRealmseasAllJtu, modrawTsdTTRealmmicroclimAllJtu, modrawTsdTTRealmhumanAllJtu)
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics
+
 ```
 
 #### Interactions as lines
@@ -1078,7 +1119,7 @@ if(file.exists(here('temp', 'slopes_rawinteractions2.rds'))){
 More response to changing temperatures with...
 
 Error bars are 95% CIs
-```{r, echo = FALSE}
+```{r echo=FALSE, fig.height=15, fig.width=6}
 # plot
 p1 <- ggplot(slopesraw2, aes(tempchange_abs, slope_microclim, color = microclim, group = microclim)) +
     geom_line() +
@@ -1104,12 +1145,28 @@ p4
 ```
 
 ## Thermal bias test
-Does the thermal bias of a community explain the proponsity to change when temperature changes?
-```{r, echo = FALSE}
-modTsdTTRealmAllJtu_thermal_biasdata <- readRDS('temp/modTsdTTRealmAllJtu_thermal_biasdata_test.rds') # has npp
-modTsdTTRealmthermal_biasAllJtu_thermal_biasdata <- readRDS('temp/modTsdTTRealmthermal_biasAllJtu_thermal_biasdata_test.rds') # has npp
+Does the thermal bias of a community explain the propensity to change when temperature changes? 
 
-aics <- AIC(modTsdTTRealmAllJtu_thermal_biasdata, modTsdTTRealmthermal_biasAllJtu_thermal_biasdata)
+### Use the metabolic temperature
+Model with thermal bias is selected
+```{r, echo = FALSE}
+modTsdTTRealmAllJtu_thermal_biasdata <- readRDS(here('temp','modTsdTTRealmAllJtu_thermal_biasdata_test.rds')) # no thermal bias, but using the thermal bias dataset
+modTsdTTRealmtsignAllJtu_thermal_biasdata <- readRDS(here('temp', 'modTsdTTRealmtsignAllJtu_thermal_biasdata_test.rds')) # adding only tsign
+modTsdTTRealmthermal_biasAllJtu_thermal_biasdata <- readRDS(here('temp','modTsdTTRealmthermal_biasAllJtu_thermal_biasdata_test.rds')) # has thermal bias as well
+
+aics <- AIC(modTsdTTRealmAllJtu_thermal_biasdata, modTsdTTRealmtsignAllJtu_thermal_biasdata, modTsdTTRealmthermal_biasAllJtu_thermal_biasdata)
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics
+```
+
+### Use the environmental temperature (rawT)
+Model with only tsign is selected
+```{r, echo = FALSE}
+modrawTsdTTRealmAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmAllJtu_thermal_biasdata.rds')) # no thermal bias, but using the thermal bias dataset
+modrawTsdTTRealmtsignAllJtu_thermal_biasdata <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu_thermal_biasdata.rds')) # adding only tsign
+modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata.rds')) # has thermal bias as well
+
+aics <- AIC(modrawTsdTTRealmAllJtu_thermal_biasdata, modrawTsdTTRealmtsignAllJtu_thermal_biasdata, modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata)
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics
 ```
@@ -1169,3 +1226,34 @@ p1 <- ggplot(slopesTB, aes(tempchange_abs, tempave_metab, z = slope)) +
 
 p1
 ```
+
+
+## Taxon test
+Using environmental temperature
+```{r, echo = FALSE}
+#modrawTsdTTRealmTaxamod2FEsdTAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmTaxamod2FEsdTAllJtu')) # has taxa_mod2:tempchange_abs
+modrawTsdTTRealmTaxamod2FEAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmTaxamod2FEAllJtu_test.rds')) # has taxa_mod2:tempave:tempchange_abs
+
+# previous models
+modRealmAllJtu <- readRDS(here('temp', 'modRealmAllJtu.rds')) # only realm
+moddTRealmAllJtu <- readRDS(here('temp', 'moddTRealmAllJtu.rds')) # uses tempchange
+modrawTsdTTRealmAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmAllJtu.rds')) # uses environmental temperature and tempchange_abs
+
+```
+
+#### AIC
+```{r}
+aics <- AIC(modRealmAllJtu, moddTRealmAllJtu, modrawTsdTTRealmAllJtu, modrawTsdTTRealmTaxamod2FEAllJtu)
+aics$dAIC <- aics$AIC - min(aics$AIC, na.rm=TRUE)
+aics
+
+```
+
+
+#### Summary
+```{r}
+summary(modrawTsdTTRealmTaxamod2FEAllJtu)
+```
+
+
+

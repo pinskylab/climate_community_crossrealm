@@ -1,12 +1,23 @@
 #!/usr/bin/Rscript --vanilla
 
 # Script to fit glmmTMB modrawTsdTTRealmhumanAllJtu model
-# nohup code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmhumanAllJtu.R > logs/turnover_vs_temperature_GLMMmodrawTsdTTRealmhumanAllJtu.Rout &
+# nohup code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmhumanAllJtu.R XX > logs/turnover_vs_temperature_GLMMXX.Rout &
+# where XX is a model name (see options below)
 # (this works if code is executable, e.g., chmod u+x code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmhumanAllJtu.R)
 # (otherwise using nohup Rscript ...)
 
-fitmod <- 'modrawTsdTTRealmhumanAllJtu'
-MATCHMOD <- FALSE # indicator to check if the argument matched a model name
+# Read command line arguments ############
+
+args <- commandArgs(trailingOnly = TRUE)
+print(args)
+
+if (length(args) < 1)
+    stop("Have to specify a model to fit", call. = FALSE)
+if (length(args) > 1)
+    stop("Have to specify only 1 model to fit", call. = FALSE)
+fitmod <- args[1]
+MATCHMOD <-
+    FALSE # indicator to check if the argument matched a model name
 
 # print basic info about the job ############################
 
@@ -47,6 +58,29 @@ iallJtu <-
         human_bowler.sc
     )]
 
+## choose model
+
+### has interaction of covariate with only sdT
+if (fitmod == 'modrawTsdTTRealmhumansdTAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange_abs.sc:duration +
+            REALM:tempave.sc:duration +
+            REALM:tempave.sc:tempchange_abs.sc:duration +
+            REALM:human_bowler.sc:duration +
+            REALM:human_bowler.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM)
+    MATCHMOD <- TRUE
+}
+
+### has interaction of covariate with T and sdT
 if (fitmod == 'modrawTsdTTRealmhumanAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')

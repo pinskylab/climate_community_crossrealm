@@ -363,7 +363,41 @@ if (fitmod == 'modRealmAllJtu') {
     MATCHMOD <- TRUE
 }
 
-# dT/sdT:REALM:duration ##################
+# dT/sdT ##################
+if (fitmod == 'moddTAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            tempchange.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    ) #,
+    #  control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+if (fitmod == 'modsdTAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    ) #,
+    #  control = glmmTMBControl(profile=TRUE))
+    MATCHMOD <- TRUE
+}
+
+
+# dT/sdT:REALM ##################
 # use tempchange
 if (fitmod == 'moddTRealmAllJtu') {
     if (MATCHMOD)
@@ -400,7 +434,9 @@ if (fitmod == 'modsdTRealmAllJtu') {
 }
 
 
-# latitude:sdT:REALM:duration #########################
+
+
+# latitude:sdT:REALM #########################
 # use lat instead of T
 if (fitmod == 'modLatsdTTRealmAllJtu') {
     if (MATCHMOD)
@@ -439,8 +475,49 @@ if (fitmod == 'modabsLatsdTTRealmAllJtu') {
     MATCHMOD <- TRUE
 }
 
+# rawT:dT/sdT #########################
+# use tempave instead of tempave_metab
+
+# with tempchange
+if (fitmod == 'modrawTdTTAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            tempchange.sc:duration +
+            tempave.sc:duration +
+            tempave.sc:tempchange.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+# with tempchange_abs
+if (fitmod == 'modrawTsdTTAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            tempchange_abs.sc:duration +
+            tempave.sc:duration +
+            tempave.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+
+
 # T:dT/sdT:REALM INTERACTION WITH SINGLE FACTORS ########################
-# T:dT:REALM:duration like Antao #########################
+# T:dT:REALM like Antao #########################
 
 # use tempchange like Antao
 if (fitmod == 'modTdTTRealmAllJtu') {
@@ -483,7 +560,7 @@ if (fitmod == 'modTdTTRealmDurscAllJtu') {
 }
 
 
-# T:sdT:REALM:duration #########################
+# T:sdT:REALM #########################
 # use tempchange_abs (otherwise like Antao)
 if (fitmod == 'modTsdTTRealmAllJtu') {
     if (MATCHMOD)
@@ -525,7 +602,7 @@ if (fitmod == 'modTsdTTRealmDurscAllJtu') {
 }
 
 
-# rawT:dT/sdT:REALM:duration #########################
+# rawT:dT/sdT:REALM #########################
 # use tempave instead of tempave_metab
 
 # with tempchange
@@ -567,7 +644,8 @@ if (fitmod == 'modrawTsdTTRealmAllJtu') {
 }
 
 
-# tsign:T:sdT:REALM:duration #########################
+# tsign:rawT/T:sdT:REALM #########################
+# metabolic temperature
 if (fitmod == 'modTsdTTRealmtsignAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -587,183 +665,33 @@ if (fitmod == 'modTsdTTRealmtsignAllJtu') {
     MATCHMOD <- TRUE
 }
 
-# thermal_bias:T:sdT:REALM:duration #########################
-if (fitmod == 'modTsdTTRealmthermal_biasAllJtu') {
+# environmental temperature
+if (fitmod == 'modrawTsdTTRealmtsignAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:tempave_metab.sc:duration +
-            REALM:tempave_metab.sc:tempchange_abs.sc:duration +
-            REALM:thermal_bias.sc:duration +
-            REALM:thermal_bias.sc:tempchange_abs.sc:duration +
-            REALM:thermal_bias.sc:tempave_metab.sc:duration +
-            REALM:thermal_bias.sc:tempave_metab.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
-    )#,
-    #control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-
-
-# npp:rawT/T:sdT:REALM:duration #########################
-
-# with metabolic temp
-if (fitmod == 'modTsdTTRealmnppAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:tempave_metab.sc:duration +
-            REALM:tempave_metab.sc:tempchange_abs.sc:duration +
-            REALM:npp.sc:duration +
-            REALM:npp.sc:tempchange_abs.sc:duration +
-            REALM:npp.sc:tempave_metab.sc:duration +
-            REALM:npp.sc:tempave_metab.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM#,
-        #control = glmmTMBControl(profile = TRUE)
-    ) 
-    MATCHMOD <- TRUE
-}
-
-# with environmental temp
-if (fitmod == 'modrawTsdTTRealmnppAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:tempave.sc:duration +
-            REALM:tempave.sc:tempchange_abs.sc:duration +
-            REALM:npp.sc:duration +
-            REALM:npp.sc:tempchange_abs.sc:duration +
-            REALM:npp.sc:tempave.sc:duration +
-            REALM:npp.sc:tempave.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM#,
-        #control = glmmTMBControl(profile = TRUE)
-    ) 
-    MATCHMOD <- TRUE
-}
-
-# seas:rawT/T:sdT:REALM:duration #########################
-
-# metabolic temp
-if (fitmod == 'modTsdTTRealmseasAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:tempave_metab.sc:duration +
-            REALM:tempave_metab.sc:tempchange_abs.sc:duration +
-            REALM:seas.sc:duration +
-            REALM:seas.sc:tempchange_abs.sc:duration +
-            REALM:seas.sc:tempave_metab.sc:duration +
-            REALM:seas.sc:tempave_metab.sc:tempchange_abs.sc:duration +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
     ) #,
-    # control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-
-# environmental temp
-if (fitmod == 'modrawTsdTTRealmseasAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:tempave.sc:duration +
-            REALM:tempave.sc:tempchange_abs.sc:duration +
-            REALM:seas.sc:duration +
-            REALM:seas.sc:tempchange_abs.sc:duration +
-            REALM:seas.sc:tempave.sc:duration +
-            REALM:seas.sc:tempave.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
-    ) #,
-    # control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-
-# microclim:rawT/T:sdT:REALM:duration #########################
-
-# metabolic temp
-if (fitmod == 'modTsdTTRealmmicroclimAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:tempave_metab.sc:duration +
-            REALM:tempave_metab.sc:tempchange_abs.sc:duration +
-            REALM:microclim.sc:duration +
-            REALM:microclim.sc:tempchange_abs.sc:duration +
-            REALM:microclim.sc:tempave_metab.sc:duration +
-            REALM:microclim.sc:tempave_metab.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM,
-        control = glmmTMBControl(profile = TRUE)
-    ) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-
-# environmental temp
-if (fitmod == 'modrawTsdTTRealmmicroclimAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:tempave.sc:duration +
-            REALM:tempave.sc:tempchange_abs.sc:duration +
-            REALM:microclim.sc:duration +
-            REALM:microclim.sc:tempchange_abs.sc:duration +
-            REALM:microclim.sc:tempave.sc:duration +
-            REALM:microclim.sc:tempave.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM,
-        control = glmmTMBControl(profile = TRUE)
-    ) # add dispersion formula
+    #  control = glmmTMBControl(profile=TRUE)) # add dispersion formula
     MATCHMOD <- TRUE
 }
 
 
-# mass:T:sdT:REALM:duration #########################
+
+# npp/seas/microclim/human/taxamod2 #########################
+## see dedicated scripts instead
+
+
+# mass:T:sdT:REALM #########################
 if (fitmod == 'modTsdTTRealmmassAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -788,54 +716,10 @@ if (fitmod == 'modTsdTTRealmmassAllJtu') {
 }
 
 
-# human:T:sdT:REALM:duration #########################
-
-# metabolic temp
-if (fitmod == 'modTsdTTRealmhumanAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:tempave_metab.sc:duration +
-            REALM:tempave_metab.sc:tempchange_abs.sc:duration +
-            REALM:human_bowler.sc:duration +
-            REALM:human_bowler.sc:tempchange_abs.sc:duration +
-            REALM:human_bowler.sc:tempave_metab.sc:duration +
-            REALM:human_bowler.sc:tempave_metab.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM)
-    MATCHMOD <- TRUE
-}
-
-# environmental temp
-if (fitmod == 'modrawTsdTTRealmhumanAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:tempave.sc:duration +
-            REALM:tempave.sc:tempchange_abs.sc:duration +
-            REALM:human_bowler.sc:duration +
-            REALM:human_bowler.sc:tempchange_abs.sc:duration +
-            REALM:human_bowler.sc:tempave.sc:duration +
-            REALM:human_bowler.sc:tempave.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM)
-    MATCHMOD <- TRUE
-}
 
 
-# endothermfrac:T:sdT:REALM:duration #########################
+
+# endothermfrac:T:sdT:REALM #########################
 if (fitmod == 'modTsdTTRealmendothermfracAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -859,36 +743,7 @@ if (fitmod == 'modTsdTTRealmendothermfracAllJtu') {
 
 
 
-# taxamod2 (as RE):T:sdT:REALM:duration #########################
-if (fitmod == 'modTsdTTRealmTaxamod2REAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:tempave_metab.sc:duration +
-            REALM:tempave_metab.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID) +
-            (REALM:tempchange_abs.sc:duration |
-                 taxa_mod2) + # add taxamod2 as random effects
-            (REALM:tempave_metab.sc:duration | taxa_mod2) +
-            (
-                REALM:tempave_metab.sc:tempchange_abs.sc:duration | taxa_mod2
-            ),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM#,
-        #control = glmmTMBControl(profile = TRUE)
-    ) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-
-
-
-
-# T+dT:REALM:duration ANTAO-STYLE DATASET #########################
+# T+dT:REALM ANTAO-STYLE DATASET #########################
 
 # try on Antao et al. 2020-style dataset
 # use tempchange, not tempchange_abs
