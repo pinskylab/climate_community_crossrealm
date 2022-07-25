@@ -61,7 +61,8 @@ bt[, length(unique(rarefyID)), by = taxa_mod2] # number of time-series by taxon 
 bt[, .(Nts = length(unique(rarefyID))), by = STUDY_ID][Nts >1, .N] # number of studies with >1 rarefyID
 bt[, range(duration+1)] # range of years sampled (2 to 119)
 
-
+trends <- readRDS('temp/trendstemp.rds')
+trends[, length(unique(rarefyID))] # number of timeseries
 
 
 ### Miscellaneous statistics -----------

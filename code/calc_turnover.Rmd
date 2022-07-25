@@ -42,7 +42,8 @@ bt <- merge(bt, rarefyID_type, by = 'rarefyID', all.x = TRUE) # merge with bioti
 # biotime taxa category and other info
 load(here::here('data', 'biotime_blowes', 'bt_malin.Rdata')) # load bt_malin
 btinfo <- data.table(bt_malin); rm(bt_malin)
-btinfo2 <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Biome, taxa_mod, REALM, STUDY_ID)]
+btinfo[, Nave := mean(N), by = rarefyID] # average number of individuals in the timeseries
+btinfo2 <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Nave, Biome, taxa_mod, REALM, STUDY_ID)]
 bt <- merge(bt, btinfo2, by = 'rarefyID') # trims out rarefyIDs not in bt_malin
 
 # richness
@@ -62,10 +63,9 @@ btinfo[S == 1, .N]
 
 ## Remove studies that don't meet quality thresholds
 Keep studies with:
-- >2 species
-- >2 years
-
-
+- >=5 species
+- >=2 years
+- >=10 individuals on average.
 ```{r QAQC}
 length(unique(bt$rarefyID))
 length(setdiff(bt$rarefyID, rich$rarefyID))
@@ -74,14 +74,17 @@ length(setdiff(bt$rarefyID, rich$rarefyID))
 # number of years per study (in remaining samples)
 nyrs <- bt[, .(nyrBT = length(unique(c(year1, year2)))), by = rarefyID]
 length(setdiff(bt$rarefyID, nyrs$rarefyID))
-invisible(nyrs[, hist(nyrBT)])
-nyrs[nyrBT < 3, .N]
+invisible(nyrs[, hist(nyrBT, breaks=seq(0.5,100.5,by=1))])
+nyrs[nyrBT < 2, .N]
 
-# >2 species, >2 yrs
-bt <- bt[rarefyID %in% rich[Nspp > 2, rarefyID], ]
+# >=5 species, >=2 yrs, >=10 individuals
+bt <- bt[rarefyID %in% rich[Nspp >= 5, rarefyID], ]
 length(unique(bt$rarefyID))
 
-bt <- bt[rarefyID %in% nyrs[nyrBT > 2, rarefyID], ]
+bt <- bt[rarefyID %in% nyrs[nyrBT >= 2, rarefyID], ]
+length(unique(bt$rarefyID))
+
+bt <- bt[Nave >= 10 | is.na(Nave), ]
 length(unique(bt$rarefyID))
 ```
 
@@ -155,7 +158,18 @@ calctrend <- function(y, year1, year2, measure = 'y', duration_group = NA_charac
                 duration_group = duration_group,
                 nsamps = length(yrs))
     return(out)
-  } else{
+  }
+  if(length(dy)==1){
+    out <- list(disstrend = y/dy, # coef for the slope
+                trendse = NA_real_,
+                year1 = min(year1), 
+                year2 = max(year2),
+                measure = measure,
+                duration_group = duration_group,
+                nsamps = length(yrs))
+    return(out)
+  }
+  if(length(dy)<1){
     out <- list(disstrend = NA_real_, trendse = NA_real_, year1 = NA_real_, year2 = NA_real_,
                 measure = measure, duration_group = duration_group, nsamps = NA_integer_)
     return(out)
@@ -182,7 +196,20 @@ calctrendy1 <- function(y, year1, year2, measure = 'y', duration_group = NA_char
                 duration_group = duration_group,
                 nsamps = length(yrs))
     return(out)
-  } else{
+  }
+  if(sum(keep)==1){
+    y2 <- y[keep]
+    dy2 <- dy[keep]
+    out <- list(disstrend = y2/dy2, # coef for the slope
+                trendse = NA_real_,
+                year1 = min(year1), 
+                year2 = max(year2),
+                measure = measure, 
+                duration_group = duration_group,
+                nsamps = length(yrs))
+    return(out)
+  } 
+  if(sum(keep)<1){
     out <- list(disstrend = NA_real_, trendse = NA_real_, year1 = NA_real_, year2 = NA_real_,
                 measure = measure, duration_group = duration_group, nsamps = NA_integer_)
     return(out)
