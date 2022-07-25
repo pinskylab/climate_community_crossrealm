@@ -644,50 +644,7 @@ if (fitmod == 'modrawTsdTTRealmAllJtu') {
 }
 
 
-# tsign:rawT/T:sdT:REALM #########################
-# metabolic temperature
-if (fitmod == 'modTsdTTRealmtsignAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tsign:tempchange_abs.sc:duration +
-            REALM:tsign:tempave_metab.sc:duration +
-            REALM:tsign:tempave_metab.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
-    ) #,
-    #  control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-
-# environmental temperature
-if (fitmod == 'modrawTsdTTRealmtsignAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tsign:tempchange_abs.sc:duration +
-            REALM:tsign:tempave.sc:duration +
-            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
-    ) #,
-    #  control = glmmTMBControl(profile=TRUE)) # add dispersion formula
-    MATCHMOD <- TRUE
-}
-
-
-
-# npp/seas/microclim/human/taxamod2 #########################
+# tsign/npp/seas/microclim/human/taxamod2 #########################
 ## see dedicated scripts instead
 
 
