@@ -11,12 +11,6 @@ library(grid) # to combine ggplots together
 library(RColorBrewer)
 library(scales) # for defining signed sqrt axis transformation
 library(here)
-if(Sys.info()[[4]]=='annotate.sebs.rutgers.edu'){ # for gam smoother
-    library(mgcv, lib.loc = '/usr/lib64/R/library') # when running on Annotate. Need to load 1.8-26, not 1.8-33.
-} else {
-    library(mgcv)
-}
-
 source(here('code', 'error.bar.R'))
 
 # produce ggplot-style colors
@@ -345,7 +339,7 @@ fig3 <- arrangeGrob(p1, p2, p3, p4, ncol = 1)
 ggsave('figures/fig3.png', fig3, width = 4, height = 6, units = 'in')
 
 
-### Figure S1: time-series start and end dates
+### Figure S1: time-series info----------
 bt <- fread('output/turnover_w_covariates.csv.gz') # from assemble_turnover_covariates.Rmd
 btts <- bt[, .(year1 = min(year1), year2 = max(year2), nsamp = length(unique(c(year1, year2)))), by = .(rarefyID, STUDY_ID)] # summarize by time-series
 
@@ -389,7 +383,10 @@ bt[, Horn := 1-Hornsim] # convert similarity to dissimilarity
 bt[, Hornsim := NULL]
 
 # load biotime trends
-trends <- fread('output/slope_w_covariates.csv.gz') # need to recalc this file to include nyr=2 ts
+#trends <- fread('output/slope_w_covariates.csv.gz') # need to recalc this file to include nyr=2 ts
+trends <- readRDS('temp/trendstemp.rds') # the slope for all trends
+trends[, duration := year2 - year1]
+
 
 # load simulations
 cors <- fread(here('output', 'simulated_ts.csv.gz'))
@@ -426,19 +423,20 @@ par(oldpar) # go back to original figure settings
 par(mfg = c(1,2)) # start with top-right
 
 # part b
-modgam <- trends[measure == 'Jtu' & duration_group == 'All', gam(disstrend~s(duration))] # gam fit
-predsgam <- data.table(duration = 1:120)
-predsgam[, c('disstrend', 'se') := predict(modgam, newdata = predsgam, se.fit = TRUE)]
+modloess <- trends[measure == 'Jtu' & duration_group == 'All', loess(disstrend~duration)] # loess fit
+predsloess <- data.table(duration = 2:118)
+predsloess[, c('disstrend', 'se') := predict(modloess, newdata = predsloess, se.fit = TRUE)]
 
 trends[measure == 'Jtu' & duration_group == 'All', plot(duration, disstrend, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')]
-predsgam[, lines(duration, disstrend, col = 'red')]
+predsloess[, lines(duration, disstrend, col = 'red')]
 abline(h = 0, lty = 2)
 mtext('B)', side = 3, line = -0.5, adj = -0.28)
 
 # part c
-plot(-1, -1, xlim = c(0,120), ylim = c(-0.04, 0.04), xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')
-predsgam[, polygon(c(duration, rev(duration)), c(disstrend+se, rev(disstrend - se)), col = '#00000044', border = NA)]
-predsgam[, lines(duration, disstrend, col = 'red')]
+#plot(-1, -1, xlim = c(0,120), ylim = c(-0.04, 0.04), xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')
+plot(-1, -1, xlim = c(0,120), ylim = c(-0.15, 0.35), xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')
+predsloess[, polygon(c(duration, rev(duration)), c(disstrend+1.96*se, rev(disstrend - 1.96*se)), col = '#00000044', border = NA)]
+predsloess[, lines(duration, disstrend, col = 'red')]
 abline(h = 0, lty = 2)
 mtext('C)', side = 3, line = -0.5, adj = -0.28)
 
