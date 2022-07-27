@@ -81,6 +81,27 @@ if (fitmod == 'modrawTsdTTRealmmicroclimsdTAllJtu') {
     MATCHMOD <- TRUE
 }
 
+### has tsign and interaction of covariate only with sdT
+if (fitmod == 'modrawTsdTTRealmtsignmicroclimAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+            REALM:microclim.sc:duration +
+            REALM:microclim.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM)
+    MATCHMOD <- TRUE
+}
+
+
 ### with covariate by tempave:tempchange_abs
 if (fitmod == 'modrawTsdTTRealmmicroclimAllJtu') {
     if (MATCHMOD)

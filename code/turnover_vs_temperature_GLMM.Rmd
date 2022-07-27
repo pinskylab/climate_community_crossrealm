@@ -1084,8 +1084,19 @@ p5
 # simple to more complex models
 modRealmAllJtu <- readRDS(here('temp', 'modRealmAllJtu.rds')) # only realm
 moddTRealmAllJtu <- readRDS(here('temp', 'moddTRealmAllJtu.rds')) # tempchange and realm
+modrawTdTTRealmAllJtu <- readRDS(here('temp', 'modrawTdTTRealmAllJtu.rds')) # uses environmental temperature, tempchange, realm
 modrawTsdTTRealmAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmAllJtu.rds')) # uses environmental temperature, tempchange_abs, realm
+modrawTsdTTtsignAllJtu <- readRDS(here('temp', 'modrawTsdTTtsignAllJtu.rds')) # tempave, tempchange_abs, tsign
+modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu.rds')) # tempave, tempchange_abs, realm, tsign
 
+
+# covariate models w/out covariate:tempave:tempchange_abs
+modrawTsdTTRealmnppsdTAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmnppsdTAllJtu.rds')) # has npp
+modrawTsdTTRealmseassdTAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmseassdTAllJtu.rds')) # has seasonality
+modrawTsdTTRealmmicroclimsdTAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmmicroclimsdTAllJtu.rds')) # has microclimates
+modrawTsdTTRealmhumansdTAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmhumansdTAllJtu.rds')) # has human impact
+
+# covariate models w/ covariate:tempave:tempchange_abs
 modrawTsdTTRealmnppAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmnppAllJtu.rds')) # has npp
 modrawTsdTTRealmseasAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmseasAllJtu.rds')) # has seasonality
 modrawTsdTTRealmmicroclimAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmmicroclimAllJtu.rds')) # has microclimates
@@ -1095,8 +1106,24 @@ modrawTsdTTRealmhumanAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmhumanAllJtu
 ```
 
 #### AIC
-```{r}
-aics <- AIC(modRealmAllJtu, moddTRealmAllJtu, modrawTsdTTRealmAllJtu, modrawTsdTTRealmnppAllJtu, modrawTsdTTRealmseasAllJtu, modrawTsdTTRealmmicroclimAllJtu, modrawTsdTTRealmhumanAllJtu)
+##### Compare simple covariate models
+```{r, rows.print=15}
+aics <- AIC(modRealmAllJtu, moddTRealmAllJtu, 
+            modrawTdTTRealmAllJtu, modrawTsdTTRealmAllJtu,
+            modrawTsdTTtsignAllJtu, modrawTsdTTRealmtsignAllJtu,
+            modrawTsdTTRealmnppsdTAllJtu, modrawTsdTTRealmseassdTAllJtu, # w/out cov:T:sdT
+            modrawTsdTTRealmmicroclimsdTAllJtu, modrawTsdTTRealmhumansdTAllJtu)
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics
+
+```
+##### Compare simple to complex covariate models 
+```{r, rows.print=15}
+aics <- AIC(modrawTsdTTtsignAllJtu, modrawTsdTTRealmtsignAllJtu,
+            modrawTsdTTRealmnppsdTAllJtu, modrawTsdTTRealmseassdTAllJtu, # w/out cov:T:sdT
+            modrawTsdTTRealmmicroclimsdTAllJtu, modrawTsdTTRealmhumansdTAllJtu,
+            modrawTsdTTRealmnppAllJtu, modrawTsdTTRealmseasAllJtu, # w/ cov:T:sdT
+            modrawTsdTTRealmmicroclimAllJtu, modrawTsdTTRealmhumanAllJtu)
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics
 

@@ -80,6 +80,26 @@ if (fitmod == 'modrawTsdTTRealmhumansdTAllJtu') {
     MATCHMOD <- TRUE
 }
 
+### has tsign and interaction of covariate only with sdT
+if (fitmod == 'modrawTsdTTRealmtsignhumanAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+            REALM:human_bowler.sc:duration +
+            REALM:human_bowler.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM)
+    MATCHMOD <- TRUE
+}
+
 ### has interaction of covariate with T and sdT
 if (fitmod == 'modrawTsdTTRealmhumanAllJtu') {
     if (MATCHMOD)
