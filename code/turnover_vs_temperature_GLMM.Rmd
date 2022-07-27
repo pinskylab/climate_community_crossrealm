@@ -484,6 +484,160 @@ trendsall[!is.na(tempave_metab.sc) & !duplicated(rarefyID), round(prop.table(tab
 
 ```
 
+#### Tsign effects
+```{r}
+fixef(modTsdTTRealmtsignAllJtu)
+
+```
+##### Make or load temperature sign effect
+Not yet updated to new method with lavaan.
+```{r, echo = FALSE}
+if(file.exists(here('temp', 'slopes_tsign.rds'))){
+  slopestsign <- readRDS(here('temp', 'slopes_tsign.rds'))
+  print('Loaded tsign predictions from file')
+} else {
+  print('Making tsign predictions from scratch')
+  
+  # set up prediction frame
+  newdattsign <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange = seq(-0.8, 0.8, length.out = 100), duration = seq(1, 10, length.out=10), REALM = c('Marine', 'Terrestrial', 'Freshwater')))
+  newdattsign$STUDY_ID <- 1
+  newdattsign$rarefyID <- 1
+  newdattsign[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
+  newdattsign[, tempchange_abs.sc := (abs(tempchange) - scalingall[var == 'tempchange_abs.sc', center])/scalingall[var == 'tempchange_abs.sc', scale]]
+  newdattsign[, tsign := sign(tempchange)]
+  newdattsign[tsign == 0, tsign := 1]
+  # predict
+  newdattsign$Jtu.sc <- predict(modTsdTTRealmtsignAllJtu, newdata = newdattsign, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response') # takes >1 hr if se.fit=TRUE
+  
+  # calculate slopes
+  slopestsign <- newdattsign[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange, tsign, REALM)]
+  
+  saveRDS(slopestsign, file = here('temp', 'slopes_tsign.rds'))
+}
+```
+
+##### Plot tsign effects
+Overall, the effects of warming and cooling at nearly equivalent.  
+More biodiversity change with warming in the ocean, consistent with the temperature effect (more change at higher temperatures).  
+More biodiversity change with cooling on land, consistent with the temperature effect (more change at lower tempeartures).  
+```{r, echo = FALSE}
+# plot
+p1 <- ggplot(slopestsign[REALM=='Marine'], aes(tempchange, tempave_metab, z = slope)) +
+  geom_raster(aes(fill = slope)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Metabolic temperature (degC)', title = 'Marine') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+p2 <- ggplot(slopestsign[REALM=='Terrestrial'], aes(tempchange, tempave_metab, z = slope)) +
+  geom_raster(aes(fill = slope)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Metabolic temperature (degC)', title = 'Terrestrial') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+p3 <- ggplot(slopestsign[REALM=='Freshwater'], aes(tempchange, tempave_metab, z = slope)) +
+  geom_raster(aes(fill = slope)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Metabolic temperature (degC)', title = 'Freshwater') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+
+p1
+p2
+p3
+```
+
+##### Difference in slopes
+These plots subtract the cooling slopes from the warming slopes.  
+Plots need to be improved, I think because pixel spacing isn't even. Getting strange patterns near 0 temperature change.
+```{r, echo = FALSE}
+#difference in slopes
+slopesM <- slopestsign[REALM=='Marine',]
+slopesT <- slopestsign[REALM=='Terrestrial',]
+slopesF <- slopestsign[REALM=='Freshwater',]
+
+slopesMdiff <- slopesM[tsign== -1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_cooling = slope)]
+slopesMdiff <- merge(slopesMdiff, slopesM[tsign == 1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_warming = slope)]) # round to allow merging
+slopesMdiff[, slope := slope_warming - slope_cooling]
+
+slopesTdiff <- slopesT[tsign== -1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_cooling = slope)]
+slopesTdiff <- merge(slopesTdiff, slopesT[tsign == 1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_warming = slope)]) # round to allow merging
+slopesTdiff[, slope := slope_warming - slope_cooling]
+
+slopesFdiff <- slopesF[tsign== -1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_cooling = slope)]
+slopesFdiff <- merge(slopesFdiff, slopesF[tsign == 1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_warming = slope)]) # round to allow merging
+slopesFdiff[, slope := slope_warming - slope_cooling]
+
+p1 <- ggplot(slopesMdiff, aes(tempchange_abs, tempave_metab, z = slope)) +
+  geom_raster(aes(fill = slope)) +
+  labs(x = 'Temperature change magnitude (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Marine') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Difference in Jtu slope (warming - cooling)') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+p2 <- ggplot(slopesTdiff, aes(tempchange_abs, tempave_metab, z = slope)) +
+  geom_raster(aes(fill = slope)) +
+  labs(x = 'Temperature change magnitude (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Terrestrial') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Difference in Jtu slope (warming - cooling)') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+p3 <- ggplot(slopesFdiff, aes(tempchange_abs, tempave_metab, z = slope)) +
+  geom_raster(aes(fill = slope)) +
+  labs(x = 'Temperature change magnitude (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Freshwater') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Difference in Jtu slope (warming - cooling)') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+p1
+p2
+p3
+```
+
 ### Environmental temperature
 #### Make/load prediction
 Uses output from pred_GLMMmodrawTsdTTRealmAllJtu.R (abs) and pred_GLMMmodrawTdTTRealmAllJtu.R (not abs).
@@ -660,6 +814,94 @@ ggplot(slopesrawTsdTT[tempave %in% vals,],
 
 ```
 
+#### tsign effects
+```{r}
+fixef(modTsdTTRealmtsignAllJtu)
+
+```
+##### Make or load temperature sign effect
+```{r, echo = FALSE}
+if(file.exists(here('temp', 'slopes_interactions2.rds'))){
+  slopestsign <- readRDS(here('temp', 'slopes_rawRealmtsign.rds'))
+  print('Loaded interaction predictions from file')
+
+} else {
+  print('Need to run pred_GLMMmodrawTsdTTRealmtsignAllJtu.R')
+  
+}
+```
+
+##### Interaction
+```{r, echo = FALSE}
+# plot
+p1 <- ggplot(slopestsign[REALM=='Marine'], aes(tempchange, tempave, z = slope_realmtsign)) +
+  geom_raster(aes(fill = slope_realmtsign)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Marine') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+p2 <- ggplot(slopestsign[REALM=='Terrestrial'], aes(tempchange, tempave, z = slope_realmtsign)) +
+  geom_raster(aes(fill = slope_realmtsign)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Terrestrial') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+p3 <- ggplot(slopestsign[REALM=='Freshwater'], aes(tempchange, tempave, z = slope_realmtsign)) +
+  geom_raster(aes(fill = slope_realmtsign)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Freshwater') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+
+p1
+p2
+p3
+```
+
+##### Confidence bounds
+CIs are from a SEM fit to the trends.
+```{r, fig.height=8}
+vals <- slopestsign[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
+ggplot(slopestsign[tempave %in% vals,], 
+       aes(tempchange, slope_realmtsign, color = factor(round(tempave)), group = tempave)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope_realmtsign-1.96*slope_realmtsign.se, ymax=slope_realmtsign+1.96*slope_realmtsign.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM))  +
+    labs(x = 'dT [degC/yr]') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
+
+```
+
+
 #### Are endotherms common at high tempave on land?
 tempG20 means temperature > 20degC. Endotherms are common at all environmental temperatures on land, not just high temperatures.
 ```{r, echo = FALSE}
@@ -702,158 +944,6 @@ modTsdTTRealmhumanAllJtu <- readRDS('temp/modTsdTTRealmhumanAllJtu.rds') # has h
 #modTsdTTRealmmassAllJtu <- readRDS('temp/modTsdTTRealmmassAllJtu.rds') # has mass
 ```
 
-#### Tsign effects
-```{r}
-fixef(modTsdTTRealmtsignAllJtu)
-
-```
-##### Make or load temperature sign effect
-```{r, echo = FALSE}
-if(file.exists(here('temp', 'slopes_tsign.rds'))){
-  slopestsign <- readRDS(here('temp', 'slopes_tsign.rds'))
-  print('Loaded tsign predictions from file')
-} else {
-  print('Making tsign predictions from scratch')
-  
-  # set up prediction frame
-  newdattsign <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange = seq(-0.8, 0.8, length.out = 100), duration = seq(1, 10, length.out=10), REALM = c('Marine', 'Terrestrial', 'Freshwater')))
-  newdattsign$STUDY_ID <- 1
-  newdattsign$rarefyID <- 1
-  newdattsign[, tempave_metab := tempave_metab.sc * scalingall[var == 'tempave_metab.sc', scale] + scalingall[var == 'tempave_metab.sc', center]]
-  newdattsign[, tempchange_abs.sc := (abs(tempchange) - scalingall[var == 'tempchange_abs.sc', center])/scalingall[var == 'tempchange_abs.sc', scale]]
-  newdattsign[, tsign := sign(tempchange)]
-  newdattsign[tsign == 0, tsign := 1]
-  # predict
-  newdattsign$Jtu.sc <- predict(modTsdTTRealmtsignAllJtu, newdata = newdattsign, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response') # takes >1 hr if se.fit=TRUE
-  
-  # calculate slopes
-  slopestsign <- newdattsign[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange, tsign, REALM)]
-  
-  saveRDS(slopestsign, file = here('temp', 'slopes_tsign.rds'))
-}
-```
-
-##### Plot tsign effects
-Overall, the effects of warming and cooling at nearly equivalent.  
-More biodiversity change with warming in the ocean, consistent with the temperature effect (more change at higher temperatures).  
-More biodiversity change with cooling on land, consistent with the temperature effect (more change at lower tempeartures).  
-```{r, echo = FALSE}
-# plot
-p1 <- ggplot(slopestsign[REALM=='Marine'], aes(tempchange, tempave_metab, z = slope)) +
-  geom_raster(aes(fill = slope)) +
-  labs(x = 'Temperature change (degC per year)', y = 'Metabolic temperature (degC)', title = 'Marine') +
-  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
-  theme(axis.text = element_text(size = 12), 
-        axis.title = element_text(size = 14),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        legend.position = "top",
-        legend.margin = margin(c(0, 0.1, -20, 0)),
-        legend.justification = c(0.92, 0.9),
-        legend.text=element_text(size= 12),
-        legend.title=element_text(size= 18),
-        legend.title.align = 1)
-p2 <- ggplot(slopestsign[REALM=='Terrestrial'], aes(tempchange, tempave_metab, z = slope)) +
-  geom_raster(aes(fill = slope)) +
-  labs(x = 'Temperature change (degC per year)', y = 'Metabolic temperature (degC)', title = 'Terrestrial') +
-  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
-  theme(axis.text = element_text(size = 12), 
-        axis.title = element_text(size = 14),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        legend.position = "top",
-        legend.margin = margin(c(0, 0.1, -20, 0)),
-        legend.justification = c(0.92, 0.9),
-        legend.text=element_text(size= 12),
-        legend.title=element_text(size= 18),
-        legend.title.align = 1)
-p3 <- ggplot(slopestsign[REALM=='Freshwater'], aes(tempchange, tempave_metab, z = slope)) +
-  geom_raster(aes(fill = slope)) +
-  labs(x = 'Temperature change (degC per year)', y = 'Metabolic temperature (degC)', title = 'Freshwater') +
-  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
-  theme(axis.text = element_text(size = 12), 
-        axis.title = element_text(size = 14),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        legend.position = "top",
-        legend.margin = margin(c(0, 0.1, -20, 0)),
-        legend.justification = c(0.92, 0.9),
-        legend.text=element_text(size= 12),
-        legend.title=element_text(size= 18),
-        legend.title.align = 1)
-
-p1
-p2
-p3
-```
-
-##### Difference in slopes
-These plots subtract the cooling slopes from the warming slopes.  
-Plots need to be improved, I think because pixel spacing isn't even. Getting strange patterns near 0 temperature change.
-```{r, echo = FALSE}
-#difference in slopes
-slopesM <- slopestsign[REALM=='Marine',]
-slopesT <- slopestsign[REALM=='Terrestrial',]
-slopesF <- slopestsign[REALM=='Freshwater',]
-
-slopesMdiff <- slopesM[tsign== -1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_cooling = slope)]
-slopesMdiff <- merge(slopesMdiff, slopesM[tsign == 1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_warming = slope)]) # round to allow merging
-slopesMdiff[, slope := slope_warming - slope_cooling]
-
-slopesTdiff <- slopesT[tsign== -1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_cooling = slope)]
-slopesTdiff <- merge(slopesTdiff, slopesT[tsign == 1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_warming = slope)]) # round to allow merging
-slopesTdiff[, slope := slope_warming - slope_cooling]
-
-slopesFdiff <- slopesF[tsign== -1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_cooling = slope)]
-slopesFdiff <- merge(slopesFdiff, slopesF[tsign == 1, .(tempave_metab, tempchange_abs = round(abs(tempchange),7), slope_warming = slope)]) # round to allow merging
-slopesFdiff[, slope := slope_warming - slope_cooling]
-
-p1 <- ggplot(slopesMdiff, aes(tempchange_abs, tempave_metab, z = slope)) +
-  geom_raster(aes(fill = slope)) +
-  labs(x = 'Temperature change magnitude (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Marine') +
-  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Difference in Jtu slope (warming - cooling)') +
-  theme(axis.text = element_text(size = 12), 
-        axis.title = element_text(size = 14),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        legend.position = "top",
-        legend.margin = margin(c(0, 0.1, -20, 0)),
-        legend.justification = c(0.92, 0.9),
-        legend.text=element_text(size= 12),
-        legend.title=element_text(size= 18),
-        legend.title.align = 1)
-p2 <- ggplot(slopesTdiff, aes(tempchange_abs, tempave_metab, z = slope)) +
-  geom_raster(aes(fill = slope)) +
-  labs(x = 'Temperature change magnitude (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Terrestrial') +
-  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Difference in Jtu slope (warming - cooling)') +
-  theme(axis.text = element_text(size = 12), 
-        axis.title = element_text(size = 14),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        legend.position = "top",
-        legend.margin = margin(c(0, 0.1, -20, 0)),
-        legend.justification = c(0.92, 0.9),
-        legend.text=element_text(size= 12),
-        legend.title=element_text(size= 18),
-        legend.title.align = 1)
-p3 <- ggplot(slopesFdiff, aes(tempchange_abs, tempave_metab, z = slope)) +
-  geom_raster(aes(fill = slope)) +
-  labs(x = 'Temperature change magnitude (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Freshwater') +
-  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Difference in Jtu slope (warming - cooling)') +
-  theme(axis.text = element_text(size = 12), 
-        axis.title = element_text(size = 14),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        legend.position = "top",
-        legend.margin = margin(c(0, 0.1, -20, 0)),
-        legend.justification = c(0.92, 0.9),
-        legend.text=element_text(size= 12),
-        legend.title=element_text(size= 18),
-        legend.title.align = 1)
-p1
-p2
-p3
-```
 
 #### AIC among covariate models
 All covariate models are preferred over the baseline model.  
@@ -873,6 +963,7 @@ fixef(modTsdTTRealmmicroclimAllJtu)
 ```
 
 ##### Make or load the microclimate interaction
+Better to rewrite this to use slopes_interactions2.rds
 ```{r, echo = FALSE}
 if(file.exists(here('temp', 'slopes_microclim1.rds'))){
   slopes1 <- readRDS(here('temp', 'slopes_microclim1.rds'))
@@ -925,6 +1016,7 @@ p1
 #### Seasonality summary
 
 ##### Make or load the seasonality interaction
+Better to replace with slopes_interactions2.rds
 ```{r, echo = FALSE}
 if(file.exists(here('temp', 'slopes_seas1.rds'))){
   slopes1 <- readRDS(here('temp', 'slopes_seas1.rds'))

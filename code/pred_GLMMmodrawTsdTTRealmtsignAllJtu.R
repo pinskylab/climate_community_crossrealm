@@ -58,7 +58,7 @@ print('models loaded')
 
 ### Make predictions -------------------
 # set up prediction frame
-newdat <- data.table(expand.grid(tempave = seq(-20, 30, length.out = 100), tempchange = seq(-1.5, 2, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial')))
+newdat <- data.table(expand.grid(tempave = seq(-20, 30, length.out = 100), tempchange = seq(-1.5, 2, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial', 'Freshwater')))
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1
 newdat[, tempave.sc := scaleme(tempave, 'tempave.sc')]
