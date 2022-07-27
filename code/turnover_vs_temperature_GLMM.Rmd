@@ -1260,19 +1260,22 @@ p1
 ## Taxon test
 Using environmental temperature
 ```{r, echo = FALSE}
-#modrawTsdTTRealmTaxamod2FEsdTAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmTaxamod2FEsdTAllJtu')) # has taxa_mod2:tempchange_abs
+modrawTsdTTRealmTaxamod2FEsdTAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmTaxamod2FEsdTAllJtu_test.rds')) # has taxa_mod2:tempchange_abs
 modrawTsdTTRealmTaxamod2FEAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmTaxamod2FEAllJtu_test.rds')) # has taxa_mod2:tempave:tempchange_abs
 
 # previous models
 modRealmAllJtu <- readRDS(here('temp', 'modRealmAllJtu.rds')) # only realm
 moddTRealmAllJtu <- readRDS(here('temp', 'moddTRealmAllJtu.rds')) # uses tempchange
+modrawTdTTRealmAllJtu <- readRDS(here('temp', 'modrawTdTTRealmAllJtu.rds')) # uses environmental temperature and tempchange
 modrawTsdTTRealmAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmAllJtu.rds')) # uses environmental temperature and tempchange_abs
 
 ```
 
 #### AIC
 ```{r}
-aics <- AIC(modRealmAllJtu, moddTRealmAllJtu, modrawTsdTTRealmAllJtu, modrawTsdTTRealmTaxamod2FEAllJtu)
+aics <- AIC(modRealmAllJtu, moddTRealmAllJtu, 
+            modrawTdTTRealmAllJtu, modrawTsdTTRealmAllJtu,
+            modrawTsdTTRealmTaxamod2FEsdTAllJtu, modrawTsdTTRealmTaxamod2FEAllJtu)
 aics$dAIC <- aics$AIC - min(aics$AIC, na.rm=TRUE)
 aics
 

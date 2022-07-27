@@ -50,6 +50,26 @@ iallJtu <-
     )]
 
 
+if (fitmod == 'modrawTsdTTRealmTaxamod2REsdTAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange_abs.sc:duration +
+            REALM:tempave.sc:duration +
+            REALM:tempave.sc:tempchange_abs.sc:duration +
+            (tempchange_abs.sc:duration|taxa_mod2) + # add taxamod2 as random effects
+            (duration | STUDY_ID / rarefyID), 
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM#,
+        #control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
 if (fitmod == 'modrawTsdTTRealmTaxamod2REAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
