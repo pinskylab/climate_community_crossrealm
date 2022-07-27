@@ -266,7 +266,8 @@ modrawTdTTAllJtu <- readRDS(here('temp', 'modrawTdTTAllJtu.rds')) # tempave and 
 modrawTsdTTAllJtu <- readRDS(here('temp', 'modrawTsdTTAllJtu.rds')) # tempave and tempchange_abs
 modrawTdTTRealmAllJtu <- readRDS(here('temp', 'modrawTdTTRealmAllJtu.rds')) # tempave and tempchange and realm
 modrawTsdTTRealmAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmAllJtu.rds')) # tempave and tempchange_abs and realm
-
+modrawTsdTTtsignAllJtu <- readRDS(here('temp', 'modrawTsdTTtsignAllJtu.rds')) # tempave, tempchange_abs, tsign
+modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu.rds')) # tempave, tempchange_abs, realm, tsign
 ```
 
 ### AIC
@@ -286,11 +287,12 @@ aics2
 ```
 
 #### Compare among environmental temperature models
-```{r}
+```{r, rows.print=15}
 aics3 <- AIC(modAllJtu, modRealmAllJtu, moddTAllJtu, modsdTAllJtu, # one var
              moddTRealmAllJtu, modsdTRealmAllJtu,  # two vars with realm
              modrawTdTTAllJtu, modrawTsdTTAllJtu, # two vars w/out realm
-             modrawTdTTRealmAllJtu, modrawTsdTTRealmAllJtu) # three vars
+             modrawTdTTRealmAllJtu, modrawTsdTTRealmAllJtu, # three vars with realm
+             modrawTsdTTtsignAllJtu, modrawTsdTTRealmtsignAllJtu) # tsign
 aics3$dAIC <- aics3$AIC - min(aics3$AIC)
 aics3
 ```
