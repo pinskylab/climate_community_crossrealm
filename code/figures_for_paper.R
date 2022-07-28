@@ -94,7 +94,7 @@ write.csv(aics, here('figures', 'table1.csv'))
 #### Figure 1: map --------
 # load BioTime data
 bt <- fread('output/turnover_w_covariates.csv.gz')
-trends <- readRDS('temp/trendstemp.rds') # the slope for all trends
+trends <- readRDS('temp/trendstemp.rds') # the slope for all trends. . From calc_turnover.Rmd
 
 # load sampled temperature trends
 temptrends <- fread('output/temperature_trends_sampled.csv.gz')
@@ -200,7 +200,7 @@ ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in')
 # slopes for all timeseries
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
 trends <- fread('output/slope_w_covariates.csv.gz') # the lm fit of dissimilarity vs. time, from assemble_slope_covariates.Rmd
-trends <- trends[duration_group == 'All' & measure == 'Jtu' & rarefyID %in% bt$rarefyID,] # use the slopes that use 5 years of data points (to standardize length)
+trends <- trends[duration_group == 'All' & measure == 'Jtu' & rarefyID %in% bt$rarefyID,]
 trends[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting in part B
 trends_by_study <- trends[, .(disstrend = mean(disstrend, na.rm=TRUE), temptrend = mean(temptrend, na.rm=TRUE)), by = .(STUDY_ID, REALM)] # average by studyID
 trends_by_study[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # re-order for nicer plotting in part A
@@ -461,3 +461,35 @@ mtext('D)', side = 3, line = -0.5, adj = -0.28)
 
 dev.off()
 
+
+### Figure S3: turnover by taxon ----------
+# slopes for all timeseries
+bt <- fread('output/turnover_w_covariates.csv.gz') # covariate data
+trends <- readRDS('temp/trendstemp.rds') # the slope for all trends. From calc_turnover.Rmd
+trends <- trends[duration_group == 'All' & measure == 'Jtu',] # trim to those we use
+trends <- merge(trends, bt[!duplicated(rarefyID),. (rarefyID, STUDY_ID, taxa_mod2)])
+trends_by_study <- trends[, .(disstrend = mean(disstrend, na.rm=TRUE)), by = .(STUDY_ID, taxa_mod2)] # average by studyID
+
+# average slopes by taxon
+ave_by_taxon <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstrend)/sqrt(.N)), by = taxa_mod2][order(taxa_mod2),]
+ave_by_taxon[, offset := seq(1, -1, length.out = 9)] # amount to vertically dodge the lines in part a
+write.csv(ave_by_taxon, file='output/ave_by_taxon.csv')
+
+
+# plot
+ht <- 6
+p1 <- ggplot(trends_by_study, aes(x=disstrend, group = taxa_mod2, fill = taxa_mod2)) +
+    geom_density(color = NA, alpha = 0.25) +
+    scale_y_sqrt(limits = c(0,7)) +
+    scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.1, -0.05, 0, 0.05, 0.1, 0.2, 0.4)) +
+    geom_segment(data = ave_by_taxon, aes(x=disstrend - 1.96*se, xend = disstrend + 1.96*se, y= ht+offset, yend = ht+offset, color = taxa_mod2), alpha = 1) +
+    geom_segment(data = ave_by_taxon, aes(x = disstrend, y = 0, xend = disstrend, yend = ht+offset, color = taxa_mod2), size=0.5, linetype = 'dashed') +
+    labs(x = 'Turnover [proportion species/year]', y = 'Density', title = '', fill = 'Taxon', color = 'Taxon') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
+p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
+ggsave('figures/figS3.png', p1, width = 6, height = 4, units = 'in')

@@ -1421,7 +1421,7 @@ aics
 
 #### Summary
 ```{r}
-summary(modrawTsdTTRealmTaxamod2FEAllJtu)
+summary(modTaxamod2AllJtu)
 ```
 
 
