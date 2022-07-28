@@ -199,34 +199,32 @@ ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in')
 ### Figure 2: main effects ---------
 # slopes for all timeseries
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
-trends <- fread('output/slope_w_covariates.csv.gz') # the lm fit of dissimilarity vs. time, from assemble_slope_covariates.Rmd
-trends <- trends[duration_group == 'All' & measure == 'Jtu' & rarefyID %in% bt$rarefyID,]
-trends[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting in part B
-trends_by_study <- trends[, .(disstrend = mean(disstrend, na.rm=TRUE), temptrend = mean(temptrend, na.rm=TRUE)), by = .(STUDY_ID, REALM)] # average by studyID
+trends <- readRDS('temp/trendstemp.rds') # the slope for all trends. . From calc_turnover.Rmd
+trends <- trends[duration_group == 'All' & measure == 'Jtu',]
+trends <- merge(trends, bt[!duplicated(rarefyID),. (rarefyID, STUDY_ID, REALM, tempchange)])
+trends[, duration := year2 - year1]
+trends[, REALM := factor(REALM, levels = c('Marine', 'Terrestrial', 'Freshwater'))] # re-order for nicer plotting in part B
+trends_by_study <- trends[, .(disstrend = mean(disstrend, na.rm=TRUE), tempchange = mean(tempchange, na.rm=TRUE)), by = .(STUDY_ID, REALM)] # average by studyID
 trends_by_study[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # re-order for nicer plotting in part A
 
 # average slopes by realm
 ave_by_realm <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstrend)/sqrt(.N)), by = REALM]
 ave_by_realm[, offset := c(-1, 0, 1)] # amount to vertically dodge the lines in part a
 
-# max temptrend by realm, for plotting limits
-temptrend_by_realm <- trends[, .(max = max(temptrend, na.rm=TRUE), min = min(temptrend, na.rm=TRUE)), by = REALM]
+# max tempchange by realm, for plotting limits
+tempchange_by_realm <- trends[, .(max = max(tempchange, na.rm=TRUE), min = min(tempchange, na.rm=TRUE)), by = REALM]
 
-# predicted slopes from the dT model (not abs)
-slopespredTdTT <- readRDS(here('temp', 'slopes_rawTdTTRealm.rds'))
-slopespredTdTT <- slopespredTdTT[round(tempave,1) %in% c(10.1, 25.0),]
-slopespredTdTT <- merge(slopespredTdTT, temptrend_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
+# predicted slopes from the dT model (not tsign)
+slopespredTdTT <- readRDS(here('temp', 'slopes_rawTdTTRealm.rds')) # from turnover_vs_temperature_GLMM.Rmd
+slopespredTdTT <- slopespredTdTT[round(tempave,1) %in% c(9.8, 24.9),]
+slopespredTdTT <- merge(slopespredTdTT, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
 slopespredTdTT <- slopespredTdTT[tempchange > min & tempchange < max, ] # trim to min & max by realm
 slopespredTdTT[, tempave := factor(as.character(round(tempave)), levels = c('25', '10'))] # re-order factor for nicer plotting
 
-# predicted slopes from the main model (tempchange_abs)
-slopespred <- readRDS(here('temp', 'slopes_rawTsdTTRealm.rds'))
-slopespred <- slopespred[round(tempave,1) %in% c(10.1, 25.1),]
-slopespred2 <- slopespred # make the negative temperature change points
-slopespred2[, tempchange := -tempchange_abs]
-slopespred <- rbind(slopespred[, .(tempave, REALM, tempchange = tempchange_abs, slope, slope.se)], 
-                    slopespred2[, .(tempave, REALM, tempchange, slope, slope.se)]) # merge neg and pos temp change points
-slopespred <- merge(slopespred, temptrend_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
+# predicted slopes from the main model (tsign)
+slopespred <- readRDS(here('temp', 'slopes_rawRealmtsign.rds')) # from pred_GLMMmodrawTsdTTRealmtsignAllJtu.R
+slopespred <- slopespred[round(tempave,1) %in% c(9.8, 24.9),]
+slopespred <- merge(slopespred, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
 slopespred <- slopespred[tempchange > min & tempchange < max, ] # trim to min & max by realm
 slopespred[, tempave := factor(as.character(round(tempave)), levels = c('25', '10'))] # re-order factor for nicer plotting
 
@@ -250,12 +248,15 @@ p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
 
 # b) plot of change vs. dT
 p2 <- ggplot() +
-    geom_point(data = trends[!is.na(temptrend)], mapping = aes(temptrend, disstrend, size = duration), 
+    geom_hline(yintercept = 0, linetype = 'dashed') +
+    geom_point(data = trends[!is.na(tempchange)], mapping = aes(tempchange, disstrend, size = duration), 
              color='#000000', alpha = 0.1, stroke = 0) +
     geom_line(data = slopespredTdTT, mapping=aes(tempchange, slope, color = tempave, group = tempave), linetype = 'dashed', alpha = 0.5) +
-    geom_line(data = slopespred, mapping=aes(tempchange, slope, color = tempave, group = tempave)) +
+    geom_line(data = slopespred, mapping=aes(tempchange, slope_realmtsign, color = tempave, group = tempave)) +
     geom_ribbon(data = slopespred, alpha = 0.25, color = NA, 
-                aes(tempchange, slope, fill = tempave, ymin=slope-slope.se, ymax=slope+slope.se)) +
+                aes(tempchange, slope_realmtsign, fill = tempave, 
+                    ymin=slope_realmtsign - slope_realmtsign.se, 
+                    ymax=slope_realmtsign + slope_realmtsign.se)) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
     labs(tag = 'B)', x = 'Temperage change [°C/year]', y = 'Turnover [proportion species/year]', 
          fill = 'Average temperature [°C]', 

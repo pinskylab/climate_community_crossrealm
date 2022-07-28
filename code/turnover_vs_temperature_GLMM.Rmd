@@ -290,11 +290,10 @@ aics2
 
 #### Compare among environmental temperature models
 ```{r, rows.print=15}
-aics3 <- AIC(modAllJtu, modRealmAllJtu, moddTAllJtu, modsdTAllJtu, # one var
-             moddTRealmAllJtu, modsdTRealmAllJtu,  # two vars with realm
+aics3 <- AIC(modAllJtu, modRealmAllJtu, moddTAllJtu, modsdTAllJtu, modrawsdTtsignAllJtu, # one var
+             moddTRealmAllJtu, modsdTRealmAllJtu, modrawsdTRealmtsignAllJtu, # one var with realm
              modrawTdTTAllJtu, modrawTsdTTAllJtu, # two vars w/out realm
              modrawTdTTRealmAllJtu, modrawTsdTTRealmAllJtu, # three vars with realm
-             modrawsdTtsignAllJtu, modrawsdTRealmtsignAllJtu, 
              modrawTsdTTtsignAllJtu, modrawTsdTTRealmtsignAllJtu) # tsign
 aics3$dAIC <- aics3$AIC - min(aics3$AIC)
 aics3
@@ -678,7 +677,7 @@ if(file.exists(here('temp', 'slopes_rawTdTTRealm.rds'))){
 }
 
 # using tsign
-if(file.exists(here('temp', 'slopes_interactions2.rds'))){
+if(file.exists(here('temp', 'slopes_rawRealmtsign.rds'))){
   slopestsign <- readRDS(here('temp', 'slopes_rawRealmtsign.rds'))
   print('Loaded tsign predictions from file')
 
