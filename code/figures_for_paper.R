@@ -70,14 +70,18 @@ tempchanges[, cor.test(temptrend, temptrend_min)]
 #### Table 1 --------------
 modAllJtu <- readRDS(here('temp', 'modAllJtu.rds'))
 modRealmAllJtu <- readRDS('temp/modRealmAllJtu.rds')
-moddTRealmAllJtu <- readRDS(here('temp', 'moddTRealmAllJtu.rds')) # uses tempchange
-modrawTdTTRealmAllJtu <- readRDS(here('temp', 'modrawTdTTRealmAllJtu.rds')) # uses duration and tempchange
-modrawTsdTTRealmAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmAllJtu.rds')) # uses duration and abs(tempchange)
-#modTsdTTRealmtsignAllJtu <- readRDS('temp/modTsdTTRealmtsignAllJtu.rds') # has temperature change sign
+modTaxamod2AllJtu <- readRDS('temp/modTaxamod2AllJtu.rds')
+moddTRealmAllJtu <- readRDS(here('temp', 'moddTRealmAllJtu.rds')) # tempchange by realm
+modrawsdTtsignAllJtu <- readRDS(here('temp', 'modrawsdTRealmtsignAllJtu.rds')) # tsign:tempchange by realm
+modrawTdTTRealmAllJtu <- readRDS(here('temp', 'modrawTdTTRealmAllJtu.rds')) # uses tempave and tempchange by realm
+modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # adds tsign to tempave:tempchange:realm
 
 # compare TsdTT models against null
-aics <- AIC(modAllJtu, modRealmAllJtu, moddTRealmAllJtu, modrawTdTTRealmAllJtu, modrawTsdTTRealmAllJtu)
+aics <- AIC(modAllJtu, modRealmAllJtu, modTaxamod2AllJtu, # simple models w/out tempchange
+            moddTRealmAllJtu, modrawsdTtsignAllJtu, # tempchange by realm
+            modrawTdTTRealmAllJtu, modrawTsdTTRealmtsignAllJtu) # add tempave
 aics$dAIC <- aics$AIC - min(aics$AIC)
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllJtu']
 aics
 
 write.csv(aics, here('figures', 'table1.csv'))
