@@ -266,6 +266,8 @@ modrawTdTTAllJtu <- readRDS(here('temp', 'modrawTdTTAllJtu.rds')) # tempave and 
 modrawTsdTTAllJtu <- readRDS(here('temp', 'modrawTsdTTAllJtu.rds')) # tempave and tempchange_abs
 modrawTdTTRealmAllJtu <- readRDS(here('temp', 'modrawTdTTRealmAllJtu.rds')) # tempave and tempchange and realm
 modrawTsdTTRealmAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmAllJtu.rds')) # tempave and tempchange_abs and realm
+modrawsdTtsignAllJtu <- readRDS(here('temp', 'modrawsdTtsignAllJtu.rds')) # tsign, tempchange_abs
+modrawsdTRealmtsignAllJtu <- readRDS(here('temp', 'modrawsdTRealmtsignAllJtu.rds')) # tsign, tempchange_abs, realm
 modrawTsdTTtsignAllJtu <- readRDS(here('temp', 'modrawTsdTTtsignAllJtu.rds')) # tempave, tempchange_abs, tsign
 modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu.rds')) # tempave, tempchange_abs, realm, tsign
 ```
@@ -292,6 +294,7 @@ aics3 <- AIC(modAllJtu, modRealmAllJtu, moddTAllJtu, modsdTAllJtu, # one var
              moddTRealmAllJtu, modsdTRealmAllJtu,  # two vars with realm
              modrawTdTTAllJtu, modrawTsdTTAllJtu, # two vars w/out realm
              modrawTdTTRealmAllJtu, modrawTsdTTRealmAllJtu, # three vars with realm
+             modrawsdTtsignAllJtu, modrawsdTRealmtsignAllJtu, 
              modrawTsdTTtsignAllJtu, modrawTsdTTRealmtsignAllJtu) # tsign
 aics3$dAIC <- aics3$AIC - min(aics3$AIC)
 aics3
@@ -639,13 +642,13 @@ p3
 ```
 
 ### Environmental temperature
-#### Make/load prediction
-Uses output from pred_GLMMmodrawTsdTTRealmAllJtu.R (abs) and pred_GLMMmodrawTdTTRealmAllJtu.R (not abs).
+#### Make/load predictions
+Uses output from pred_GLMMmodrawTsdTTRealmAllJtu.R (abs), pred_GLMMmodrawTdTTRealmAllJtu.R (not abs), and pred_GLMMmodrawTsdTTRealmtsignAllJtu.R (tsign)
 ```{r, echo = FALSE}
 # using tempchange_abs
 if(file.exists(here('temp', 'slopes_rawTsdTTRealm.rds'))){
   slopesrawTsdTT <- readRDS(here('temp', 'slopes_rawTsdTTRealm.rds'))
-  print('Loaded predictions from file')
+  print('Loaded tempchange_abs predictions from file')
 } else {
   print('Making predictions from pred_GLMMmodrawTsdTTRealmAllJtu.R output')
   
@@ -661,7 +664,7 @@ if(file.exists(here('temp', 'slopes_rawTsdTTRealm.rds'))){
 # using tempchange
 if(file.exists(here('temp', 'slopes_rawTdTTRealm.rds'))){
   slopesrawTdTT <- readRDS(here('temp', 'slopes_rawTdTTRealm.rds'))
-  print('Loaded predictions from file')
+  print('Loaded tempchange predictions from file')
 } else {
   print('Making predictions from pred_GLMMmodrawTdTTRealmAllJtu.R output')
   
@@ -673,6 +676,17 @@ if(file.exists(here('temp', 'slopes_rawTdTTRealm.rds'))){
   
   saveRDS(slopesrawTdTT, file = here('temp', 'slopes_rawTdTTRealm.rds'))
 }
+
+# using tsign
+if(file.exists(here('temp', 'slopes_interactions2.rds'))){
+  slopestsign <- readRDS(here('temp', 'slopes_rawRealmtsign.rds'))
+  print('Loaded tsign predictions from file')
+
+} else {
+  print('No tsign effects. Need to run pred_GLMMmodrawTsdTTRealmtsignAllJtu.R')
+  
+}
+
 ```
 
 #### Tempchange plots
@@ -819,19 +833,32 @@ ggplot(slopesrawTsdTT[tempave %in% vals,],
 fixef(modTsdTTRealmtsignAllJtu)
 
 ```
-##### Make or load temperature sign effect
-```{r, echo = FALSE}
-if(file.exists(here('temp', 'slopes_interactions2.rds'))){
-  slopestsign <- readRDS(here('temp', 'slopes_rawRealmtsign.rds'))
-  print('Loaded interaction predictions from file')
-
-} else {
-  print('Need to run pred_GLMMmodrawTsdTTRealmtsignAllJtu.R')
-  
-}
-```
 
 ##### Interaction
+###### Across realms
+modrawTsdTTtsignAllJtu model that doesn't have realm
+```{r, echo = FALSE}
+# plot
+p1 <- ggplot(slopestsign, aes(tempchange, tempave, z = slope_tsign)) +
+  geom_raster(aes(fill = slope_tsign)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'All realms') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+
+p1
+```
+
+###### By realm
+modrawTsdTTRealmtsignAllJtu model
 ```{r, echo = FALSE}
 # plot
 p1 <- ggplot(slopestsign[REALM=='Marine'], aes(tempchange, tempave, z = slope_realmtsign)) +
@@ -883,6 +910,26 @@ p3
 ```
 
 ##### Confidence bounds
+###### Across realms
+CIs are from a SEM fit to the trends.
+```{r, fig.height=8}
+vals <- slopestsign[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
+ggplot(slopestsign[tempave %in% vals,], 
+       aes(tempchange, slope_tsign, color = factor(round(tempave)), group = tempave)) +
+    geom_hline(yintercept = 0, linetype = 'dashed') +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope_tsign-1.96*slope_tsign.se, ymax=slope_tsign+1.96*slope_tsign.se), alpha = 0.25) + 
+    labs(x = 'dT [degC/yr]') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
+
+```
+
+###### By realm
 CIs are from a SEM fit to the trends.
 ```{r, fig.height=8}
 vals <- slopestsign[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
@@ -1273,7 +1320,7 @@ Model with thermal bias is selected
 ```{r, echo = FALSE}
 modTsdTTRealmAllJtu_thermal_biasdata <- readRDS(here('temp','modTsdTTRealmAllJtu_thermal_biasdata_test.rds')) # no thermal bias, but using the thermal bias dataset
 modTsdTTRealmtsignAllJtu_thermal_biasdata <- readRDS(here('temp', 'modTsdTTRealmtsignAllJtu_thermal_biasdata_test.rds')) # adding only tsign
-modTsdTTRealmthermal_biasAllJtu_thermal_biasdata <- readRDS(here('temp','modTsdTTRealmthermal_biasAllJtu_thermal_biasdata_test.rds')) # has thermal bias as well
+modTsdTTRealmthermal_biasAllJtu_thermal_biasdata <- readRDS(here('temp','modTsdTTRealmthermal_biasAllJtu_thermal_biasdata_test.rds')) # adds thermal bias:tempave_metab:tempchange_abs
 
 aics <- AIC(modTsdTTRealmAllJtu_thermal_biasdata, modTsdTTRealmtsignAllJtu_thermal_biasdata, modTsdTTRealmthermal_biasAllJtu_thermal_biasdata)
 aics$dAIC <- aics$AIC - min(aics$AIC)
@@ -1285,17 +1332,20 @@ Model with only tsign is selected
 ```{r, echo = FALSE}
 modrawTsdTTRealmAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmAllJtu_thermal_biasdata.rds')) # no thermal bias, but using the thermal bias dataset
 modrawTsdTTRealmtsignAllJtu_thermal_biasdata <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu_thermal_biasdata.rds')) # adding only tsign
-modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata.rds')) # has thermal bias as well
+modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata.rds')) # adds thermal bias:tempchange_abs:tsign
+modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata.rds')) # adds thermal bias:tempave
 
-aics <- AIC(modrawTsdTTRealmAllJtu_thermal_biasdata, modrawTsdTTRealmtsignAllJtu_thermal_biasdata, modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata)
+aics <- AIC(modrawTsdTTRealmAllJtu_thermal_biasdata, modrawTsdTTRealmtsignAllJtu_thermal_biasdata, modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata,  modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata)
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics
 ```
 
 #### Thermal bias coefs
+Model that doesn't have a thermal_bias:tempave interaction.
 ```{r, echo = FALSE}
-fixef(modTsdTTRealmthermal_biasAllJtu_thermal_biasdata)
+fixef(modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata)
 ```
+
 #### Make or load thermal bias effect
 ```{r, echo = FALSE}
 if(file.exists(here('temp', 'slopes_thermal_bias.rds'))){
@@ -1350,24 +1400,19 @@ p1
 
 
 ## Taxon test
-Using environmental temperature
+Models with taxon effects interacted with temperature change all returned singular fits (NAs for SEs). Using simplest model here.
 ```{r, echo = FALSE}
-modrawTsdTTRealmTaxamod2FEsdTAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmTaxamod2FEsdTAllJtu_test.rds')) # has taxa_mod2:tempchange_abs
-modrawTsdTTRealmTaxamod2FEAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmTaxamod2FEAllJtu_test.rds')) # has taxa_mod2:tempave:tempchange_abs
+modTaxamod2AllJtu <- readRDS(here('temp', 'modTaxamod2AllJtu.rds')) # has taxa_mod2
 
 # previous models
+modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # only duration
 modRealmAllJtu <- readRDS(here('temp', 'modRealmAllJtu.rds')) # only realm
-moddTRealmAllJtu <- readRDS(here('temp', 'moddTRealmAllJtu.rds')) # uses tempchange
-modrawTdTTRealmAllJtu <- readRDS(here('temp', 'modrawTdTTRealmAllJtu.rds')) # uses environmental temperature and tempchange
-modrawTsdTTRealmAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmAllJtu.rds')) # uses environmental temperature and tempchange_abs
 
 ```
 
 #### AIC
 ```{r}
-aics <- AIC(modRealmAllJtu, moddTRealmAllJtu, 
-            modrawTdTTRealmAllJtu, modrawTsdTTRealmAllJtu,
-            modrawTsdTTRealmTaxamod2FEsdTAllJtu, modrawTsdTTRealmTaxamod2FEAllJtu)
+aics <- AIC(modAllJtu, modRealmAllJtu, modTaxamod2AllJtu)
 aics$dAIC <- aics$AIC - min(aics$AIC, na.rm=TRUE)
 aics
 

@@ -73,7 +73,7 @@ if (fitmod == 'modrawTsdTTRealmAllJtu_thermal_biasdata') {
     MATCHMOD <- TRUE
 }
 
-
+# with tsign
 if (fitmod == 'modrawTsdTTRealmtsignAllJtu_thermal_biasdata') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -91,7 +91,7 @@ if (fitmod == 'modrawTsdTTRealmtsignAllJtu_thermal_biasdata') {
     MATCHMOD <- TRUE
 }
 
-
+# add thermal_bias:tempchange_abs:tsign
 if (fitmod == 'modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -111,6 +111,7 @@ if (fitmod == 'modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata') {
     MATCHMOD <- TRUE
 }
 
+# add thermal_bias:tempave and thermal_bias:tempave:tempchange_abs:tsign
 if (fitmod == 'modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
