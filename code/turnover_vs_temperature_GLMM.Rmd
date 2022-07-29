@@ -1234,6 +1234,13 @@ modrawTsdTTRealmseassdTAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmseassdTAl
 modrawTsdTTRealmmicroclimsdTAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmmicroclimsdTAllJtu.rds')) # has microclimates
 modrawTsdTTRealmhumansdTAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmhumansdTAllJtu.rds')) # has human impact
 
+# covariation models with tsign
+modrawTsdTTRealmtsignhumanAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignhumanAllJtu.rds')) # human
+modrawTsdTTRealmtsignmicroclimAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignmicroclimAllJtu.rds')) # microclim
+modrawTsdTTRealmtsignnppAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignnppAllJtu.rds')) # npp
+modrawTsdTTRealmtsignseasAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignseasAllJtu.rds')) # seas
+
+
 # covariate models w/ covariate:tempave:tempchange_abs
 modrawTsdTTRealmnppAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmnppAllJtu.rds')) # has npp
 modrawTsdTTRealmseasAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmseasAllJtu.rds')) # has seasonality
@@ -1266,6 +1273,17 @@ aics$dAIC <- aics$AIC - min(aics$AIC)
 aics
 
 ```
+
+##### Compare tsign covariate models
+```{r, rows.print=15}
+aics <- AIC(modrawTsdTTtsignAllJtu, modrawTsdTTRealmtsignAllJtu,
+            modrawTsdTTRealmtsignnppAllJtu, modrawTsdTTRealmtsignseasAllJtu, # w/tsign
+            modrawTsdTTRealmtsignmicroclimAllJtu, modrawTsdTTRealmtsignhumanAllJtu)
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics
+
+```
+
 
 #### Interactions as lines
 ##### Load the interaction effects
@@ -1314,7 +1332,7 @@ p4
 ## Thermal bias test
 Does the thermal bias of a community explain the propensity to change when temperature changes? 
 
-### Use the metabolic temperature
+### With metabolic temperature
 Model with thermal bias is selected
 ```{r, echo = FALSE}
 modTsdTTRealmAllJtu_thermal_biasdata <- readRDS(here('temp','modTsdTTRealmAllJtu_thermal_biasdata_test.rds')) # no thermal bias, but using the thermal bias dataset
@@ -1326,7 +1344,7 @@ aics$dAIC <- aics$AIC - min(aics$AIC)
 aics
 ```
 
-### Use the environmental temperature (rawT)
+### With environmental temperature (rawT)
 Model with only tsign is selected
 ```{r, echo = FALSE}
 modrawTsdTTRealmAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmAllJtu_thermal_biasdata.rds')) # no thermal bias, but using the thermal bias dataset
@@ -1347,40 +1365,24 @@ fixef(modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata)
 
 #### Make or load thermal bias effect
 ```{r, echo = FALSE}
-if(file.exists(here('temp', 'slopes_thermal_bias.rds'))){
-  slopesTB <- readRDS(here('temp', 'slopes_thermal_bias.rds'))
+if(file.exists(here('temp', 'slopes_rawTsdTTRealmthermal_bias.rds'))){
+  slopesTB <- readRDS(here('temp', 'slopes_rawTsdTTRealmthermal_bias.rds'))
   print('Loaded thermal bias predictions from file')
 } else {
-  print('Making thermal bias predictions from scratch')
-  
-  # set up prediction frame
-  newdatTB <- data.table(expand.grid(tempave_metab.sc = seq(-1.6, 1.5, length.out = 100), tempchange_abs = seq(0, 0.8, length.out = 100), duration = seq(1, 10, length.out=10), REALM = c('Marine', 'Terrestrial', 'Freshwater'), thermal_bias.sc = c(-2, 2)))
-
-  newdatTB$STUDY_ID <- 1
-  newdatTB$rarefyID <- 1
-  newdatTB[, tempave_metab := unscaleme(tempave_metab.sc, 'tempave_metab.sc')]
-  newdatTB[, tempchange_abs.sc := scaleme(tempchange_abs, 'tempchange_abs.sc')]
-  newdatTB[, thermal_bias := unscaleme(thermal_bias.sc, 'thermal_bias.sc')]
- 
-  # predict
-  newdatTB$Jtu.sc <- predict(modTsdTTRealmthermal_biasAllJtu_thermal_biasdata, newdata = newdatTB, se.fit = FALSE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-  
-  # calculate slopes
-  slopesTB <- newdatTB[, .(slope = coef(lm(Jtu.sc ~ duration))[2]), by = .(tempave_metab, tempchange_abs, thermal_bias, REALM)]
-  
-  saveRDS(slopesTB, file = here('temp', 'slopes_thermal_bias.rds'))
+  print('Need to run pred_GLMMmodrawTsdTTRealmthermal_biasAllJtu.R')
 }
 ```
 
 
 
-#### Plot thermal bias effects
-Thermal bias is the Community Temperature Index minus the environmental temperature. Positive means that the species are adapted to warmer conditions than they are experiencing (and presumably are more tolerant of warming but less tolerant of cooling). 
+#### Plot thermal bias T:dT interaction
+Thermal bias is the Community Temperature Index minus the environmental temperature. Positive means that the species are adapted to warmer conditions than they are experiencing (and presumably are more tolerant of warming but less tolerant of cooling).  
+Plot the simpler model (only has thermal_bias:tempchange_abs:tsign and not also thermal_bias:tempave).  
 ```{r, echo = FALSE, fig.height=8}
 # plot
-p1 <- ggplot(slopesTB, aes(tempchange_abs, tempave_metab, z = slope)) +
-  geom_raster(aes(fill = slope)) +
-  labs(x = 'Temperature change (degC per year)', y = 'Long-term metabolic temperature (degC)', title = 'Negative (left) or positive (right) thermal bias') +
+p1 <- ggplot(slopesTB, aes(tempchange, tempave, z = slope_thermal_biassdT)) +
+  geom_raster(aes(fill = slope_thermal_biassdT)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Negative (left) or positive (right) thermal bias') +
   scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
   facet_grid(row = vars(REALM), col = vars(thermal_bias)) +
   theme(axis.text = element_text(size = 12), 
@@ -1396,6 +1398,19 @@ p1 <- ggplot(slopesTB, aes(tempchange_abs, tempave_metab, z = slope)) +
 
 p1
 ```
+
+#### Plot interaction as lines
+```{r echo=FALSE}
+# plot
+p1 <- ggplot(slopesTB[tempave %in% c(-20, 30)], aes(tempchange, slope_thermal_biassdT, color = as.factor(thermal_bias), group = as.factor(thermal_bias))) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope_thermal_biassdT-1.96*slope_thermal_biassdT.se,
+                        ymax=slope_thermal_biassdT+1.96*slope_thermal_biassdT.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM), rows = vars(tempave), labeller = label_both)
+
+p1
+```
+
 
 
 ## Taxon test
