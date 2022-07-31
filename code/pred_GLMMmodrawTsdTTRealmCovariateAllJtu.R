@@ -69,7 +69,7 @@ scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv'))
 
 # run full model preds -------------
 if(predmod == 'full'){
-    MATCHMOD == TRUE
+    MATCHMOD <- TRUE
     
     # The model
     modrawTsdTTRealmmicroclimAllJtu <- readRDS('temp/modrawTsdTTRealmmicroclimAllJtu.rds') # has microclimates
@@ -115,6 +115,7 @@ if(predmod == 'full'){
     
     # write out
     saveRDS(newdat, file = here('temp', 'preds_rawTsdTTRealmCovariate.rds'))
+    print(paste('Wrote preds_rawTsdTTRealmCovariate.rds:', Sys.time()))
     
     
     # calculate slopes and SE of the slope using latent variables (since predictions have SE)
@@ -153,12 +154,13 @@ if(predmod == 'full'){
     
     # save slopes
     saveRDS(slopes2, file = here('temp', 'slopes_rawinteractions2.rds'))
+    print(paste('Wrote slopes_rawinteractions2.rds:', Sys.time()))
 }
 
 
 # run tsign model preds -------------
 if(predmod == 'tsign'){
-    MATCHMOD == TRUE
+    MATCHMOD <- TRUE
     
     # The model
     modrawTsdTTRealmtsignmicroclimAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimAllJtu.rds') # has microclimates
@@ -206,36 +208,48 @@ if(predmod == 'tsign'){
     
     # write out
     saveRDS(newdat, file = here('temp', 'preds_rawTsdTTRealmtsignCovariate.rds'))
-    
+    print(paste('Wrote preds_rawTsdTTRealmtsignCovariate.rds:', Sys.time()))
     
     # calculate slopes and SE of the slope using latent variables (since predictions have SE)
     mods.microclim <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc.microclim\nJtu.sc.microclim ~~ ', mean(Jtu.sc.microclim.se), '*Jtu.sc.microclim'), data.frame(Jtu.sc.microclim, duration)))), 
-                             by = .(tempave, tempchange_abs, microclim, npp, seas, human_bowler, mass, REALM)] # takes ~30 min
+                             by = .(tempave, tempchange, tempchange_abs, tsign, microclim, npp, seas, human_bowler, mass, REALM)] # takes ~30 min
     print('finished microclim SEM')
     mods.npp <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc.npp\nJtu.sc.npp ~~ ', mean(Jtu.sc.npp.se), '*Jtu.sc.npp'), data.frame(Jtu.sc.npp, duration)))), 
-                       by = .(tempave, tempchange_abs, microclim, npp, seas, human_bowler, mass, REALM)]
+                       by = .(tempave, tempchange, tempchange_abs, tsign, microclim, tsign, npp, seas, human_bowler, mass, REALM)]
     print('finished npp SEM')
     mods.seas <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc.seas\nJtu.sc.seas ~~ ', mean(Jtu.sc.seas.se), '*Jtu.sc.seas'), data.frame(Jtu.sc.seas, duration)))), 
-                        by = .(tempave, tempchange_abs, microclim, npp, seas, human_bowler, mass, REALM)]
+                        by = .(tempave, tempchange, tempchange_abs, tsign, microclim, npp, seas, human_bowler, mass, REALM)]
     print('finished seas SEM')
     mods.human <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc.human\nJtu.sc.human ~~ ', mean(Jtu.sc.human.se), '*Jtu.sc.human'), data.frame(Jtu.sc.human, duration)))), 
-                         by = .(tempave, tempchange_abs, microclim, npp, seas, human_bowler, mass, REALM)]
+                         by = .(tempave, tempchange, tempchange_abs, tsign, microclim, npp, seas, human_bowler, mass, REALM)]
     print('finished human SEM')
     
     
     # extract slopes and SEs
     slopes.microclim <- mods.microclim[, parameterEstimates(mod[[1]]), 
-                                       by = .(tempave, tempchange_abs, microclim, npp, seas, human_bowler, mass, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
-                                                                                                                         .(tempave, tempchange_abs, microclim, npp, seas, human_bowler, mass, REALM, slope_microclim = est, slope_microclim.se = se)]
+                                       by = .(tempave, tempchange, tempchange_abs, tsign, 
+                                              microclim, npp, seas, human_bowler, mass, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
+                                                                                                .(tempave, tempchange, tempchange_abs, 
+                                                                                                  microclim, npp, seas, human_bowler, mass, REALM, 
+                                                                                                  slope_microclim = est, slope_microclim.se = se)]
     slopes.npp <- mods.npp[, parameterEstimates(mod[[1]]), 
-                           by = .(tempave, tempchange_abs, microclim, npp, seas, human_bowler, mass, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
-                                                                                                             .(tempave, tempchange_abs, microclim, npp, seas, human_bowler, mass, REALM, slope_npp = est, slope_npp.se = se)]
+                           by = .(tempave, tempchange, tempchange_abs, tsign, 
+                                  microclim, npp, seas, human_bowler, mass, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
+                                                                                    .(tempave, tempchange, tempchange_abs, tsign, 
+                                                                                      microclim, npp, seas, human_bowler, mass, REALM, 
+                                                                                      slope_npp = est, slope_npp.se = se)]
     slopes.seas <- mods.seas[, parameterEstimates(mod[[1]]), 
-                             by = .(tempave, tempchange_abs, microclim, npp, seas, human_bowler, mass, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
-                                                                                                               .(tempave, tempchange_abs, microclim, npp, seas, human_bowler, mass, REALM, slope_seas = est, slope_seas.se = se)]
+                             by = .(tempave, tempchange, tempchange_abs, tsign, 
+                                    microclim, npp, seas, human_bowler, mass, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
+                                                                                      .(tempave, tempchange, tempchange_abs, tsign, 
+                                                                                        microclim, npp, seas, human_bowler, mass, REALM, 
+                                                                                        slope_seas = est, slope_seas.se = se)]
     slopes.human <- mods.human[, parameterEstimates(mod[[1]]), 
-                               by = .(tempave, tempchange_abs, microclim, npp, seas, human_bowler, mass, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
-                                                                                                                 .(tempave, tempchange_abs, microclim, npp, seas, human_bowler, mass, REALM, slope_human = est, slope_human.se = se)]
+                               by = .(tempave, tempchange, tempchange_abs, tsign, 
+                                      microclim, npp, seas, human_bowler, mass, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
+                                                                                        .(tempave, tempchange, tempchange_abs, tsign, 
+                                                                                          microclim, npp, seas, human_bowler, mass, REALM, 
+                                                                                          slope_human = est, slope_human.se = se)]
     
     slopes2 <- merge(slopes.microclim, slopes.npp)
     slopes2 <- merge(slopes2, slopes.seas)
@@ -244,6 +258,7 @@ if(predmod == 'tsign'){
     
     # save slopes
     saveRDS(slopes2, file = here('temp', 'slopes_rawTsdTTRealmtsignCovariate.rds'))
+    print(paste('Wrote slopes_rawTsdTTRealmtsignCovariate.rds:', Sys.time()))
 }
 
 if(!MATCHMOD) print('Failed to match a model type! Use either tsign or full')

@@ -1289,19 +1289,59 @@ aics
 ##### Load the interaction effects
 ```{r, echo = FALSE}
 
-if(file.exists(here('temp', 'slopes_rawinteractions2.rds'))){
-  slopesraw2 <- readRDS(here('temp', 'slopes_rawinteractions2.rds'))
-  print('Loaded interaction predictions from file')
+if(file.exists(here('temp', 'slopes_rawTsdTTRealmtsignCovariate.rds'))){
+  slopes_rawTsdTTRealmtsignCovariate <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariate.rds'))
+  print('Loaded tsign interaction predictions from file')
 
 } else {
-  print('Need to run pred_GLMMmodrawTsdTTRealmCovariate.R')
+  print('Need to run pred_GLMMmodrawTsdTTRealmCovariate.R with argument tsign')
+  
+}
+
+if(file.exists(here('temp', 'slopes_rawinteractions2.rds'))){
+  slopesraw2 <- readRDS(here('temp', 'slopes_rawinteractions2.rds'))
+  print('Loaded complex interaction predictions from file')
+
+} else {
+  print('Need to run pred_GLMMmodrawTsdTTRealmCovariate.R with argument full')
   
 }
 
 ```
 
-##### Plot the interactions (raw)
-More response to changing temperatures with...
+##### Plot the interactions for tsign models
+Covariate only interacts with tempchange_abs.
+
+Error bars are 95% CIs
+```{r echo=FALSE, fig.height=15, fig.width=6}
+# plot
+p1 <- ggplot(slopes_rawTsdTTRealmtsignCovariate, aes(tempchange, slope_microclim, 
+                                                     color = microclim, group = microclim)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope_microclim-1.96*slope_microclim.se, 
+                        ymax=slope_microclim+1.96*slope_microclim.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM), rows = vars(tempave), labeller = label_both)
+p2 <- ggplot(slopes_rawTsdTTRealmtsignCovariate, aes(tempchange, slope_npp, color = npp, group = npp)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope_npp-1.96*slope_npp.se, ymax=slope_npp+1.96*slope_npp.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM), rows = vars(tempave), labeller = label_both)
+p3 <- ggplot(slopes_rawTsdTTRealmtsignCovariate, aes(tempchange, slope_seas, color = seas, group = seas)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope_seas-1.96*slope_seas.se, ymax=slope_seas+1.96*slope_seas.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM), rows = vars(tempave))
+p4 <- ggplot(slopes_rawTsdTTRealmtsignCovariate, aes(tempchange, slope_human, 
+                                                     color = human_bowler, group = human_bowler)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope_human-1.96*slope_human.se, ymax=slope_human+1.96*slope_human.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM), rows = vars(tempave), labeller = label_both)
+
+p1
+p2
+p3
+p4
+```
+##### Plot the interactions for complex, non-tsign models
+These have an interaction of covariate with tempave but don't have tsign.
 
 Error bars are 95% CIs
 ```{r echo=FALSE, fig.height=15, fig.width=6}
