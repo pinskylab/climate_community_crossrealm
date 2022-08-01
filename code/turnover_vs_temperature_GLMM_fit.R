@@ -492,7 +492,44 @@ if (fitmod == 'modabsLatsdTTRealmAllJtu') {
     MATCHMOD <- TRUE
 }
 
-# rawT:dT/sdT #########################
+# rawT+dT #########################
+# use tempave instead of tempave_metab
+# has tempave + tempchange (and no interaction)
+# with tempchange
+if (fitmod == 'modrawTdTAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            tempchange.sc:duration +
+            tempave.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+# with tempchange_abs
+if (fitmod == 'modrawTsdTAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            tempchange_abs.sc:duration +
+            tempave.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+# rawT*dT/sdT #########################
 # use tempave instead of tempave_metab
 
 # with tempchange
@@ -533,9 +570,50 @@ if (fitmod == 'modrawTsdTTAllJtu') {
 
 
 
-# T:dT/sdT:REALM INTERACTION WITH SINGLE FACTORS ########################
-# T:dT:REALM like Antao #########################
 
+# (T+dT):REALM like Antao #########################
+# have REALM:tempave + REALM:tempchange, but not REALM:tempave:tempchange
+# use tempave instead of tempave_metab
+# with tempchange
+if (fitmod == 'modrawTdTRealmAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange.sc:duration +
+            REALM:tempave.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+# with tempchange_abs
+if (fitmod == 'modrawTsdTRealmAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tempchange_abs.sc:duration +
+            REALM:tempave.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+
+
+
+# T*dT:REALM like Antao #########################
 # use tempchange like Antao
 if (fitmod == 'modTdTTRealmAllJtu') {
     if (MATCHMOD)
@@ -577,7 +655,6 @@ if (fitmod == 'modTdTTRealmDurscAllJtu') {
 }
 
 
-# T:sdT:REALM #########################
 # use tempchange_abs (otherwise like Antao)
 if (fitmod == 'modTsdTTRealmAllJtu') {
     if (MATCHMOD)
@@ -619,9 +696,7 @@ if (fitmod == 'modTsdTTRealmDurscAllJtu') {
 }
 
 
-# rawT:dT/sdT:REALM #########################
 # use tempave instead of tempave_metab
-
 # with tempchange
 if (fitmod == 'modrawTdTTRealmAllJtu') {
     if (MATCHMOD)

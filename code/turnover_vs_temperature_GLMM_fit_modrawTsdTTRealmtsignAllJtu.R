@@ -97,7 +97,27 @@ if (fitmod == 'modrawsdTRealmtsignAllJtu') {
 }
 
 
-# tsign:rawT/T:sdT #########################
+# tsign:sdT + rawT #########################
+# environmental temperature, no realm, no tempave:tempchange interaction
+if (fitmod == 'modrawTsdTtsignAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            tsign:tempchange_abs.sc:duration +
+            tsign:tempave.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    ) #,
+    #  control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+
+# tsign:sdT:rawT #########################
 # environmental temperature, no realm
 if (fitmod == 'modrawTsdTTtsignAllJtu') {
     if (MATCHMOD)
@@ -117,6 +137,26 @@ if (fitmod == 'modrawTsdTTtsignAllJtu') {
     MATCHMOD <- TRUE
 }
 
+
+# (tsign:sdT + rawT):REALM #########################
+# environmental temperature, with realm, no tempave:tempchange interaction
+if (fitmod == 'modrawTsdTRealmtsignAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            REALM:duration +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    ) #,
+    #  control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    MATCHMOD <- TRUE
+}
 
 
 # tsign:rawT/T:sdT:REALM #########################

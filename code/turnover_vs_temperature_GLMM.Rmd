@@ -273,14 +273,14 @@ modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu
 ```
 
 ### AIC
-#### Check whether duration should be scaled
+#### Duration scaled or not
 Clearly chooses un-scaled duration and abs(tempchange).
 ```{r}
 aics <- AIC(modAllJtu, modTdTTRealmAllJtu, modTdTTRealmDurscAllJtu, modTsdTTRealmAllJtu, modTsdTTRealmDurscAllJtu, modRealmAllJtu, moddTRealmAllJtu)
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics
 ```
-#### Metabolic temperature vs. environmental temperature
+#### Metabolic vs. environmental temperature
 Prefers environmental over metabolic temperature.
 ```{r}
 aics2 <- AIC(modAllJtu, modTsdTTRealmAllJtu, modrawTsdTTRealmAllJtu)
@@ -288,13 +288,21 @@ aics2$dAIC <- aics2$AIC - min(aics2$AIC)
 aics2
 ```
 
-#### Compare among environmental temperature models
+#### Environmental temperature models
+##### Without tempave
 ```{r, rows.print=15}
 aics3 <- AIC(modAllJtu, modRealmAllJtu, moddTAllJtu, modsdTAllJtu, modrawsdTtsignAllJtu, # one var
+             moddTRealmAllJtu, modsdTRealmAllJtu, modrawsdTRealmtsignAllJtu # one var with realm
+             ) # tsign
+aics3$dAIC <- aics3$AIC - min(aics3$AIC)
+aics3
+```
+##### With tempave
+```{r, rows.print=15}
+aics3 <- AIC(modAllJtu, modRealmAllJtu, moddTAllJtu, modsdTAllJtu, modrawsdTtsignAllJtu, # tempchange or tempchange_abs or tsign:tempchange_abs (one var)
              moddTRealmAllJtu, modsdTRealmAllJtu, modrawsdTRealmtsignAllJtu, # one var with realm
-             modrawTdTTAllJtu, modrawTsdTTAllJtu, # two vars w/out realm
-             modrawTdTTRealmAllJtu, modrawTsdTTRealmAllJtu, # three vars with realm
-             modrawTsdTTtsignAllJtu, modrawTsdTTRealmtsignAllJtu) # tsign
+             modrawTdTTAllJtu, modrawTsdTTAllJtu, modrawTsdTTtsignAllJtu, # add tempave w/out realm
+             modrawTdTTRealmAllJtu, modrawTsdTTRealmAllJtu, modrawTsdTTRealmtsignAllJtu)# add tempave and realm
 aics3$dAIC <- aics3$AIC - min(aics3$AIC)
 aics3
 ```
