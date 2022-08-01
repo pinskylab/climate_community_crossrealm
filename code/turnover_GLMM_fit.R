@@ -181,6 +181,24 @@ if (fitmod == 'modRealmAllJtu') {
 }
 
 
+
+# Taxa_mod models ###################################
+if (fitmod == 'modTaxamod2AllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            taxa_mod2:duration +
+            (duration | STUDY_ID / rarefyID), 
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM#,
+        #control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
 # print and save results ############################
 if (MATCHMOD == FALSE)
     stop("Model name did not match anything", call. = FALSE)

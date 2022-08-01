@@ -68,13 +68,13 @@ tempchanges[, cor.test(temptrend, temptrend_min)]
 
 
 #### Table 1 --------------
-modAllJtu <- readRDS(here('temp', 'modAllJtu.rds'))
-modRealmAllJtu <- readRDS('temp/modRealmAllJtu.rds')
-modTaxamod2AllJtu <- readRDS('temp/modTaxamod2AllJtu.rds')
-moddTRealmAllJtu <- readRDS(here('temp', 'moddTRealmAllJtu.rds')) # tempchange by realm
-modrawsdTtsignAllJtu <- readRDS(here('temp', 'modrawsdTRealmtsignAllJtu.rds')) # tsign:tempchange by realm
-modrawTdTTRealmAllJtu <- readRDS(here('temp', 'modrawTdTTRealmAllJtu.rds')) # uses tempave and tempchange by realm
-modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # adds tsign to tempave:tempchange:realm
+modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
+modRealmAllJtu <- readRDS('temp/modRealmAllJtu.rds') # Realm. Fit by code/turnover_GLMM_fit.R
+modTaxamod2AllJtu <- readRDS('temp/modTaxamod2AllJtu.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
+moddTRealmAllJtu <- readRDS(here('temp', 'moddTRealmAllJtu.rds')) # Tempchange by realm. Fit by code/turnover_vs_temperature_GLMM_fit.R
+modrawsdTtsignAllJtu <- readRDS(here('temp', 'modrawsdTRealmtsignAllJtu.rds')) # tsign:tempchange by realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
+modrawTdTTRealmAllJtu <- readRDS(here('temp', 'modrawTdTTRealmAllJtu.rds')) # uses tempave and tempchange by realm. Fit by code/turnover_vs_temperature_GLMM_fit.R.
+modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # adds tsign to tempave:tempchange:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 
 # compare TsdTT models against null
 aics <- AIC(modAllJtu, modRealmAllJtu, modTaxamod2AllJtu, # simple models w/out tempchange
@@ -94,7 +94,8 @@ write.csv(aics, here('figures', 'table1.csv'))
 #### Figure 1: map --------
 # load BioTime data
 bt <- fread('output/turnover_w_covariates.csv.gz')
-trends <- readRDS('temp/trendstemp.rds') # the slope for all trends. . From calc_turnover.Rmd
+trends <- fread('output/slope.csv.gz') # from calc_turnover.R
+
 
 # load sampled temperature trends
 temptrends <- fread('output/temperature_trends_sampled.csv.gz')
@@ -199,7 +200,7 @@ ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in')
 ### Figure 2: main effects ---------
 # slopes for all timeseries
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
-trends <- readRDS('temp/trendstemp.rds') # the slope for all trends. . From calc_turnover.Rmd
+trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends <- trends[duration_group == 'All' & measure == 'Jtu',]
 trends <- merge(trends, bt[!duplicated(rarefyID),. (rarefyID, STUDY_ID, REALM, tempchange)])
 trends[, duration := year2 - year1]
@@ -344,6 +345,37 @@ fig3 <- arrangeGrob(p1, p2, p3, p4, ncol = 1)
 ggsave('figures/fig3.png', fig3, width = 4, height = 6, units = 'in')
 
 
+#### Table S1: covariate AICs --------------
+# load models
+modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
+modrawTsdTTRealmtsignmicroclimAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimAllJtu.rds') # has microclimates. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmmicroclimAllJtu.R.
+modrawTsdTTRealmtsignnppAllJtu <- readRDS('temp/modrawTsdTTRealmtsignnppAllJtu.rds') # has npp. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmnppAllJtu.R.
+modrawTsdTTRealmtsignseasAllJtu <- readRDS('temp/modrawTsdTTRealmtsignseasAllJtu.rds') # has seasonality. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmseasAllJtu.R.
+modrawTsdTTRealmtsignhumanAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanAllJtu.rds') # has human impact. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmhumanAllJtu.R
+
+# compare covariate models against null
+aics <- AIC(modAllJtu, modrawTsdTTRealmtsignmicroclimAllJtu,
+            modrawTsdTTRealmtsignhumanAllJtu, modrawTsdTTRealmtsignseasAllJtu, 
+            modrawTsdTTRealmtsignnppAllJtu) 
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllJtu']
+aics
+
+write.csv(aics, here('figures', 'tableS1.csv'))
+
+#### Table S1: thermal_bias AICs --------------
+# load models
+modrawTsdTTRealmtsignAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
+modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
+
+# compare thermal_bias against tsign model
+aics <- AIC(modrawTsdTTRealmtsignAllJtu_thermal_biasdata, modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata) 
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics
+
+write.csv(aics, here('figures', 'tableS2.csv'))
+
+
 ### Figure S1: time-series info----------
 bt <- fread('output/turnover_w_covariates.csv.gz') # from assemble_turnover_covariates.Rmd
 btts <- bt[, .(year1 = min(year1), year2 = max(year2), nsamp = length(unique(c(year1, year2)))), by = .(rarefyID, STUDY_ID)] # summarize by time-series
@@ -388,8 +420,7 @@ bt[, Horn := 1-Hornsim] # convert similarity to dissimilarity
 bt[, Hornsim := NULL]
 
 # load biotime trends
-#trends <- fread('output/slope_w_covariates.csv.gz') # need to recalc this file to include nyr=2 ts
-trends <- readRDS('temp/trendstemp.rds') # the slope for all trends
+trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends[, duration := year2 - year1]
 
 
@@ -466,7 +497,7 @@ dev.off()
 ### Figure S3: turnover by taxon ----------
 # slopes for all timeseries
 bt <- fread('output/turnover_w_covariates.csv.gz') # covariate data
-trends <- readRDS('temp/trendstemp.rds') # the slope for all trends. From calc_turnover.Rmd
+trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends <- trends[duration_group == 'All' & measure == 'Jtu',] # trim to those we use
 trends <- merge(trends, bt[!duplicated(rarefyID),. (rarefyID, STUDY_ID, taxa_mod2)])
 trends_by_study <- trends[, .(disstrend = mean(disstrend, na.rm=TRUE)), by = .(STUDY_ID, taxa_mod2)] # average by studyID

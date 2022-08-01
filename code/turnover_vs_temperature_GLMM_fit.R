@@ -347,38 +347,6 @@ if (fitmod == 'modRFslopeRE2levdisprealm10') {
 
 
 
-# REALM models #################################
-if (fitmod == 'modRealmAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
-    )
-    MATCHMOD <- TRUE
-}
-
-# Taxa_mod models ###################################
-if (fitmod == 'modTaxamod2AllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            taxa_mod2:duration +
-            (duration | STUDY_ID / rarefyID), 
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM#,
-        #control = glmmTMBControl(profile = TRUE)
-    ) # add dispersion formula
-    MATCHMOD <- TRUE
-}
 
 # dT/sdT ##################
 if (fitmod == 'moddTAllJtu') {
