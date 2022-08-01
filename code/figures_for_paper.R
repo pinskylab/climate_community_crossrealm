@@ -538,7 +538,7 @@ p1 <- ggplot(slopesTB[tempave == 30, ], aes(tempchange, slope_thermal_biassdT, c
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'A)', x = 'Temperature change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'Thermal bias') +
+    labs(x = 'Temperature change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'Thermal bias') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
