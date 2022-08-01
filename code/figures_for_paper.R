@@ -259,7 +259,7 @@ p2 <- ggplot() +
                     ymin=slope_realmtsign - slope_realmtsign.se, 
                     ymax=slope_realmtsign + slope_realmtsign.se)) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
-    labs(tag = 'B)', x = 'Temperage change [°C/year]', y = 'Turnover [proportion species/year]', 
+    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = 'Turnover [proportion species/year]', 
          fill = 'Average temperature [°C]', 
          color = 'Average temperature [°C]',
          size = 'Duration [years]') +
@@ -292,7 +292,7 @@ p1 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_microclim, color = 
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'A)', x = 'Temperage change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'Microclimate') +
+    labs(tag = 'A)', x = 'Temperature change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'Microclimate') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -305,7 +305,7 @@ p2 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_human, color = huma
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'D)', x = 'Temperage change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'Human       ') +
+    labs(tag = 'D)', x = 'Temperature change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'Human       ') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -318,7 +318,7 @@ p3 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_seas, color = seas,
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'C)', x = 'Temperage change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'Seasonality ') +
+    labs(tag = 'C)', x = 'Temperature change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'Seasonality ') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -331,7 +331,7 @@ p4 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_npp, color = npp, f
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'B)', x = 'Temperage change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'NPP         ') +
+    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'NPP         ') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -348,13 +348,14 @@ ggsave('figures/fig3.png', fig3, width = 4, height = 6, units = 'in')
 #### Table S1: covariate AICs --------------
 # load models
 modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
+modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # adds tsign to tempave:tempchange:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 modrawTsdTTRealmtsignmicroclimAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimAllJtu.rds') # has microclimates. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmmicroclimAllJtu.R.
 modrawTsdTTRealmtsignnppAllJtu <- readRDS('temp/modrawTsdTTRealmtsignnppAllJtu.rds') # has npp. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmnppAllJtu.R.
 modrawTsdTTRealmtsignseasAllJtu <- readRDS('temp/modrawTsdTTRealmtsignseasAllJtu.rds') # has seasonality. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmseasAllJtu.R.
 modrawTsdTTRealmtsignhumanAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanAllJtu.rds') # has human impact. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmhumanAllJtu.R
 
 # compare covariate models against null
-aics <- AIC(modAllJtu, modrawTsdTTRealmtsignmicroclimAllJtu,
+aics <- AIC(modAllJtu, modrawTsdTTRealmtsignAllJtu, modrawTsdTTRealmtsignmicroclimAllJtu,
             modrawTsdTTRealmtsignhumanAllJtu, modrawTsdTTRealmtsignseasAllJtu, 
             modrawTsdTTRealmtsignnppAllJtu) 
 aics$dAIC <- aics$AIC - min(aics$AIC)
@@ -363,7 +364,7 @@ aics
 
 write.csv(aics, here('figures', 'tableS1.csv'))
 
-#### Table S1: thermal_bias AICs --------------
+#### Table S2: thermal_bias AICs --------------
 # load models
 modrawTsdTTRealmtsignAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
 modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
@@ -525,3 +526,26 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = taxa_mod2, fill = taxa_mo
           plot.title=element_text(size=8))  
 p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
 ggsave('figures/figS3.png', p1, width = 6, height = 4, units = 'in')
+
+
+
+### Figure S4: thermal bias ---------
+slopesTB <- readRDS(here('temp', 'slopes_rawTsdTTRealmthermal_bias.rds'))
+slopesTB[, ':='(thermal_bias = as.factor(signif(thermal_bias,2)))] # set as factors for plotting
+
+p1 <- ggplot(slopesTB[tempave == 30, ], aes(tempchange, slope_thermal_biassdT, color = thermal_bias, fill = thermal_bias, group = thermal_bias,
+                                           ymin=slope_thermal_biassdT-slope_thermal_biassdT.se,  ymax=slope_thermal_biassdT+slope_thermal_biassdT.se)) +
+    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
+    geom_line() +
+    facet_grid(cols = vars(REALM)) +
+    labs(tag = 'A)', x = 'Temperature change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'Thermal bias') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
+
+
+ggsave('figures/figS4.png', p1, width = 6, height = 3, units = 'in')
+
