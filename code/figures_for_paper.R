@@ -35,7 +35,7 @@ addSmallLegend <- function(myPlot, pointSize = 0.5, textSize = 3, spaceLegend = 
     return(newplot)
 }
 
-# binomial ci
+# binomial ci (95% by default)
 binomci <- function(x, n){
     out <- as.numeric(binom.test(x, n)$conf.int)
     return(list(out[1], out[2]))
@@ -520,7 +520,7 @@ prop[variable == 'glmmonegauss.p', error.bar(range+dg[3], prop, lower = prop-low
 prop[variable == 'glmmonebeta.p', points(range+dg[4], prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = cols[4], type = 'o')]
 prop[variable == 'glmmonebeta.p', error.bar(range+dg[4], prop, lower = prop-lower, upper = upper-prop, length = 0.02, col = cols[4])]
 abline(h = 0.05, lty = 2, col = 'red')
-legend('topleft', legend = c('Pearson correlation', 'Two-stage ME', 'One-stage Gaussian ME', 'One-stage Beta ME'), col = cols, pch = 1, cex=0.5)
+legend('topleft', legend = c('Pearson correlation', 'Meta-analysis', 'One-stage Gaussian ME', 'One-stage beta ME'), col = cols, pch = 1, cex=0.5)
 mtext('E)', side = 3, line = -0.5, adj = -0.28)
 
 dev.off()

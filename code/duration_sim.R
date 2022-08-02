@@ -79,7 +79,7 @@ for(i in 1:nrow(cors)){
     # statistical tests
     test <- slopes[, cor.test(slope1, slope2_abs)] # a pearson correlation
     test2 <- slopes[, coef(lm(slope1 ~ slope2_abs))[2]] # a simple regression
-    test3 <- slopes[, summary(glmmTMB(slope1 ~ slope2_abs, disp=~se1))$coefficients$cond] # glmmTMB and dispersion
+    test3 <- slopes[, summary(glmmTMB(slope1 ~ slope2_abs, disp=~se1))$coefficients$cond] # glmmTMB and dispersion: a meta-analysis model
 
     cors[i, ':='(cor.p = test$p.value, cor.cor = test$estimate, lm.m = test2, glmmwgt.p = test3[2,4], glmmwgt.beta = test3[2,1])]    
     
