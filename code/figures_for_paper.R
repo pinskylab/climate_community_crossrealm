@@ -41,7 +41,12 @@ binomci <- function(x, n){
     return(list(out[1], out[2]))
 }
 
-
+# given a duration, make a Gaussian white noise timeseries and return the slope
+calcslopeGauss <- function(dur){
+    x <- 1:dur
+    y <- rnorm(dur)
+    return(coef(lm(y~x))[2])
+}
 
 ### Dataset sizes ---------
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
@@ -139,7 +144,7 @@ p2 <- ggplot(temptrends[REALM == 'Terrestrial & Freshwater'], aes(x = tempchange
     scale_y_sqrt() +
     scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans, 
                        breaks = c(-2, -1, -0.5, 0, 0.5, 1, 2)) +
-    labs(tag = 'B)', x = 'Temperature trend (°C/yr)', title = 'Terrestrial & Freshwater') +
+    labs(tag = 'B)', x = 'Temperature trend [°C/yr]', title = 'Terrestrial & Freshwater') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -154,7 +159,7 @@ p3 <- ggplot(temptrends[REALM == 'Marine'], aes(x = tempchange, fill = type)) +
     scale_y_sqrt() +
     scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans, 
                        breaks = c(-2, -1, -0.5, 0, 0.5, 1, 2)) +
-    labs(tag = 'C)', x = 'Temperature trend (°C/yr)', title = 'Marine') +
+    labs(tag = 'C)', x = 'Temperature trend [°C/yr]', title = 'Marine') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -182,7 +187,7 @@ p5 <- ggplot(trends_by_study, aes(x = Jtu)) +
     scale_y_sqrt() +
     geom_vline(xintercept = 0, linetype = 'dashed', size = 0.5) +
     scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.05, 0, 0.05, 0.2, 0.4)) +
-    labs(tag = 'E)', x = 'Turnover\n[proportion species/year]', title = '') +
+    labs(tag = 'E)', x = 'Turnover rate\n[proportion species/year]', title = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -238,7 +243,7 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = REALM, fill = REALM)) +
     scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.1, -0.05, 0, 0.05, 0.1, 0.2, 0.4)) +
     geom_segment(data = ave_by_realm, aes(x=disstrend - 1.96*se, xend = disstrend + 1.96*se, y= ht+offset, yend = ht+offset, color = REALM), alpha = 1) +
     geom_segment(data = ave_by_realm, aes(x = disstrend, y = 0, xend = disstrend, yend = ht+offset, color = REALM), size=0.5, linetype = 'dashed') +
-    labs(tag = 'A)', x = 'Turnover [proportion species/year]', y = 'Density', title = '') +
+    labs(tag = 'A)', x = 'Turnover rate [proportion species/year]', y = 'Density', title = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -259,7 +264,7 @@ p2 <- ggplot() +
                     ymin=slope_realmtsign - slope_realmtsign.se, 
                     ymax=slope_realmtsign + slope_realmtsign.se)) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
-    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = 'Turnover [proportion species/year]', 
+    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion species/year]', 
          fill = 'Average temperature [°C]', 
          color = 'Average temperature [°C]',
          size = 'Duration [years]') +
@@ -292,7 +297,7 @@ p1 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_microclim, color = 
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'A)', x = 'Temperature change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'Microclimate') +
+    labs(tag = 'A)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion spp/yr]', color = 'Microclimate') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -305,7 +310,7 @@ p2 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_human, color = huma
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'D)', x = 'Temperature change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'Human       ') +
+    labs(tag = 'D)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion spp/yr]', color = 'Human       ') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -318,7 +323,7 @@ p3 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_seas, color = seas,
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'C)', x = 'Temperature change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'Seasonality ') +
+    labs(tag = 'C)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion spp/yr]', color = 'Seasonality ') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -331,7 +336,7 @@ p4 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_npp, color = npp, f
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'NPP         ') +
+    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion spp/yr]', color = 'NPP         ') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -423,7 +428,13 @@ bt[, Hornsim := NULL]
 # load biotime trends
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends[, duration := year2 - year1]
+trends <- trends[measure == 'Jtu', ] # trim to Jaccard turnover
 
+# load temperature slopes
+tempchange <- fread('output/turnover_w_covariates.csv.gz') # covariate data. From assemble_turnover_covariates.Rmd
+scalingall <- fread('output/turnover_w_covariates_scaling.csv') # covariate scaling data. From assemble_turnover_covariates.Rmd
+tempchange <- tempchange[, .(tempchange.sc = mean(tempchange.sc, na.rm=TRUE), duration = max(duration)), by = rarefyID] # summarize by rarefyID
+tempchange[, tempchange := tempchange.sc * scalingall[var == 'tempchange.sc', scale] + scalingall[var == 'tempchange.sc', center]]
 
 # load simulations
 cors <- fread(here('output', 'simulated_ts.csv.gz'))
@@ -432,13 +443,30 @@ prop <- corsl[variable %in% c('cor.p', 'glmmwgt.p', 'glmmonegauss.p', 'glmmonebe
               .(nsims = sum(!is.na(value)), prop = sum(value < 0.05, na.rm=TRUE)/sum(!is.na(value), na.rm=TRUE)), by = c("range", "n", "variable")]
 prop[, c("lower", "upper") := binomci(nsims*prop, nsims), by = .(range, n, variable)]
 
+# make slopes of Gaussian white noise timeseries
+set.seed(10)
+trends[, gauss.slope := calcslopeGauss(duration), by = rarefyID]
+
+# make mean predictions of turnover rate and temperature change rate
+modloess <- trends[, loess(disstrend~duration)] # loess fit
+predsloess <- data.table(duration = 2:118)
+predsloess[, c('disstrend', 'se') := predict(modloess, newdata = predsloess, se.fit = TRUE)]
+
+modloessgauss <- trends[, loess(gauss.slope~duration)] # loess fit
+predsloess[, c('gauss.slope', 'gauss.se') := predict(modloessgauss, newdata = predsloess, se.fit = TRUE)]
+
+
+modloesstemp <- tempchange[, loess(tempchange~duration)] # loess fit
+predsloesstemp <- data.table(duration = 2:118)
+predsloesstemp[, c('tempchange', 'se') := predict(modloesstemp, newdata = predsloesstemp, se.fit = TRUE)]
+
 
 # make plots of dissimilarity vs. duration with different durations plotted
-png(file = 'figures/figS2.png', width = 6, height = 6, units = 'in', res = 300)
-par(mfrow=c(2,2), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(1.9, 0.5, 0), tcl = -0.2, cex.axis = 0.8)
+png(file = 'figures/figS2.png', width = 6.5, height = 5, units = 'in', res = 300)
+par(mfrow=c(2,3), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(1.9, 0.5, 0), tcl = -0.2, cex.axis = 0.8)
 
 # part a
-bt[rarefyID == '339_1085477', plot(dY, Jtu, xlab = 'Temporal difference (years)', ylab = 'Jaccard turnover dissimilarity', col = '#00000044', bty = 'l', ylim = c(0,1))]
+bt[rarefyID == '339_1085477', plot(dY, Jtu, xlab = 'Temporal difference (years)', ylab = 'Turnover [proportion of species]', col = '#00000044', bty = 'l', ylim = c(0,1))]
 bt[rarefyID == '339_1085477', abline(lm(Jtu~dY), col = '#a6cee3', lwd = 3)]
 mod5 <- bt[rarefyID == '339_1085477' & dY <=5, lm(Jtu~dY)] # calc trendline
 preds <- data.table(dY = 1:20)
@@ -459,25 +487,28 @@ segments(20,0,20,1, lty = 2)
 par(oldpar) # go back to original figure settings
 par(mfg = c(1,2)) # start with top-right
 
-# part b
-modloess <- trends[measure == 'Jtu' & duration_group == 'All', loess(disstrend~duration)] # loess fit
-predsloess <- data.table(duration = 2:118)
-predsloess[, c('disstrend', 'se') := predict(modloess, newdata = predsloess, se.fit = TRUE)]
-
-trends[measure == 'Jtu' & duration_group == 'All', plot(duration, disstrend, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')]
-predsloess[, lines(duration, disstrend, col = 'red')]
+# part b: turnover by duration
+trends[, plot(duration, disstrend, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Turnover rate\n[proportion spp/yr]', bty = 'l')]
 abline(h = 0, lty = 2)
+predsloess[, lines(duration, disstrend, col = 'red')]
 mtext('B)', side = 3, line = -0.5, adj = -0.28)
 
-# part c
-#plot(-1, -1, xlim = c(0,120), ylim = c(-0.04, 0.04), xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')
-plot(-1, -1, xlim = c(0,120), ylim = c(-0.15, 0.35), xlab = 'Duration', ylab = 'Jaccard turnover slope', bty = 'l')
-predsloess[, polygon(c(duration, rev(duration)), c(disstrend+1.96*se, rev(disstrend - 1.96*se)), col = '#00000044', border = NA)]
-predsloess[, lines(duration, disstrend, col = 'red')]
+
+# part c: tempchange by duration
+tempchange[, plot(duration, tempchange, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Temperature trend [°C/yr]', bty = 'l')]
 abline(h = 0, lty = 2)
+predsloesstemp[, lines(duration, tempchange, col = 'red')]
 mtext('C)', side = 3, line = -0.5, adj = -0.28)
 
-# part d
+
+# part d: Gaussian white noise slope by duration
+trends[, plot(duration, gauss.slope, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Slope of Gaussian white noise', bty = 'l')]
+abline(h = 0, lty = 2)
+predsloess[, lines(duration, gauss.slope, col = 'red')]
+mtext('D)', side = 3, line = -0.5, adj = -0.28)
+
+
+# part e: type I error
 cols <- c('#a6cee3', '#1f78b4', '#b2df8a', '#33a02c')
 dg = c(-3, -1, 1, 3)
 prop[variable == 'cor.p', plot(range+dg[1], prop, xlab = 'Range of durations', ylab = 'Proportion false positive', xlim=c(0,102), ylim = c(0,1), col = cols[1], type = 'o', bty = 'l')]
@@ -490,7 +521,7 @@ prop[variable == 'glmmonebeta.p', points(range+dg[4], prop, xlab = 'Range of dur
 prop[variable == 'glmmonebeta.p', error.bar(range+dg[4], prop, lower = prop-lower, upper = upper-prop, length = 0.02, col = cols[4])]
 abline(h = 0.05, lty = 2, col = 'red')
 legend('topleft', legend = c('Pearson correlation', 'Two-stage ME', 'One-stage Gaussian ME', 'One-stage Beta ME'), col = cols, pch = 1, cex=0.5)
-mtext('D)', side = 3, line = -0.5, adj = -0.28)
+mtext('E)', side = 3, line = -0.5, adj = -0.28)
 
 dev.off()
 
@@ -517,14 +548,14 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = taxa_mod2, fill = taxa_mo
     scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.1, -0.05, 0, 0.05, 0.1, 0.2, 0.4)) +
     geom_segment(data = ave_by_taxon, aes(x=disstrend - 1.96*se, xend = disstrend + 1.96*se, y= ht+offset, yend = ht+offset, color = taxa_mod2), alpha = 1) +
     geom_segment(data = ave_by_taxon, aes(x = disstrend, y = 0, xend = disstrend, yend = ht+offset, color = taxa_mod2), size=0.5, linetype = 'dashed') +
-    labs(x = 'Turnover [proportion species/year]', y = 'Density', title = '', fill = 'Taxon', color = 'Taxon') +
+    labs(x = 'Turnover rate [proportion species/year]', y = 'Density', title = '', fill = 'Taxon', color = 'Taxon') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))  
-p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
+p1 <- addSmallLegend(p1, pointSize = 0.8, spaceLegend = 0.2, textSize = 8)
 ggsave('figures/figS3.png', p1, width = 6, height = 4, units = 'in')
 
 
@@ -538,7 +569,7 @@ p1 <- ggplot(slopesTB[tempave == 30, ], aes(tempchange, slope_thermal_biassdT, c
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(x = 'Temperature change [°C/year]', y = 'Turnover\n[proportion spp/yr]', color = 'Thermal bias') +
+    labs(x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion spp/yr]', color = 'Thermal bias') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
