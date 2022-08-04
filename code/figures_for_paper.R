@@ -76,15 +76,13 @@ tempchanges[, cor.test(temptrend, temptrend_min)]
 modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 modRealmAllJtu <- readRDS('temp/modRealmAllJtu.rds') # Realm. Fit by code/turnover_GLMM_fit.R
 modTaxamod2AllJtu <- readRDS('temp/modTaxamod2AllJtu.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
-moddTRealmAllJtu <- readRDS(here('temp', 'moddTRealmAllJtu.rds')) # Tempchange by realm. Fit by code/turnover_vs_temperature_GLMM_fit.R
-modrawsdTtsignAllJtu <- readRDS(here('temp', 'modrawsdTRealmtsignAllJtu.rds')) # tsign:tempchange by realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
-modrawTdTTRealmAllJtu <- readRDS(here('temp', 'modrawTdTTRealmAllJtu.rds')) # uses tempave and tempchange by realm. Fit by code/turnover_vs_temperature_GLMM_fit.R.
+modsdTRealmtsignAllJtu <- readRDS(here('temp', 'modrawsdTRealmtsignAllJtu.rds')) # tsign:tempchange by realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # adds tsign to tempave:tempchange:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 
-# compare TsdTT models against null
+# compare sdT amd TsdTT models against null
 aics <- AIC(modAllJtu, modRealmAllJtu, modTaxamod2AllJtu, # simple models w/out tempchange
-            moddTRealmAllJtu, modrawsdTtsignAllJtu, # tempchange by realm
-            modrawTdTTRealmAllJtu, modrawTsdTTRealmtsignAllJtu) # add tempave
+            modsdTRealmtsignAllJtu, # tsign:tempchange_abs by realm
+            modrawTsdTTRealmtsignAllJtu) # add tempave:tempchange_abs
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllJtu']
 aics
@@ -220,14 +218,12 @@ ave_by_realm[, offset := c(-1, 0, 1)] # amount to vertically dodge the lines in 
 # max tempchange by realm, for plotting limits
 tempchange_by_realm <- trends[, .(max = max(tempchange, na.rm=TRUE), min = min(tempchange, na.rm=TRUE)), by = REALM]
 
-# predicted slopes from the dT model (not tsign)
-slopespredTdTT <- readRDS(here('temp', 'slopes_rawTdTTRealm.rds')) # from turnover_vs_temperature_GLMM.Rmd
-slopespredTdTT <- slopespredTdTT[round(tempave,1) %in% c(9.8, 24.9),]
-slopespredTdTT <- merge(slopespredTdTT, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
-slopespredTdTT <- slopespredTdTT[tempchange > min & tempchange < max, ] # trim to min & max by realm
-slopespredTdTT[, tempave := factor(as.character(round(tempave)), levels = c('25', '10'))] # re-order factor for nicer plotting
+# predicted slopes from the tsign model (no tempave)
+slopespredsdT <- readRDS(here('temp', 'slopes_modrawsdTRealmtsignAllJtu.rds')) # from turnover_vs_temperature_GLMM.Rmd
+slopespredsdT <- merge(slopespredsdT, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
+slopespredsdT <- slopespredsdT[tempchange > min & tempchange < max, ] # trim to min & max by realm
 
-# predicted slopes from the main model (tsign)
+# predicted slopes from the tempave interaction model
 slopespred <- readRDS(here('temp', 'slopes_rawRealmtsign.rds')) # from pred_GLMMmodrawTsdTTRealmtsignAllJtu.R
 slopespred <- slopespred[round(tempave,1) %in% c(9.8, 24.9),]
 slopespred <- merge(slopespred, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
@@ -254,14 +250,18 @@ p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
 
 # b) plot of change vs. dT
 p2 <- ggplot() +
-    geom_hline(yintercept = 0, linetype = 'dashed') +
+    #geom_hline(yintercept = 0, linetype = 'dashed') +
     geom_point(data = trends[!is.na(tempchange)], mapping = aes(tempchange, disstrend, size = duration), 
-             color='#000000', alpha = 0.1, stroke = 0) +
-    geom_line(data = slopespredTdTT, mapping=aes(tempchange, slope, color = tempave, group = tempave), linetype = 'dashed', alpha = 0.5) +
-    geom_line(data = slopespred, mapping=aes(tempchange, slope_realmtsign, color = tempave, group = tempave)) +
-    geom_ribbon(data = slopespred, alpha = 0.25, color = NA, 
-                aes(tempchange, slope_realmtsign, fill = tempave, 
-                    ymin=slope_realmtsign - slope_realmtsign.se, 
+             color='#AAAAAA', alpha = 0.1, stroke = 0) +
+    geom_line(data = slopespredsdT, mapping=aes(tempchange, slope), size=2) +
+    geom_ribbon(data = slopespredsdT, alpha = 0.5, color = NA, 
+                aes(tempchange, slope,
+                    ymin=slope - slope.se, 
+                    ymax=slope + slope.se)) +
+    geom_line(data = slopespred, mapping=aes(tempchange, slope_realmtsign, color = tempave, group = tempave), linetype = 'dashed') +
+    geom_ribbon(data = slopespred, alpha = 0.2, color = NA,
+                aes(tempchange, slope_realmtsign, fill = tempave,
+                    ymin=slope_realmtsign - slope_realmtsign.se,
                     ymax=slope_realmtsign + slope_realmtsign.se)) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
     labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion species/year]', 
