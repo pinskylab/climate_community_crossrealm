@@ -10,8 +10,8 @@ himp <- raster('dataDL/human_impact_marine/masked_model.tif') # marine human imp
 
 # Load Bowler anthropogenic threats
 atc <- stack("dataDL/bowler_atcs/Figure_6.grd") # raster stack. Cumulative is all of them together
-names(atc)
-atc_cum <- stackApply(atc, indices = c(1,2,2,2,2,1), fun = sum, na.rm = TRUE)[[2]] # sum up non-climate drivers
+names(atc) # Climate_change, Human_use, Human_population, Pollution, Alien_potential, Cumulative
+atc_cum <- stackApply(atc, indices = c(1,2,2,2,2,1), fun = sum, na.rm = TRUE)[[2]] # sum up non-climate and non-cumulative drivers in layer 2 and return only layer 2
 #plot(atc_cum)
 
 # BioTime locations
