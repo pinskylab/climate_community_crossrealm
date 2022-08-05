@@ -825,7 +825,7 @@ p3
 ##### Confidence bounds
 CIs are from a SEM fit to the trends.
 ```{r, echo = FALSE}
-vals <- slopessdTRealmAllJtu[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
+vals <- slopessdTRealmAllJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
 ggplot(slopessdTRealmAllJtu[tempave %in% vals,], 
        aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
     geom_line() +
@@ -894,7 +894,7 @@ p3
 ##### Confidence bounds
 CIs are from a SEM fit to the trends.
 ```{r, echo = FALSE}
-vals <- slopesrawsdTRealmtsignAllJtu[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
+vals <- slopesrawsdTRealmtsignAllJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
 ggplot(slopesrawsdTRealmtsignAllJtu[tempave %in% vals,], 
        aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
     geom_line() +
@@ -936,7 +936,7 @@ p1
 ##### Confidence bounds
 CIs are from a SEM fit to the trends.
 ```{r, echo = FALSE}
-vals <- slopesrawTsdTAllJtu[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
+vals <- slopesrawTsdTAllJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
 ggplot(slopesrawTsdTAllJtu[tempave %in% vals,], 
        aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
     geom_line() +
@@ -979,7 +979,7 @@ p1
 ##### Confidence bounds
 CIs are from a SEM fit to the trends.
 ```{r, echo = FALSE}
-vals <- slopesrawTsdTtsignAllJtu[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
+vals <- slopesrawTsdTtsignAllJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
 ggplot(slopesrawTsdTtsignAllJtu[tempave %in% vals,], 
        aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
     geom_line() +
@@ -1048,7 +1048,7 @@ p3
 ##### Confidence bounds
 CIs are from a SEM fit to the trends.
 ```{r, echo = FALSE}
-vals <- slopesrawTsdTRealmAllJtu[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
+vals <- slopesrawTsdTRealmAllJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
 ggplot(slopesrawTsdTRealmAllJtu[tempave %in% vals,], 
        aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
   geom_line() +
@@ -1118,7 +1118,7 @@ p3
 ##### Confidence bounds
 CIs are from a SEM fit to the trends.
 ```{r, echo = FALSE}
-vals <- slopesrawTsdTRealmtsignAllJtu[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
+vals <- slopesrawTsdTRealmtsignAllJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
 ggplot(slopesrawTsdTRealmtsignAllJtu[tempave %in% vals,], 
        aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
   geom_line() +
@@ -1188,7 +1188,7 @@ p3
 ##### Confidence bounds
 CIs are from a SEM fit to the trends.
 ```{r, fig.height=8}
-vals <- slopesrawTdTT[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
+vals <- slopesrawTdTT[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
 ggplot(slopesrawTdTT[tempave %in% vals,], 
        aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
     geom_line() +
@@ -1257,7 +1257,7 @@ p3
 ##### Confidence bounds
 CIs are from a SEM fit to the trends.
 ```{r, echo = FALSE}
-vals <- slopesrawTsdTT[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
+vals <- slopesrawTsdTT[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
 ggplot(slopesrawTsdTT[tempave %in% vals,], 
        aes(tempchange_abs, slope, color = factor(round(tempave)), group = tempave)) +
     geom_line() +
@@ -1358,7 +1358,7 @@ p3
 ###### Across realms
 CIs are from a SEM fit to the trends.
 ```{r, echo=FALSE}
-vals <- slopestsign[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
+vals <- slopestsign[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
 ggplot(slopestsign[tempave %in% vals,], 
        aes(tempchange, slope_tsign, color = factor(round(tempave)), group = tempave)) +
     geom_hline(yintercept = 0, linetype = 'dashed') +
@@ -1377,7 +1377,7 @@ ggplot(slopestsign[tempave %in% vals,],
 ###### By realm
 CIs are from a SEM fit to the trends.
 ```{r, echo=FALSE}
-vals <- slopestsign[c(which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 10 and 25degC
+vals <- slopestsign[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
 ggplot(slopestsign[tempave %in% vals,], 
        aes(tempchange, slope_realmtsign, color = factor(round(tempave)), group = tempave)) +
     geom_line() +

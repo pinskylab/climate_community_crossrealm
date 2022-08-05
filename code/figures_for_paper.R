@@ -48,8 +48,21 @@ calcslopeGauss <- function(dur){
     return(coef(lm(y~x))[2])
 }
 
+# convert back from scaled covariates. Assumes scaling is loaded as scalingall object
+unscaleme <- function(x.sc, nm){
+    if(!(nm %in% scalingall[,var])) stop('nm not found in scalingall')
+    if(scalingall[var==nm, log]){
+        x <- exp(x.sc * scalingall[var == nm, scale] + scalingall[var == nm, center]) - scalingall[var==nm, plus]
+    } else {
+        x <- x.sc * scalingall[var == nm, scale] + scalingall[var == nm, center] - scalingall[var==nm, plus]
+    }
+    return(x)
+}
+
+
 ### Dataset sizes ---------
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
+scalingall <- fread('output/turnover_w_covariates_scaling.csv') # covariate scaling data. From assemble_turnover_covariates.Rmd
 
 nrow(bt)
 bt[, length(unique(STUDY_ID))] # number of studies
@@ -59,6 +72,8 @@ bt[, .(N = length(unique(rarefyID))), by = REALM] # numbers of time-series by re
 bt[, length(unique(rarefyID)), by = taxa_mod2] # number of time-series by taxon group
 bt[, .(Nts = length(unique(rarefyID))), by = STUDY_ID][Nts >1, .N] # number of studies with >1 rarefyID
 bt[, range(duration+1)] # range of years sampled (2 to 119)
+bt[unscaleme(tempave.sc, 'tempave.sc') >10 & REALM=='Marine', length(unique(rarefyID))] # number of timeseries >10degC
+bt[unscaleme(tempave.sc, 'tempave.sc') >10  & REALM=='Marine', length(unique(rarefyID))]/bt[REALM=='Marine', length(unique(rarefyID))] # fraction of timeseries >10degC
 
 trends <- readRDS('temp/trendstemp.rds')
 trends[, length(unique(rarefyID))] # number of timeseries
@@ -230,6 +245,10 @@ slopespred <- merge(slopespred, tempchange_by_realm, all.x = TRUE, by = "REALM")
 slopespred <- slopespred[tempchange > min & tempchange < max, ] # trim to min & max by realm
 slopespred[, tempave := factor(as.character(round(tempave)), levels = c('25', '10'))] # re-order factor for nicer plotting
 
+
+# fastest turnover at highest observed rate of temperature change
+slopespredsdT[, max(slope)] # just looking at tempchange
+slopespred[, max(slope_realmtsign)] # also considering tempave
 
 # a) across realms
 ht <- 6.3
@@ -432,7 +451,6 @@ trends <- trends[measure == 'Jtu', ] # trim to Jaccard turnover
 
 # load temperature slopes
 tempchange <- fread('output/turnover_w_covariates.csv.gz') # covariate data. From assemble_turnover_covariates.Rmd
-scalingall <- fread('output/turnover_w_covariates_scaling.csv') # covariate scaling data. From assemble_turnover_covariates.Rmd
 tempchange <- tempchange[, .(tempchange.sc = mean(tempchange.sc, na.rm=TRUE), duration = max(duration)), by = rarefyID] # summarize by rarefyID
 tempchange[, tempchange := tempchange.sc * scalingall[var == 'tempchange.sc', scale] + scalingall[var == 'tempchange.sc', center]]
 
