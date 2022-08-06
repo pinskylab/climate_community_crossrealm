@@ -127,7 +127,7 @@ temptrends[REALM %in% c('Terrestrial', 'Freshwater'), REALM := 'Terrestrial & Fr
 
 # make table of temporal trends by STUDY_ID
 # use the slopes that use all data points and all pairs
-trends <- trends[duration_group == 'All' & rarefyID %in% bt$rarefyID,]
+trends <- trends[duration_group == 'All' & rarefyID %in% bt$rarefyID & year2 - year1 >2,]
 trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend') # wide format for plotting
 trendsw[, STUDY_ID := vapply(strsplit(rarefyID,"_"), `[`, 1, FUN.VALUE=character(1))] # extract STUDY_ID from rarefyID
 trends_by_study <- trendsw[, .(Horn = mean(Horn, na.rm=TRUE), Jbeta = mean(Jbeta), Jtu = mean(Jtu)), by = STUDY_ID]
@@ -223,12 +223,13 @@ trends <- trends[duration_group == 'All' & measure == 'Jtu',]
 trends <- merge(trends, bt[!duplicated(rarefyID),. (rarefyID, STUDY_ID, REALM, tempchange)])
 trends[, duration := year2 - year1]
 trends[, REALM := factor(REALM, levels = c('Marine', 'Terrestrial', 'Freshwater'))] # re-order for nicer plotting in part B
-trends_by_study <- trends[, .(disstrend = mean(disstrend, na.rm=TRUE), tempchange = mean(tempchange, na.rm=TRUE)), by = .(STUDY_ID, REALM)] # average by studyID
+trends_by_study <- trends[duration>2, .(disstrend = mean(disstrend, na.rm=TRUE), tempchange = mean(tempchange, na.rm=TRUE)), by = .(STUDY_ID, REALM)] # average by studyID. Can't use 2-year trends since they assume dissimilarity at y0 is 0.
 trends_by_study[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # re-order for nicer plotting in part A
 
 # average slopes by realm
 ave_by_realm <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstrend)/sqrt(.N)), by = REALM]
 ave_by_realm[, offset := c(-1, 0, 1)] # amount to vertically dodge the lines in part a
+write.csv(ave_by_realm, file='output/ave_by_realm.csv')
 
 # max tempchange by realm, for plotting limits
 tempchange_by_realm <- trends[, .(max = max(tempchange, na.rm=TRUE), min = min(tempchange, na.rm=TRUE)), by = REALM]
@@ -240,10 +241,11 @@ slopespredsdT <- slopespredsdT[tempchange > min & tempchange < max, ] # trim to 
 
 # predicted slopes from the tempave interaction model
 slopespred <- readRDS(here('temp', 'slopes_rawRealmtsign.rds')) # from pred_GLMMmodrawTsdTTRealmtsignAllJtu.R
-slopespred <- slopespred[round(tempave,1) %in% c(9.8, 24.9),]
+vals <- slopespred[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC (+/-2SD from the mean)
+slopespred <- slopespred[tempave %in% vals,]
 slopespred <- merge(slopespred, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
 slopespred <- slopespred[tempchange > min & tempchange < max, ] # trim to min & max by realm
-slopespred[, tempave := factor(as.character(round(tempave)), levels = c('25', '10'))] # re-order factor for nicer plotting
+slopespred[, tempave := factor(as.character(round(tempave)), levels = c('25', '0'))] # re-order factor for nicer plotting
 
 
 # fastest turnover at highest observed rate of temperature change
@@ -447,7 +449,7 @@ bt[, Hornsim := NULL]
 # load biotime trends
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends[, duration := year2 - year1]
-trends <- trends[measure == 'Jtu', ] # trim to Jaccard turnover
+trends <- trends[measure == 'Jtu' & duration>2, ] # trim to Jaccard turnover
 
 # load temperature slopes
 tempchange <- fread('output/turnover_w_covariates.csv.gz') # covariate data. From assemble_turnover_covariates.Rmd
@@ -549,8 +551,9 @@ dev.off()
 bt <- fread('output/turnover_w_covariates.csv.gz') # covariate data
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends <- trends[duration_group == 'All' & measure == 'Jtu',] # trim to those we use
+trends[, duration := year2 - year1]
 trends <- merge(trends, bt[!duplicated(rarefyID),. (rarefyID, STUDY_ID, taxa_mod2)])
-trends_by_study <- trends[, .(disstrend = mean(disstrend, na.rm=TRUE)), by = .(STUDY_ID, taxa_mod2)] # average by studyID
+trends_by_study <- trends[duration>2, .(disstrend = mean(disstrend, na.rm=TRUE)), by = .(STUDY_ID, taxa_mod2)] # average by studyID
 
 # average slopes by taxon
 ave_by_taxon <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstrend)/sqrt(.N)), by = taxa_mod2][order(taxa_mod2),]
