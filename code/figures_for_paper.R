@@ -223,11 +223,11 @@ trends <- trends[duration_group == 'All' & measure == 'Jtu',]
 trends <- merge(trends, bt[!duplicated(rarefyID),. (rarefyID, STUDY_ID, REALM, tempchange)])
 trends[, duration := year2 - year1]
 trends[, REALM := factor(REALM, levels = c('Marine', 'Terrestrial', 'Freshwater'))] # re-order for nicer plotting in part B
-trends_by_study <- trends[duration>2, .(disstrend = mean(disstrend, na.rm=TRUE), tempchange = mean(tempchange, na.rm=TRUE)), by = .(STUDY_ID, REALM)] # average by studyID. Can't use 2-year trends since they assume dissimilarity at y0 is 0.
+trends_by_study <- trends[duration>2, .(disstrend = mean(disstrend, na.rm=TRUE), tempchange = mean(tempchange, na.rm=TRUE), duration = mean(duration)), by = .(STUDY_ID, REALM)] # average by studyID. Can't use 2-year trends since they assume dissimilarity at y0 is 0.
 trends_by_study[, REALM := factor(REALM, levels = c('Freshwater', 'Terrestrial', 'Marine'))] # re-order for nicer plotting in part A
 
 # average slopes by realm
-ave_by_realm <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstrend)/sqrt(.N)), by = REALM]
+ave_by_realm <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstrend)/sqrt(.N), duration = mean(duration), duration.se = sd(duration)/sqrt(.N)), by = REALM]
 ave_by_realm[, offset := c(-1, 0, 1)] # amount to vertically dodge the lines in part a
 write.csv(ave_by_realm, file='output/ave_by_realm.csv')
 
@@ -313,6 +313,11 @@ slopes2[, ':='(microclim = as.factor(signif(microclim,2)),
                seas = as.factor(signif(seas,2)),
                human_bowler = as.factor(signif(human_bowler,2)))] # set as factors for plotting
 
+# max rates by realm and covariate
+slopes2[tempave==10 & tempchange==2, .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
+        by = .(REALM, microclim, human_bowler)]
+
+# plots
 p1 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_microclim, color = microclim, fill = microclim, group = microclim,
                                                  ymin=slope_microclim-slope_microclim.se,  ymax=slope_microclim+slope_microclim.se)) +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
@@ -553,10 +558,10 @@ trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends <- trends[duration_group == 'All' & measure == 'Jtu',] # trim to those we use
 trends[, duration := year2 - year1]
 trends <- merge(trends, bt[!duplicated(rarefyID),. (rarefyID, STUDY_ID, taxa_mod2)])
-trends_by_study <- trends[duration>2, .(disstrend = mean(disstrend, na.rm=TRUE)), by = .(STUDY_ID, taxa_mod2)] # average by studyID
+trends_by_study <- trends[duration>2, .(disstrend = mean(disstrend, na.rm=TRUE), duration = mean(duration)), by = .(STUDY_ID, taxa_mod2)] # average by studyID
 
 # average slopes by taxon
-ave_by_taxon <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstrend)/sqrt(.N)), by = taxa_mod2][order(taxa_mod2),]
+ave_by_taxon <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstrend)/sqrt(.N), duration = mean(duration), duration.se = sd(duration)/sqrt(.N)), by = taxa_mod2][order(taxa_mod2),]
 ave_by_taxon[, offset := seq(1, -1, length.out = 9)] # amount to vertically dodge the lines in part a
 write.csv(ave_by_taxon, file='output/ave_by_taxon.csv')
 
