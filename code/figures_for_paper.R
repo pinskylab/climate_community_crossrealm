@@ -237,7 +237,7 @@ tempchange_by_realm <- trends[, .(max = max(tempchange, na.rm=TRUE), min = min(t
 # predicted slopes from the tsign model (no tempave)
 slopespredsdT <- readRDS(here('temp', 'slopes_modrawsdTRealmtsignAllJtu.rds')) # from turnover_vs_temperature_GLMM.Rmd
 slopespredsdT <- merge(slopespredsdT, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
-slopespredsdT <- slopespredsdT[tempchange > min & tempchange < max, ] # trim to min & max by realm
+slopespredsdT <- slopespredsdT[tempchange > min & tempchange < max & !duplicated(cbind(tempchange, REALM)), ] # trim to min & max by realm
 
 # predicted slopes from the tempave interaction model
 slopespred <- readRDS(here('temp', 'slopes_rawRealmtsign.rds')) # from pred_GLMMmodrawTsdTTRealmtsignAllJtu.R
@@ -274,7 +274,7 @@ p2 <- ggplot() +
     #geom_hline(yintercept = 0, linetype = 'dashed') +
     geom_point(data = trends[!is.na(tempchange)], mapping = aes(tempchange, disstrend, size = duration), 
              color='#AAAAAA', alpha = 0.1, stroke = 0) +
-    geom_line(data = slopespredsdT, mapping=aes(tempchange, slope), size=2) +
+    geom_line(data = slopespredsdT, mapping=aes(tempchange, slope), size=1) +
     geom_ribbon(data = slopespredsdT, alpha = 0.5, color = NA, 
                 aes(tempchange, slope,
                     ymin=slope - slope.se, 
