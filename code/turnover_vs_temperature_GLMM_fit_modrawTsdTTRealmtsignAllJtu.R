@@ -48,10 +48,8 @@ iallJtu <-
         Jtu.sc,
         tempchange_abs.sc,
         REALM,
-        tempave_metab.sc,
-        durationlog.sc,
-        mass.sc,
-        nspp.sc,
+        tempave.sc,
+        duration.sc,
         seas.sc,
         microclim.sc,
         npp.sc,
@@ -80,7 +78,7 @@ if (fitmod == 'modrawsdTtsignAllJtu') {
 
 # tsign:sdT:realm #########################
 # realm, no environmental temperature
-if (fitmod == 'modrawsdTRealmtsignAllJtu') {
+if (fitmod == 'modsdTRealmtsignAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
