@@ -3,7 +3,7 @@
 ## so that we can also calculate SEs
 #
 # run as
-# nohup Rscript --vanilla code/pred_GLMMmodrawTsdTTRealmtsignAllJtu.R > logs/pred_GLMMmodrawTsdTTRealmtsignAllJtu.Rout &
+# nohup Rscript --vanilla code/pred_GLMMmodrawTsdTTRealmtsignAllHorn.R > logs/pred_GLMMmodrawTsdTTRealmtsignAllHorn.Rout &
 # or run by hand to, for example, start after the predictions have been made (line 93). would need to read the predictions in by hand.
 # set to run on Annotate
 
@@ -52,7 +52,7 @@ signneg11 <- function(x){ # assign 0 a sign of 1 so that there are only 2 levels
 scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv'))
 
 # The models
-modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu.rds')) # tempave, tempchange_abs, realm, tsign
+modrawTsdTTRealmtsignAllHorn <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllHorn.rds')) # tempave, tempchange_abs, realm, tsign
 print('models loaded')
 
 ### Make predictions -------------------
@@ -66,19 +66,19 @@ newdat[, tsign := signneg11(tempchange)]
 newdat[, tempchange_abs.sc := scaleme(tempchange_abs, 'tempchange_abs.sc')]
 
 # predict
-preds.realmtsign <- predict(modrawTsdTTRealmtsignAllJtu, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdat$Jtu.sc.realmtsign <- preds.realmtsign$fit
-newdat$Jtu.sc.realmtsign.se <- preds.realmtsign$se.fit
+preds.realmtsign <- predict(modrawTsdTTRealmtsignAllHorn, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdat$Horn.sc.realmtsign <- preds.realmtsign$fit
+newdat$Horn.sc.realmtsign.se <- preds.realmtsign$se.fit
 print('finished realmtsign predictions')
 
 
 ### Write dissimilarities ------------------
-saveRDS(newdat, file = here('temp', 'preds_rawTsdTTRealmtsign.rds'))
+saveRDS(newdat, file = here('temp', 'preds_rawTsdTTRealmtsignHorn.rds'))
 
 
 ### Slope calculations -------------------
 # calculate slopes and SE of the slope using latent variables (since predictions have SE)
-mods.realmtsign <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc.realmtsign\nJtu.sc.realmtsign ~~ ', mean(Jtu.sc.realmtsign.se), '*Jtu.sc.realmtsign'), data.frame(Jtu.sc.realmtsign, duration)))), 
+mods.realmtsign <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Horn.sc.realmtsign\nHorn.sc.realmtsign ~~ ', mean(Horn.sc.realmtsign.se), '*Horn.sc.realmtsign'), data.frame(Horn.sc.realmtsign, duration)))), 
                      by = .(tempave, tempchange, REALM)] # takes ~30 min
 print('finished realmtsign SEM')
 
@@ -89,7 +89,7 @@ slopes2 <- mods.realmtsign[, parameterEstimates(mod[[1]]),
                                                                .(tempave, tempchange, REALM, slope_realmtsign = est, slope_realmtsign.se = se)]
 
 ### Write slopes -------------
-saveRDS(slopes2, file = here('temp', 'slopes_rawTsdTTRealmtsign.rds'))
+saveRDS(slopes2, file = here('temp', 'slopes_rawTsdTTRealmtsignHorn.rds'))
 
 
 print(warnings())

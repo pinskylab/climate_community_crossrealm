@@ -1,15 +1,13 @@
 #!/usr/bin/Rscript --vanilla
 
 
-## Make predictions data.frame from sdT and TsdT models with environmental temperature (rawT)
-## From turnover_vs_temperature_GLMM.Rmd, but set up to run in the background
-## so that we can also calculate SEs
+## Make Horn predictions data.frame from sdT and TsdT models with environmental temperature (rawT)
 #
 # run as
-# nohup Rscript --vanilla code/pred_GLMMmodrawXAllJtu.R X > logs/pred_GLMMmodrawXAllJtu_X.Rout &
+# nohup Rscript --vanilla code/pred_GLMMmodrawXAllHorn.R X > logs/pred_GLMMmodrawXAllHorn_X.Rout &
 # where X is an argument (see below)
 # or as:
-# pred_modrawXAllJtu.sh X1 X2
+# pred_modrawXAllHorn.sh X1 X2
 # which spawns a job for each argument
 # or run by hand to, for example, start after the predictions have been made (line 93). would need to read the predictions in by hand.
 # set to run on Annotate
@@ -71,40 +69,40 @@ signneg11 <- function(x){ # assign 0 a sign of 1 so that there are only 2 levels
 scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv'))
 
 # Choose a model
-if(predmod == 'modsdTRealmAllJtu'){
-    mod <- readRDS(here('temp', 'modsdTRealmAllJtu.rds'))
-    out_preds <- 'preds_modsdTRealmAllJtu.rds'
-    out_slopes <- 'slopes_modsdTRealmAllJtu.rds'
+if(predmod == 'modsdTRealmAllHorn'){
+    mod <- readRDS(here('temp', 'modsdTRealmAllHorn.rds'))
+    out_preds <- 'preds_modsdTRealmAllHorn.rds'
+    out_slopes <- 'slopes_modsdTRealmAllHorn.rds'
     print('model loaded')
 }
-if(predmod == 'modrawTsdTAllJtu'){
-    mod <- readRDS(here('temp', 'modrawTsdTAllJtu.rds'))
-    out_preds <- 'preds_modrawTsdTAllJtu.rds'
-    out_slopes <- 'slopes_modrawTsdTAllJtu.rds'
+if(predmod == 'modrawTsdTAllHorn'){
+    mod <- readRDS(here('temp', 'modrawTsdTAllHorn.rds'))
+    out_preds <- 'preds_modrawTsdTAllHorn.rds'
+    out_slopes <- 'slopes_modrawTsdTAllHorn.rds'
     print('model loaded')
 } 
-if(predmod == 'modrawTsdTtsignAllJtu'){
-    mod <- readRDS(here('temp', 'modrawTsdTtsignAllJtu.rds'))
-    out_preds <- 'preds_modrawTsdTtsignAllJtu.rds'
-    out_slopes <- 'slopes_modrawTsdTtsignAllJtu.rds'
+if(predmod == 'modrawTsdTtsignAllHorn'){
+    mod <- readRDS(here('temp', 'modrawTsdTtsignAllHorn.rds'))
+    out_preds <- 'preds_modrawTsdTtsignAllHorn.rds'
+    out_slopes <- 'slopes_modrawTsdTtsignAllHorn.rds'
     print('model loaded')
 } 
-if(predmod == 'modsdTRealmtsignAllJtu'){
-    mod <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds'))
-    out_preds <- 'preds_modsdTRealmtsignAllJtu.rds'
-    out_slopes <- 'slopes_modsdTRealmtsignAllJtu.rds'
+if(predmod == 'modsdTRealmtsignAllHorn'){
+    mod <- readRDS(here('temp', 'modsdTRealmtsignAllHorn.rds'))
+    out_preds <- 'preds_modsdTRealmtsignAllHorn.rds'
+    out_slopes <- 'slopes_modsdTRealmtsignAllHorn.rds'
     print('model loaded')
 } 
-if(predmod == 'modrawTsdTRealmAllJtu'){
-    mod <- readRDS(here('temp', 'modrawTsdTRealmAllJtu.rds'))
-    out_preds <- 'preds_modrawTsdTRealmAllJtu.rds'
-    out_slopes <- 'slopes_modrawTsdTRealmAllJtu.rds'
+if(predmod == 'modrawTsdTRealmAllHorn'){
+    mod <- readRDS(here('temp', 'modrawTsdTRealmAllHorn.rds'))
+    out_preds <- 'preds_modrawTsdTRealmAllHorn.rds'
+    out_slopes <- 'slopes_modrawTsdTRealmAllHorn.rds'
     print('model loaded')
 } 
-if(predmod == 'modrawTsdTRealmtsignAllJtu'){
-    mod <- readRDS(here('temp', 'modrawTsdTRealmtsignAllJtu.rds'))
-    out_preds <- 'preds_modrawTsdTRealmtsignAllJtu.rds'
-    out_slopes <- 'slopes_modrawTsdTRealmtsignAllJtu.rds'
+if(predmod == 'modrawTsdTRealmtsignAllHorn'){
+    mod <- readRDS(here('temp', 'modrawTsdTRealmtsignAllHorn.rds'))
+    out_preds <- 'preds_modrawTsdTRealmtsignAllHorn.rds'
+    out_slopes <- 'slopes_modrawTsdTRealmtsignAllHorn.rds'
     print('model loaded')
 } 
 
@@ -125,8 +123,8 @@ newdat[, tempchange_abs.sc := scaleme(tempchange_abs, 'tempchange_abs.sc')]
 
 # predict
 preds <- predict(mod, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdat$Jtu.sc <- preds$fit
-newdat$Jtu.sc.se <- preds$se.fit
+newdat$Horn.sc <- preds$fit
+newdat$Horn.sc.se <- preds$se.fit
 print('finished  predictions')
 
 ### Write dissimilarities ------------------
@@ -135,7 +133,7 @@ saveRDS(newdat, file = here('temp', out_preds))
 
 ### Slope calculations -------------------
 # calculate slopes and SE of the slope using latent variables (since predictions have SE)
-slopemods <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc\nJtu.sc ~~ ', mean(Jtu.sc.se), '*Jtu.sc'), data.frame(Jtu.sc, duration)))), 
+slopemods <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Horn.sc\nHorn.sc ~~ ', mean(Horn.sc.se), '*Horn.sc'), data.frame(Horn.sc, duration)))), 
                          by = .(tempave, tempchange, REALM)]
 print('finished SEM')
 
