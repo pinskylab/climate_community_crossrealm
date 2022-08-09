@@ -312,6 +312,8 @@ slopes2[, ':='(microclim = as.factor(signif(microclim,2)),
                npp = as.factor(signif(npp,2)),
                seas = as.factor(signif(seas,2)),
                human_bowler = as.factor(signif(human_bowler,2)))] # set as factors for plotting
+# slopes2 <- slopes2[human_bowler == 0.055,] # to manually make a plot with only the low factor levels
+# slopes2 <- slopes2[human_bowler == 10,] # to manually make a plot with only the high factor levels. Also have to add , fill = '#00BFC4' to geom_ribbon and color= '#00BFC4' to geom_line
 
 # max rates by realm and covariate
 slopes2[tempave==10 & tempchange==2, .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
@@ -329,7 +331,9 @@ p1 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_microclim, color = 
           legend.key=element_blank(),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
+          plot.title=element_text(size=8)) +
+    scale_color_discrete(drop = FALSE) + # to keep missing factor levels in the plot if we drop them above
+    scale_fill_discrete(drop = FALSE)
 
 p2 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_human, color = human_bowler, fill = human_bowler, group = human_bowler,
                                            ymin=slope_human-slope_human.se,  ymax=slope_human+slope_human.se)) +
@@ -342,7 +346,9 @@ p2 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_human, color = huma
           legend.key=element_blank(),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
+          plot.title=element_text(size=8)) +
+    scale_color_discrete(drop = FALSE) + 
+    scale_fill_discrete(drop = FALSE) 
 
 p3 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_seas, color = seas, fill = seas, group = seas,
                                                  ymin=slope_seas-slope_seas.se,  ymax=slope_seas+slope_seas.se)) +
@@ -355,7 +361,9 @@ p3 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_seas, color = seas,
           legend.key=element_blank(),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
+          plot.title=element_text(size=8))  +
+    scale_color_discrete(drop = FALSE) + 
+    scale_fill_discrete(drop = FALSE) 
 
 p4 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_npp, color = npp, fill = npp, group = npp,
                                            ymin=slope_npp-slope_npp.se,  ymax=slope_npp+slope_npp.se)) +
@@ -368,7 +376,9 @@ p4 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_npp, color = npp, f
           legend.key=element_blank(),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
+          plot.title=element_text(size=8))  +
+    scale_color_discrete(drop = FALSE) + 
+    scale_fill_discrete(drop = FALSE) 
 
 
 fig3 <- arrangeGrob(p1, p2, p3, p4, ncol = 1)
