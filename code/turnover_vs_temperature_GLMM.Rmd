@@ -254,122 +254,31 @@ aics3
 
 ### Plots for Jtu
 #### Make/load predictions
-Uses output from pred_GLMMmodrawTsdTTRealmAllJtu.R (abs), pred_GLMMmodrawTdTTRealmAllJtu.R (not abs), and pred_GLMMmodrawTsdTTRealmtsignAllJtu.R (tsign)
+Uses output from scripts.
 ```{r, echo = FALSE}
-# using tempchange_abs : realm
-if(file.exists(here('temp', 'slopes_modsdTRealmAllJtu.rds'))){
-  slopessdTRealmAllJtu <- readRDS(here('temp', 'slopes_modsdTRealmAllJtu.rds'))
-  print('Loaded sdTRealmAllJtu predictions from file')
-} else {
-  print('No modsdTRealmAllJtu effects. Need to run code/pred_modrawXAllJtu.sh modsdTRealmAllJtu')
-}
-
 # using tsign:tempchange_abs:realm
-if(file.exists(here('temp', 'slopes_modrawsdTRealmtsignAllJtu.rds'))){
-  slopesrawsdTRealmtsignAllJtu <- readRDS(here('temp', 'slopes_modrawsdTRealmtsignAllJtu.rds'))
-  print('Loaded rawsdTRealmtsignAllJtu predictions from file')
+if(file.exists(here('temp', 'slopes_modsdTRealmtsignAllJtu.rds'))){
+  slopessdTRealmtsignAllJtu <- readRDS(here('temp', 'slopes_modsdTRealmtsignAllJtu.rds'))
+  print('Loaded sdTRealmtsignAllJtu predictions from file')
 } else {
-  print('No modrawsdTRealmtsignAllJtu effects. Need to run code/pred_modrawXAllJtu.sh modrawsdTRealmtsignAllJtu')
-}
-
-# using tempchange_abs +tempave
-if(file.exists(here('temp', 'slopes_modrawTsdTAllJtu.rds'))){
-  slopesrawTsdTAllJtu <- readRDS(here('temp', 'slopes_modrawTsdTAllJtu.rds'))
-  print('Loaded rawTsdTAllJtu predictions from file')
-} else {
-  print('No modrawTsdTAllJtu effects. Need to run code/pred_modrawXAllJtu.sh modrawTsdTAllJtu')
-}
-
-# using tsign:tempchange_abs +tempave
-if(file.exists(here('temp', 'slopes_modrawTsdTtsignAllJtu.rds'))){
-  slopesrawTsdTtsignAllJtu <- readRDS(here('temp', 'slopes_modrawTsdTtsignAllJtu.rds'))
-  print('Loaded rawTsdTtsignAllJtu predictions from file')
-} else {
-  print('No modrawTsdTtsignAllJtu effects. Need to run code/pred_modrawXAllJtu.sh modrawTsdTtsignAllJtu')
-}
-
-# using (tempchange_abs +tempave):realm
-if(file.exists(here('temp', 'slopes_modrawTsdTRealmAllJtu.rds'))){
-  slopesrawTsdTRealmAllJtu <- readRDS(here('temp', 'slopes_modrawTsdTRealmAllJtu.rds'))
-  print('Loaded rawTsdTRealmAllJtu predictions from file')
-} else {
-  print('No modrawTsdTRealmAllJtu effects. Need to run code/pred_modrawXAllJtu.sh modrawTsdTRealmAllJtu')
-}
-
-# using (tsign:tempchange_abs +tempave):realm
-if(file.exists(here('temp', 'slopes_modrawTsdTRealmtsignAllJtu.rds'))){
-  slopesrawTsdTRealmtsignAllJtu <- readRDS(here('temp', 'slopes_modrawTsdTRealmtsignAllJtu.rds'))
-  print('Loaded rawTsdTRealmtsignAllJtu predictions from file')
-} else {
-  print('No modrawTsdTRealmtsignAllJtu effects. Need to run code/pred_modrawXAllJtu.sh modrawTsdTRealmtsignAllJtu')
-}
-
-# using tempchange_abs * tempave * realm
-if(file.exists(here('temp', 'slopes_rawTsdTTRealm.rds'))){
-  slopesrawTsdTT <- readRDS(here('temp', 'slopes_rawTsdTTRealm.rds'))
-  print('Loaded tempchange_abs predictions from file')
-} else {
-  print('Making predictions from pred_GLMMmodrawTsdTTRealmAllJtu.R output')
-  
-  newdat <- readRDS(here('temp', 'preds_rawTsdTTRealm.rds')) # this also has slope.se
-  
-  # calculate slopes and SE of the slope using latent variables (since predictions have SE)
-  mods <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc\nJtu.sc ~~ ', mean(Jtu.sc.se), '*Jtu.sc'), data.frame(Jtu.sc, duration)))), by = .(tempave, tempchange_abs, REALM)] # takes ~30 min
-  slopesrawTsdTT <- mods[, parameterEstimates(mod[[1]]), by = .(tempave, tempchange_abs, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', .(tempave, tempchange_abs, REALM, slope = est, slope.se = se)] # extract the coefficients
-  
-  saveRDS(slopesrawTsdTT, file = here('temp', 'slopes_rawTsdTTRealm.rds'))
-}
-
-# using tempchange * tempave * realm
-if(file.exists(here('temp', 'slopes_rawTdTTRealm.rds'))){
-  slopesrawTdTT <- readRDS(here('temp', 'slopes_rawTdTTRealm.rds'))
-  print('Loaded tempchange predictions from file')
-} else {
-  print('Making predictions from pred_GLMMmodrawTdTTRealmAllJtu.R output')
-  
-  newdat <- readRDS(here('temp', 'preds_rawTdTTRealm.rds')) # this also has slope.se
-  
-  # calculate slopes and SE of the slope using latent variables (since predictions have SE)
-  mods <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc\nJtu.sc ~~ ', mean(Jtu.sc.se), '*Jtu.sc'), data.frame(Jtu.sc, duration)))), by = .(tempave, tempchange, REALM)] # takes ~30 min
-  slopesrawTdTT <- mods[, parameterEstimates(mod[[1]]), by = .(tempave, tempchange, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', .(tempave, tempchange, REALM, slope = est, slope.se = se)] # extract the coefficients
-  
-  saveRDS(slopesrawTdTT, file = here('temp', 'slopes_rawTdTTRealm.rds'))
+  print('No modsdTRealmtsignAllJtu effects. Need to run code/pred_modrawXAllJtu.sh modsdTRealmtsignAllJtu')
 }
 
 # using tsign:tempchange_abs * tempave * realm
-if(file.exists(here('temp', 'slopes_rawRealmtsign.rds'))){
-  slopestsign <- readRDS(here('temp', 'slopes_rawRealmtsign.rds'))
-  print('Loaded tsign predictions from file')
+if(file.exists(here('temp', 'slopes_rawTsdTTRealmtsign.rds'))){
+  slopesTsdTTRealmtsignJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds'))
+  print('Loaded TsdTTRealmtsignJtu predictions from file')
 } else {
-  print('No tsign effects. Need to run pred_GLMMmodrawTsdTTRealmtsignAllJtu.R')
+  print('No TsdTTRealmtsignJtu effects. Need to run pred_GLMMmodrawTsdTTRealmtsignAllJtu.R')
 }
-
-```
-#### tempchange_abs:realm plots
-##### Confidence bounds
-CIs are from a SEM fit to the trends.
-```{r, echo = FALSE}
-vals <- slopessdTRealmAllJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
-ggplot(slopessdTRealmAllJtu[tempave %in% vals,], 
-       aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
-    geom_line() +
-    geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
-    facet_grid(cols = vars(REALM))  +
-    labs(x = 'dT [degC/yr]') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
 
 ```
 #### tsign:tempchange_abs:realm plots
 ##### Confidence bounds
 CIs are from a SEM fit to the trends.
 ```{r, echo = FALSE}
-vals <- slopesrawsdTRealmtsignAllJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
-ggplot(slopesrawsdTRealmtsignAllJtu[tempave %in% vals,], 
+vals <- slopessdTRealmtsignAllJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
+ggplot(slopessdTRealmtsignAllJtu[tempave %in% vals,], 
        aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
     geom_line() +
     geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
@@ -385,284 +294,7 @@ ggplot(slopesrawsdTRealmtsignAllJtu[tempave %in% vals,],
 ```
 
 
-#### (tempchange_abs + tempave plots):realm
-##### Interaction
-```{r, echo = FALSE}
-p1 <- ggplot(slopesrawTsdTRealmAllJtu[REALM=='Marine'], aes(tempchange, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Marine') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-p2 <- ggplot(slopesrawTsdTRealmAllJtu[REALM=='Terrestrial'], aes(tempchange, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Terrestrial') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-p3 <- ggplot(slopesrawTsdTRealmAllJtu[REALM=='Freshwater'], aes(tempchange, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Freshwater') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
 
-p1
-p2
-p3
-```
-
-##### Confidence bounds
-CIs are from a SEM fit to the trends.
-```{r, echo = FALSE}
-vals <- slopesrawTsdTRealmAllJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
-ggplot(slopesrawTsdTRealmAllJtu[tempave %in% vals,], 
-       aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
-  geom_line() +
-  geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
-  facet_grid(cols = vars(REALM))  +
-  labs(x = 'dT [degC/yr]') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=8),
-        plot.title=element_text(size=8))  
-```
-
-
-#### (tsign:tempchange_abs + tempave plots):realm
-##### Interaction
-```{r, echo = FALSE}
-p1 <- ggplot(slopesrawTsdTRealmtsignAllJtu[REALM=='Marine'], aes(tempchange, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Marine') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-p2 <- ggplot(slopesrawTsdTRealmtsignAllJtu[REALM=='Terrestrial'], aes(tempchange, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Terrestrial') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-p3 <- ggplot(slopesrawTsdTRealmtsignAllJtu[REALM=='Freshwater'], aes(tempchange, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Freshwater') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-
-p1
-p2
-p3
-```
-
-##### Confidence bounds
-CIs are from a SEM fit to the trends.
-```{r, echo = FALSE}
-vals <- slopesrawTsdTRealmtsignAllJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
-ggplot(slopesrawTsdTRealmtsignAllJtu[tempave %in% vals,], 
-       aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
-  geom_line() +
-  geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
-  facet_grid(cols = vars(REALM))  +
-  labs(x = 'dT [degC/yr]') +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=8),
-        plot.title=element_text(size=8))  
-```
-
-
-#### tempave*tempchange*realm plots
-##### Interaction
-```{r, echo = FALSE}
-p1 <- ggplot(slopesrawTdTT[REALM=='Marine'], aes(tempchange, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Marine') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-p2 <- ggplot(slopesrawTdTT[REALM=='Terrestrial'], aes(tempchange, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Terrestrial') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-p3 <- ggplot(slopesrawTdTT[REALM=='Freshwater'], aes(tempchange, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Freshwater') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-
-p1
-p2
-p3
-```
-
-##### Confidence bounds
-CIs are from a SEM fit to the trends.
-```{r}
-vals <- slopesrawTdTT[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
-ggplot(slopesrawTdTT[tempave %in% vals,], 
-       aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
-    geom_line() +
-    geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
-    facet_grid(cols = vars(REALM))  +
-    labs(x = 'dT [degC/yr]') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
-
-```
-
-#### tempave*tempchange_abs*realm plots
-##### Interaction
-```{r, echo = FALSE}
-p1 <- ggplot(slopesrawTsdTT[REALM=='Marine'], aes(tempchange_abs, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Marine') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-p2 <- ggplot(slopesrawTsdTT[REALM=='Terrestrial'], aes(tempchange_abs, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Terrestrial') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-p3 <- ggplot(slopesrawTsdTT[REALM=='Freshwater'], aes(tempchange_abs, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Freshwater') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -20, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 12),
-          legend.title=element_text(size= 18),
-          legend.title.align = 1)
-
-p1
-p2
-p3
-```
-##### Confidence bounds
-CIs are from a SEM fit to the trends.
-```{r, echo = FALSE}
-vals <- slopesrawTsdTT[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
-ggplot(slopesrawTsdTT[tempave %in% vals,], 
-       aes(tempchange_abs, slope, color = factor(round(tempave)), group = tempave)) +
-    geom_line() +
-    geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
-    facet_grid(cols = vars(REALM))  +
-    labs(x = '|dT|') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
-
-```
 
 #### tsign:tempchange_abs*tempave:realm effects
 ```{r}
@@ -671,33 +303,10 @@ fixef(modTsdTTRealmtsignAllJtu)
 ```
 
 ##### Interaction
-###### Across realms
-modrawTsdTTtsignAllJtu model that doesn't have realm
-```{r, echo = FALSE}
-# plot
-p1 <- ggplot(slopestsign, aes(tempchange, tempave, z = slope_tsign)) +
-  geom_raster(aes(fill = slope_tsign)) +
-  labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'All realms') +
-  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
-  theme(axis.text = element_text(size = 12), 
-        axis.title = element_text(size = 14),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        legend.position = "top",
-        legend.margin = margin(c(0, 0.1, -20, 0)),
-        legend.justification = c(0.92, 0.9),
-        legend.text=element_text(size= 12),
-        legend.title=element_text(size= 18),
-        legend.title.align = 1)
-
-p1
-```
-
-###### By realm
 modrawTsdTTRealmtsignAllJtu model
 ```{r, echo = FALSE}
 # plot
-p1 <- ggplot(slopestsign[REALM=='Marine'], aes(tempchange, tempave, z = slope_realmtsign)) +
+p1 <- ggplot(slopesTsdTTRealmtsignJtu[REALM=='Marine'], aes(tempchange, tempave, z = slope_realmtsign)) +
   geom_raster(aes(fill = slope_realmtsign)) +
   labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Marine') +
   scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
@@ -711,7 +320,7 @@ p1 <- ggplot(slopestsign[REALM=='Marine'], aes(tempchange, tempave, z = slope_re
         legend.text=element_text(size= 12),
         legend.title=element_text(size= 18),
         legend.title.align = 1)
-p2 <- ggplot(slopestsign[REALM=='Terrestrial'], aes(tempchange, tempave, z = slope_realmtsign)) +
+p2 <- ggplot(slopesTsdTTRealmtsignJtu[REALM=='Terrestrial'], aes(tempchange, tempave, z = slope_realmtsign)) +
   geom_raster(aes(fill = slope_realmtsign)) +
   labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Terrestrial') +
   scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
@@ -725,7 +334,7 @@ p2 <- ggplot(slopestsign[REALM=='Terrestrial'], aes(tempchange, tempave, z = slo
         legend.text=element_text(size= 12),
         legend.title=element_text(size= 18),
         legend.title.align = 1)
-p3 <- ggplot(slopestsign[REALM=='Freshwater'], aes(tempchange, tempave, z = slope_realmtsign)) +
+p3 <- ggplot(slopesTsdTTRealmtsignJtu[REALM=='Freshwater'], aes(tempchange, tempave, z = slope_realmtsign)) +
   geom_raster(aes(fill = slope_realmtsign)) +
   labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Freshwater') +
   scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
@@ -746,15 +355,14 @@ p3
 ```
 
 ##### Confidence bounds
-###### Across realms
 CIs are from a SEM fit to the trends.
 ```{r, echo=FALSE}
-vals <- slopestsign[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
-ggplot(slopestsign[tempave %in% vals,], 
-       aes(tempchange, slope_tsign, color = factor(round(tempave)), group = tempave)) +
-    geom_hline(yintercept = 0, linetype = 'dashed') +
+vals <- slopesTsdTTRealmtsignJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
+ggplot(slopesTsdTTRealmtsignJtu[tempave %in% vals,], 
+       aes(tempchange, slope_realmtsign, color = factor(round(tempave)), group = tempave)) +
     geom_line() +
-    geom_pointrange(aes(ymin=slope_tsign-1.96*slope_tsign.se, ymax=slope_tsign+1.96*slope_tsign.se), alpha = 0.25) + 
+    geom_pointrange(aes(ymin=slope_realmtsign-1.96*slope_realmtsign.se, ymax=slope_realmtsign+1.96*slope_realmtsign.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM))  +
     labs(x = 'dT [degC/yr]') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -765,11 +373,114 @@ ggplot(slopestsign[tempave %in% vals,],
 
 ```
 
-###### By realm
+
+### Plots for Horn
+#### Make/load predictions
+Uses output from scripts.
+```{r, echo = FALSE}
+# using tsign:tempchange_abs:realm
+if(file.exists(here('temp', 'slopes_modsdTRealmtsignAllHorn.rds'))){
+  slopessdTRealmtsignAllHorn <- readRDS(here('temp', 'slopes_modsdTRealmtsignAllHorn.rds'))
+  print('Loaded sdTRealmtsignAllHorn predictions from file')
+} else {
+  print('No modsdTRealmtsignAllHorn effects. Need to run code/pred_modrawXAllHorn.sh modsdTRealmtsignAllHorn')
+}
+
+# using tsign:tempchange_abs * tempave * realm
+if(file.exists(here('temp', 'slopes_rawTsdTTRealmtsignHorn.rds'))){
+  slopesTsdTTRealmtsignHorn <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignHorn.rds'))
+  print('Loaded TsdTTRealmtsignHorn predictions from file')
+} else {
+  print('No TsdTTRealmtsignHorn effects. Need to run pred_GLMMmodrawTsdTTRealmtsignAllHorn.R')
+}
+
+```
+#### tsign:tempchange_abs:realm plots
+##### Confidence bounds
+CIs are from a SEM fit to the trends.
+```{r, echo = FALSE}
+vals <- slopessdTRealmtsignAllHorn[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
+ggplot(slopessdTRealmtsignAllHorn[tempave %in% vals,], 
+       aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
+    facet_grid(cols = vars(REALM))  +
+    labs(x = 'dT [degC/yr]') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
+
+```
+
+
+
+
+#### tsign:tempchange_abs*tempave:realm effects
+```{r}
+fixef(modTsdTTRealmtsignAllHorn)
+
+```
+
+##### Interaction
+modrawTsdTTRealmtsignAllHorn model
+```{r, echo = FALSE}
+# plot
+p1 <- ggplot(slopesTsdTTRealmtsignHorn[REALM=='Marine'], aes(tempchange, tempave, z = slope_realmtsign)) +
+  geom_raster(aes(fill = slope_realmtsign)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Marine') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Horn slope') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+p2 <- ggplot(slopesTsdTTRealmtsignHorn[REALM=='Terrestrial'], aes(tempchange, tempave, z = slope_realmtsign)) +
+  geom_raster(aes(fill = slope_realmtsign)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Terrestrial') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Horn slope') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+p3 <- ggplot(slopesTsdTTRealmtsignHorn[REALM=='Freshwater'], aes(tempchange, tempave, z = slope_realmtsign)) +
+  geom_raster(aes(fill = slope_realmtsign)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Freshwater') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Horn slope') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -20, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 12),
+        legend.title=element_text(size= 18),
+        legend.title.align = 1)
+
+p1
+p2
+p3
+```
+
+##### Confidence bounds
 CIs are from a SEM fit to the trends.
 ```{r, echo=FALSE}
-vals <- slopestsign[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
-ggplot(slopestsign[tempave %in% vals,], 
+vals <- slopesTsdTTRealmtsignHorn[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
+ggplot(slopesTsdTTRealmtsignHorn[tempave %in% vals,], 
        aes(tempchange, slope_realmtsign, color = factor(round(tempave)), group = tempave)) +
     geom_line() +
     geom_pointrange(aes(ymin=slope_realmtsign-1.96*slope_realmtsign.se, ymax=slope_realmtsign+1.96*slope_realmtsign.se), alpha = 0.25) + 
