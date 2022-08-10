@@ -1,8 +1,7 @@
 #!/usr/bin/Rscript --vanilla
 
 # Script to fit glmmTMB modrawTsdTTRealmseasAllJtu model
-# nohup code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmseasAllJtu.R XX > logs/turnover_vs_temperature_GLMMXX.Rout &
-# where XX is a model name (see below)
+# nohup code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmseasAllJtu.R > logs/turnover_vs_temperature_GLMMmodrawTsdTTRealmtsignseasAllJtu.Rout &
 # (this works if code is executable, e.g., chmod u+x code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmseasAllJtu.R)
 # (otherwise using nohup Rscript ...)
 
@@ -12,17 +11,8 @@ print(paste('This is script turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmsea
 print(paste('This is process #', Sys.getpid()))
 print(Sys.time())
 
-# read arguments #############################
-args <- commandArgs(trailingOnly = TRUE)
-print(args)
-
-if (length(args) < 1)
-    stop("Have to specify a model to fit", call. = FALSE)
-if (length(args) > 1)
-    stop("Have to specify only 1 model to fit", call. = FALSE)
-fitmod <- args[1]
-MATCHMOD <-
-    FALSE # indicator to check if the argument matched a model name
+fitmod <- 'modrawTsdTTRealmtsignseasAllJtu'
+print(fitmod)
 
 
 # load libraries ############################
@@ -46,92 +36,40 @@ iallJtu <-
         Jtu.sc,
         tempchange_abs.sc,
         REALM,
-        tempave_metab.sc,
-        durationlog.sc,
-        mass.sc,
-        nspp.sc,
+        tempave.sc,
+        duration.sc,
         seas.sc,
         microclim.sc,
         npp.sc,
         human_bowler.sc
     )]
 
-## choose model
-### with covariate by tempchange_abs only
-if (fitmod == 'modrawTsdTTRealmseassdTAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:tempave.sc:duration +
-            REALM:tempave.sc:tempchange_abs.sc:duration +
-            REALM:seas.sc:duration +
-            REALM:seas.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM)
-    MATCHMOD <- TRUE
-}
 
 ### has tsign and interaction of covariate only with sdT
-if (fitmod == 'modrawTsdTTRealmtsignseasAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tsign:tempchange_abs.sc:duration +
-            REALM:tsign:tempave.sc:duration +
-            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
-            REALM:seas.sc:duration +
-            REALM:seas.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM)
-    MATCHMOD <- TRUE
-}
+print(paste(sum(iallJtu), 'data points'))
+mod <- glmmTMB(
+    Jtu.sc ~ duration +
+        REALM:duration +
+        REALM:tsign:tempchange_abs.sc:duration +
+        REALM:tsign:tempave.sc:duration +
+        REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+        REALM:seas.sc:duration +
+        REALM:seas.sc:tempchange_abs.sc:duration +
+        (duration | STUDY_ID / rarefyID),
+    data = trendsall[iallJtu, ],
+    family = beta_family(link = 'logit'),
+    dispformula = ~ REALM)
 
 
-### with covariate by tempchange_abs:tempave
-if (fitmod == 'modrawTsdTTRealmseasAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:tempave.sc:duration +
-            REALM:tempave.sc:tempchange_abs.sc:duration +
-            REALM:seas.sc:duration +
-            REALM:seas.sc:tempchange_abs.sc:duration +
-            REALM:seas.sc:tempave.sc:duration +
-            REALM:seas.sc:tempave.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM)
-    MATCHMOD <- TRUE
-}
 
 # print and save results ############################
-if (MATCHMOD == FALSE)
-    stop("Model name did not match anything", call. = FALSE)
-if (MATCHMOD) {
-    print(summary(mod))
-    saveRDS(mod, file = paste0('temp/', fitmod, '.rds'))
-    print(paste0('saved ', fitmod, '.rds'))
-    print(Sys.time())
-    print(warnings())
-    if (!grepl('dredge', fitmod)) {
-        print(performance::r2(mod)) # run if not a dredge object
-    }
+print(summary(mod))
+saveRDS(mod, file = paste0('temp/', fitmod, '.rds'))
+print(paste0('saved ', fitmod, '.rds'))
+print(Sys.time())
+print(warnings())
+if (!grepl('dredge', fitmod)) {
+    print(performance::r2(mod)) # run if not a dredge object
 }
 
 print(warnings())
