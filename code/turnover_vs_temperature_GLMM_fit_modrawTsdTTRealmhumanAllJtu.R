@@ -47,22 +47,20 @@ iallJtu <-
 
 ## choose model
 
-### has interaction of covariate with only sdT
+### has tsign and interaction of covariate only with sdT
 print(paste(sum(iallJtu), 'data points'))
 mod <- glmmTMB(
     Jtu.sc ~ duration +
         REALM:duration +
-        REALM:tempchange_abs.sc:duration +
-        REALM:tempave.sc:duration +
-        REALM:tempave.sc:tempchange_abs.sc:duration +
+        REALM:tsign:tempchange_abs.sc:duration +
+        REALM:tsign:tempave.sc:duration +
+        REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
         REALM:human_bowler.sc:duration +
         REALM:human_bowler.sc:tempchange_abs.sc:duration +
         (duration | STUDY_ID / rarefyID),
     data = trendsall[iallJtu, ],
     family = beta_family(link = 'logit'),
     dispformula = ~ REALM)
-
-
 
 
 # print and save results ############################

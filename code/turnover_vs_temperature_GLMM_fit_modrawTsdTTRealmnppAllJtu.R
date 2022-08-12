@@ -64,18 +64,15 @@ mod <- glmmTMB(
 
 
 # print and save results ############################
-if (MATCHMOD == FALSE)
-    stop("Model name did not match anything", call. = FALSE)
-if (MATCHMOD) {
-    print(summary(mod))
-    saveRDS(mod, file = paste0('temp/', fitmod, '.rds'))
-    print(paste0('saved ', fitmod, '.rds'))
-    print(Sys.time())
-    print(warnings())
-    if (!grepl('dredge', fitmod)) {
-        print(performance::r2(mod)) # run if not a dredge object
-    }
+print(summary(mod))
+saveRDS(mod, file = paste0('temp/', fitmod, '.rds'))
+print(paste0('saved ', fitmod, '.rds'))
+print(Sys.time())
+print(warnings())
+if (!grepl('dredge', fitmod)) {
+    print(performance::r2(mod)) # run if not a dredge object
 }
+
 
 print(warnings())
 print(paste('Ended', Sys.time(), sep = ''))
