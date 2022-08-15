@@ -537,7 +537,7 @@ modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu
 # covariate models with tsign
 modrawTsdTTRealmtsignhumanAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignhumanAllJtu.rds')) # human
 modrawTsdTTRealmtsignmicroclimAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignmicroclimAllJtu.rds')) # microclim
-#modrawTsdTTRealmtsignnppAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignnppAllJtu.rds')) # npp
+modrawTsdTTRealmtsignnppAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignnppAllJtu.rds')) # npp
 modrawTsdTTRealmtsignseasAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignseasAllJtu.rds')) # seas
 ```
 
@@ -608,34 +608,7 @@ p2
 p3
 p4
 ```
-#### Plot the interactions for complex, non-tsign models
-These have an interaction of covariate with tempave but don't have tsign.
 
-Error bars are 95% CIs
-```{r echo=FALSE, fig.height=15, fig.width=6}
-# plot
-p1 <- ggplot(slopesraw2, aes(tempchange_abs, slope_microclim, color = microclim, group = microclim)) +
-    geom_line() +
-    geom_pointrange(aes(ymin=slope_microclim-1.96*slope_microclim.se, ymax=slope_microclim+1.96*slope_microclim.se), alpha = 0.25) + 
-    facet_grid(cols = vars(REALM), rows = vars(tempave), labeller = label_both)
-p2 <- ggplot(slopesraw2, aes(tempchange_abs, slope_npp, color = npp, group = npp)) +
-    geom_line() +
-    geom_pointrange(aes(ymin=slope_npp-1.96*slope_npp.se, ymax=slope_npp+1.96*slope_npp.se), alpha = 0.25) + 
-    facet_grid(cols = vars(REALM), rows = vars(tempave), labeller = label_both)
-p3 <- ggplot(slopesraw2, aes(tempchange_abs, slope_seas, color = seas, group = seas)) +
-    geom_line() +
-    geom_pointrange(aes(ymin=slope_seas-1.96*slope_seas.se, ymax=slope_seas+1.96*slope_seas.se), alpha = 0.25) + 
-    facet_grid(cols = vars(REALM), rows = vars(tempave))
-p4 <- ggplot(slopesraw2, aes(tempchange_abs, slope_human, color = human_bowler, group = human_bowler)) +
-    geom_line() +
-    geom_pointrange(aes(ymin=slope_human-1.96*slope_human.se, ymax=slope_human+1.96*slope_human.se), alpha = 0.25) + 
-    facet_grid(cols = vars(REALM), rows = vars(tempave), labeller = label_both)
-
-p1
-p2
-p3
-p4
-```
 
 ## Thermal bias test
 Does the thermal bias of a community explain the propensity to change when temperature changes? 
