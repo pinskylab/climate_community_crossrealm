@@ -60,7 +60,7 @@ iallJtu <-
 
 # tsign:sdT #########################
 # no environmental temperature, no realm
-if (fitmod == 'modrawsdTtsignAllJtu') {
+if (fitmod == 'modsdTtsignAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
