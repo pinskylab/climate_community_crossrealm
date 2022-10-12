@@ -647,7 +647,7 @@ slopesTsdTTRealmtsignJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds'
 # plot
 p1 <- ggplot(slopesTsdTTRealmtsignJtu, aes(tempchange, tempave, z = slope_realmtsign)) +
     geom_raster(aes(fill = slope_realmtsign)) +
-    labs(x = 'Temperature trend (degC per year)', y = 'Temperature (degC)') +
+    labs(x = 'Temperature trend (°C/yr)', y = 'Temperature (°C)') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Turnover rate') +
     facet_grid(cols = vars(REALM)) +
     theme(axis.text = element_text(size = 12), 
