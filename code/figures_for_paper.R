@@ -96,6 +96,8 @@ tempchanges[, cor.test(temptrend, temptrend_max)]
 tempchanges[, cor.test(temptrend, temptrend_min)]
 
 
+
+
 #### Table 1: AICs --------------
 modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 modRealmAllJtu <- readRDS('temp/modRealmAllJtu.rds') # Realm. Fit by code/turnover_GLMM_fit.R
@@ -329,8 +331,8 @@ slopes2[, ':='(microclim = as.factor(signif(microclim,2)),
 # slopes2 <- slopes2[human_bowler == 10,] # to manually make a plot with only the high factor levels. Also have to add , fill = '#00BFC4' to geom_ribbon and color= '#00BFC4' to geom_line
 
 # max rates by realm and covariate
-slopes2[tempave==10 & tempchange==2, .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
-        by = .(REALM, microclim, human_bowler)]
+slopes2[tempave==10 & tempchange %in% c(2,-1.5), .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
+        by = .(REALM, tempchange, microclim, human_bowler)]
 
 # plots
 p1 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_microclim, color = microclim, fill = microclim, group = microclim,
