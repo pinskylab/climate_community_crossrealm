@@ -639,7 +639,33 @@ ggsave('figures/figS3.png', p1, width = 6, height = 4, units = 'in')
 
 
 
-### Figure S4: thermal bias ---------
+### Figure S4: T trend x Ave T interaction ---------
+
+# read in slopes
+slopesTsdTTRealmtsignJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds'))
+
+# plot
+p1 <- ggplot(slopesTsdTTRealmtsignJtu, aes(tempchange, tempave, z = slope_realmtsign)) +
+    geom_raster(aes(fill = slope_realmtsign)) +
+    labs(x = 'Temperature trend (degC per year)', y = 'Temperature (degC)') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Turnover rate') +
+    facet_grid(cols = vars(REALM)) +
+    theme(axis.text = element_text(size = 12), 
+          axis.title = element_text(size = 14),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -5, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 8),
+          legend.title=element_text(size= 12),
+          legend.title.align = 1)
+
+ggsave('figures/figS4.png', p1, width = 6, height = 3, units = 'in')
+    
+
+
+### Figure S5: thermal bias ---------
 slopesTB <- readRDS(here('temp', 'slopes_rawTsdTTRealmthermal_bias.rds'))
 slopesTB[, ':='(thermal_bias = as.factor(signif(thermal_bias,2)))] # set as factors for plotting
 
@@ -657,13 +683,13 @@ p1 <- ggplot(slopesTB[tempave == 30, ], aes(tempchange, slope_thermal_biassdT, c
           plot.title=element_text(size=8))  
 
 
-ggsave('figures/figS4.png', p1, width = 6, height = 3, units = 'in')
+ggsave('figures/figS5.png', p1, width = 6, height = 3, units = 'in')
 
 
 
 
 
-### Figure S5: Horn main effects ---------
+### Figure S6: Horn main effects ---------
 # slopes for all timeseries
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
@@ -746,7 +772,7 @@ p2 <- ggplot() +
     scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50))
 
 p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
-figS5 <- arrangeGrob(p1, p2, nrow = 2, heights = c(1,2))
+figS6 <- arrangeGrob(p1, p2, nrow = 2, heights = c(1,2))
 
-ggsave('figures/figS5.png', figS5, width = 6, height = 4, units = 'in')
+ggsave('figures/figS6.png', figS6, width = 6, height = 4, units = 'in')
 
