@@ -226,11 +226,12 @@ aics
 modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # just duration
 modRealmAllJtu <- readRDS(here('temp', 'modRealmAllJtu.rds')) # realm
 modTaxamod2AllJtu <- readRDS(here('temp', 'modTaxamod2AllJtu.rds')) # realm
+modsdTtsignAllJtu <- readRDS(here('temp', 'modsdTtsignAllJtu.rds')) # tsign, tempchange_abs, realm
 modsdTRealmtsignAllJtu <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # tsign, tempchange_abs, realm
 modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu.rds')) # tempave * tempchange_abs, realm, tsign
 
 aics3 <- AIC(modAllJtu, modRealmAllJtu,modTaxamod2AllJtu, # no tempchange
-             modsdTRealmtsignAllJtu, # tempchange with realm
+             modsdTtsignAllJtu, modsdTRealmtsignAllJtu, # tempchange w/out or w/ realm
              modrawTsdTTRealmtsignAllJtu)# add tempave*tempchange and realm
 aics3$dAIC <- aics3$AIC - min(aics3$AIC)
 aics3
