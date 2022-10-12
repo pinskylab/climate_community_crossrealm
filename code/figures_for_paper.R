@@ -75,9 +75,18 @@ bt[, range(duration+1)] # range of years sampled (2 to 119)
 bt[unscaleme(tempave.sc, 'tempave.sc') >10 & REALM=='Marine', length(unique(rarefyID))] # number of timeseries >10degC
 bt[unscaleme(tempave.sc, 'tempave.sc') >10  & REALM=='Marine', length(unique(rarefyID))]/bt[REALM=='Marine', length(unique(rarefyID))] # proportion of timeseries >10degC
 
+# number of time series
 trends <- readRDS('temp/trendstemp.rds')
-trends[, length(unique(rarefyID))] # number of timeseries
+trends[, length(unique(rarefyID))] # number of time series
 
+# number of studies with negative slopes
+trends <- fread('output/slope.csv.gz') # from calc_turnover.R
+trends <- trends[duration_group == 'All' & rarefyID %in% bt$rarefyID & year2 - year1 >2,]
+trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend') # wide format for plotting
+trendsw[, STUDY_ID := vapply(strsplit(rarefyID,"_"), `[`, 1, FUN.VALUE=character(1))] # extract STUDY_ID from rarefyID
+trends_by_study <- trendsw[, .(Horn = mean(Horn, na.rm=TRUE), Jbeta = mean(Jbeta), Jtu = mean(Jtu)), by = STUDY_ID]
+trends_by_study[Jtu < 0, .N] # number of Jtu trends < 0
+trends_by_study[Jtu < 0, .N/trends_by_study[!is.na(Jtu), .N]] # 15% < 0
 
 ### Miscellaneous statistics -----------
 
@@ -110,7 +119,7 @@ write.csv(aics, here('figures', 'table1.csv'))
 
 
 
-#### Figure 1: map --------
+#### Figure 1: map and data --------
 # load BioTime data
 bt <- fread('output/turnover_w_covariates.csv.gz')
 bt[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting in part A
@@ -595,6 +604,17 @@ prop[variable == 'glmmonebeta.p', error.bar(range+dg[4], prop, lower = prop-lowe
 abline(h = 0.05, lty = 2, col = 'red')
 legend('topleft', legend = c('Pearson correlation', 'Meta-analysis', 'One-stage Gaussian ME', 'One-stage beta ME'), col = cols, pch = 1, cex=0.5)
 mtext('E)', side = 3, line = -0.5, adj = -0.28)
+
+
+# part f: an example negative slope
+bt[rarefyID == '213_435199', plot(dY, Jtu, xlab = 'Temporal difference (years)', ylab = 'Turnover [proportion of species]', col = '#00000044', bty = 'l', 
+                                  ylim = c(0,1))]
+mod <- bt[rarefyID == '213_435199', lm(Jtu~dY)] # calc trendline
+preds <- data.table(dY = 1:35)
+preds[, c('Jtu', 'se', 'df', 'residual.scale') := predict(mod, preds, se.fit=TRUE)]
+preds[, polygon(x = c(dY, rev(dY)), y= c(Jtu+se, rev(Jtu-se)), col = '#88888855', border = NA)]
+preds[, lines(dY, Jtu, col = '#a6cee3', lwd = 3)]
+mtext('F)', side = 3, line = -0.5, adj = -0.28)
 
 dev.off()
 
