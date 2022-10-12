@@ -225,8 +225,8 @@ aics
 ```{r, rows.print=20}
 modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # just duration
 modRealmAllJtu <- readRDS(here('temp', 'modRealmAllJtu.rds')) # realm
-modTaxamod2AllJtu <- readRDS(here('temp', 'modTaxamod2AllJtu.rds')) # realm
-modsdTtsignAllJtu <- readRDS(here('temp', 'modsdTtsignAllJtu.rds')) # tsign, tempchange_abs, realm
+modTaxamod2AllJtu <- readRDS(here('temp', 'modTaxamod2AllJtu.rds')) # taxa
+modsdTtsignAllJtu <- readRDS(here('temp', 'modsdTtsignAllJtu.rds')) # tsign, tempchange_abs
 modsdTRealmtsignAllJtu <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # tsign, tempchange_abs, realm
 modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu.rds')) # tempave * tempchange_abs, realm, tsign
 
