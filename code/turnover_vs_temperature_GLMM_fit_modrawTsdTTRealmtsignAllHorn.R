@@ -58,6 +58,23 @@ iallHorn <-
 
 ## choose model
 
+# tsign:sdT #########################
+# no environmental temperature, no realm
+if (fitmod == 'modsdTtsignAllHorn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallHorn), 'data points'))
+    mod <- glmmTMB(
+        Horn.sc ~ duration +
+            tsign:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallHorn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
 
 # tsign:sdT:realm #########################
 # realm, no environmental temperature
@@ -72,8 +89,7 @@ if (fitmod == 'modsdTRealmtsignAllHorn') {
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
-    ) #,
-    #  control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    )
     MATCHMOD <- TRUE
 }
 
@@ -96,8 +112,7 @@ if (fitmod == 'modrawTsdTTRealmtsignAllHorn') {
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
-    ) #,
-    #  control = glmmTMBControl(profile=TRUE)) # add dispersion formula
+    )
     MATCHMOD <- TRUE
 }
 
