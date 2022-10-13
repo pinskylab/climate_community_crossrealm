@@ -241,12 +241,13 @@ aics3
 ```{r, rows.print=20}
 modAllHorn <- readRDS(here('temp', 'modAllHorn.rds')) # just duration
 modRealmAllHorn <- readRDS(here('temp', 'modRealmAllHorn.rds')) # realm
-modTaxamod2AllHorn <- readRDS(here('temp', 'modTaxamod2AllHorn.rds')) # realm
+modTaxamod2AllHorn <- readRDS(here('temp', 'modTaxamod2AllHorn.rds')) # taxa
+modsdTtsignAllHorn <- readRDS(here('temp', 'modsdTtsignAllHorn.rds')) # tsign, tempchange_abs
 modsdTRealmtsignAllHorn <- readRDS(here('temp', 'modsdTRealmtsignAllHorn.rds')) # tsign, tempchange_abs, realm
 modrawTsdTTRealmtsignAllHorn <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllHorn.rds')) # tempave * tempchange_abs, realm, tsign
 
 aics3 <- AIC(modAllHorn, modRealmAllHorn, modTaxamod2AllHorn,
-             modsdTRealmtsignAllHorn, # tempchange with realm
+             modsdTtsignAllHorn, modsdTRealmtsignAllHorn, # tempchange w/out and with realm
              modrawTsdTTRealmtsignAllHorn
              )# add tempave*tempchange and realm
 aics3$dAIC <- aics3$AIC - min(aics3$AIC)

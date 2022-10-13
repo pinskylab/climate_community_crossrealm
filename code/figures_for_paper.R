@@ -442,12 +442,13 @@ write.csv(aics, here('figures', 'tableS2.csv'))
 modAllHorn <- readRDS(here('temp', 'modAllHorn.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 modRealmAllHorn <- readRDS('temp/modRealmAllHorn.rds') # Realm. Fit by code/turnover_GLMM_fit.R
 modTaxamod2AllHorn <- readRDS('temp/modTaxamod2AllHorn.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
+modsdTtsignAllHorn <- readRDS(here('temp', 'modsdTtsignAllHorn.rds')) # tsign, tempchange_abs. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllHorn.R
 modsdTRealmtsignAllHorn <- readRDS(here('temp', 'modsdTRealmtsignAllHorn.rds')) # tsign:tempchange by realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllHorn.R
 modrawTsdTTRealmtsignAllHorn <- readRDS(here('temp','modrawTsdTTRealmtsignAllHorn.rds')) # adds tsign to tempave:tempchange:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllHorn.R
 
 # compare sdT amd TsdTT models against null
 aics <- AIC(modAllHorn, modRealmAllHorn, modTaxamod2AllHorn, # simple models w/out tempchange
-            modsdTRealmtsignAllHorn, # tsign:tempchange_abs by realm
+            modsdTtsignAllHorn, modsdTRealmtsignAllHorn, # tsign:tempchange_abs, also by realm
             modrawTsdTTRealmtsignAllHorn) # add tempave:tempchange_abs
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllHorn']
