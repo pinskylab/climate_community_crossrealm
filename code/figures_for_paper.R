@@ -96,6 +96,9 @@ tempchanges[, cor.test(temptrend, temptrend_max)]
 tempchanges[, cor.test(temptrend, temptrend_min)]
 
 
+# correlation among human impacts and microclimates
+bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
+bt[!duplicated(rarefyID), cor.test(microclim.sc, human_bowler.sc), by = REALM]
 
 
 #### Table 1: AICs --------------
@@ -365,40 +368,9 @@ p2 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_human, color = huma
     scale_color_discrete(drop = FALSE) + 
     scale_fill_discrete(drop = FALSE) 
 
-p3 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_seas, color = seas, fill = seas, group = seas,
-                                                 ymin=slope_seas-slope_seas.se,  ymax=slope_seas+slope_seas.se)) +
-    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
-    geom_line() +
-    facet_grid(cols = vars(REALM)) +
-    labs(tag = 'C)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion spp/yr]', color = 'Seasonality ') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  +
-    scale_color_discrete(drop = FALSE) + 
-    scale_fill_discrete(drop = FALSE) 
+fig3 <- arrangeGrob(p1, p2, ncol = 1)
 
-p4 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_npp, color = npp, fill = npp, group = npp,
-                                           ymin=slope_npp-slope_npp.se,  ymax=slope_npp+slope_npp.se)) +
-    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
-    geom_line() +
-    facet_grid(cols = vars(REALM)) +
-    labs(tag = 'D)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion spp/yr]', color = 'NPP         ') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  +
-    scale_color_discrete(drop = FALSE) + 
-    scale_fill_discrete(drop = FALSE) 
-
-
-fig3 <- arrangeGrob(p1, p2, p3, p4, ncol = 1)
-
-ggsave('figures/fig3.png', fig3, width = 4, height = 6, units = 'in')
+ggsave('figures/fig3.png', fig3, width = 4, height = 4, units = 'in')
 
 
 #### Table S1: covariate AICs --------------
@@ -406,14 +378,11 @@ ggsave('figures/fig3.png', fig3, width = 4, height = 6, units = 'in')
 modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # adds tsign to tempave:tempchange:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 modrawTsdTTRealmtsignmicroclimAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimAllJtu.rds') # has microclimates. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmmicroclimAllJtu.R.
-modrawTsdTTRealmtsignnppAllJtu <- readRDS('temp/modrawTsdTTRealmtsignnppAllJtu.rds') # has npp. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmnppAllJtu.R.
-modrawTsdTTRealmtsignseasAllJtu <- readRDS('temp/modrawTsdTTRealmtsignseasAllJtu.rds') # has seasonality. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmseasAllJtu.R.
 modrawTsdTTRealmtsignhumanAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanAllJtu.rds') # has human impact. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmhumanAllJtu.R
 
 # compare covariate models against null
 aics <- AIC(modAllJtu, modrawTsdTTRealmtsignAllJtu, modrawTsdTTRealmtsignmicroclimAllJtu,
-            modrawTsdTTRealmtsignhumanAllJtu, modrawTsdTTRealmtsignseasAllJtu, 
-            modrawTsdTTRealmtsignnppAllJtu) 
+            modrawTsdTTRealmtsignhumanAllJtu) 
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllJtu']
 aics
