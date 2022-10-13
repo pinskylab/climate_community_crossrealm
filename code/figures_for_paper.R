@@ -355,7 +355,7 @@ p2 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_human, color = huma
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'D)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion spp/yr]', color = 'Human       ') +
+    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion spp/yr]', color = 'Human       ') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -385,7 +385,7 @@ p4 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_npp, color = npp, f
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion spp/yr]', color = 'NPP         ') +
+    labs(tag = 'D)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion spp/yr]', color = 'NPP         ') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
