@@ -374,7 +374,7 @@ ggsave('figures/fig3.png', fig3, width = 4, height = 4, units = 'in')
 
 
 #### Table S1: covariate AICs --------------
-# load models
+# load models for AICs
 modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # adds tsign to tempave:tempchange:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 modrawTsdTTRealmtsignmicroclimAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimAllJtu.rds') # has microclimates. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmmicroclimAllJtu.R.
