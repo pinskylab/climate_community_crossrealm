@@ -271,7 +271,7 @@ slopespred[, max(slope_realmtsign)] # also considering tempave
 # a) across realms
 ht <- 6.3
 p1 <- ggplot(trends_by_study, aes(x=disstrend, group = REALM, fill = REALM)) +
-    geom_density(color = NA, alpha = 0.25) +
+    geom_density(color = NA, alpha = 0.4) +
     scale_y_sqrt(breaks = c(0.1, 1, 2, 6)) +
     scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.1, -0.05, 0, 0.05, 0.1, 0.2, 0.4)) +
     geom_segment(data = ave_by_realm, aes(x=disstrend - 1.96*se, xend = disstrend + 1.96*se, y= ht+offset, yend = ht+offset, color = REALM), alpha = 1) +
@@ -292,6 +292,7 @@ p2 <- ggplot() +
     #geom_hline(yintercept = 0, linetype = 'dashed') +
     geom_point(data = trends[!is.na(tempchange)], mapping = aes(tempchange, disstrend, size = duration), 
              color='#AAAAAA', alpha = 0.1, stroke = 0) +
+    geom_hline(yintercept = 0, linetype = 'dotted') +
     geom_line(data = slopespredsdT, mapping=aes(tempchange, slope), size=1) +
     geom_ribbon(data = slopespredsdT, alpha = 0.5, color = NA, 
                 aes(tempchange, slope,
@@ -315,7 +316,8 @@ p2 <- ggplot() +
           plot.title=element_text(size=8)) +
     scale_y_continuous(trans = signedsqrttrans, 
                        breaks = c(seq(-1,-0.2, by = 0.2), -0.1, 0, 0.1, seq(0.2, 1, by=0.2))) +
-    scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50))
+    scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
+    guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
     
 p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 fig2 <- arrangeGrob(p1, p2, nrow = 2, heights = c(1,2))
@@ -340,6 +342,7 @@ slopes2[tempave==10 & tempchange %in% c(2,-1.5), .(slope_microclim, slope_microc
 # plots
 p1 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_microclim, color = microclim, fill = microclim, group = microclim,
                                                  ymin=slope_microclim-slope_microclim.se,  ymax=slope_microclim+slope_microclim.se)) +
+    geom_hline(yintercept = 0, linetype = 'dotted') +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
@@ -355,6 +358,7 @@ p1 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_microclim, color = 
 
 p2 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_human, color = human_bowler, fill = human_bowler, group = human_bowler,
                                            ymin=slope_human-slope_human.se,  ymax=slope_human+slope_human.se)) +
+    geom_hline(yintercept = 0, linetype = 'dotted') +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
@@ -366,7 +370,7 @@ p2 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_human, color = huma
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
     scale_color_discrete(drop = FALSE) + 
-    scale_fill_discrete(drop = FALSE) 
+    scale_fill_discrete(drop = FALSE)
 
 fig3 <- arrangeGrob(p1, p2, ncol = 1)
 
@@ -598,6 +602,7 @@ trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends <- trends[duration_group == 'All' & measure == 'Jtu',] # trim to those we use
 trends[, duration := year2 - year1]
 trends <- merge(trends, bt[!duplicated(rarefyID),. (rarefyID, STUDY_ID, taxa_mod2)])
+trends[taxa_mod2 == 'All', taxa_mod2 := 'Multiple taxa'] # rename a level so more intuitive
 trends_by_study <- trends[duration>2, .(disstrend = mean(disstrend, na.rm=TRUE), duration = mean(duration)), by = .(STUDY_ID, taxa_mod2)] # average by studyID
 
 # average slopes by taxon
