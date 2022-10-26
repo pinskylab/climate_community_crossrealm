@@ -388,7 +388,7 @@ modrawTsdTTRealmtsignhumanAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanAllJ
 # compare covariate models against null
 aics <- AIC(modAllJtu, modrawTsdTTRealmtsignAllJtu, modrawTsdTTRealmtsignmicroclimAllJtu,
             modrawTsdTTRealmtsignhumanAllJtu) 
-aics$dAIC <- aics$AIC - min(aics$AIC)
+aics$dAICTsdTT <- aics$AIC - aics$AIC[rownames(aics)=='modrawTsdTTRealmtsignAllJtu']
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllJtu']
 aics
 
