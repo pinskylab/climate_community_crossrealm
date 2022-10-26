@@ -541,21 +541,26 @@ modrawTsdTTRealmtsignhumanAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignh
 modrawTsdTTRealmtsignmicroclimAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignmicroclimAllJtu.rds')) # microclim
 modrawTsdTTRealmtsignnppAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignnppAllJtu.rds')) # npp
 modrawTsdTTRealmtsignseasAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignseasAllJtu.rds')) # seas
+
+# double covariate model with tsign
+modrawTsdTTRealmtsignmicroclimhumanAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignmicroclimhumanAllJtu.rds')) # seas
+
 ```
 
 ### AIC
 ```{r, rows.print=15}
 aics <- AIC(modRealmAllJtu, modrawTsdTTRealmtsignAllJtu,
             #modrawTsdTTRealmtsignnppAllJtu, 
-            modrawTsdTTRealmtsignseasAllJtu,
-            modrawTsdTTRealmtsignmicroclimAllJtu, modrawTsdTTRealmtsignhumanAllJtu)
+            #modrawTsdTTRealmtsignseasAllJtu,
+            modrawTsdTTRealmtsignmicroclimAllJtu, modrawTsdTTRealmtsignhumanAllJtu,
+            modrawTsdTTRealmtsignmicroclimhumanAllJtu)
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics
 
 ```
 
 
-### plots
+### plots of single covariate models
 #### Load the interactions
 ```{r, echo = FALSE}
 
@@ -635,6 +640,45 @@ p1 <- ggplot(slopes_rawTsdTTRealmtsignCovariate[microclim == min(microclim), ], 
   facet_grid(cols = vars(REALM))
 p1
 ```
+
+### plots of double covariate models
+Only microclimate + human so far.
+#### Load the interactions
+
+```{r, echo = FALSE}
+
+if(file.exists(here('temp', 'slopes_rawTsdTTRealmtsignmicroclimhuman.rds'))){
+  slopes_rawTsdTTRealmtsignmicroclimhuman <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignmicroclimhuman.rds'))
+  print('Loaded microclim+human interaction predictions from file')
+
+} else {
+  print('Need to run pred_GLMMmodrawTsdTTRealmmicroclimhumanAllJtu.R')
+}
+
+```
+
+#### Plot covariate interactions as lines
+Covariates only interact with tempchange_abs.
+
+Error bars are 95% CIs
+```{r echo=FALSE, fig.height=15, fig.width=8}
+# plot
+p1 <- ggplot(slopes_rawTsdTTRealmtsignmicroclimhuman, aes(tempchange, slope_microclimhuman, 
+                                                     color = microclim, group = microclim)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope_microclimhuman-1.96*slope_microclimhuman.se, 
+                        ymax=slope_microclimhuman+1.96*slope_microclimhuman.se), alpha = 0.25) + 
+    facet_grid(tempave ~ REALM + human_bowler, labeller = label_both)
+p2 <- ggplot(slopes_rawTsdTTRealmtsignmicroclimhuman, aes(tempchange, slope_microclimhuman, color = human_bowler, group = human_bowler)) +
+    geom_line() +
+    geom_pointrange(aes(ymin=slope_microclimhuman-1.96*slope_microclimhuman.se, 
+                        ymax=slope_microclimhuman+1.96*slope_microclimhuman.se), alpha = 0.25) + 
+    facet_grid(tempave ~ REALM + microclim, labeller = label_both)
+
+p1
+p2
+```
+
 
 ## Thermal bias test
 Does the thermal bias of a community explain the propensity to change when temperature changes? 
