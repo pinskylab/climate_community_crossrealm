@@ -99,6 +99,7 @@ tempchanges[, cor.test(temptrend, temptrend_min)]
 # correlation among human impacts and microclimates
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
 bt[!duplicated(rarefyID), cor.test(microclim.sc, human_bowler.sc), by = REALM]
+bt[!duplicated(rarefyID), cor.test(tempave.sc, human_bowler.sc), by = REALM]
 
 
 #### Table 1: AICs --------------
@@ -216,7 +217,7 @@ p5 <- ggplot(trends_by_study, aes(x = Jtu)) +
     scale_y_sqrt() +
     geom_vline(xintercept = 0, linetype = 'dashed', size = 0.5) +
     scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.05, 0, 0.05, 0.2, 0.4)) +
-    labs(tag = 'E)', x = 'Turnover rate\n[proportion species/year]', title = '') +
+    labs(tag = 'E)', x = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), title = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -276,7 +277,7 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = REALM, fill = REALM)) +
     scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.1, -0.05, 0, 0.05, 0.1, 0.2, 0.4)) +
     geom_segment(data = ave_by_realm, aes(x=disstrend - 1.96*se, xend = disstrend + 1.96*se, y= ht+offset, yend = ht+offset, color = REALM), alpha = 1) +
     geom_segment(data = ave_by_realm, aes(x = disstrend, y = 0, xend = disstrend, yend = ht+offset, color = REALM), size=0.5, linetype = 'dashed') +
-    labs(tag = 'A)', x = 'Turnover rate [proportion species/year]', y = 'Density', title = '') +
+    labs(tag = 'A)', x = expression('Turnover rate ['~Delta~'Turnover/year]'), y = 'Density', title = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -304,7 +305,7 @@ p2 <- ggplot() +
                     ymin=slope_realmtsign - slope_realmtsign.se,
                     ymax=slope_realmtsign + slope_realmtsign.se)) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
-    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion species/year]', 
+    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
          fill = 'Average temperature [°C]', 
          color = 'Average temperature [°C]',
          size = 'Duration [years]') +
@@ -346,7 +347,7 @@ p1 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_microclim, color = 
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'A)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion spp/yr]', color = 'Microclimate') +
+    labs(tag = 'A)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Microclimate') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -362,7 +363,7 @@ p2 <- ggplot(slopes2[tempave == 10, ], aes(tempchange, slope_human, color = huma
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion spp/yr]', color = 'Human       ') +
+    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Human       ') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -428,14 +429,6 @@ aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllHorn']
 aics
 
 write.csv(aics, here('figures', 'tableS3.csv'))
-
-
-
-
-
-
-
-
 
 
 
@@ -546,7 +539,7 @@ par(oldpar) # go back to original figure settings
 par(mfg = c(1,2)) # start with top-right
 
 # part b: turnover by duration
-trends[, plot(duration, disstrend, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Turnover rate\n[proportion spp/yr]', bty = 'l')]
+trends[, plot(duration, disstrend, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), bty = 'l')]
 abline(h = 0, lty = 2)
 predsloess[, lines(duration, disstrend, col = 'red')]
 mtext('B)', side = 3, line = -0.5, adj = -0.28)
@@ -622,7 +615,7 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = taxa_mod2, fill = taxa_mo
     scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.1, -0.05, 0, 0.05, 0.1, 0.2, 0.4)) +
     geom_segment(data = ave_by_taxon, aes(x=disstrend - 1.96*se, xend = disstrend + 1.96*se, y= ht+offset, yend = ht+offset, color = taxa_mod2), alpha = 1) +
     geom_segment(data = ave_by_taxon, aes(x = disstrend, y = 0, xend = disstrend, yend = ht+offset, color = taxa_mod2), size=0.5, linetype = 'dashed') +
-    labs(x = 'Turnover rate [proportion species/year]', y = 'Density', title = '', fill = 'Taxon', color = 'Taxon') +
+    labs(x = expression('Turnover rate ['~Delta~'Turnover/year]'), y = 'Density', title = '', fill = 'Taxon', color = 'Taxon') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -671,7 +664,7 @@ p1 <- ggplot(slopesTB[tempave == 30, ], aes(tempchange, slope_thermal_biassdT, c
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(x = 'Temperature trend [°C/year]', y = 'Turnover rate\n[proportion spp/yr]', color = 'Thermal bias') +
+    labs(x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Thermal bias') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -722,12 +715,12 @@ slopespred[, tempave := factor(as.character(round(tempave)), levels = c('25', '0
 # a) across realms
 ht <- 6.3
 p1 <- ggplot(trends_by_study, aes(x=disstrend, group = REALM, fill = REALM)) +
-    geom_density(color = NA, alpha = 0.25) +
+    geom_density(color = NA, alpha = 0.4) +
     scale_y_sqrt(breaks = c(0.1, 1, 2, 6)) +
     scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.1, -0.05, 0, 0.05, 0.1, 0.2, 0.4)) +
     geom_segment(data = ave_by_realm, aes(x=disstrend - 1.96*se, xend = disstrend + 1.96*se, y= ht+offset, yend = ht+offset, color = REALM), alpha = 1) +
     geom_segment(data = ave_by_realm, aes(x = disstrend, y = 0, xend = disstrend, yend = ht+offset, color = REALM), size=0.5, linetype = 'dashed') +
-    labs(tag = 'A)', x = 'Turnover rate', y = 'Density', title = '') +
+    labs(tag = 'A)', x = expression('Turnover rate ['~Delta~'Turnover/year]'), y = 'Density', title = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -743,6 +736,7 @@ p2 <- ggplot() +
     #geom_hline(yintercept = 0, linetype = 'dashed') +
     geom_point(data = trends[!is.na(tempchange)], mapping = aes(tempchange, disstrend, size = duration), 
                color='#AAAAAA', alpha = 0.1, stroke = 0) +
+    geom_hline(yintercept = 0, linetype = 'dotted') +
     geom_line(data = slopespredsdT, mapping=aes(tempchange, slope), size=1) +
     geom_ribbon(data = slopespredsdT, alpha = 0.5, color = NA, 
                 aes(tempchange, slope,
@@ -754,7 +748,7 @@ p2 <- ggplot() +
                     ymin=slope_realmtsign - slope_realmtsign.se,
                     ymax=slope_realmtsign + slope_realmtsign.se)) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
-    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = 'Turnover rate', 
+    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
          fill = 'Average temperature [°C]', 
          color = 'Average temperature [°C]',
          size = 'Duration [years]') +
@@ -766,7 +760,8 @@ p2 <- ggplot() +
           plot.title=element_text(size=8)) +
     scale_y_continuous(trans = signedsqrttrans, 
                        breaks = c(seq(-1,-0.2, by = 0.2), -0.1, 0, 0.1, seq(0.2, 1, by=0.2))) +
-    scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50))
+    scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
+    guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
 
 p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 figS6 <- arrangeGrob(p1, p2, nrow = 2, heights = c(1,2))
