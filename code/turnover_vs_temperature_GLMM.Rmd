@@ -619,12 +619,35 @@ p4
 
 
 #### Plot tempchange:tempave interaction
-Only the microclimate model. Predictions were only made for a few tempaves, so the plot shows only strips.  
+##### microclimate model
+Predictions were only made for a few tempaves, so the plot shows only strips.  
 However, 
 ```{r, echo = FALSE}
 # plot
 p1 <- ggplot(slopes_rawTsdTTRealmtsignCovariate[microclim == min(microclim), ], aes(tempchange, tempave, z = slope_microclim)) +
   geom_raster(aes(fill = slope_microclim)) +
+  labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Marine') +
+  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
+  theme(axis.text = element_text(size = 12), 
+        axis.title = element_text(size = 14),
+        panel.background = element_blank(),
+        axis.line = element_line(colour = "black"),
+        legend.position = "top",
+        legend.margin = margin(c(0, 0.1, -10, 0)),
+        legend.justification = c(0.92, 0.9),
+        legend.text=element_text(size= 8),
+        legend.title=element_text(size= 12),
+        legend.title.align = 1) +
+  facet_grid(cols = vars(REALM))
+p1
+```
+##### seasonality model
+Predictions were only made for a few tempaves, so the plot shows only strips.  
+However, matches well to model w/out seasonality
+```{r, echo = FALSE}
+# plot
+p1 <- ggplot(slopes_rawTsdTTRealmtsignCovariate[seas == max(seas), ], aes(tempchange, tempave, z = slope_seas)) +
+  geom_raster(aes(fill = slope_seas)) +
   labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Marine') +
   scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
   theme(axis.text = element_text(size = 12), 
