@@ -143,7 +143,7 @@ hist <- acfy1s[, hist(V1)] # histogram of AR1
 This only recalculates from scratch if temp/trendstemp.rds is not available.
 
 
-## Do calculations
+## Load calculations
 Write out trendstemp.rds, which has the slopes for all timeseries that meet criteria (all pairwise dissimilarities, all dissimilarities from year 1, durations 3 to 20 and annual sampling, or durations 3 to 20 and minimum 3 samples), focused on the last series in each rarefyID.  
 Also write out trendstempallmin3.rds, which has slopes for all timeseries in all rarefyIDs (not just the last series).
 ```{r do calculations}
@@ -598,30 +598,30 @@ longtsHorn <- trendsallmin3[measure == 'Horn' & duration_group == '5min3', .(n =
 p1 <- ggplot(trendsallmin3[measure == 'Jtu' & duration_group == '5min3' & rarefyID %in% longtsJtu$rarefyID,], aes(year1, disstrend, group = rarefyID, color = rarefyID)) +
   geom_line(alpha = 0.1) + 
   theme(legend.position = 'none') + 
-  labs(x = 'Years', y = 'Jaccard turnover slope')
+  labs(x = 'Initial year', y = 'Jaccard turnover slope')
 
 p2 <- ggplot(trendsallmin3[measure == 'Jbeta' & duration_group == '5min3' & rarefyID %in% longtsJbeta$rarefyID,], aes(year1, disstrend, group = rarefyID, color = rarefyID)) +
   geom_line(alpha = 0.1) + 
   theme(legend.position = 'none') + 
-  labs(x = 'Years', y = 'Jaccard total slope')
+  labs(x = 'Initial year', y = 'Jaccard total slope')
 
 p3 <- ggplot(trendsallmin3[measure == 'Horn' & duration_group == '5min3' & rarefyID %in% longtsHorn$rarefyID,], aes(year1, disstrend, group = rarefyID, color = rarefyID)) +
   geom_line(alpha = 0.1) + 
   theme(legend.position = 'none') + 
-  labs(x = 'Years', y = 'Morisita-Horn slope')
+  labs(x = 'Initial year', y = 'Morisita-Horn slope')
 
 # without points
 p4 <- ggplot(trendsallmin3[measure == 'Jtu' & duration_group == '5min3' & rarefyID %in% longtsJtu$rarefyID,], aes(year1, disstrend)) +
   geom_smooth(na.rm = TRUE) +
-  labs(x = 'Years', y = 'Jaccard turnover slope')
+  labs(x = 'Initial year', y = 'Jaccard turnover slope')
 
 p5 <- ggplot(trendsallmin3[measure == 'Jbeta' & duration_group == '5min3' & rarefyID %in% longtsJbeta$rarefyID,], aes(year1, disstrend)) +
   geom_smooth(na.rm = TRUE) +
-  labs(x = 'Years', y = 'Jaccard total slope')
+  labs(x = 'Initial year', y = 'Jaccard total slope')
 
 p6 <- ggplot(trendsallmin3[measure == 'Horn' & duration_group == '5min3' & rarefyID %in% longtsHorn$rarefyID,], aes(year1, disstrend)) +
   geom_smooth(na.rm = TRUE) +
-  labs(x = 'Years', y = 'Morisita-Horn slope')
+  labs(x = 'Initial year', y = 'Morisita-Horn slope')
 
 grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 3)
 ```
@@ -637,30 +637,30 @@ longtsHorn <- trendsallmin3[measure == 'Horn' & duration_group == '10min3', .(n 
 p1 <- ggplot(trendsallmin3[measure == 'Jtu' & duration_group == '10min3' & rarefyID %in% longtsJtu$rarefyID,], aes(year1, disstrend, group = rarefyID, color = rarefyID)) +
   geom_line(alpha = 0.1) + 
   theme(legend.position = 'none') + 
-  labs(x = 'Years', y = 'Jaccard turnover slope')
+  labs(x = 'Initial year', y = 'Jaccard turnover slope')
 
 p2 <- ggplot(trendsallmin3[measure == 'Jbeta' & duration_group == '10min3' & rarefyID %in% longtsJbeta$rarefyID,], aes(year1, disstrend, group = rarefyID, color = rarefyID)) +
   geom_line(alpha = 0.1) + 
   theme(legend.position = 'none') + 
-  labs(x = 'Years', y = 'Jaccard total slope')
+  labs(x = 'Initial year', y = 'Jaccard total slope')
 
 p3 <- ggplot(trendsallmin3[measure == 'Horn' & duration_group == '10min3' & rarefyID %in% longtsHorn$rarefyID,], aes(year1, disstrend, group = rarefyID, color = rarefyID)) +
   geom_line(alpha = 0.1) + 
   theme(legend.position = 'none') + 
-  labs(x = 'Years', y = 'Morisita-Horn slope')
+  labs(x = 'Initial year', y = 'Morisita-Horn slope')
 
 # without points
 p4 <- ggplot(trendsallmin3[measure == 'Jtu' & duration_group == '10min3' & rarefyID %in% longtsJtu$rarefyID,], aes(year1, disstrend)) +
   geom_smooth(na.rm = TRUE) +
-  labs(x = 'Years', y = 'Jaccard turnover slope')
+  labs(x = 'Initial year', y = 'Jaccard turnover slope')
 
 p5 <- ggplot(trendsallmin3[measure == 'Jbeta' & duration_group == '10min3' & rarefyID %in% longtsJbeta$rarefyID,], aes(year1, disstrend)) +
   geom_smooth(na.rm = TRUE) +
-  labs(x = 'Years', y = 'Jaccard total slope')
+  labs(x = 'Initial year', y = 'Jaccard total slope')
 
 p6 <- ggplot(trendsallmin3[measure == 'Horn' & duration_group == '10min3' & rarefyID %in% longtsHorn$rarefyID,], aes(year1, disstrend)) +
   geom_smooth(na.rm = TRUE) +
-  labs(x = 'Years', y = 'Morisita-Horn slope')
+  labs(x = 'Initial year', y = 'Morisita-Horn slope')
 
 grid.arrange(p1, p2, p3, p4, p5, p6, ncol = 3)
 ```

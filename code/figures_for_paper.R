@@ -11,6 +11,7 @@ library(grid) # to combine ggplots together
 library(RColorBrewer)
 library(scales) # for defining signed sqrt axis transformation
 library(here)
+library(rcompanion) # for CIs on median
 source(here('code', 'error.bar.R'))
 
 # produce ggplot-style colors
@@ -88,18 +89,26 @@ trends_by_study <- trendsw[, .(Horn = mean(Horn, na.rm=TRUE), Jbeta = mean(Jbeta
 trends_by_study[Jtu < 0, .N] # number of Jtu trends < 0
 trends_by_study[Jtu < 0, .N/trends_by_study[!is.na(Jtu), .N]] # 15% < 0
 
+# fraction of time series with thermal affinities for most species
+cti <- fread(here('output', 'cti_byrarefyID.csv.gz'))
+btcti <- merge(bt[!duplicated(rarefyID),], cti, by = 'rarefyID') # number of timeseries
+btcti[(nspp_wdata/nspp) >= 0.95, .N] # number of ts for which at least 95% of species have thermal affinity
+btcti[(nspp_wdata/nspp) >= 0.95, .N]/nrow(btcti) # fraction of ts for which at least 95% of species have thermal affinity
+btcti[(nspp_wdata/nspp) >= 0.75, .N] # number of ts for which at least 75% of species have thermal affinity
+btcti[(nspp_wdata/nspp) >= 0.75, .N]/nrow(btcti) # fraction of ts for which at least 75% of species have thermal affinity
+
+
 ### Miscellaneous statistics -----------
 
-# correlation among mean/min/max temperature changes
-tempchanges <- fread('output/temperaturetrend_byrarefyID_by_year1_year2.csv.gz')
-tempchanges[, cor.test(temptrend, temptrend_max)]
-tempchanges[, cor.test(temptrend, temptrend_min)]
-
-
-# correlation among human impacts and microclimates
-bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
-bt[!duplicated(rarefyID), cor.test(microclim.sc, human_bowler.sc), by = REALM]
-bt[!duplicated(rarefyID), cor.test(tempave.sc, human_bowler.sc), by = REALM]
+# median temporal turnover across studies
+trends <- fread('output/slope.csv.gz') # from calc_turnover.R
+trends <- trends[duration_group == 'All' & rarefyID %in% bt$rarefyID & year2 - year1 >2,]
+trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend') # wide format for plotting
+trendsw[, STUDY_ID := vapply(strsplit(rarefyID,"_"), `[`, 1, FUN.VALUE=character(1))] # extract STUDY_ID from rarefyID
+trends_by_study <- trendsw[, .(Horn = mean(Horn, na.rm=TRUE), Jbeta = mean(Jbeta), Jtu = mean(Jtu)), by = STUDY_ID]
+trends_by_study[, median(Jtu)]
+groupwiseMedian(Jtu ~ 1, data = trends_by_study, conf = 0.95, R = 5000, percentile = TRUE, 
+                                  bca = FALSE, basic = FALSE, normal = FALSE, wilcox = FALSE, digits = 3)
 
 
 #### Table 1: AICs --------------
@@ -149,9 +158,8 @@ trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend') # wide for
 trendsw[, STUDY_ID := vapply(strsplit(rarefyID,"_"), `[`, 1, FUN.VALUE=character(1))] # extract STUDY_ID from rarefyID
 trends_by_study <- trendsw[, .(Horn = mean(Horn, na.rm=TRUE), Jbeta = mean(Jbeta), Jtu = mean(Jtu)), by = STUDY_ID]
 
-# correlation across dissimilarity metrics
-trendsw[, cor.test(Jtu, Jbeta)]
-trendsw[, cor.test(Jtu, Horn)]
+# range of trends in Fig. 1E
+trends_by_study[, range(Jtu)]
 
 # make plot pieces
 # a) map
@@ -216,6 +224,7 @@ p5 <- ggplot(trends_by_study, aes(x = Jtu)) +
     geom_density(color = NA, alpha = 0.5, fill = 'grey') +
     scale_y_sqrt() +
     geom_vline(xintercept = 0, linetype = 'dashed', size = 0.5) +
+    geom_vline(xintercept = 0.008, linetype = 'dashed', size = 0.5) +
     scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.05, 0, 0.05, 0.2, 0.4)) +
     labs(tag = 'E)', x = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), title = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
