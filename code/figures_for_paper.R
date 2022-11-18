@@ -441,6 +441,23 @@ write.csv(aics, here('figures', 'tableS3.csv'))
 
 
 
+#### Table S4: Dispersion estimates ----------------
+modnms <- c('modAllJtu.rds', 'modRealmAllJtu.rds', 
+          'modTaxamod2AllJtu.rds', 'modsdTtsignAllJtu.rds', 
+          'modsdTRealmtsignAllJtu.rds', 'modrawTsdTTRealmtsignAllJtu.rds', 
+          'modAllHorn.rds', 'modRealmAllHorn.rds', 
+          'modTaxamod2AllHorn.rds', 'modsdTtsignAllHorn.rds', 
+          'modsdTRealmtsignAllHorn.rds', 'modrawTsdTTRealmtsignAllHorn.rds')
+out <- data.frame(modnms = gsub('.rds', '', modnms), freshwater = numeric(12), marine = numeric(12), terrestrial = numeric(12))
+for(i in 1:length(modnms)){ # a bit slow to load each model
+    cat(i)
+    mod <- readRDS(here('temp', modnms[i]))
+    out[i, 2:4] <- fixef(mod)$disp
+}
+
+out[,2:4] <- signif(out[,2:4], 3)
+write.csv(out, here('figures', 'tableS4.csv'))
+
 
 
 ### Figure S1: time-series info----------
