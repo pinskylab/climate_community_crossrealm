@@ -99,9 +99,9 @@ if (fitmod == 'modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata') {
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:tempave.sc:duration +
-            REALM:tempave.sc:tempchange_abs.sc:duration +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
             REALM:thermal_bias.sc:tsign:duration +
             REALM:thermal_bias.sc:tsign:tempchange_abs.sc:duration +
             (duration | STUDY_ID / rarefyID),
