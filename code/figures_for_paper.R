@@ -100,6 +100,11 @@ btcti[(nspp_wdata/nspp) >= 0.75, .N]/nrow(btcti) # fraction of ts for which at l
 
 ### Miscellaneous statistics -----------
 
+# temporal turnover for Swedish birds
+trends <- fread('output/slope.csv.gz') # from calc_turnover.R
+trends[duration_group == 'All' & rarefyID =='339_1085477' & measure=='Jtu',]
+
+
 # median temporal turnover across studies
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends <- trends[duration_group == 'All' & rarefyID %in% bt$rarefyID & year2 - year1 >2,]
