@@ -164,6 +164,9 @@ trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend') # wide for
 trendsw[, STUDY_ID := vapply(strsplit(rarefyID,"_"), `[`, 1, FUN.VALUE=character(1))] # extract STUDY_ID from rarefyID
 trends_by_study <- trendsw[, .(Horn = mean(Horn, na.rm=TRUE), Jbeta = mean(Jbeta), Jtu = mean(Jtu)), by = STUDY_ID]
 
+# average temperate change by realm, standard error of the mean, and standard deviation (degC per year)
+temptrends[, .(mean = mean(tempchange), se = sd(tempchange)/sqrt(.N), sd = sd(tempchange)), by = REALM]
+
 # range of trends in Fig. 1E
 trends_by_study[, range(Jtu)]
 
@@ -171,7 +174,7 @@ trends_by_study[, range(Jtu)]
 # a) map
 world <- map_data('world')
 p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
-    geom_polygon(fill = 'lightgray', color = 'white') +
+    geom_polygon(fill = 'lightgray', color = 'white', size = 0.1) +
     geom_point(data = bt, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.3, alpha = 0.4, shape = 16)  +
     scale_color_brewer(palette="Set2", name = 'Realm') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
