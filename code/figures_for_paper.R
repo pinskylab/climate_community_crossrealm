@@ -169,6 +169,7 @@ temptrends[, .(mean = mean(tempchange), se = sd(tempchange)/sqrt(.N), sd = sd(te
 
 # range of trends in Fig. 1E
 trends_by_study[, range(Jtu)]
+trends_by_study[, median(Jtu)]
 
 # make plot pieces
 # a) map
@@ -672,11 +673,11 @@ slopesTsdTTRealmtsignJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds'
 # plot
 p1 <- ggplot(slopesTsdTTRealmtsignJtu, aes(tempchange, tempave, z = slope_realmtsign)) +
     geom_raster(aes(fill = slope_realmtsign)) +
-    labs(x = 'Temperature trend (°C/yr)', y = 'Temperature (°C)') +
+    labs(x = 'Temperature trend (°C/yr)', y = 'Average Temperature (°C)') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Turnover rate') +
     facet_grid(cols = vars(REALM)) +
-    theme(axis.text = element_text(size = 12), 
-          axis.title = element_text(size = 14),
+    theme(axis.text = element_text(size = 10), 
+          axis.title = element_text(size = 12),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
           legend.position = "top",
