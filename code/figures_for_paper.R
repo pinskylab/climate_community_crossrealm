@@ -183,7 +183,7 @@ p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
           axis.text=element_text(size=8),
           axis.title=element_text(size=8)) +
     labs(x = 'Longitude (°)', y = 'Latitude (°)', tag = 'A)') +
-    guides(color = guide_legend(override.aes = list(size=2)))
+    guides(color = guide_legend(override.aes = list(size=2, alpha = 1)))
 
 # b) temperature trends on land and freshwater
 p2 <- ggplot(temptrends[REALM == 'Terrestrial & Freshwater'], aes(x = tempchange, fill = type)) +
@@ -232,7 +232,7 @@ p4 <- ggplot(bt[rarefyID=='339_1085477', .(dY = year2 - year1, Jtu.sc)], aes(dY,
 p5 <- ggplot(trends_by_study, aes(x = Jtu)) +
     geom_density(color = NA, alpha = 0.5, fill = 'grey') +
     scale_y_sqrt() +
-    geom_vline(xintercept = 0, linetype = 'dashed', size = 0.5) +
+    geom_vline(xintercept = 0, linetype = 'solid', size = 0.5) +
     geom_vline(xintercept = 0.008, linetype = 'dashed', size = 0.5) +
     scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.05, 0, 0.05, 0.2, 0.4)) +
     labs(tag = 'E)', x = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), title = '') +
