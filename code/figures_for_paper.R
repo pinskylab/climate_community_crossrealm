@@ -309,12 +309,11 @@ p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
 
 # b) plot of change vs. dT
 p2 <- ggplot() +
-    #geom_hline(yintercept = 0, linetype = 'dashed') +
     geom_point(data = trends[!is.na(tempchange)], mapping = aes(tempchange, disstrend, size = duration), 
              color='#AAAAAA', alpha = 0.1, stroke = 0) +
     geom_hline(yintercept = 0, linetype = 'dotted') +
-    geom_line(data = slopespredsdT, mapping=aes(tempchange, slope), size=1) +
-    geom_ribbon(data = slopespredsdT, alpha = 0.5, color = NA, 
+    geom_line(data = slopespredsdT, mapping=aes(tempchange, slope), size=0.5) +
+    geom_ribbon(data = slopespredsdT, alpha = 0.2, color = NA, 
                 aes(tempchange, slope,
                     ymin=slope - slope.se, 
                     ymax=slope + slope.se)) +
