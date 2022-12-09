@@ -232,7 +232,7 @@ p4 <- ggplot(bt[rarefyID=='339_1085477', .(dY = year2 - year1, Jtu.sc)], aes(dY,
 # e) distribution of Jtu trends
 p5 <- ggplot(trends_by_study, aes(x = Jtu)) +
     geom_density(color = NA, alpha = 0.5, fill = 'grey') +
-    scale_y_sqrt() +
+    scale_y_sqrt(breaks = c(0.1,1,3)) +
     geom_vline(xintercept = 0, linetype = 'solid', size = 0.5) +
     geom_vline(xintercept = 0.008, linetype = 'dashed', size = 0.5) +
     scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.05, 0, 0.05, 0.2, 0.4)) +
