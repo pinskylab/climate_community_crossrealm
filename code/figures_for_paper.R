@@ -344,6 +344,66 @@ fig2 <- arrangeGrob(p1, p2, nrow = 2, heights = c(1,2))
 ggsave('figures/fig2.png', fig2, width = 6, height = 4, units = 'in')
 
 
+# w/out T predictions
+p2noT <- ggplot() +
+    geom_point(data = trends[!is.na(tempchange)], mapping = aes(tempchange, disstrend, size = duration), 
+               color='#AAAAAA', alpha = 0.1, stroke = 0) +
+    geom_hline(yintercept = 0, linetype = 'dotted') +
+    geom_line(data = slopespred, mapping=aes(tempchange, slope_realmtsign, color = tempave, group = tempave), linetype = 'dashed') +
+    geom_ribbon(data = slopespred, alpha = 0.2, color = NA,
+                aes(tempchange, slope_realmtsign, fill = tempave,
+                    ymin=slope_realmtsign - slope_realmtsign.se,
+                    ymax=slope_realmtsign + slope_realmtsign.se)) +
+    facet_grid(cols = vars(REALM), scales = 'free')  +
+    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+         fill = 'Average temperature [°C]', 
+         color = 'Average temperature [°C]',
+         size = 'Duration [years]') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8)) +
+    scale_y_continuous(trans = signedsqrttrans, 
+                       breaks = c(seq(-1,-0.2, by = 0.2), -0.1, 0, 0.1, seq(0.2, 1, by=0.2))) +
+    scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
+    guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
+p2noT <- addSmallLegend(p2noT, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
+fig2noT <- arrangeGrob(p1, p2noT, nrow = 2, heights = c(1,2))
+ggsave('figures/fig2_nopredsT.png', fig2noT, width = 6, height = 4, units = 'in')
+
+
+# w/out Tempav x Temptrend predictions
+p2noTT <- ggplot() +
+    geom_point(data = trends[!is.na(tempchange)], mapping = aes(tempchange, disstrend, size = duration), 
+               color='#AAAAAA', alpha = 0.1, stroke = 0) +
+    geom_hline(yintercept = 0, linetype = 'dotted') +
+    geom_line(data = slopespredsdT, mapping=aes(tempchange, slope), size=0.5) +
+    geom_ribbon(data = slopespredsdT, alpha = 0.2, color = NA, 
+                aes(tempchange, slope,
+                    ymin=slope - slope.se, 
+                    ymax=slope + slope.se)) +
+    facet_grid(cols = vars(REALM), scales = 'free')  +
+    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+         fill = 'Average temperature [°C]', 
+         color = 'Average temperature [°C]',
+         size = 'Duration [years]') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8)) +
+    scale_y_continuous(trans = signedsqrttrans, 
+                       breaks = c(seq(-1,-0.2, by = 0.2), -0.1, 0, 0.1, seq(0.2, 1, by=0.2))) +
+    scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
+    guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
+p2noTT <- addSmallLegend(p2noTT, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
+fig2noTT <- arrangeGrob(p1, p2noTT, nrow = 2, heights = c(1,2))
+
+ggsave('figures/fig2_nopredsTxT.png', fig2noTT, width = 6, height = 4, units = 'in')
+
 
 ### Figure 3: interactions ---------
 slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariate.rds')) # from code/pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R with argument tsign
