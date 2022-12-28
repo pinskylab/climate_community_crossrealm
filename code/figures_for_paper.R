@@ -544,9 +544,43 @@ fig3high <- arrangeGrob(p1high, p2high, ncol = 1)
 ggsave('figures/fig3_onlyhigh.png', fig3high, width = 4, height = 4, units = 'in')
 
 
+#### Table S1: random effects for main model --------------
+if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
+if(!exists('sum_modrawTsdTTRealmtsignAllJtu')) sum_modrawTsdTTRealmtsignAllJtu <- summary(modrawTsdTTRealmtsignAllJtu)
+capture.output(print(sum_modrawTsdTTRealmtsignAllJtu$varcor), file = 'figures/tableS1.txt')
+
+#### Table S2: fixed effects for main model --------------
+if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
+if(!exists('sum_modrawTsdTTRealmtsignAllJtu')) sum_modrawTsdTTRealmtsignAllJtu <- summary(modrawTsdTTRealmtsignAllJtu)
+out <- sum_modrawTsdTTRealmtsignAllJtu$coefficients$cond
+
+# trim to min p-value for each term (choose among the factor levels)
+keep <- rep(FALSE, nrow(out))
+keep[rownames(out)=='(Intercept)'] <- TRUE
+keep[rownames(out)=='duration'] <- TRUE
+i <- grepl('REALM', rownames(out)) & !grepl('tsign', rownames(out)) # for realm
+keep[i & out[,4] == min(out[i,4])] <- TRUE
+i <- grepl('tempchange_abs', rownames(out)) & !grepl('tempave', rownames(out)) # for tempchange_abs
+keep[i & out[,4] == min(out[i,4])] <- TRUE
+i <- grepl('tempave', rownames(out)) & !grepl('tempchange_abs', rownames(out)) # for tempave
+keep[i & out[,4] == min(out[i,4])] <- TRUE
+i <- grepl('tempave', rownames(out)) & grepl('tempchange_abs', rownames(out)) # for tempave:tempchange
+keep[i & out[,4] == min(out[i,4])] <- TRUE
+
+# fix row names
+rownames(out) <- gsub('Terrestrial|Marine|Freshwater|1|-1', '', rownames(out))
+rownames(out) <- gsub('duration', 'Years', rownames(out))
+rownames(out) <- gsub('REALM', 'Realm', rownames(out))
+rownames(out) <- gsub('tsign', 'sign', rownames(out))
+rownames(out) <- gsub('tempchange_abs.sc', 'Ttrend', rownames(out))
+rownames(out) <- gsub('tempave.sc', 'Tave', rownames(out))
 
 
-#### Table S1: covariate AICs --------------
+# write out
+write.csv(format(out[keep,], digits=2), file = 'figures/tableS2.csv')
+
+
+#### Table S3: covariate AICs --------------
 # load models for AICs
 modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # adds tsign to tempave:tempchange:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
@@ -560,12 +594,12 @@ aics$dAICTsdTT <- aics$AIC - aics$AIC[rownames(aics)=='modrawTsdTTRealmtsignAllJ
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllJtu']
 aics
 
-write.csv(aics, here('figures', 'tableS1.csv'))
+write.csv(aics, here('figures', 'tableS3.csv'))
 
 
 
 
-#### Table S2: thermal_bias AICs --------------
+#### Table S4: thermal_bias AICs --------------
 # load models
 modrawTsdTTRealmtsignAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
 modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
@@ -575,12 +609,12 @@ aics <- AIC(modrawTsdTTRealmtsignAllJtu_thermal_biasdata, modrawTsdTTRealmtherma
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics
 
-write.csv(aics, here('figures', 'tableS2.csv'))
+write.csv(aics, here('figures', 'tableS4.csv'))
 
 
 
 
-#### Table S3: Horn AICs --------------
+#### Table S5: Horn AICs --------------
 modAllHorn <- readRDS(here('temp', 'modAllHorn.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 modRealmAllHorn <- readRDS('temp/modRealmAllHorn.rds') # Realm. Fit by code/turnover_GLMM_fit.R
 modTaxamod2AllHorn <- readRDS('temp/modTaxamod2AllHorn.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
@@ -596,11 +630,11 @@ aics$dAIC <- aics$AIC - min(aics$AIC)
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllHorn']
 aics
 
-write.csv(aics, here('figures', 'tableS3.csv'))
+write.csv(aics, here('figures', 'tableS5.csv'))
 
 
 
-#### Table S4: Dispersion estimates ----------------
+#### Table S6: Dispersion estimates ----------------
 modnms <- c('modAllJtu.rds', 'modRealmAllJtu.rds', 
           'modTaxamod2AllJtu.rds', 'modsdTtsignAllJtu.rds', 
           'modsdTRealmtsignAllJtu.rds', 'modrawTsdTTRealmtsignAllJtu.rds', 
@@ -615,7 +649,7 @@ for(i in 1:length(modnms)){ # a bit slow to load each model
 }
 
 out[,2:4] <- signif(out[,2:4], 3)
-write.csv(out, here('figures', 'tableS4.csv'))
+write.csv(out, here('figures', 'tableS6.csv'))
 
 
 

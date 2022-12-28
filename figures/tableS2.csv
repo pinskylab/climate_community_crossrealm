@@ -1,3 +1,7 @@
-"","df","AIC","dAIC"
-"modrawTsdTTRealmtsignAllJtu_thermal_biasdata",31,-7008663.08902172,0
-"modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata",43,-7008652.49868673,10.5903349854052
+"","Estimate","Std. Error","z value","Pr(>|z|)"
+"(Intercept)","-8.8e-01"," 1.1e-01","-7.8e+00"," 8.6e-15"
+"Years"," 2.6e-02"," 1.8e-02"," 1.4e+00"," 1.6e-01"
+"Years:Realm","-1.0e-02"," 2.0e-02","-5.1e-01"," 6.1e-01"
+"Years:Realm:sign:Ttrend"," 2.1e-02"," 5.9e-03"," 3.5e+00"," 3.9e-04"
+"Years:Realm:sign:Tave"," 2.1e-02"," 1.0e-03"," 2.1e+01"," 2.4e-94"
+"Years:Realm:sign:Ttrend:Tave"," 3.6e-03"," 7.0e-04"," 5.2e+00"," 1.7e-07"

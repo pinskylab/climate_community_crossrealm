@@ -1,0 +1,7 @@
+
+Conditional model:
+ Groups            Name        Std.Dev. Corr   
+ rarefyID:STUDY_ID (Intercept) 0.604227        
+                   duration    0.044694 -0.417 
+ STUDY_ID          (Intercept) 1.856644        
+                   duration    0.063394 -0.219 
