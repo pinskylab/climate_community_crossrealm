@@ -117,13 +117,13 @@ groupwiseMedian(Jtu ~ 1, data = trends_by_study, conf = 0.95, R = 5000, percenti
 
 
 #### Table 1: AICs --------------
-modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
-modRealmAllJtu <- readRDS('temp/modRealmAllJtu.rds') # Realm. Fit by code/turnover_GLMM_fit.R
-modTaxamod2AllJtu <- readRDS('temp/modTaxamod2AllJtu.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
-modsdTtsignAllJtu <- readRDS(here('temp', 'modsdTtsignAllJtu.rds')) # tsign, tempchange_abs. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
-modsdTRealmtsignAllJtu <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # tsign:tempchange_abs by realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
-modabsLatsdTabsLatRealmtsignAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignAllJtu.rds')) # tsign:tempchange_abs:absLat Fit by code/turnover_vs_temperature_GLMM_fit_modabsLatsdTabsLatRealmtsignAllJtu.R
-modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
+if(!exists('modAllJtu')) modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
+if(!exists('modRealmAllJtu')) modRealmAllJtu <- readRDS('temp/modRealmAllJtu.rds') # Realm. Fit by code/turnover_GLMM_fit.R
+if(!exists('modTaxamod2AllJtu')) modTaxamod2AllJtu <- readRDS('temp/modTaxamod2AllJtu.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
+if(!exists('modsdTtsignAllJtu')) modsdTtsignAllJtu <- readRDS(here('temp', 'modsdTtsignAllJtu.rds')) # tsign, tempchange_abs. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
+if(!exists('modsdTRealmtsignAllJtu')) modsdTRealmtsignAllJtu <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # tsign:tempchange_abs by realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
+if(!exists('modabsLatsdTabsLatRealmtsignAllJtu')) modabsLatsdTabsLatRealmtsignAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignAllJtu.rds')) # tsign:tempchange_abs:absLat Fit by code/turnover_vs_temperature_GLMM_fit_modabsLatsdTabsLatRealmtsignAllJtu.R
+if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 
 # compare sdT amd TsdTT models against null
 aics <- AIC(modAllJtu, modRealmAllJtu, modTaxamod2AllJtu, # simple models w/out tempchange
@@ -552,7 +552,7 @@ capture.output(print(sum_modrawTsdTTRealmtsignAllJtu$varcor), file = 'figures/ta
 #### Table S2: fixed effects for main model --------------
 if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 if(!exists('sum_modrawTsdTTRealmtsignAllJtu')) sum_modrawTsdTTRealmtsignAllJtu <- summary(modrawTsdTTRealmtsignAllJtu)
-out <- sum_modrawTsdTTRealmtsignAllJtu$coefficients$cond
+out <- as.data.frame(sum_modrawTsdTTRealmtsignAllJtu$coefficients$cond)
 
 # trim to min p-value for each term (choose among the factor levels)
 keep <- rep(FALSE, nrow(out))
@@ -567,54 +567,41 @@ keep[i & out[,4] == min(out[i,4])] <- TRUE
 i <- grepl('tempave', rownames(out)) & grepl('tempchange_abs', rownames(out)) # for tempave:tempchange
 keep[i & out[,4] == min(out[i,4])] <- TRUE
 
-# fix row names
-rownames(out) <- gsub('Terrestrial|Marine|Freshwater|1|-1', '', rownames(out))
-rownames(out) <- gsub('duration', 'Years', rownames(out))
-rownames(out) <- gsub('REALM', 'Realm', rownames(out))
-rownames(out) <- gsub('tsign', 'sign', rownames(out))
-rownames(out) <- gsub('tempchange_abs.sc', 'Ttrend', rownames(out))
-rownames(out) <- gsub('tempave.sc', 'Tave', rownames(out))
+# get term names
+out$term <- gsub('Terrestrial|Marine|Freshwater|1|-1', '', rownames(out))
+out$term <- gsub('duration', 'Years', out$term)
+out$term <- gsub('REALM', 'Realm', out$term)
+out$term <- gsub('tsign', 'sign', out$term)
+out$term <- gsub('tempchange_abs.sc', 'Ttrend', out$term)
+out$term <- gsub('tempave.sc', 'Tave', out$term)
+out$term[out$term == 'Years:Realm'] <- 'Realm ✕ Years'
+out$term[out$term == 'Years:Realm:sign:Ttrend'] <- 'sign ✕ |Ttrend| ✕ Realm ✕ Years'
+out$term[out$term == 'Years:Realm:sign:Tave'] <- 'sign ✕ Tave ✕ Realm ✕ Years'
+out$term[out$term == 'Years:Realm:sign:Ttrend:Tave'] <- 'sign ✕ |Ttrend| ✕ Tave ✕ Realm ✕ Years'
 
+# get realm
+out$realm <- rownames(out)
+out$realm[grepl('Freshwater', out$realm)] <- 'Freshwater'
+out$realm[out$term == 'Years'] <- 'Freshwater' # the baseline Year term is for Freshwater
+out$term[out$term == 'Years'] <- 'Years:Realm'
+out$realm[grepl('Marine', out$realm)] <- 'Marine'
+out$realm[grepl('Terrestrial', out$realm)] <- 'Terrestrial'
+out$realm[!grepl('Terrestrial|Marine|Freshwater', out$realm)] <- ''
+
+# get tsign
+out$tsign <- rownames(out)
+out$tsign[grepl('tsign-1', out$tsign)] <- 'cooling'
+out$tsign[grepl('tsign1', out$tsign)] <- 'warming'
+out$tsign[!grepl('cooling|warming', out$tsign)] <- ''
+
+# reorder columns
+out <- out[,c('term', 'realm', 'tsign', 'Estimate', 'Std. Error', 'z value', 'Pr(>|z|)')]
 
 # write out
-write.csv(format(out[keep,], digits=2), file = 'figures/tableS2.csv')
+write.csv(format(out, digits=2), file = 'figures/tableS2.csv', row.names=FALSE)
 
 
-#### Table S3: covariate AICs --------------
-# load models for AICs
-modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
-modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # adds tsign to tempave:tempchange:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
-modrawTsdTTRealmtsignmicroclimAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimAllJtu.rds') # has microclimates. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmmicroclimAllJtu.R.
-modrawTsdTTRealmtsignhumanAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanAllJtu.rds') # has human impact. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmhumanAllJtu.R
-
-# compare covariate models against null
-aics <- AIC(modAllJtu, modrawTsdTTRealmtsignAllJtu, modrawTsdTTRealmtsignmicroclimAllJtu,
-            modrawTsdTTRealmtsignhumanAllJtu) 
-aics$dAICTsdTT <- aics$AIC - aics$AIC[rownames(aics)=='modrawTsdTTRealmtsignAllJtu']
-aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllJtu']
-aics
-
-write.csv(aics, here('figures', 'tableS3.csv'))
-
-
-
-
-#### Table S4: thermal_bias AICs --------------
-# load models
-modrawTsdTTRealmtsignAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
-modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
-
-# compare thermal_bias against tsign model
-aics <- AIC(modrawTsdTTRealmtsignAllJtu_thermal_biasdata, modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata) 
-aics$dAIC <- aics$AIC - min(aics$AIC)
-aics
-
-write.csv(aics, here('figures', 'tableS4.csv'))
-
-
-
-
-#### Table S5: Horn AICs --------------
+#### Table S3: Horn AICs --------------
 modAllHorn <- readRDS(here('temp', 'modAllHorn.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 modRealmAllHorn <- readRDS('temp/modRealmAllHorn.rds') # Realm. Fit by code/turnover_GLMM_fit.R
 modTaxamod2AllHorn <- readRDS('temp/modTaxamod2AllHorn.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
@@ -630,7 +617,43 @@ aics$dAIC <- aics$AIC - min(aics$AIC)
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllHorn']
 aics
 
+write.csv(aics, here('figures', 'tableS3.csv'))
+
+
+#### Table S4: covariate AICs --------------
+# load models for AICs
+if(!exists('modAllJtu')) modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
+if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # adds tsign to tempave:tempchange:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
+if(!exists('modrawTsdTTRealmtsignmicroclimAllJtu')) modrawTsdTTRealmtsignmicroclimAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimAllJtu.rds') # has microclimates. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmmicroclimAllJtu.R.
+if(!exists('modrawTsdTTRealmtsignhumanAllJtu')) modrawTsdTTRealmtsignhumanAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanAllJtu.rds') # has human impact. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmhumanAllJtu.R
+
+# compare covariate models against null
+aics <- AIC(modAllJtu, modrawTsdTTRealmtsignAllJtu, modrawTsdTTRealmtsignmicroclimAllJtu,
+            modrawTsdTTRealmtsignhumanAllJtu) 
+aics$dAICTsdTT <- aics$AIC - aics$AIC[rownames(aics)=='modrawTsdTTRealmtsignAllJtu']
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllJtu']
+aics
+
+write.csv(aics, here('figures', 'tableS4.csv'))
+
+
+
+
+#### Table S5: thermal_bias AICs --------------
+# load models
+modrawTsdTTRealmtsignAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
+modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
+
+# compare thermal_bias against tsign model
+aics <- AIC(modrawTsdTTRealmtsignAllJtu_thermal_biasdata, modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata) 
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics
+
 write.csv(aics, here('figures', 'tableS5.csv'))
+
+
+
+
 
 
 
@@ -874,31 +897,7 @@ ggsave('figures/figS4.png', p1, width = 6, height = 3, units = 'in')
     
 
 
-### Figure S5: thermal bias ---------
-slopesTB <- readRDS(here('temp', 'slopes_rawTsdTTRealmthermal_bias.rds'))
-slopesTB[, ':='(thermal_bias = as.factor(signif(thermal_bias,2)))] # set as factors for plotting
-
-p1 <- ggplot(slopesTB[tempave == 30, ], aes(tempchange, slope_thermal_biassdT, color = thermal_bias, fill = thermal_bias, group = thermal_bias,
-                                           ymin=slope_thermal_biassdT-slope_thermal_biassdT.se,  ymax=slope_thermal_biassdT+slope_thermal_biassdT.se)) +
-    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
-    geom_line() +
-    facet_grid(cols = vars(REALM)) +
-    labs(x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Thermal bias') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
-
-
-ggsave('figures/figS5.png', p1, width = 6, height = 3, units = 'in')
-
-
-
-
-
-### Figure S6: Horn main effects ---------
+### Figure S5: Horn main effects ---------
 # slopes for all timeseries
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
@@ -983,7 +982,28 @@ p2 <- ggplot() +
     guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
 
 p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
-figS6 <- arrangeGrob(p1, p2, nrow = 2, heights = c(1,2))
+figS5 <- arrangeGrob(p1, p2, nrow = 2, heights = c(1,2))
 
-ggsave('figures/figS6.png', figS6, width = 6, height = 4, units = 'in')
+ggsave('figures/figS5.png', figS5, width = 6, height = 4, units = 'in')
 
+
+
+### Figure S6: thermal bias ---------
+slopesTB <- readRDS(here('temp', 'slopes_rawTsdTTRealmthermal_bias.rds'))
+slopesTB[, ':='(thermal_bias = as.factor(signif(thermal_bias,2)))] # set as factors for plotting
+
+p1 <- ggplot(slopesTB[tempave == 30, ], aes(tempchange, slope_thermal_biassdT, color = thermal_bias, fill = thermal_bias, group = thermal_bias,
+                                            ymin=slope_thermal_biassdT-slope_thermal_biassdT.se,  ymax=slope_thermal_biassdT+slope_thermal_biassdT.se)) +
+    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
+    geom_line() +
+    facet_grid(cols = vars(REALM)) +
+    labs(x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Thermal bias') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8))  
+
+
+ggsave('figures/figS6.png', p1, width = 6, height = 3, units = 'in')

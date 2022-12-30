@@ -1,3 +1,5 @@
-"","df","AIC","dAIC"
-"modrawTsdTTRealmtsignAllJtu_thermal_biasdata",31,-7008663.08902172,0
-"modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata",43,-7008652.49868673,10.5903349854052
+"","df","AIC","dAICTsdTT","dAICnull"
+"modAllJtu",11,-7187120.67565817,497.303883288056,0
+"modrawTsdTTRealmtsignAllJtu",31,-7187617.97954145,0,-497.303883288056
+"modrawTsdTTRealmtsignmicroclimAllJtu",37,-7187633.81873095,-15.8391894958913,-513.143072783947
+"modrawTsdTTRealmtsignhumanAllJtu",37,-7187620.04974749,-2.07020603213459,-499.37408932019
