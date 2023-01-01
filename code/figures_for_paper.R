@@ -77,8 +77,7 @@ bt[unscaleme(tempave.sc, 'tempave.sc') >10 & REALM=='Marine', length(unique(rare
 bt[unscaleme(tempave.sc, 'tempave.sc') >10  & REALM=='Marine', length(unique(rarefyID))]/bt[REALM=='Marine', length(unique(rarefyID))] # proportion of timeseries >10degC
 
 # number of time series
-trends <- readRDS('temp/trendstemp.rds')
-trends[, length(unique(rarefyID))] # number of time series
+bt[, length(unique(rarefyID))]
 
 # number of studies with negative slopes
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
@@ -142,13 +141,13 @@ write.csv(aics, here('figures', 'table1.csv'))
 
 #### Figure 1: map and data --------
 # load BioTime data
-bt <- fread('output/turnover_w_covariates.csv.gz')
+bt <- fread('output/turnover_w_covariates.csv.gz') # from assemble_turnover_covariates.Rmd
 bt[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting in part A
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 
 
 # load sampled temperature trends
-temptrends <- fread('output/temperature_trends_sampled.csv.gz')
+temptrends <- fread('output/temperature_trends_sampled.csv.gz') # from sample_global_temp.Rmd
 
 # make temperature trends data.table
 temptrends$type <- 'Global'
@@ -255,7 +254,7 @@ ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in')
 
 ### Figure 2: main effects ---------
 # slopes for all timeseries
-bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
+bt <- fread('output/turnover_w_covariates.csv.gz') # from assemble_turnover_covariates.Rmd
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends <- trends[duration_group == 'All' & measure == 'Jtu',]
 trends <- merge(trends, bt[!duplicated(rarefyID),. (rarefyID, STUDY_ID, REALM, tempchange)])
@@ -273,7 +272,7 @@ write.csv(ave_by_realm, file='output/ave_by_realm.csv')
 tempchange_by_realm <- trends[, .(max = max(tempchange, na.rm=TRUE), min = min(tempchange, na.rm=TRUE)), by = REALM]
 
 # predicted slopes from the tsign model (no tempave)
-slopespredsdT <- readRDS(here('temp', 'slopes_modsdTRealmtsignAllJtu.rds')) # from pred_modrawXAllJtu.sh/.R
+slopespredsdT <- readRDS(here('temp', 'slopes_modsdTRealmtsignAllJtu.rds')) # from pred_modrawXAllJtu.sh
 slopespredsdT <- merge(slopespredsdT, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
 slopespredsdT <- slopespredsdT[tempchange > min & tempchange < max & !duplicated(cbind(tempchange, REALM)), ] # trim to min & max by realm
 
@@ -554,19 +553,6 @@ if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRD
 if(!exists('sum_modrawTsdTTRealmtsignAllJtu')) sum_modrawTsdTTRealmtsignAllJtu <- summary(modrawTsdTTRealmtsignAllJtu)
 out <- as.data.frame(sum_modrawTsdTTRealmtsignAllJtu$coefficients$cond)
 
-# trim to min p-value for each term (choose among the factor levels)
-keep <- rep(FALSE, nrow(out))
-keep[rownames(out)=='(Intercept)'] <- TRUE
-keep[rownames(out)=='duration'] <- TRUE
-i <- grepl('REALM', rownames(out)) & !grepl('tsign', rownames(out)) # for realm
-keep[i & out[,4] == min(out[i,4])] <- TRUE
-i <- grepl('tempchange_abs', rownames(out)) & !grepl('tempave', rownames(out)) # for tempchange_abs
-keep[i & out[,4] == min(out[i,4])] <- TRUE
-i <- grepl('tempave', rownames(out)) & !grepl('tempchange_abs', rownames(out)) # for tempave
-keep[i & out[,4] == min(out[i,4])] <- TRUE
-i <- grepl('tempave', rownames(out)) & grepl('tempchange_abs', rownames(out)) # for tempave:tempchange
-keep[i & out[,4] == min(out[i,4])] <- TRUE
-
 # get term names
 out$term <- gsub('Terrestrial|Marine|Freshwater|1|-1', '', rownames(out))
 out$term <- gsub('duration', 'Years', out$term)
@@ -730,7 +716,7 @@ tempchange <- tempchange[, .(tempchange.sc = mean(tempchange.sc, na.rm=TRUE), du
 tempchange[, tempchange := tempchange.sc * scalingall[var == 'tempchange.sc', scale] + scalingall[var == 'tempchange.sc', center]]
 
 # load simulations
-cors <- fread(here('output', 'simulated_ts.csv.gz'))
+cors <- fread(here('output', 'simulated_ts.csv.gz')) # created by duration_sim.R
 corsl <- melt(cors, id.vars = c('n', 'minduration', 'maxduration', 'name', 'range'), measure.vars = c('cor.p', 'cor.cor', 'lm.m', 'glmmwgt.p', 'glmmwgt.beta', 'glmmonegauss.p', 'glmmonegauss.beta', 'glmmonebeta.p', 'glmmonebeta.beta'))
 prop <- corsl[variable %in% c('cor.p', 'glmmwgt.p', 'glmmonegauss.p', 'glmmonebeta.p'), 
               .(nsims = sum(!is.na(value)), prop = sum(value < 0.05, na.rm=TRUE)/sum(!is.na(value), na.rm=TRUE)), by = c("range", "n", "variable")]
@@ -874,7 +860,7 @@ ggsave('figures/figS3.png', p1, width = 6, height = 4, units = 'in')
 ### Figure S4: T trend x Ave T interaction ---------
 
 # read in slopes
-slopesTsdTTRealmtsignJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds'))
+slopesTsdTTRealmtsignJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds')) # made by pred_GLMMmodrawTsdTTRealmtsignAllJtu.R
 
 # plot
 p1 <- ggplot(slopesTsdTTRealmtsignJtu, aes(tempchange, tempave, z = slope_realmtsign)) +
@@ -989,7 +975,7 @@ ggsave('figures/figS5.png', figS5, width = 6, height = 4, units = 'in')
 
 
 ### Figure S6: thermal bias ---------
-slopesTB <- readRDS(here('temp', 'slopes_rawTsdTTRealmthermal_bias.rds'))
+slopesTB <- readRDS(here('temp', 'slopes_rawTsdTTRealmthermal_bias.rds')) # from pred_GLMMmodrawTsdTTRealmthermal_biasAllJtu.R
 slopesTB[, ':='(thermal_bias = as.factor(signif(thermal_bias,2)))] # set as factors for plotting
 
 p1 <- ggplot(slopesTB[tempave == 30, ], aes(tempchange, slope_thermal_biassdT, color = thermal_bias, fill = thermal_bias, group = thermal_bias,

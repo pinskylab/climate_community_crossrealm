@@ -25,7 +25,7 @@ library(performance) # for R2
 # load data ############################
 
 # Turnover and covariates assembled by assemble_turnover_covariates.Rmd
-trendsall <- fread('output/turnover_w_covariates.csv.gz')
+trendsall <- fread('output/turnover_w_covariates.csv.gz') # From assemble_turnover_covariates.Rmd
 
 trendsall[, tsign := as.factor(tsign)]
 

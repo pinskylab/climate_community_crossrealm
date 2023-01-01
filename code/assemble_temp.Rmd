@@ -1,5 +1,5 @@
 ---
-title: "Assemble temperature dataset (average, difference, and seasonality). Also consider ecto vs. endotherms."
+title: "Assemble temperature dataset (average, difference)."
 output: 
     github_document: default
 
@@ -35,9 +35,6 @@ btspp <- data.table(bt_grid_spp_list); rm(bt_grid_spp_list) # rename to btspp
 btspp <- merge(btspp, btinfo[, .(rarefyID, taxa_mod)], by = 'rarefyID') # add taxa_mod to spp list
 
 btspp[, length(unique(Species))] # 29981 species
-
-# endo vs. ectotherm classifications by species
-endo <- fread('output/metab_feed_byspecies.csv.gz')
 
 # CRU TS mean temp by year
 n = nc_open('dataDL/cruts/cru_ts4.03.1901.2018.tmp.dat.nc') # Open the netCDF file. Won't work on .gz for some reason
@@ -94,31 +91,6 @@ ggplot(crutsyr[YEAR == 1901,], aes(lon_cruts, lat_cruts, color = cruts)) + geom_
 ggplot(ersstyr[YEAR == 1901,], aes(lon_ersst, lat_ersst, color = ersst)) + geom_point(size = 1) # plot to make sure it worked
 ```
 
-# Calculate seasonality by year (SD)
-average from the whole time period
-```{r}
-# CRU TS
-crutsmelt[, mo := as.numeric(substr(time, 5,6))] # extract month
-crutsmo <- crutsmelt[, .(cruts = mean(cruts, na.rm = TRUE)), by = .(lat_cruts = as.numeric(lat_cruts), lon_cruts = as.numeric(lon_cruts), mo)] # average by month
-crutsseas <- crutsmo[, .(seas_cruts = sd(cruts, na.rm = TRUE)), by = .(lat_cruts, lon_cruts)]
-
-# ERSST
-ersstmelt[, mo := as.numeric(substr(time, 5,6))] # extract month
-ersstmo <- ersstmelt[, .(ersst = mean(ersst, na.rm = TRUE)), by = .(lat_ersst = as.numeric(lat_ersst), lon_ersst = as.numeric(lon_ersst), mo)] # average by month
-ersstmo[lon_ersst > 180, lon_ersst := lon_ersst - 360] # convert to -180 to 180
-ersstseas <- ersstmo[, .(seas_ersst = sd(ersst, na.rm = TRUE)), by = .(lat_ersst, lon_ersst)]
-
-```
-
-## Plot CRU TS to make sure seasonality worked
-```{r}
-ggplot(crutsseas, aes(lon_cruts, lat_cruts, color = seas_cruts)) + geom_point(size = 0.1) # plot to make sure it worked
-```
-## Plot ERSST to make sure seasonality worked
-```{r}
-ggplot(ersstseas, aes(lon_ersst, lat_ersst, color = seas_ersst)) + geom_point(size = 1) # plot to make sure it worked
-```
-
 
 # Calculate temperature change based on biotime year pair/lat/lon
 Set up lat/lon grid in bt
@@ -173,21 +145,6 @@ ggplot(btersst[REALM == 'Marine', ], aes(lon_ersst, lat_ersst, color = is.na(der
     geom_point(size = 0.2)
 ```
 
-# Calculations by rarefyID
-Find fraction ectotherm vs. mammal vs. bird by rarefyID
-```{r endotherm fractions}
-# summarize by rarefyID
-endofrac <- endo[, .(mammfrac = sum(metab == 'mamm')/.N, birdfrac = sum(metab == 'bird')/.N, ectofrac = sum(metab == 'ecto')/.N),
-                 by = .(rarefyID)]
-
-# check
-endofrac[, all(rowSums(cbind(mammfrac, birdfrac, ectofrac)) == 1)] # TRUE, good
-invisible(endofrac[mammfrac != 0, hist(mammfrac)])
-invisible(endofrac[birdfrac != 0, hist(birdfrac)])
-invisible(endofrac[ectofrac != 0, hist(ectofrac)])
-
-```
-
 # Extract temperature for unsampled years in BT
 ```{r temperature for all years}
 # CRU TS
@@ -200,39 +157,26 @@ btallyrsersst <- merge(btallyrsersst, ersstyr, by = c('lat_ersst', 'lon_ersst', 
 
 ```
 
-## Average temperature and average metabolic temperature (choose body temperature for endotherms)
+## Average temperature
 For the time period encompassed by each pair of years, including unsampled years in between
-```{r ave temp and ave metab temp}
+```{r ave temp}
 # CTU TS
 avecruts <- btallyrscruts[, .(ave_cruts = mean(cruts, na.rm = TRUE)), 
           by = .(rarefyID, year1,  year2)] # calculate ave for all years between and including each pairwise comparison of years
-avecruts <- merge(avecruts, endofrac, all.x = TRUE)
-avecruts[, ave_metab_cruts := ave_cruts * ectofrac + 38 * mammfrac + 40 * birdfrac] # average temperature, considering endotherm body temps (latter from McCoy & Gillooly 2008 Ecology Letters)
 
 # ERSST
 aveersst <- btallyrsersst[, .(ave_ersst = mean(ersst, na.rm = TRUE)), 
           by = .(rarefyID, year1, year2)] # calculate ave
-aveersst <- merge(aveersst, endofrac, all.x = TRUE)
-aveersst[, ave_metab_ersst := ave_ersst * ectofrac + 38 * mammfrac + 40 * birdfrac]
-
-# examine
-avecruts[, plot(ave_metab_cruts ~ ectofrac)]
-aveersst[, plot(ave_metab_ersst ~ ectofrac)]
-
 ```
 
 
 
 
-## Merge ave, change, and seasonality with bt by rarefyID, year1, year2
-```{r merge temp ave, trend, seas with bt}
-# merge seasonality with BT by lat/lon
-btsum <- merge(bt[, .(rarefyID, year1, year2, REALM, lat_cruts, lon_cruts, lat_ersst, lon_ersst)], crutsseas, by = c('lat_cruts', 'lon_cruts'), all.x = TRUE) # CRU TS
-btsum <- merge(btsum, ersstseas, by = c('lat_ersst', 'lon_ersst'), all.x = TRUE) # ERSST
-
-# merge in average temperature and metabolically corrected ave temp
-btsum <- merge(btsum, avecruts[, .(rarefyID, year1, year2, ave_cruts, ave_metab_cruts)], all.x = TRUE, by = c('rarefyID', 'year1', 'year2'))
-btsum <- merge(btsum, aveersst[, .(rarefyID, year1, year2, ave_ersst, ave_metab_ersst)], all.x = TRUE, by = c('rarefyID', 'year1', 'year2'))
+## Merge ave, change with bt by rarefyID, year1, year2
+```{r merge temp ave, trend with bt}
+# merge in average temperature
+btsum <- merge(bt[, .(rarefyID, year1, year2, REALM, lat_cruts, lon_cruts, lat_ersst, lon_ersst)], avecruts[, .(rarefyID, year1, year2, ave_cruts)], all.x = TRUE, by = c('rarefyID', 'year1', 'year2'))
+btsum <- merge(btsum, aveersst[, .(rarefyID, year1, year2, ave_ersst)], all.x = TRUE, by = c('rarefyID', 'year1', 'year2'))
 
 # merge in temperature change
 btsum <- merge(btsum, btcruts[, .(rarefyID, year1, year2, dcruts)], all.x = TRUE, by = c('rarefyID', 'year1', 'year2'))
@@ -240,7 +184,7 @@ btsum <- merge(btsum, btersst[, .(rarefyID, year1, year2, dersst)], all.x = TRUE
 ```
 
 # Examine CRUTS vs. ERSST
-Temperature trends are correlated, though non-linear for seasonality (at the poles, low in the ocean and high on land)
+Temperature trends are correlated
 ```{r basic graphs of temperatures}
 # compare temperature trends from CRU TS vs ERSST
 ggplot(btsum, aes(dcruts, dersst)) + # ERSST more muted at fastest rates of change in CRU TS
@@ -251,21 +195,16 @@ ggplot(btsum, aes(dcruts, dersst)) + # ERSST more muted at fastest rates of chan
 ggplot(btsum, aes(ave_cruts, ave_ersst, color = lat_cruts)) + # ERSST more muted at fastest rates of change in CRU TS
     geom_point() +
     geom_smooth()
-
-# compare seasonality from CRU TS and ERSST
-ggplot(btsum, aes(seas_cruts, seas_ersst, color = lat_cruts)) + # ERSST more muted at fastest rates of change in CRU TS
-    geom_point() +
-    geom_smooth()
 ```
 
 # Choose CRU TS vs. ERSST
 Use CRUTS in general, except ERSST in marine realm
 ```{r combine cruts and ersst}
-# average temperature and metabolically corrected ave temp
-btsum[, ':='(tempave = ave_cruts, tempave_metab = ave_metab_cruts)]
-btsum[REALM == 'Marine', ':='(tempave = ave_ersst, tempave_metab = ave_metab_ersst)]
-btsum[REALM == 'Marine' & is.na(ave_ersst), ':='(tempave = ave_cruts, tempave_metab = ave_metab_cruts)] # fill missing marine with CRU TS
-btsum[REALM != 'Marine' & is.na(ave_cruts), ':='(tempave = ave_ersst, tempave_metab = ave_metab_ersst)] # fill missing non-marine with ERSST
+# average temperature
+btsum[, ':='(tempave = ave_cruts)]
+btsum[REALM == 'Marine', ':='(tempave = ave_ersst)]
+btsum[REALM == 'Marine' & is.na(ave_ersst), ':='(tempave = ave_cruts)] # fill missing marine with CRU TS
+btsum[REALM != 'Marine' & is.na(ave_cruts), ':='(tempave = ave_ersst)] # fill missing non-marine with ERSST
 
 # temperature change
 btsum[ , tempchange := dcruts] # CRU TS for land and freshwater
@@ -273,14 +212,8 @@ btsum[REALM == 'Marine', tempchange := dersst] # ERSST for marine
 btsum[REALM == 'Marine' & is.na(dersst), ':='(tempchange = dcruts)]
 btsum[REALM != 'Marine' & is.na(dcruts), ':='(tempchange = dersst)]
 
-# seasonality
-btsum[, seas := seas_cruts]
-btsum[REALM == 'Marine', seas := seas_ersst]
-btsum[REALM == 'Marine' & is.na(seas_ersst), ':='(seas = seas_cruts)]
-btsum[REALM != 'Marine' & is.na(seas_cruts), ':='(seas = seas_ersst)]
-
 # set column order and remove columns
-out <- btsum[, .(rarefyID, year1, year2, tempave, tempave_metab, tempchange, seas)]
+out <- btsum[, .(rarefyID, year1, year2, tempave, tempchange)]
 
 # check
 dim(bt)
@@ -291,9 +224,7 @@ out
 # Checking missing
 ```{r check missing}
 out[!duplicated(rarefyID) & is.na(tempave), .N]
-out[!duplicated(rarefyID) & is.na(tempave_metab), .N]
 out[!duplicated(rarefyID) & is.na(tempchange), .N]
-out[!duplicated(rarefyID) & is.na(seas), .N]
 
 ```
 

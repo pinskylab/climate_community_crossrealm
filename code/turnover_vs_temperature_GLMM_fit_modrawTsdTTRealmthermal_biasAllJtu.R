@@ -36,7 +36,7 @@ library(performance) # for R2
 # load data ############################
 
 # Turnover and covariates assembled by assemble_turnover_covariates.Rmd
-trendsall <- fread('output/turnover_w_covariates.csv.gz')
+trendsall <- fread('output/turnover_w_covariates.csv.gz') # From assemble_turnover_covariates.Rmd
 trendsall[, tsign := as.factor(tsign)]
 
 # Models ############################
@@ -110,29 +110,6 @@ if (fitmod == 'modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata') {
         dispformula = ~ REALM)
     MATCHMOD <- TRUE
 }
-
-# add thermal_bias:tempave and thermal_bias:tempave:tempchange_abs:tsign
-if (fitmod == 'modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            REALM:duration +
-            REALM:tempchange_abs.sc:duration +
-            REALM:tempave.sc:duration +
-            REALM:tempave.sc:tempchange_abs.sc:duration +
-            REALM:thermal_bias.sc:tsign:duration +
-            REALM:thermal_bias.sc:tsign:tempchange_abs.sc:duration +
-            REALM:thermal_bias.sc:tsign:tempave.sc:duration +
-            REALM:thermal_bias.sc:tsign:tempave.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM)
-    MATCHMOD <- TRUE
-}
-
 
 
 # print and save results ############################

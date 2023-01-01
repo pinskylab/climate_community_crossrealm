@@ -35,7 +35,7 @@ library(glmmTMB, lib.loc = "/usr/lib64/R/library") # for ME models
 # load data ############################
 
 # Turnover and covariates assembled by assemble_turnover_covariates.Rmd
-trendsall <- fread('output/turnover_w_covariates.csv.gz')
+trendsall <- fread('output/turnover_w_covariates.csv.gz') # From assemble_turnover_covariates.Rmd
 
 trendsall[, tsign := as.factor(tsign)]
 
@@ -45,19 +45,6 @@ trendsall[, tsign := as.factor(tsign)]
 iallJtu <-
     trendsall[, complete.cases(
         Jtu.sc,
-        tempchange_abs.sc,
-        REALM,
-        tempave.sc,
-        duration.sc,
-        seas.sc,
-        microclim.sc,
-        npp.sc,
-        human_bowler.sc
-    )]
-
-iallJbeta <-
-    trendsall[, complete.cases(
-        Jbeta.sc,
         tempchange_abs.sc,
         REALM,
         tempave.sc,
@@ -96,21 +83,6 @@ if (fitmod == 'modAllJtu') {
     MATCHMOD <- TRUE
 }
 
-if (fitmod == 'modAllJbeta') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJbeta), 'data points'))
-    mod <- glmmTMB(
-        Jbeta.sc ~ duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJbeta, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
-    )
-    MATCHMOD <- TRUE
-}
-
-
 if (fitmod == 'modAllHorn') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -137,21 +109,6 @@ if (fitmod == 'modRealmAllJtu') {
             REALM:duration +
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
-    )
-    MATCHMOD <- TRUE
-}
-
-if (fitmod == 'modRealmAllJbeta') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJbeta), 'data points'))
-    mod <- glmmTMB(
-        Jbeta.sc ~ duration +
-            REALM:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJbeta, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
     )
@@ -190,19 +147,6 @@ if (fitmod == 'modTaxamod2AllJtu') {
     MATCHMOD <- TRUE
 }
 
-if (fitmod == 'modTaxamod2AllJbeta') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJbeta), 'data points'))
-    mod <- glmmTMB(
-        Jbeta.sc ~ duration +
-            taxa_mod2:duration +
-            (duration | STUDY_ID / rarefyID), 
-        data = trendsall[iallJbeta, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM)
-    MATCHMOD <- TRUE
-}
 
 if (fitmod == 'modTaxamod2AllHorn') {
     if (MATCHMOD)

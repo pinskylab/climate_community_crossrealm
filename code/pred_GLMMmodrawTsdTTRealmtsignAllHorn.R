@@ -49,10 +49,10 @@ signneg11 <- function(x){ # assign 0 a sign of 1 so that there are only 2 levels
 }
 
 # The scaling factors
-scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv'))
+scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From assemble_turnover_covariates.Rmd
 
 # The models
-modrawTsdTTRealmtsignAllHorn <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllHorn.rds')) # tempave, tempchange_abs, realm, tsign
+modrawTsdTTRealmtsignAllHorn <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllHorn.rds')) # tempave, tempchange_abs, realm, tsign. From turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllHorn.R
 print('models loaded')
 
 ### Make predictions -------------------

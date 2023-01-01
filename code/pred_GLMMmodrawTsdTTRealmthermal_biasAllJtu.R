@@ -49,11 +49,11 @@ signneg11 <- function(x){ # assign 0 a sign of 1 so that there are only 2 levels
 }
 
 # The scaling factors
-scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv'))
+scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From assemble_turnover_covariates.Rmd
 
 # The models
-modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign
-modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata.rds')) # also adds thermal bias:tempave
+modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. From turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
+modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata.rds')) # also adds thermal bias:tempave. From turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
 print('models loaded')
 
 ### Make predictions -------------------

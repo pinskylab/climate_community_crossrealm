@@ -68,43 +68,13 @@ signneg11 <- function(x){ # assign 0 a sign of 1 so that there are only 2 levels
 }
 
 # The scaling factors
-scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv'))
+scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From assemble_turnover_covariates.Rmd
 
 # Choose a model
-if(predmod == 'modsdTRealmAllJtu'){
-    mod <- readRDS(here('temp', 'modsdTRealmAllJtu.rds'))
-    out_preds <- 'preds_modsdTRealmAllJtu.rds'
-    out_slopes <- 'slopes_modsdTRealmAllJtu.rds'
-    print('model loaded')
-}
-if(predmod == 'modrawTsdTAllJtu'){
-    mod <- readRDS(here('temp', 'modrawTsdTAllJtu.rds'))
-    out_preds <- 'preds_modrawTsdTAllJtu.rds'
-    out_slopes <- 'slopes_modrawTsdTAllJtu.rds'
-    print('model loaded')
-} 
-if(predmod == 'modrawTsdTtsignAllJtu'){
-    mod <- readRDS(here('temp', 'modrawTsdTtsignAllJtu.rds'))
-    out_preds <- 'preds_modrawTsdTtsignAllJtu.rds'
-    out_slopes <- 'slopes_modrawTsdTtsignAllJtu.rds'
-    print('model loaded')
-} 
 if(predmod == 'modsdTRealmtsignAllJtu'){
-    mod <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds'))
+    mod <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # From turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
     out_preds <- 'preds_modsdTRealmtsignAllJtu.rds'
     out_slopes <- 'slopes_modsdTRealmtsignAllJtu.rds'
-    print('model loaded')
-} 
-if(predmod == 'modrawTsdTRealmAllJtu'){
-    mod <- readRDS(here('temp', 'modrawTsdTRealmAllJtu.rds'))
-    out_preds <- 'preds_modrawTsdTRealmAllJtu.rds'
-    out_slopes <- 'slopes_modrawTsdTRealmAllJtu.rds'
-    print('model loaded')
-} 
-if(predmod == 'modrawTsdTRealmtsignAllJtu'){
-    mod <- readRDS(here('temp', 'modrawTsdTRealmtsignAllJtu.rds'))
-    out_preds <- 'preds_modrawTsdTRealmtsignAllJtu.rds'
-    out_slopes <- 'slopes_modrawTsdTRealmtsignAllJtu.rds'
     print('model loaded')
 } 
 

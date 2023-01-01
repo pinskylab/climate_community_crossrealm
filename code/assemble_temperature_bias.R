@@ -28,7 +28,7 @@ rm(bt)
 btspp[, length(unique(Species))] # 26289 species
 
 # load gbif species names
-phylo = fread('output/taxonomy.csv.gz', drop = 1)
+phylo = fread('output/taxonomy.csv.gz', drop = 1) # from match_names_with_gbif.R
 
 # merge spp with gbif names
 btspp <- merge(btspp, phylo[, .(class_gbif = class, genus_gbif = genus, 

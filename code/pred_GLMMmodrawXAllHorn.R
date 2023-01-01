@@ -66,43 +66,13 @@ signneg11 <- function(x){ # assign 0 a sign of 1 so that there are only 2 levels
 }
 
 # The scaling factors
-scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv'))
+scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From assemble_turnover_covariates.Rmd	
 
 # Choose a model
-if(predmod == 'modsdTRealmAllHorn'){
-    mod <- readRDS(here('temp', 'modsdTRealmAllHorn.rds'))
-    out_preds <- 'preds_modsdTRealmAllHorn.rds'
-    out_slopes <- 'slopes_modsdTRealmAllHorn.rds'
-    print('model loaded')
-}
-if(predmod == 'modrawTsdTAllHorn'){
-    mod <- readRDS(here('temp', 'modrawTsdTAllHorn.rds'))
-    out_preds <- 'preds_modrawTsdTAllHorn.rds'
-    out_slopes <- 'slopes_modrawTsdTAllHorn.rds'
-    print('model loaded')
-} 
-if(predmod == 'modrawTsdTtsignAllHorn'){
-    mod <- readRDS(here('temp', 'modrawTsdTtsignAllHorn.rds'))
-    out_preds <- 'preds_modrawTsdTtsignAllHorn.rds'
-    out_slopes <- 'slopes_modrawTsdTtsignAllHorn.rds'
-    print('model loaded')
-} 
 if(predmod == 'modsdTRealmtsignAllHorn'){
-    mod <- readRDS(here('temp', 'modsdTRealmtsignAllHorn.rds'))
+    mod <- readRDS(here('temp', 'modsdTRealmtsignAllHorn.rds')) # From turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllHorn.R
     out_preds <- 'preds_modsdTRealmtsignAllHorn.rds'
     out_slopes <- 'slopes_modsdTRealmtsignAllHorn.rds'
-    print('model loaded')
-} 
-if(predmod == 'modrawTsdTRealmAllHorn'){
-    mod <- readRDS(here('temp', 'modrawTsdTRealmAllHorn.rds'))
-    out_preds <- 'preds_modrawTsdTRealmAllHorn.rds'
-    out_slopes <- 'slopes_modrawTsdTRealmAllHorn.rds'
-    print('model loaded')
-} 
-if(predmod == 'modrawTsdTRealmtsignAllHorn'){
-    mod <- readRDS(here('temp', 'modrawTsdTRealmtsignAllHorn.rds'))
-    out_preds <- 'preds_modrawTsdTRealmtsignAllHorn.rds'
-    out_slopes <- 'slopes_modrawTsdTRealmtsignAllHorn.rds'
     print('model loaded')
 } 
 
