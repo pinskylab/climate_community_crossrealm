@@ -12,7 +12,7 @@ library(RColorBrewer)
 library(scales) # for defining signed sqrt axis transformation
 library(here)
 library(rcompanion) # for CIs on median
-source(here('code', 'error.bar.R'))
+source(here('code', 'util.R'))
 
 # produce ggplot-style colors
 gg_color_hue <- function(n) {
