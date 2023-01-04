@@ -40,32 +40,8 @@ library(data.table) # for handling large datasets
 library(glmmTMB, lib.loc = "/usr/lib64/R/library") # for ME models
 library(here) # for relative paths
 library(lavaan) # for SEM models of slopes
+source(here('code', 'util.R'))
 
-scaleme <- function(x, nm){
-    if(!(nm %in% scalingall[,var])) stop('nm not found in scalingall')
-    if(scalingall[var==nm, log]){
-        x.sc <- (log(x + scalingall[var==nm, plus]) - scalingall[var == nm, center]) / scalingall[var == nm, scale]  
-    } else {
-        x.sc <- (x  + scalingall[var==nm, plus] - scalingall[var == nm, center]) / scalingall[var == nm, scale]
-    }
-    return(x.sc)
-}
-unscaleme <- function(x.sc, nm){
-    if(!(nm %in% scalingall[,var])) stop('nm not found in scalingall')
-    if(scalingall[var==nm, log]){
-        x <- exp(x.sc * scalingall[var == nm, scale] + scalingall[var == nm, center]) - scalingall[var==nm, plus]
-    } else {
-        x <- x.sc * scalingall[var == nm, scale] + scalingall[var == nm, center] - scalingall[var==nm, plus]
-    }
-    return(x)
-}
-
-# sign of temperature change
-signneg11 <- function(x){ # assign 0 a sign of 1 so that there are only 2 levels
-    out <- sign(x)
-    out[out == 0] <- 1
-    return(out)
-}
 
 # The scaling factors
 scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From assemble_turnover_covariates.Rmd
@@ -75,6 +51,13 @@ if(predmod == 'modsdTRealmtsignAllJtu'){
     mod <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # From turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
     out_preds <- 'preds_modsdTRealmtsignAllJtu.rds'
     out_slopes <- 'slopes_modsdTRealmtsignAllJtu.rds'
+    print('model loaded')
+} 
+
+if(predmod == 'modrawTsdTTRealmtsignAllJtu'){
+    mod <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu.rds')) # From turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
+    out_preds <- 'preds_rawTsdTTRealmtsign.rds' # note: name is not quite of same form as previous model.
+    out_slopes <- 'slopes_rawTsdTTRealmtsign.rds' # note: name is not quite of same form as previous model.
     print('model loaded')
 } 
 

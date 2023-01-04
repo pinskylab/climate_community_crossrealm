@@ -105,6 +105,7 @@ signneg11 <- function(x){ # assign 0 a sign of 1 so that there are only 2 levels
     return(out)
 }
 
+
 # transformation for 2 categories. Eq. 1 in Douma & Weedon 2019 MEE
 transform01 <- function(x) (x * (length(x) - 1) + 0.5) / (length(x))
 
@@ -129,3 +130,27 @@ panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
     if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
     text(0.5, 0.5, txt) #, cex = cex.cor * r)
 }
+
+# function to scale a variable using the definitions in the scalingall object (assumes this is loaded)
+scaleme <- function(x, nm){
+    if(!exists('scalingall')) stop('Have to load scalingall')
+    if(!(nm %in% scalingall[,var])) stop('nm not found in scalingall')
+    if(scalingall[var==nm, log]){
+        x.sc <- (log(x + scalingall[var==nm, plus]) - scalingall[var == nm, center]) / scalingall[var == nm, scale]  
+    } else {
+        x.sc <- (x  + scalingall[var==nm, plus] - scalingall[var == nm, center]) / scalingall[var == nm, scale]
+    }
+    return(x.sc)
+}
+unscaleme <- function(x.sc, nm){
+    if(!exists('scalingall')) stop('Have to load scalingall')
+    if(!(nm %in% scalingall[,var])) stop('nm not found in scalingall')
+    if(scalingall[var==nm, log]){
+        x <- exp(x.sc * scalingall[var == nm, scale] + scalingall[var == nm, center]) - scalingall[var==nm, plus]
+    } else {
+        x <- x.sc * scalingall[var == nm, scale] + scalingall[var == nm, center] - scalingall[var==nm, plus]
+    }
+    return(x)
+}
+
+
