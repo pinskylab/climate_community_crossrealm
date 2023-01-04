@@ -546,6 +546,7 @@ ggsave('figures/fig3_onlyhigh.png', fig3high, width = 4, height = 4, units = 'in
 #### Table S1: random effects for main model --------------
 if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 if(!exists('sum_modrawTsdTTRealmtsignAllJtu')) sum_modrawTsdTTRealmtsignAllJtu <- summary(modrawTsdTTRealmtsignAllJtu)
+sum_modrawTsdTTRealmtsignAllJtu$varcor
 capture.output(print(sum_modrawTsdTTRealmtsignAllJtu$varcor), file = 'figures/tableS1.txt')
 
 #### Table S2: fixed effects for main model --------------
@@ -582,6 +583,8 @@ out$tsign[!grepl('cooling|warming', out$tsign)] <- ''
 
 # reorder columns
 out <- out[,c('term', 'realm', 'tsign', 'Estimate', 'Std. Error', 'z value', 'Pr(>|z|)')]
+
+out
 
 # write out
 write.csv(format(out, digits=2), file = 'figures/tableS2.csv', row.names=FALSE)
