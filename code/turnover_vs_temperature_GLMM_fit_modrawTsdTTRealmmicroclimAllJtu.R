@@ -39,9 +39,7 @@ iallJtu <-
         REALM,
         tempave.sc,
         duration.sc,
-        seas.sc,
         microclim.sc,
-        npp.sc,
         human_bowler.sc
     )]
 

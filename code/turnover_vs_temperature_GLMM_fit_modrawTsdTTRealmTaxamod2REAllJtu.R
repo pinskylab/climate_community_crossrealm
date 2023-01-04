@@ -39,13 +39,7 @@ iallJtu <-
         Jtu.sc,
         tempchange_abs.sc,
         REALM,
-        tempave_metab.sc,
-        durationlog.sc,
-        mass.sc,
-        nspp.sc,
-        seas.sc,
         microclim.sc,
-        npp.sc,
         human_bowler.sc
     )]
 

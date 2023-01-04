@@ -4,7 +4,7 @@
 ## functions
 ##############
 require(data.table)
-
+source('code/util.R') # for picklongest()
 
 ##############
 # Load data
@@ -77,7 +77,8 @@ btcti
 btcti[, hist(nspp_wdata/nspp)] # fraction of species in each study with data. most >50%
 
 # add environmental temperature to CTI, calculate bias
-btcti <- merge(btcti, temperature[, .(rarefyID, tempave)], all.x = TRUE, by = 'rarefyID')
+tempave <- temperature[, .(tempave = picklongest(year1, year2, tempave)), by = rarefyID] # pick the tempave for the full time series duration
+btcti <- merge(btcti, tempave[, .(rarefyID, tempave)], all.x = TRUE, by = 'rarefyID')
 btcti[, thermal_bias := cti - tempave]
 btcti[, thermal_biasmax := ctimax - tempave]
 

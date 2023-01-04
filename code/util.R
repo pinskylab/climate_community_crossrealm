@@ -79,3 +79,43 @@ get.ellipse <- function (a, b, c, d, e, f, n.points = 1000) {
     z <- backsolve(chol(A), v) + mu
     return(list(x = z[1,], y = z[2,]))
 }
+
+# for vector y in which each entry is associated with start and end years (year1 and year2)
+# pick the value of y that has the longest duration
+picklongest <- function(year1, year2, y){
+    dy <- year2 - year1
+    keep <- which.max(dy)
+    return(y[keep])
+}
+
+# sign of temperature change
+signneg11 <- function(x){ # assign 0 a sign of 1 so that there are only 2 levels
+    out <- sign(x)
+    out[out == 0] <- 1
+    return(out)
+}
+
+# transformation for 2 categories. Eq. 1 in Douma & Weedon 2019 MEE
+transform01 <- function(x) (x * (length(x) - 1) + 0.5) / (length(x))
+
+# function for returning the slope of a regression and catching errors related to NAs
+lmNAcoef <- function(y, x){
+    if(sum(!is.na(y)) > 1){ # if enough data points to calculate a slope
+        b <- coef(lm(y ~ x))[2]
+        return(b)
+    } else {
+        return(NA_real_)
+    }
+}
+
+# plot pearson's correlation on the lower triangle of a pairs plot
+panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
+{
+    usr <- par("usr"); on.exit(par(usr))
+    par(usr = c(0, 1, 0, 1))
+    r <- cor(x, y, use = 'pairwise.complete.obs')
+    txt <- format(c(r, 0.123456789), digits = digits)[1]
+    txt <- paste0(prefix, txt)
+    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
+    text(0.5, 0.5, txt) #, cex = cex.cor * r)
+}

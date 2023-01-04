@@ -17,8 +17,7 @@ if (length(args) < 1)
 if (length(args) > 1)
     stop("Have to specify only 1 model to fit", call. = FALSE)
 fitmod <- args[1]
-MATCHMOD <-
-    FALSE # indicator to check if the argument matched a model name
+MATCHMOD <- FALSE # indicator to check if the argument matched a model name
 
 # print basic info about the job ############################
 
@@ -49,9 +48,7 @@ iallJtu <-
         REALM,
         tempave.sc,
         duration.sc,
-        seas.sc,
         microclim.sc,
-        npp.sc,
         human_bowler.sc
     )]
 
@@ -62,16 +59,13 @@ iallHorn <-
         REALM,
         tempave.sc,
         duration.sc,
-        seas.sc,
         microclim.sc,
-        npp.sc,
         human_bowler.sc
     )]
 
 # Trend model #################################
 if (fitmod == 'modAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
+    if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
@@ -84,15 +78,15 @@ if (fitmod == 'modAllJtu') {
 }
 
 if (fitmod == 'modAllHorn') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
+    if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
     mod <- glmmTMB(
         Horn.sc ~ duration +
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
+        dispformula = ~ REALM,
+        control = glmmTMBControl(optimizer=optim, optArgs = list(method='BFGS'))
     )
     MATCHMOD <- TRUE
 }
@@ -101,8 +95,7 @@ if (fitmod == 'modAllHorn') {
 
 # REALM models #################################
 if (fitmod == 'modRealmAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
+    if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
@@ -116,8 +109,7 @@ if (fitmod == 'modRealmAllJtu') {
 }
 
 if (fitmod == 'modRealmAllHorn') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
+    if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
     mod <- glmmTMB(
         Horn.sc ~ duration +
@@ -132,8 +124,7 @@ if (fitmod == 'modRealmAllHorn') {
 
 # Taxa_mod models ###################################
 if (fitmod == 'modTaxamod2AllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
+    if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
@@ -149,8 +140,7 @@ if (fitmod == 'modTaxamod2AllJtu') {
 
 
 if (fitmod == 'modTaxamod2AllHorn') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
+    if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
     mod <- glmmTMB(
         Horn.sc ~ duration +
@@ -170,8 +160,7 @@ if (fitmod == 'modTaxamod2AllHorn') {
 
 
 # print and save results ############################
-if (MATCHMOD == FALSE)
-    stop("Model name did not match anything", call. = FALSE)
+if (!MATCHMOD) stop("Model name did not match anything", call. = FALSE)
 if (MATCHMOD) {
     print(summary(mod))
     saveRDS(mod, file = paste0('temp/', fitmod, '.rds'))
