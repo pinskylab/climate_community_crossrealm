@@ -271,7 +271,7 @@ if(file.exists(here('temp', 'slopes_rawTsdTTRealmtsign.rds'))){
   slopesTsdTTRealmtsignJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds'))
   print('Loaded TsdTTRealmtsignJtu predictions from file')
 } else {
-  print('No TsdTTRealmtsignJtu effects. Need to run pred_GLMMmodrawTsdTTRealmtsignAllJtu.R')
+  print('No TsdTTRealmtsignJtu effects. Need to run pred_GLMMmodrawXAllJtu.R')
 }
 
 ```
@@ -308,8 +308,8 @@ fixef(modTsdTTRealmtsignAllJtu)
 modrawTsdTTRealmtsignAllJtu model
 ```{r, echo = FALSE}
 # plot
-p1 <- ggplot(slopesTsdTTRealmtsignJtu[REALM=='Marine'], aes(tempchange, tempave, z = slope_realmtsign)) +
-  geom_raster(aes(fill = slope_realmtsign)) +
+p1 <- ggplot(slopesTsdTTRealmtsignJtu[REALM=='Marine'], aes(tempchange, tempave, z = slope)) +
+  geom_raster(aes(fill = slope)) +
   labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Marine') +
   scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
   theme(axis.text = element_text(size = 12), 
@@ -322,8 +322,8 @@ p1 <- ggplot(slopesTsdTTRealmtsignJtu[REALM=='Marine'], aes(tempchange, tempave,
         legend.text=element_text(size= 12),
         legend.title=element_text(size= 18),
         legend.title.align = 1)
-p2 <- ggplot(slopesTsdTTRealmtsignJtu[REALM=='Terrestrial'], aes(tempchange, tempave, z = slope_realmtsign)) +
-  geom_raster(aes(fill = slope_realmtsign)) +
+p2 <- ggplot(slopesTsdTTRealmtsignJtu[REALM=='Terrestrial'], aes(tempchange, tempave, z = slope)) +
+  geom_raster(aes(fill = slope)) +
   labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Terrestrial') +
   scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
   theme(axis.text = element_text(size = 12), 
@@ -336,8 +336,8 @@ p2 <- ggplot(slopesTsdTTRealmtsignJtu[REALM=='Terrestrial'], aes(tempchange, tem
         legend.text=element_text(size= 12),
         legend.title=element_text(size= 18),
         legend.title.align = 1)
-p3 <- ggplot(slopesTsdTTRealmtsignJtu[REALM=='Freshwater'], aes(tempchange, tempave, z = slope_realmtsign)) +
-  geom_raster(aes(fill = slope_realmtsign)) +
+p3 <- ggplot(slopesTsdTTRealmtsignJtu[REALM=='Freshwater'], aes(tempchange, tempave, z = slope)) +
+  geom_raster(aes(fill = slope)) +
   labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Freshwater') +
   scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
   theme(axis.text = element_text(size = 12), 
@@ -361,9 +361,9 @@ CIs are from a SEM fit to the trends.
 ```{r, echo=FALSE}
 vals <- slopesTsdTTRealmtsignJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
 ggplot(slopesTsdTTRealmtsignJtu[tempave %in% vals,], 
-       aes(tempchange, slope_realmtsign, color = factor(round(tempave)), group = tempave)) +
+       aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
     geom_line() +
-    geom_pointrange(aes(ymin=slope_realmtsign-1.96*slope_realmtsign.se, ymax=slope_realmtsign+1.96*slope_realmtsign.se), alpha = 0.25) + 
+    geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
     facet_grid(cols = vars(REALM))  +
     labs(x = 'dT [degC/yr]') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -393,7 +393,7 @@ if(file.exists(here('temp', 'slopes_rawTsdTTRealmtsignHorn.rds'))){
   slopesTsdTTRealmtsignHorn <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignHorn.rds'))
   print('Loaded TsdTTRealmtsignHorn predictions from file')
 } else {
-  print('No TsdTTRealmtsignHorn effects. Need to run pred_GLMMmodrawTsdTTRealmtsignAllHorn.R')
+  print('No TsdTTRealmtsignHorn effects. Need to run pred_GLMMmodrawXAllHorn.R')
 }
 
 ```
@@ -430,8 +430,8 @@ fixef(modTsdTTRealmtsignAllHorn)
 modrawTsdTTRealmtsignAllHorn model
 ```{r, echo = FALSE}
 # plot
-p1 <- ggplot(slopesTsdTTRealmtsignHorn[REALM=='Marine'], aes(tempchange, tempave, z = slope_realmtsign)) +
-  geom_raster(aes(fill = slope_realmtsign)) +
+p1 <- ggplot(slopesTsdTTRealmtsignHorn[REALM=='Marine'], aes(tempchange, tempave, z = slope)) +
+  geom_raster(aes(fill = slope)) +
   labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Marine') +
   scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Horn slope') +
   theme(axis.text = element_text(size = 12), 
@@ -444,8 +444,8 @@ p1 <- ggplot(slopesTsdTTRealmtsignHorn[REALM=='Marine'], aes(tempchange, tempave
         legend.text=element_text(size= 12),
         legend.title=element_text(size= 18),
         legend.title.align = 1)
-p2 <- ggplot(slopesTsdTTRealmtsignHorn[REALM=='Terrestrial'], aes(tempchange, tempave, z = slope_realmtsign)) +
-  geom_raster(aes(fill = slope_realmtsign)) +
+p2 <- ggplot(slopesTsdTTRealmtsignHorn[REALM=='Terrestrial'], aes(tempchange, tempave, z = slope)) +
+  geom_raster(aes(fill = slope)) +
   labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Terrestrial') +
   scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Horn slope') +
   theme(axis.text = element_text(size = 12), 
@@ -458,8 +458,8 @@ p2 <- ggplot(slopesTsdTTRealmtsignHorn[REALM=='Terrestrial'], aes(tempchange, te
         legend.text=element_text(size= 12),
         legend.title=element_text(size= 18),
         legend.title.align = 1)
-p3 <- ggplot(slopesTsdTTRealmtsignHorn[REALM=='Freshwater'], aes(tempchange, tempave, z = slope_realmtsign)) +
-  geom_raster(aes(fill = slope_realmtsign)) +
+p3 <- ggplot(slopesTsdTTRealmtsignHorn[REALM=='Freshwater'], aes(tempchange, tempave, z = slope)) +
+  geom_raster(aes(fill = slope)) +
   labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Freshwater') +
   scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Horn slope') +
   theme(axis.text = element_text(size = 12), 
@@ -483,9 +483,9 @@ CIs are from a SEM fit to the trends.
 ```{r, echo=FALSE}
 vals <- slopesTsdTTRealmtsignHorn[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
 ggplot(slopesTsdTTRealmtsignHorn[tempave %in% vals,], 
-       aes(tempchange, slope_realmtsign, color = factor(round(tempave)), group = tempave)) +
+       aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
     geom_line() +
-    geom_pointrange(aes(ymin=slope_realmtsign-1.96*slope_realmtsign.se, ymax=slope_realmtsign+1.96*slope_realmtsign.se), alpha = 0.25) + 
+    geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
     facet_grid(cols = vars(REALM))  +
     labs(x = 'dT [degC/yr]') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),

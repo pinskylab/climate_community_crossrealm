@@ -14,52 +14,6 @@ library(here)
 library(rcompanion) # for CIs on median
 source(here('code', 'util.R'))
 
-# produce ggplot-style colors
-gg_color_hue <- function(n) {
-    hues = seq(15, 375, length = n + 1)
-    hcl(h = hues, l = 65, c = 100)[1:n]
-}
-
-signedsqrt = function(x) sign(x)*sqrt(abs(x))
-signedsq = function(x) sign(x) * x^2
-signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, inverse = signedsq)
-
-
-# from https://stackoverflow.com/questions/52297978/decrease-overal-legend-size-elements-and-text
-addSmallLegend <- function(myPlot, pointSize = 0.5, textSize = 3, spaceLegend = 0.1) {
-    newplot <- myPlot +
-        guides(shape = guide_legend(override.aes = list(size = pointSize)),
-               color = guide_legend(override.aes = list(size = pointSize))) +
-        theme(legend.title = element_text(size = textSize), 
-              legend.text  = element_text(size = textSize),
-              legend.key.size = unit(spaceLegend, "lines"))
-    return(newplot)
-}
-
-# binomial ci (95% by default)
-binomci <- function(x, n){
-    out <- as.numeric(binom.test(x, n)$conf.int)
-    return(list(out[1], out[2]))
-}
-
-# given a duration, make a Gaussian white noise timeseries and return the slope
-calcslopeGauss <- function(dur){
-    x <- 1:dur
-    y <- rnorm(dur)
-    return(coef(lm(y~x))[2])
-}
-
-# convert back from scaled covariates. Assumes scaling is loaded as scalingall object
-unscaleme <- function(x.sc, nm){
-    if(!(nm %in% scalingall[,var])) stop('nm not found in scalingall')
-    if(scalingall[var==nm, log]){
-        x <- exp(x.sc * scalingall[var == nm, scale] + scalingall[var == nm, center]) - scalingall[var==nm, plus]
-    } else {
-        x <- x.sc * scalingall[var == nm, scale] + scalingall[var == nm, center] - scalingall[var==nm, plus]
-    }
-    return(x)
-}
-
 
 ### Dataset sizes ---------
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
@@ -277,7 +231,7 @@ slopespredsdT <- merge(slopespredsdT, tempchange_by_realm, all.x = TRUE, by = "R
 slopespredsdT <- slopespredsdT[tempchange > min & tempchange < max & !duplicated(cbind(tempchange, REALM)), ] # trim to min & max by realm
 
 # predicted slopes from the tempave interaction model
-slopespred <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds')) # from pred_GLMMmodrawTsdTTRealmtsignAllJtu.R
+slopespred <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds')) # from pred_GLMMmodrawXAllJtu.sh/.R
 vals <- slopespred[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC (+/-2SD from the mean)
 slopespred <- slopespred[tempave %in% vals,]
 slopespred <- merge(slopespred, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
@@ -287,7 +241,7 @@ slopespred[, tempave := factor(as.character(round(tempave)), levels = c('0', '25
 
 # fastest turnover at highest observed rate of temperature change
 slopespredsdT[, max(slope)] # just looking at tempchange
-slopespred[, max(slope_realmtsign)] # also considering tempave
+slopespred[, max(slope)] # also considering tempave
 
 # a) across realms
 ht <- 6.3
@@ -318,11 +272,11 @@ p2 <- ggplot() +
                 aes(tempchange, slope,
                     ymin=slope - slope.se, 
                     ymax=slope + slope.se)) +
-    geom_line(data = slopespred, mapping=aes(tempchange, slope_realmtsign, color = tempave, group = tempave), linetype = 'dashed') +
+    geom_line(data = slopespred, mapping=aes(tempchange, slope, color = tempave, group = tempave), linetype = 'dashed') +
     geom_ribbon(data = slopespred, alpha = 0.2, color = NA,
-                aes(tempchange, slope_realmtsign, fill = tempave,
-                    ymin=slope_realmtsign - slope_realmtsign.se,
-                    ymax=slope_realmtsign + slope_realmtsign.se)) +
+                aes(tempchange, slope, fill = tempave,
+                    ymin=slope - slope.se,
+                    ymax=slope + slope.se)) +
     scale_color_brewer(palette = 'Dark2') +
     scale_fill_brewer(palette = 'Dark2') +
     facet_grid(cols = vars(REALM), scales = 'free')  +
@@ -352,11 +306,11 @@ p2noT <- ggplot() +
     geom_point(data = trends[!is.na(tempchange)], mapping = aes(tempchange, disstrend, size = duration), 
                color='#AAAAAA', alpha = 0.1, stroke = 0) +
     geom_hline(yintercept = 0, linetype = 'dotted') +
-    geom_line(data = slopespred, mapping=aes(tempchange, slope_realmtsign, color = tempave, group = tempave), linetype = 'dashed') +
+    geom_line(data = slopespred, mapping=aes(tempchange, slope, color = tempave, group = tempave), linetype = 'dashed') +
     geom_ribbon(data = slopespred, alpha = 0.2, color = NA,
-                aes(tempchange, slope_realmtsign, fill = tempave,
-                    ymin=slope_realmtsign - slope_realmtsign.se,
-                    ymax=slope_realmtsign + slope_realmtsign.se)) +
+                aes(tempchange, slope, fill = tempave,
+                    ymin=slope - slope.se,
+                    ymax=slope + slope.se)) +
     scale_color_brewer(palette = 'Set2') +
     scale_fill_brewer(palette = 'Set2') +
     facet_grid(cols = vars(REALM), scales = 'free')  +
@@ -863,11 +817,11 @@ ggsave('figures/figS3.png', p1, width = 6, height = 4, units = 'in')
 ### Figure S4: T trend x Ave T interaction ---------
 
 # read in slopes
-slopesTsdTTRealmtsignJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds')) # made by pred_GLMMmodrawTsdTTRealmtsignAllJtu.R
+slopesTsdTTRealmtsignJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds')) # made by pred_modrawXAllJtu.sh/.r
 
 # plot
-p1 <- ggplot(slopesTsdTTRealmtsignJtu, aes(tempchange, tempave, z = slope_realmtsign)) +
-    geom_raster(aes(fill = slope_realmtsign)) +
+p1 <- ggplot(slopesTsdTTRealmtsignJtu, aes(tempchange, tempave, z = slope)) +
+    geom_raster(aes(fill = slope)) +
     labs(x = 'Temperature trend (°C/yr)', y = 'Average Temperature (°C)') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Turnover rate') +
     facet_grid(cols = vars(REALM)) +
@@ -910,7 +864,7 @@ slopespredsdT <- merge(slopespredsdT, tempchange_by_realm, all.x = TRUE, by = "R
 slopespredsdT <- slopespredsdT[tempchange > min & tempchange < max & !duplicated(cbind(tempchange, REALM)), ] # trim to min & max by realm
 
 # predicted slopes from the tempave interaction model
-slopespred <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignHorn.rds')) # from pred_GLMMmodrawTsdTTRealmtsignAllHorn.R
+slopespred <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignHorn.rds')) # from pred_GLMMmodrawXAllHorn.sh/.R
 vals <- slopespred[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC (+/-2SD from the mean)
 slopespred <- slopespred[tempave %in% vals,]
 slopespred <- merge(slopespred, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
@@ -949,11 +903,11 @@ p2 <- ggplot() +
                 aes(tempchange, slope,
                     ymin=slope - slope.se, 
                     ymax=slope + slope.se)) +
-    geom_line(data = slopespred, mapping=aes(tempchange, slope_realmtsign, color = tempave, group = tempave), linetype = 'dashed') +
+    geom_line(data = slopespred, mapping=aes(tempchange, slope, color = tempave, group = tempave), linetype = 'dashed') +
     geom_ribbon(data = slopespred, alpha = 0.2, color = NA,
-                aes(tempchange, slope_realmtsign, fill = tempave,
-                    ymin=slope_realmtsign - slope_realmtsign.se,
-                    ymax=slope_realmtsign + slope_realmtsign.se)) +
+                aes(tempchange, slope, fill = tempave,
+                    ymin=slope - slope.se,
+                    ymax=slope + slope.se)) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
     labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
          fill = 'Average temperature [°C]', 

@@ -154,3 +154,38 @@ unscaleme <- function(x.sc, nm){
 }
 
 
+# given a duration, make a Gaussian white noise timeseries and return the slope
+calcslopeGauss <- function(dur){
+    x <- 1:dur
+    y <- rnorm(dur)
+    return(coef(lm(y~x))[2])
+}
+
+# produce ggplot-style colors
+gg_color_hue <- function(n) {
+    hues = seq(15, 375, length = n + 1)
+    hcl(h = hues, l = 65, c = 100)[1:n]
+}
+
+# useful transformations for ggplot axes
+signedsqrt = function(x) sign(x)*sqrt(abs(x))
+signedsq = function(x) sign(x) * x^2
+signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, inverse = signedsq)
+
+
+# from https://stackoverflow.com/questions/52297978/decrease-overal-legend-size-elements-and-text
+addSmallLegend <- function(myPlot, pointSize = 0.5, textSize = 3, spaceLegend = 0.1) {
+    newplot <- myPlot +
+        guides(shape = guide_legend(override.aes = list(size = pointSize)),
+               color = guide_legend(override.aes = list(size = pointSize))) +
+        theme(legend.title = element_text(size = textSize), 
+              legend.text  = element_text(size = textSize),
+              legend.key.size = unit(spaceLegend, "lines"))
+    return(newplot)
+}
+
+# binomial ci (95% by default)
+binomci <- function(x, n){
+    out <- as.numeric(binom.test(x, n)$conf.int)
+    return(list(out[1], out[2]))
+}

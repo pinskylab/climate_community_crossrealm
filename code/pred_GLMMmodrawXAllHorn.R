@@ -51,6 +51,12 @@ if(predmod == 'modsdTRealmtsignAllHorn'){
     out_slopes <- 'slopes_modsdTRealmtsignAllHorn.rds'
     print('model loaded')
 } 
+if(predmod == 'modrawTsdTTRealmtsignAllHorn'){
+    mod <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllHorn.rds')) # From turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllHorn.R
+    out_preds <- 'preds_rawTsdTTRealmtsignHorn.rds' # note: name is not quite of same form as previous model.
+    out_slopes <- 'slopes_rawTsdTTRealmtsignHorn.rds' # note: name is not quite of same form as previous model.
+    print('model loaded')
+} 
 
 if(!exists('mod')) stop('No model loaded. Make sure argument matches one of the model names')
 

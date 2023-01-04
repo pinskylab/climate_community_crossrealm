@@ -62,8 +62,6 @@ The code is organized in five main steps:
 - pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R
 - pred_GLMMmodrawTsdTTRealmmicroclimhumanAllJtu.R
 - pred_GLMMmodrawTsdTTRealmthermal_biasAllJtu.R
-- pred_GLMMmodrawTsdTTRealmtsignAllHorn.R
-- pred_GLMMmodrawTsdTTRealmtsignAllJtu.R
 - pred_GLMMmodrawXAllHorn.R
 - pred_GLMMmodrawXAllJtu.R
 - pred_modrawXAllHorn.sh
