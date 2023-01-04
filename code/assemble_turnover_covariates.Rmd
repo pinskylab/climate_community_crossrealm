@@ -18,6 +18,7 @@ library(gridExtra) # to combine ggplots together
 library(grid) # to combine ggplots together
 require(scales) # for custom axis scales
 require(here)
+source(here('code', 'util.R')) # simple utility functions
 
 ```
 
@@ -91,12 +92,6 @@ cat('number of timeseries'); bt[, length(unique(rarefyID))]
 ### Choose the appropriate temperature value for each study and duration
 Average temperature for the full duration. Thiel-Sen temperature slope.
 ```{r}
-picklongest <- function(year1, year2, y){
-  dy <- year2 - year1
-  keep <- which.max(dy)
-  return(y[keep])
-}
-
 btall <- bt # legacy from when we divided dataset into different ts durations (3, 5, 10, 20 years)
 btall[, tempave := picklongest(year1, year2, tempave), by = rarefyID]
 btall[, tempchange := median(tempchange/(year2 - year1)), by = rarefyID] # Thiel-Sen estimator of the slope: median of all pairwise differences
@@ -120,21 +115,13 @@ btall[, duration := year2 - year1]
 btall[, taxa_mod2 := taxa_mod]
 btall[taxa_mod == 'Marine invertebrates/plants', taxa_mod2 := 'All']
 
-# sign of temperature change
-signneg11 <- function(x){ # assign 0 a sign of 1 so that there are only 2 levels
-  out <- sign(x)
-  out[out == 0] <- 1
-  return(out)
-}
+
 btall[, tsign := signneg11(tempchange)]
 
 #######################
 ## Transformations
 
 ### Adjust response away from 0-1
-# transformation for 2 categories. Eq. 1 in Douma & Weedon 2019 MEE
-transform01 <- function(x) (x * (length(x) - 1) + 0.5) / (length(x))
-
 btall[, ':='(Jtu.sc = transform01(Jtu), Jne.sc = transform01(Jne), 
            Jbeta.sc = transform01(Jbeta), Horn.sc = transform01(Horn))]
 
@@ -173,18 +160,15 @@ btall[, length(unique(rarefyID)), by = REALM]
 
 
 ## Write out
-Only if file doesn't yet exist
 ```{r write out}
-if(!file.exists(here('output', 'turnover_w_covariates.csv.gz'))){
-  write.csv(btall[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
+write.csv(btall[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
                    Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
                    tempave.sc, 
                    microclim.sc, tempchange, tsign, tempchange.sc, tempchange_abs.sc,
                    nspp.sc, thermal_bias.sc,
                    duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
-            gzfile(here('output', 'turnover_w_covariates.csv.gz')), row.names = FALSE)
-  write.csv(scalingall, here('output','turnover_w_covariates_scaling.csv'), row.names = FALSE)
-}
+          gzfile(here('output', 'turnover_w_covariates.csv.gz')), row.names = FALSE)
+write.csv(scalingall, here('output','turnover_w_covariates_scaling.csv'), row.names = FALSE)
 ```
 
 
@@ -192,15 +176,6 @@ if(!file.exists(here('output', 'turnover_w_covariates.csv.gz'))){
 # A bit more prep for visualizing covariate distributions
 ## Make a data.table summarized by rarefyID
 ```{r summarize by rarefyID}
-# function for returning the slope of a regression and catching errors related to NAs
-lmNAcoef <- function(y, x){
-  if(sum(!is.na(y)) > 1){ # if enough data points to calculate a slope
-    b <- coef(lm(y ~ x))[2]
-    return(b)
-  } else {
-    return(NA_real_)
-  }
-}
 btaveall <- btall[, .(Jtuslope = lmNAcoef(Jtu, duration), Jbetaslope = lmNAcoef(Jbeta, duration), Hornslope = lmNAcoef(Horn, duration), 
                     minyrBT = min(year1), maxyrBT = max(year2), nyrBT = length(Jtu) + 1,
                     REALM = unique(REALM), REALM2 = unique(REALM2), rarefyID_y = mean(rarefyID_y),
@@ -277,16 +252,6 @@ invisible(btaveall[, hist(human_bowler.sc, main = 'log Human impact score (Bowle
 # Check correlations among variables 
 Pearson's r is in the lower triangle
 ```{r pairs, fig.height=10, fig.width=10}
-panel.cor <- function(x, y, digits = 2, prefix = "", cex.cor, ...)
-{
-    usr <- par("usr"); on.exit(par(usr))
-    par(usr = c(0, 1, 0, 1))
-    r <- cor(x, y, use = 'pairwise.complete.obs')
-    txt <- format(c(r, 0.123456789), digits = digits)[1]
-    txt <- paste0(prefix, txt)
-    if(missing(cex.cor)) cex.cor <- 0.8/strwidth(txt)
-    text(0.5, 0.5, txt) #, cex = cex.cor * r)
-}
 pairs(formula = ~ tempave.sc + microclim.sc + tempchange.sc + tempchange_abs.sc + nspp.sc + thermal_bias.sc + human_bowler.sc, data = btaveall, gap = 1/10, cex = 0.2, col = '#00000022', lower.panel = panel.cor)
 
 ```

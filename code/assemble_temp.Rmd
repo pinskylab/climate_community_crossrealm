@@ -8,6 +8,7 @@ output:
 require(data.table)
 require(ncdf4)
 require(ggplot2)
+require(here)
 
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
 ```
@@ -17,12 +18,12 @@ Using average daily temperature by month from CRU TS
 Using average temperature by month from ERSST. NOAA_ERSST_V5 data provided by the NOAA/OAR/ESRL PSD, Boulder, Colorado, USA, from their Web site at https://www.esrl.noaa.gov/psd/
 ```{r}
 # biotime taxa category and other info
-load('data/biotime_blowes/bt_malin.Rdata') # load bt_malin
+load(here('data', 'biotime_blowes', 'bt_malin.Rdata')) # load bt_malin
 btinfo <- data.table(bt_malin); rm(bt_malin)
 btinfo <- btinfo[!duplicated(rarefyID), .(rarefyID, rarefyID_x, rarefyID_y, Biome, taxa_mod, REALM, STUDY_ID)]
 
 # biotime community similarity data
-load('data/biotime_blowes/all_pairs_beta.RData') # load rarefied_beta_medians
+load(here('data','biotime_blowes','all_pairs_beta.Rdata')) # load rarefied_beta_medians
 bt <- data.table(rarefied_beta_medians); rm(rarefied_beta_medians)
 bt <- bt[, .(rarefyID, year1, year2)] # trim to time-series and years
 bt[, year1 := as.numeric(year1)] # not sure why it gets read in as character
@@ -30,14 +31,14 @@ bt[, year2 := as.numeric(year2)]
 bt <- merge(bt, btinfo[, .(rarefyID, rarefyID_x, rarefyID_y, REALM)]) # add lat/lon and realm
 
 # biotime species lists
-load('data/biotime_blowes/bt_grid_spp_list.Rdata') # loads bt_grid_spp_list. this has some studies not in bt.
+load(here('data','biotime_blowes','bt_grid_spp_list.Rdata')) # loads bt_grid_spp_list. this has some studies not in bt.
 btspp <- data.table(bt_grid_spp_list); rm(bt_grid_spp_list) # rename to btspp
 btspp <- merge(btspp, btinfo[, .(rarefyID, taxa_mod)], by = 'rarefyID') # add taxa_mod to spp list
 
 btspp[, length(unique(Species))] # 29981 species
 
 # CRU TS mean temp by year
-n = nc_open('dataDL/cruts/cru_ts4.03.1901.2018.tmp.dat.nc') # Open the netCDF file. Won't work on .gz for some reason
+n = nc_open(here('dataDL','cruts','cru_ts4.03.1901.2018.tmp.dat.nc')) # Open the netCDF file. Won't work on .gz for some reason
 # print(n) # get information about the file format
 cruts = ncvar_get(n, 'tmp') # dim order: 720 lon x 360 lat x 1416 time (observations are month, time measured in days since Jan 1, 1900). 0 lon is at date line.
 dim(cruts)
@@ -46,7 +47,7 @@ dimnames(cruts) <- list(lon_cruts = ncvar_get(n, 'lon'), lat_cruts = ncvar_get(n
 nc_close(n)
 
 # ERSST temp by month
-n = nc_open('dataDL/ersst/sst.mnmean.nc') # Open the netCDF file
+n = nc_open(here('dataDL','ersst','sst.mnmean.nc')) # Open the netCDF file
 # print(n) # get information about the file format
 ersst = ncvar_get(n, 'sst') # dim order: 180 lon x 89 lat x 1994 time (observations are month, time measured in days since Jan 1, 1800). 0 lon is at greenwhich mean.
 dim(ersst)
@@ -197,13 +198,17 @@ ggplot(btsum, aes(ave_cruts, ave_ersst, color = lat_cruts)) + # ERSST more muted
     geom_smooth()
 ```
 
-# Choose CRU TS vs. ERSST
+# Choose CRU TS vs. ERSST for each time series
 Use CRUTS in general, except ERSST in marine realm
 ```{r combine cruts and ersst}
 # average temperature
 btsum[, ':='(tempave = ave_cruts)]
 btsum[REALM == 'Marine', ':='(tempave = ave_ersst)]
 btsum[REALM == 'Marine' & is.na(ave_ersst), ':='(tempave = ave_cruts)] # fill missing marine with CRU TS
+# btsum[, hist(tempave, main = REALM), by = REALM] # histograms by realm
+# btsum[REALM == 'Marine' & tempave < -1.8, .N] # 48 points < -1.8degC
+# btsum[REALM == 'Marine' & tempave < -1.8, length(unique(rarefyID))] # 21 timeseries
+btsum[REALM == 'Marine' & tempave < -1.8, tempave := -1.8] # constrain min ocean temp to -1.8degC
 btsum[REALM != 'Marine' & is.na(ave_cruts), ':='(tempave = ave_ersst)] # fill missing non-marine with ERSST
 
 # temperature change
@@ -230,6 +235,6 @@ out[!duplicated(rarefyID) & is.na(tempchange), .N]
 
 # Write out 
 ```{r write}
-write.csv(out, file = gzfile('output/temperature_byrarefyID.csv.gz'), row.names = FALSE)
+write.csv(out, file = gzfile(here('output','temperature_byrarefyID.csv.gz')), row.names = FALSE)
 
 ```
