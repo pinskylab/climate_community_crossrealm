@@ -1,6 +1,7 @@
 # utility functions
 
 # require(Hmisc) # for wtd.var
+require(scales) # for trans_new
 
 # geometric mean. remove NAs and x<0
 geomean = function(x){ 

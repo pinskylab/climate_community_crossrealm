@@ -68,6 +68,7 @@ if(!exists('mod')) stop('No model loaded. Make sure argument matches one of the 
 newdat <- data.table(expand.grid(tempave = seq(-20, 30, length.out = 100), tempchange = seq(-1.5, 2, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial', 'Freshwater')))
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1
+newdat[, duration.sc := scaleme(duration, 'duration.sc')]
 newdat[, tempave.sc := scaleme(tempave, 'tempave.sc')]
 newdat[, tempchange_abs := abs(tempchange)]
 newdat[, tsign := signneg11(tempchange)]
@@ -85,14 +86,14 @@ saveRDS(newdat, file = here('temp', out_preds))
 
 ### Slope calculations -------------------
 # calculate slopes and SE of the slope using latent variables (since predictions have SE)
-slopemods <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Horn.sc\nHorn.sc ~~ ', mean(Horn.sc.se), '*Horn.sc'), data.frame(Horn.sc, duration)))), 
+slopemods <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration.sc\nfithat =~ 1*Horn.sc\nHorn.sc ~~ ', mean(Horn.sc.se), '*Horn.sc'), data.frame(Horn.sc, duration.sc)))), 
                          by = .(tempave, tempchange, REALM)]
 print('finished SEM')
 
 
 # extract slopes and SEs
 slopes <- slopemods[, parameterEstimates(mod[[1]]), 
-                           by = .(tempave, tempchange, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
+                           by = .(tempave, tempchange, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration.sc', 
                                                                .(tempave, tempchange, REALM, slope = est, slope.se = se)]
 
 ### Write slopes -------------
