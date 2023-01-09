@@ -86,14 +86,14 @@ saveRDS(newdat, file = here('temp', out_preds))
 
 ### Slope calculations -------------------
 # calculate slopes and SE of the slope using latent variables (since predictions have SE)
-slopemods <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration.sc\nfithat =~ 1*Horn.sc\nHorn.sc ~~ ', mean(Horn.sc.se), '*Horn.sc'), data.frame(Horn.sc, duration.sc)))), 
+slopemods <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Horn.sc\nHorn.sc ~~ ', mean(Horn.sc.se), '*Horn.sc'), data.frame(Horn.sc, duration)))), 
                          by = .(tempave, tempchange, REALM)]
 print('finished SEM')
 
 
 # extract slopes and SEs
 slopes <- slopemods[, parameterEstimates(mod[[1]]), 
-                           by = .(tempave, tempchange, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration.sc', 
+                           by = .(tempave, tempchange, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
                                                                .(tempave, tempchange, REALM, slope = est, slope.se = se)]
 
 ### Write slopes -------------

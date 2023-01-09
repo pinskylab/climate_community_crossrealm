@@ -49,6 +49,16 @@ newdat[, tempchange_abs.sc := scaleme(tempchange_abs, 'tempchange_abs.sc')]
 newdat[, microclim := unscaleme(microclim.sc, 'microclim.sc')]
 newdat[, human_bowler := unscaleme(human_bowler.sc, 'human_bowler.sc')]
 
+# constrain human covariate to >=0 and <=10, since that is the range over which it is defined
+if(newdat[, min(human_bowler)<0]){
+    newdat[abs(human_bowler.sc - -2)<0.001, human_bowler := 0]
+    newdat[, human_bowler.sc := scaleme(human_bowler, 'human_bowler.sc')]
+}
+if(newdat[, max(human_bowler)>10]){
+    newdat[abs(human_bowler.sc - 2)<0.01, human_bowler := 10]
+    newdat[, human_bowler.sc := scaleme(human_bowler, 'human_bowler.sc')]
+}
+
 # predict
 preds.microclim <- predict(modrawTsdTTRealmtsignmicroclimAllJtu, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')
 newdat$Jtu.sc.microclim <- preds.microclim$fit

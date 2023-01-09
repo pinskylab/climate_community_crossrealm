@@ -84,7 +84,7 @@ btcti[, thermal_biasmax := ctimax - tempave]
 
 
 # plot cti vs. temperature
-# not as clear as in Stuart-Smith et al. 2015 Nature
+# increases, but not as clear as in Stuart-Smith et al. 2015 Nature
 btcti[, plot(tempave, cti)]; abline(0,1, col = 'red')
 btcti[, plot(tempave, ctimax)]; abline(0,1, col = 'red')
 

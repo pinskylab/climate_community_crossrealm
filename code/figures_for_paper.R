@@ -368,8 +368,6 @@ ggsave('figures/fig2_nopredsTxT.png', fig2noTT, width = 6, height = 4, units = '
 slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariate.rds')) # from code/pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R with argument tsign
 slopes2 <- slopes2[tempave == 10, ]
 slopes2[, ':='(microclim = as.factor(signif(microclim,2)),
-               npp = as.factor(signif(npp,2)),
-               seas = as.factor(signif(seas,2)),
                human_bowler = as.factor(signif(human_bowler,2)))] # set as factors for plotting
 
 # max rates by realm and covariate
@@ -415,8 +413,7 @@ ggsave('figures/fig3.png', fig3, width = 4, height = 4, units = 'in')
 
 
 # only low values
-slopes2low <- slopes2[human_bowler == 0.055,] # to manually make a plot with only the low factor levels
-# slopes2 <- slopes2[human_bowler == 10,] # to manually make a plot with only the high factor levels. Also have to add , fill = '#00BFC4' to geom_ribbon and color= '#00BFC4' to geom_line
+slopes2low <- slopes2[human_bowler == 0,] # to manually make a plot with only the low factor levels
 
 p1low <- ggplot(slopes2low, aes(tempchange, slope_microclim, color = microclim, fill = microclim, group = microclim,
                                            ymin=slope_microclim-slope_microclim.se,  ymax=slope_microclim+slope_microclim.se)) +
@@ -615,6 +612,8 @@ for(i in 1:length(modnms)){ # a bit slow to load each model
 }
 
 out[,2:4] <- signif(out[,2:4], 3)
+out
+
 write.csv(out, here('figures', 'tableS6.csv'))
 
 

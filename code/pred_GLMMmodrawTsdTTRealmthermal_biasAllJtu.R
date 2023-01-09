@@ -37,6 +37,7 @@ print('models loaded')
 newdat <- data.table(expand.grid(tempave = seq(-20, 30, length.out = 100), tempchange = seq(-1.5, 2, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial'), thermal_bias.sc = c(-2, 2)))
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1
+newdat[, duration.sc := scaleme(duration, 'duration.sc')]
 newdat[, tempave.sc := scaleme(tempave, 'tempave.sc')]
 newdat[, tempchange_abs := abs(tempchange)]
 newdat[, tsign := signneg11(tempchange)]
