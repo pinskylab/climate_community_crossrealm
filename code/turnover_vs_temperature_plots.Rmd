@@ -12,12 +12,10 @@ library(gridExtra) # to combine ggplots together
 library(grid) # to combine ggplots together
 library(RColorBrewer)
 library(scales) # for defining custom scales in ggplot
+library(here)
+source(here('code','util.R'))
 
 options(width=500) # turn off most text wrapping
-
-signedsqrt = function(x) sign(x)*sqrt(abs(x))
-signedsq = function(x) sign(x) * x^2
-signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, inverse = signedsq)
 
 
 # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
@@ -361,63 +359,6 @@ grid.arrange(p1, p2, p3, ncol = 3)
 
 ```
 
-## By body size
-```{r diss vs. temperature trend vs. duration by body size, message = FALSE, warning = FALSE, fig.width=10, fig.height = 3}
-small <- trends[mass_mean_weight < 1, ]
-p1 <- ggplot(small[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
-  geom_smooth(aes(color = '<=0.05')) +
-  geom_smooth(data = small[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], aes(color = '0.05-0.1')) +
-  geom_smooth(data = small[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], aes(color = '0.1-0.5')) +
-  geom_smooth(data = small[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
-  scale_x_log10() + 
-  labs(y = 'Jaccard dissimilarity', color = '°C change', title = '<1 g')
-
-med <- trends[mass_mean_weight < 10000 & mass_mean_weight >= 1, ]
-p2 <- ggplot(med[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
-  geom_smooth(aes(color = '<=0.05')) +
-  geom_smooth(data = med[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], aes(color = '0.05-0.1')) +
-  geom_smooth(data = med[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], aes(color = '0.1-0.5')) +
-  geom_smooth(data = med[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
-  scale_x_log10() + 
-  labs(y = 'Jaccard dissimilarity', color = '°C change', title = '1g to 10kg')
-
-lg <- trends[mass_mean_weight >= 10000, ]
-p3 <- ggplot(lg[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
-  geom_smooth(aes(color = '<=0.05')) +
-  geom_smooth(data = lg[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], aes(color = '0.05-0.1')) +
-  geom_smooth(data = lg[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], aes(color = '0.1-0.5')) +
-  geom_smooth(data = lg[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
-  scale_x_log10() + 
-  labs(y = 'Jaccard dissimilarity', color = '°C change', title = '>10kg')
-
-grid.arrange(p1, p2, p3, ncol = 3)
-
-```
-
-
-## By endo/ectotherm
-```{r diss vs. temperature trend vs. duration by endofrac, message = FALSE, warning = FALSE, fig.width=7, fig.height = 3}
-ecto <- trends[endofrac <= 0.5, ]
-p1 <- ggplot(ecto[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
-  geom_smooth(aes(color = '<=0.05')) +
-  geom_smooth(data = ecto[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], aes(color = '0.05-0.1')) +
-  geom_smooth(data = ecto[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], aes(color = '0.1-0.5')) +
-  geom_smooth(data = ecto[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
-  scale_x_log10() + 
-  labs(y = 'Jaccard dissimilarity', color = '°C change', title = 'Mostly ectotherms')
-
-endo <- trends[endofrac > 0.5, ]
-p2 <- ggplot(endo[abs(tempchange) <= 0.05, ], aes(x=duration, y=Jtu)) +
-  geom_smooth(aes(color = '<=0.05')) +
-  geom_smooth(data = endo[abs(tempchange) <= 0.1 & abs(tempchange) > 0.05,], aes(color = '0.05-0.1')) +
-  geom_smooth(data = endo[abs(tempchange) <= 0.5 & abs(tempchange) > 0.1,], aes(color = '0.1-0.5')) +
-  geom_smooth(data = endo[abs(tempchange) >= 0.5,], method = 'lm', aes(color = '>=0.5')) +
-  scale_x_log10() + 
-  labs(y = 'Jaccard dissimilarity', color = '°C change', title = 'Mostly endotherms')
-
-grid.arrange(p1, p2, ncol = 2)
-
-```
 
 # Plot dissimilarity binned by duration vs tempchange
 ## Jaccard turnover dissimilarity
@@ -462,96 +403,6 @@ p3 <- ggplot(fre[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
 
 grid.arrange(p1, p2, p3, ncol = 3)
 
-```
-
-## By body size
-```{r diss vs. temperature trend by duration by body size, message = FALSE, warning = FALSE, fig.width=10, fig.height = 3}
-small <- trends[mass_mean_weight < 1, ]
-p1 <- ggplot(small[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
-  geom_smooth(aes(color = '1')) +
-  geom_smooth(data = small[duration==5,], aes(color = '5')) +
-  geom_smooth(data = small[duration==10,], aes(color = '10')) +
-  geom_smooth(data = small[duration==15,], aes(color = '15')) +
-  geom_smooth(data = small[duration>15,], aes(color = '>15')) +
-  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = '<1 g')
-
-med <- trends[mass_mean_weight < 10000 & mass_mean_weight >= 1, ]
-p2 <- ggplot(med[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
-  geom_smooth(aes(color = '1')) +
-  geom_smooth(data = med[duration==5,], aes(color = '5')) +
-  geom_smooth(data = med[duration==10,], aes(color = '10')) +
-  geom_smooth(data = med[duration==15,], aes(color = '15')) +
-  geom_smooth(data = med[duration>15,], aes(color = '>15')) +
-  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = '1g to 10kg')
-
-lg <- trends[mass_mean_weight >= 10000, ]
-p3 <- ggplot(lg[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
-  geom_smooth(aes(color = '1')) +
-  geom_smooth(data = lg[duration==5,], aes(color = '5')) +
-  geom_smooth(data = lg[duration==10,], aes(color = '10')) +
-  geom_smooth(data = lg[duration==15,], aes(color = '15')) +
-  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = '>10kg')
-
-grid.arrange(p1, p2, p3, ncol = 3)
-
-```
-
-
-## By endo/ectotherm
-```{r diss vs. temperature trend by duration by endofrac, message = FALSE, warning = FALSE, fig.width=7, fig.height = 3}
-ecto <- trends[endofrac <= 0.5, ]
-p1 <- ggplot(ecto[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
-  geom_smooth(aes(color = '1')) +
-  geom_smooth(data = ecto[duration==5,], aes(color = '5')) +
-  geom_smooth(data = ecto[duration==10,], aes(color = '10')) +
-  geom_smooth(data = ecto[duration==15,], aes(color = '15')) +
-  geom_smooth(data = ecto[duration>15,], aes(color = '>15')) +
-  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = 'Mostly ectotherms')
-
-endo <- trends[endofrac > 0.5, ]
-p2 <- ggplot(endo[duration==1, ], aes(x=abs(tempchange), y=Jtu)) +
-  geom_smooth(aes(color = '1')) +
-  geom_smooth(data = endo[duration==5,], aes(color = '5')) +
-  geom_smooth(data = endo[duration==10,], aes(color = '10')) +
-  geom_smooth(data = endo[duration==15,], aes(color = '15')) +
-  geom_smooth(data = ecto[duration>15,], aes(color = '>15')) +
-  labs(y = 'Jaccard dissimilarity', color = 'Duration', title = 'Mostly endotherms')
-
-grid.arrange(p1, p2, ncol = 2)
-
-```
-## By realm and body size
-```{r diss vs. tempchange by duration mass, message = FALSE, warning = FALSE, fig.width=7, fig.height = 7}
-trends[duration == 1, dur_bin := '[1] yr']
-trends[duration > 1 & duration <= 5, dur_bin := '(1-5] yr']
-trends[duration > 5 & duration <= 10, dur_bin := '(5-10] yr']
-trends[duration > 10 & duration <= 20, dur_bin := '(10-20] yr']
-trends[duration > 20, dur_bin := '>20 yr']
-trends[mass_mean_weight <= 1, mass_bin := '<=1 g']
-trends[mass_mean_weight > 1 & mass_mean_weight <= 10000, mass_bin := '(1 g-10 kg]']
-trends[mass_mean_weight > 10000, mass_bin := '>10 kg']
-ggplot(trends[!is.na(mass_bin), ], aes(x=abs(tempchange), y=Jtu, color = dur_bin, group = dur_bin)) +
-  geom_smooth() +
-  facet_grid(mass_bin~REALM, scales = 'free') +
-  labs(y = 'Jaccard dissimilarity', title = '')
-```
-
-## By realm, body size AND endo/ecto
-```{r diss vs. tempchange by duration mass endofrac, message = FALSE, warning = FALSE, fig.width=7, fig.height = 7}
-trends[duration == 1, dur_bin := '[1] yr']
-trends[duration > 1 & duration <= 5, dur_bin := '(1-5] yr']
-trends[duration > 5 & duration <= 10, dur_bin := '(5-10] yr']
-trends[duration > 10 & duration <= 20, dur_bin := '(10-20] yr']
-trends[duration > 20, dur_bin := '>20 yr']
-trends[mass_mean_weight <= 1, mass_bin := '<=1 g']
-trends[mass_mean_weight > 1 & mass_mean_weight <= 10000, mass_bin := '(1 g-10 kg]']
-trends[mass_mean_weight > 10000, mass_bin := '>10 kg']
-trends[endofrac > 0.5, endoTF := 'endo']
-trends[endofrac <= 0.5, endoTF := 'ecto']
-ggplot(trends[!is.na(mass_bin), ], aes(x=abs(tempchange), y=Jtu, color = dur_bin, group = dur_bin)) +
-  geom_smooth() +
-  facet_grid(mass_bin + endoTF~REALM, scales = 'free') +
-  labs(y = 'Jaccard dissimilarity', title = '')
 ```
 
 

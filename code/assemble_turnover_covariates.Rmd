@@ -45,9 +45,6 @@ temperature <- fread(here('output', 'temperature_byrarefyID.csv.gz')) # from ass
 # microclimates
 microclim <- fread(here('output', 'microclimates.csv.gz'), drop = 1) # from assemble_microclimates.R
 
-# CTI
-cti <- fread(here('output', 'cti_byrarefyID.csv.gz')) # from assemble_temperature_bias.R
-    
 # richness
 rich <- fread(here('output', 'richness_by_rarefyID.csv.gz')) # number of species. from extract_richness.R
 
@@ -62,7 +59,6 @@ human <- fread(here('output', 'humanimpact_by_rarefyID.csv.gz'))
 # add covariates
 bt <- merge(bt, temperature, all.x = TRUE, by = c('rarefyID', 'year1', 'year2')) # temperature ave, change
 bt <- merge(bt, microclim[, .(rarefyID, microclim = Temp_sd20km)], all.x = TRUE, by = 'rarefyID') # microclimates
-bt <- merge(bt, cti[, .(rarefyID, thermal_bias)], all.x = TRUE) # thermal bias (degC)
 bt <- merge(bt, rich, all.x = TRUE) # species richness
 bt <- merge(bt, human[, .(rarefyID, human_bowler = atc)], all.x = TRUE) # human impact
 ```
@@ -132,7 +128,6 @@ btall[, ':='(tempave.sc = scale(tempave),
            tempchange.sc = scale(tempchange, center = TRUE), 
            tempchange_abs.sc = scale(abs(tempchange), center = TRUE),
            nspp.sc = scale(log(Nspp)),
-           thermal_bias.sc = scale(thermal_bias),
            duration.sc = scale(duration),
            durationlog.sc = scale(log(duration)))]
 btall[, human_bowler.sc := scale(log(human_bowler+1)), by = REALM2] # separate scaling by realm
@@ -149,9 +144,9 @@ scalingall$scale <- vapply(scalingall$scale, paste, collapse = ", ", character(1
 
 ## save the transformations just entered above
 scalingall$log <- FALSE # whether variable was log-transformed before scaling
-scalingall$log[scalingall$var %in% c('microclim.sc', 'mass.sc', 'speed.sc', 'lifepsan.sc', 'nspp.sc', 'npp.sc', 'veg.sc', 'durationlog.sc', 'human_bowler.sc', 'human_footprint.sc')] <- TRUE
+scalingall$log[scalingall$var %in% c('microclim.sc', 'nspp.sc', 'durationlog.sc', 'human_bowler.sc')] <- TRUE
 scalingall$plus <- 0 # whether anything was added to the variable before logtransforming
-scalingall$plus[scalingall$var %in% c('speed.sc', 'veg.sc', 'human_bowler.sc')] <- 1
+scalingall$plus[scalingall$var %in% c('human_bowler.sc')] <- 1
 
 ```
 
@@ -171,7 +166,6 @@ write.csv(btall[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, tax
                    Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
                    tempave.sc, 
                    microclim.sc, tempchange, tsign, tempchange.sc, tempchange_abs.sc,
-                   nspp.sc, thermal_bias.sc,
                    duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
           gzfile(here('output', 'turnover_w_covariates.csv.gz')), row.names = FALSE)
 write.csv(scalingall, here('output','turnover_w_covariates_scaling.csv'), row.names = FALSE)
@@ -187,12 +181,12 @@ btaveall <- btall[, .(Jtuslope = lmNAcoef(Jtu, duration), Jbetaslope = lmNAcoef(
                     REALM = unique(REALM), REALM2 = unique(REALM2), rarefyID_y = mean(rarefyID_y),
                     tempchange = mean(tempchange), tempave = mean(tempave),
                     microclim = mean(microclim),
-                    Nspp = mean(Nspp), thermal_bias = mean(thermal_bias),
+                    Nspp = mean(Nspp), 
                     human_bowler = mean(human_bowler),
                     tempave.sc = mean(tempave.sc),
                     tempchange.sc = mean(tempchange.sc), tempchange_abs.sc = mean(tempchange_abs.sc),
                     microclim.sc = mean(microclim.sc),
-                    nspp.sc = mean(nspp.sc), thermal_bias.sc = mean(thermal_bias.sc),
+                    nspp.sc = mean(nspp.sc),
                     human_bowler.sc = mean(human_bowler.sc)),
                 by = rarefyID]
 ```
@@ -235,7 +229,6 @@ invisible(btaveall[, hist(tempave, main = 'Environmental temperature (°C)', cex
 invisible(btaveall[, hist(tempchange, main = 'Temperature trend (°C/yr)', cex.main = cexmain)]) # all the raw data
 invisible(btaveall[, hist(microclim, main = 'Microclimates (°C)', cex.main = cexmain)])
 invisible(btaveall[, hist(Nspp, main = 'Species richness', cex.main = cexmain)])
-invisible(btaveall[, hist(thermal_bias, main = 'Thermal bias (°C)', cex.main = cexmain)])
 invisible(btaveall[, hist(human_bowler, main = 'Human impact score (Bowler)', cex.main = cexmain)])
 ```
 
@@ -249,7 +242,6 @@ invisible(btaveall[, hist(microclim.sc, main = 'log Microclimates (°C)', cex.ma
 invisible(btaveall[, hist(tempchange.sc, main = 'Temperature trend (°C/yr)', cex.main = cexmain)])
 invisible(btaveall[, hist(tempchange_abs.sc, main = 'abs(Temperature trend) (°C/yr)', cex.main = cexmain)])
 invisible(btaveall[, hist(nspp.sc, main = 'log Species richness', cex.main = cexmain)])
-invisible(btaveall[, hist(thermal_bias.sc, main = 'Thermal bias (°C)', cex.main = cexmain)])
 invisible(btaveall[, hist(human_bowler.sc, main = 'log Human impact score (Bowler)', cex.main = cexmain)])
 ```
 
@@ -258,7 +250,7 @@ invisible(btaveall[, hist(human_bowler.sc, main = 'log Human impact score (Bowle
 # Check correlations among variables 
 Pearson's r is in the lower triangle
 ```{r pairs, fig.height=10, fig.width=10}
-pairs(formula = ~ tempave.sc + microclim.sc + tempchange.sc + tempchange_abs.sc + nspp.sc + thermal_bias.sc + human_bowler.sc, data = btaveall, gap = 1/10, cex = 0.2, col = '#00000022', lower.panel = panel.cor)
+pairs(formula = ~ tempave.sc + microclim.sc + tempchange.sc + tempchange_abs.sc + nspp.sc + human_bowler.sc, data = btaveall, gap = 1/10, cex = 0.2, col = '#00000022', lower.panel = panel.cor)
 
 ```
 
@@ -271,7 +263,6 @@ beanplot(tempave ~ REALM, data = btaveall, what = c(1,1,1,1), col = c("#CAB2D6",
 beanplot(microclim ~ REALM, data = btaveall, what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Microclimates (degC)', ll = 0.05)
 beanplot(tempchange ~ REALM, data = btaveall, what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature change (degC)', ll = 0.05)
 beanplot(Nspp ~ REALM, data = btaveall, what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Number of species', ll = 0.05, log = 'y')
-beanplot(thermal_bias ~ REALM, data = btaveall[!is.na(thermal_bias),], what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Thermal bias (degC)', ll = 0.05)
 
 ```
 
@@ -323,19 +314,13 @@ p11 <- ggplot(btaveall, aes(Nspp, Jtuslope)) +
   scale_x_log10() +
   labs(x = 'Number of species', y = 'Jaccard slope')
 
-p12 <- ggplot(btaveall, aes(thermal_bias, Jtuslope)) +
-  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Thermal bias (°C)', y = 'Jaccard slope')
-
 p15 <- ggplot(btaveall, aes(human_bowler, Jtuslope, color = REALM)) +
   geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
   geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
   scale_color_brewer(palette="Set1") + 
   labs(x = 'Bowler human impact score', y = 'Jaccard slope')
 
-grid.arrange(p1, p2, p5, p11, p12, p15, ncol = 2)
+grid.arrange(p1, p2, p5, p11, p15, ncol = 2)
 ```
 
 - Strong trends with temperature change, but trends are pretty symmetric around no trend in temperature, which implies warming or cooling drives similar degree of community turnover.

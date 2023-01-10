@@ -579,25 +579,9 @@ write.csv(aics, here('figures', 'tableS4.csv'))
 
 
 
-#### Table S5: thermal_bias AICs --------------
-# load models
-modrawTsdTTRealmtsignAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu_thermal_biasdata.rds')) # has tempave:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
-modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
-
-# compare thermal_bias against tsign model
-aics <- AIC(modrawTsdTTRealmtsignAllJtu_thermal_biasdata, modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata) 
-aics$dAIC <- aics$AIC - min(aics$AIC)
-aics
-
-write.csv(aics, here('figures', 'tableS5.csv'))
 
 
-
-
-
-
-
-#### Table S6: Dispersion estimates ----------------
+#### Table S5: Dispersion estimates ----------------
 modnms <- c('modAllJtu.rds', 'modRealmAllJtu.rds', 
           'modTaxamod2AllJtu.rds', 'modsdTtsignAllJtu.rds', 
           'modsdTRealmtsignAllJtu.rds', 'modrawTsdTTRealmtsignAllJtu.rds', 
@@ -614,7 +598,7 @@ for(i in 1:length(modnms)){ # a bit slow to load each model
 out[,2:4] <- signif(out[,2:4], 3)
 out
 
-write.csv(out, here('figures', 'tableS6.csv'))
+write.csv(out, here('figures', 'tableS5.csv'))
 
 
 
@@ -927,25 +911,3 @@ p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 figS5 <- arrangeGrob(p1, p2, nrow = 2, heights = c(1,2))
 
 ggsave('figures/figS5.png', figS5, width = 6, height = 4, units = 'in')
-
-
-
-### Figure S6: thermal bias ---------
-slopesTB <- readRDS(here('temp', 'slopes_rawTsdTTRealmthermal_bias.rds')) # from pred_GLMMmodrawTsdTTRealmthermal_biasAllJtu.R
-slopesTB[, ':='(thermal_bias = as.factor(signif(thermal_bias,2)))] # set as factors for plotting
-
-p1 <- ggplot(slopesTB[tempave == 30, ], aes(tempchange, slope_thermal_biassdT, color = thermal_bias, fill = thermal_bias, group = thermal_bias,
-                                            ymin=slope_thermal_biassdT-slope_thermal_biassdT.se,  ymax=slope_thermal_biassdT+slope_thermal_biassdT.se)) +
-    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
-    geom_line() +
-    facet_grid(cols = vars(REALM)) +
-    labs(x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Thermal bias') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
-
-
-ggsave('figures/figS6.png', p1, width = 6, height = 3, units = 'in')

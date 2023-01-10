@@ -39,10 +39,8 @@ The code is organized in five main steps:
 ## 2. Prep data
 - assemble_microclimates.R: extract microclimate variability for each time series
 - assemble_temp.Rmd: calculate temperature averages and trends
-- assemble_temperature_bias.R: calculate thermal bias for each time series
 - extract_human_impacts.R: extract human impact values for each time series
 - extract_richness.R: extract species richness data for each time series
-- match_names_with_gbif.R: prep taxonomy input files for assemble_temperature_bias.R
 - assemble_turnover_covariates.Rmd: put dissimilarity data together with covariates
 - calc_turnover.R: calculate temporal turnover as the slope of dissimilarity vs. year
 - sample_global_temp.Rmd: make a representative sample of global temperature trends
@@ -53,7 +51,6 @@ The code is organized in five main steps:
 - turnover_vs_temperature_GLMM_fit_modabsLatsdTabsLatRealmtsignAllJtu.R
 - turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmhumanAllJtu.R
 - turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmmicroclimAllJtu.R
-- turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
 - turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllHorn.R
 - turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 - util.R: some utility functions used in multiple scripts
@@ -61,7 +58,6 @@ The code is organized in five main steps:
 ## 4. Make predictions from the models
 - pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R
 - pred_GLMMmodrawTsdTTRealmmicroclimhumanAllJtu.R
-- pred_GLMMmodrawTsdTTRealmthermal_biasAllJtu.R
 - pred_GLMMmodrawXAllHorn.R
 - pred_GLMMmodrawXAllJtu.R
 - pred_modrawXAllHorn.sh

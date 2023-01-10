@@ -1,3 +1,13 @@
-"","df","AIC","dAIC"
-"modrawTsdTTRealmtsignAllJtu_thermal_biasdata",31,-7013144.91062029,113.768754871562
-"modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata",43,-7013258.67937517,0
+"","modnms","freshwater","marine","terrestrial"
+"1","modAllJtu",-0.795,0.155,2.64
+"2","modRealmAllJtu",-0.795,0.155,2.64
+"3","modTaxamod2AllJtu",-0.795,0.155,2.64
+"4","modsdTtsignAllJtu",-0.795,0.155,2.64
+"5","modsdTRealmtsignAllJtu",-0.794,0.154,2.64
+"6","modrawTsdTTRealmtsignAllJtu",-0.794,0.154,2.64
+"7","modAllHorn",0.185,0.113,2.15
+"8","modRealmAllHorn",0.185,0.113,2.15
+"9","modTaxamod2AllHorn",0.185,0.113,2.15
+"10","modsdTtsignAllHorn",0.185,0.113,2.15
+"11","modsdTRealmtsignAllHorn",0.185,0.112,2.15
+"12","modrawTsdTTRealmtsignAllHorn",0.185,0.113,2.15
