@@ -29,8 +29,7 @@ scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From 
 
 # The models
 modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. From turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
-modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata.rds')) # also adds thermal bias:tempave. From turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
-print('models loaded')
+print('model loaded')
 
 ### Make predictions -------------------
 # set up prediction frame
@@ -50,12 +49,6 @@ newdat$Jtu.sc.thermal_biassdT <- preds.thermal_biassdT$fit
 newdat$Jtu.sc.thermal_biassdT.se <- preds.thermal_biassdT$se.fit
 print('finished thermal_biassdT predictions')
 
-preds.thermal_bias <- predict(modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdat$Jtu.sc.thermal_bias <- preds.thermal_bias$fit
-newdat$Jtu.sc.thermal_bias.se <- preds.thermal_bias$se.fit
-print('finished thermal_bias predictions')
-
-
 ### Write dissimilarities ------------------
 saveRDS(newdat, file = here('temp', 'preds_rawTsdTTRealmthermal_bias.rds'))
 
@@ -66,21 +59,11 @@ mods.thermal_biassdT <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\n
                                by = .(tempave, tempchange, thermal_bias, REALM)]
 print('finished thermal_biassdT SEM')
 
-mods.thermal_bias <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc.thermal_bias\nJtu.sc.thermal_bias ~~ ', mean(Jtu.sc.thermal_bias.se), '*Jtu.sc.thermal_bias'), data.frame(Jtu.sc.thermal_bias, duration)))), 
-                            by = .(tempave, tempchange, thermal_bias, REALM)]
-print('finished thermal_bias SEM')
-
 
 # extract slopes and SEs
-slopes.thermal_biassdT <- mods.thermal_biassdT[, parameterEstimates(mod[[1]]), 
+slopes2 <- mods.thermal_biassdT[, parameterEstimates(mod[[1]]), 
                            by = .(tempave, tempchange, thermal_bias, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
                                                                .(tempave, tempchange, thermal_bias, REALM, slope_thermal_biassdT = est, slope_thermal_biassdT.se = se)]
-slopes.thermal_bias <- mods.thermal_bias[, parameterEstimates(mod[[1]]), 
-                           by = .(tempave, tempchange, thermal_bias, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
-                                                               .(tempave, tempchange, thermal_bias, REALM, slope_thermal_bias = est, slope_thermal_bias.se = se)]
-
-slopes2 <- merge(slopes.thermal_biassdT, slopes.thermal_bias)
-
 
 ### Write slopes -------------
 saveRDS(slopes2, file = here('temp', 'slopes_rawTsdTTRealmthermal_bias.rds'))

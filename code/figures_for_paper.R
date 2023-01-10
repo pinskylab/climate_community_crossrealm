@@ -581,7 +581,7 @@ write.csv(aics, here('figures', 'tableS4.csv'))
 
 #### Table S5: thermal_bias AICs --------------
 # load models
-modrawTsdTTRealmtsignAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
+modrawTsdTTRealmtsignAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu_thermal_biasdata.rds')) # has tempave:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
 modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata.rds')) # has thermal bias:tempchange_abs:tsign. Fit by turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmthermal_biasAllJtu.R
 
 # compare thermal_bias against tsign model

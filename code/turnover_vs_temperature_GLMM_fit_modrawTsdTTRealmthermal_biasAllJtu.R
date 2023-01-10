@@ -55,25 +55,8 @@ iallJtu <-
 
 # thermal_bias:tsign:T:sdT:REALM:duration #########################
 
-# baseline
-if (fitmod == 'modrawTsdTTRealmAllJtu_thermal_biasdata') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration.sc +
-            REALM:duration.sc +
-            REALM:tempchange_abs.sc:duration.sc +
-            REALM:tempave.sc:duration.sc +
-            REALM:tempave.sc:tempchange_abs.sc:duration.sc +
-            (duration.sc | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM)
-    MATCHMOD <- TRUE
-}
 
-# with tsign
+# baseline
 if (fitmod == 'modrawTsdTTRealmtsignAllJtu_thermal_biasdata') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
