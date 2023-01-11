@@ -58,10 +58,8 @@ The code is organized in five main steps:
 ## 4. Make predictions from the models
 - pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R
 - pred_GLMMmodrawTsdTTRealmmicroclimhumanAllJtu.R
-- pred_GLMMmodrawXAllHorn.R
 - pred_GLMMmodrawXAllJtu.R
-- pred_modrawXAllHorn.sh
-- pred_modrawXAllJtu.sh
+- pred_modrawXAllJtu.sh: Shell script to spawn multiple instances of pred_GLMMmodrawXAllJtu.R
 
 ## 5. Make outputs for communication
 - figures_for_paper.R: figures and tables and stats for paper
