@@ -77,8 +77,8 @@ trendsall[!duplicated(rarefyID), table(taxa_mod, REALM)]
 Use Bowler for human impact
 ```{r sample size Jtu covariates}
 # the cases we can compare
-apply(trendsall[, .(Jtu.sc, REALM, tempave_metab.sc, seas.sc, microclim.sc, tempchange.sc, mass.sc, speed.sc, consumerfrac.sc, endothermfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
-i <- trendsall[, complete.cases(Jtu.sc, tempave_metab.sc, seas.sc, microclim.sc, tempchange.sc, mass.sc, speed.sc, consumerfrac.sc, nspp.sc, thermal_bias.sc, npp.sc, veg.sc, human_bowler.sc)]
+apply(trendsall[, .(Jtu.sc, REALM, tempave_metab.sc, microclim.sc, tempchange.sc, nspp.sc, human_bowler.sc)], MARGIN = 2, FUN = function(x) sum(!is.na(x)))
+i <- trendsall[, complete.cases(Jtu.sc, tempave_metab.sc, microclim.sc, tempchange.sc, nspp.sc, human_bowler.sc)]
 cat('Overall # dissimilarities: ', sum(i), '\n')
 cat('# studies: ', trendsall[i, length(unique(STUDY_ID))], '\n')
 cat('# timeseries: ', trendsall[i, length(unique(rarefyID))], '\n')
@@ -150,16 +150,14 @@ lme4:::dotplot.ranef.mer(ranef(mods10[[which(names(mods10)=='modRFslopeRE2levdis
 ```{r, echo=FALSE, eval=FALSE}
 ## run the top part by hand if needed. takes ~3 hrs
 if(FALSE) {
-  i10 <- trends10[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, 
-                                   endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+  i10 <- trends10[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, microclim.sc, human_bowler.sc, nspp.sc)]
 
   res_RFslopeRE2levdisprealm10 <- simulateResiduals(mods10[[which(names(mods10)=='modRFslopeRE2levdisprealm10')]], n = 250)
   
   saveRDS(res_RFslopeRE2levdisprealm10, file = 'temp/res_RFslopeRE2levdisprealm10.rds')
 } else {
   if(file.exists('temp/res_RFslopeRE2levdisprealm10.rds')) res_RFslopeRE2levdisprealm10 <- readRDS('temp/res_res_RFslopeRE2levdisprealm10.rds')
-  i10 <- trends10[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, mass.sc, 
-                                   endothermfrac.sc, microclim.sc, npp.sc, human_bowler.sc, nspp.sc)]
+  i10 <- trends10[, complete.cases(Jtu.sc, tempchange_abs.sc, REALM, tempave_metab.sc, duration.sc, microclim.sc, human_bowler.sc, nspp.sc)]
 }
 ```
 
@@ -172,10 +170,7 @@ if(exists('res_RFslopeRE2levdisprealm10')){
   plotResiduals(res_RFslopeRE2levdisprealm10, form=trends10$REALM[i10], xlab = 'REALM', main = '')
   plotResiduals(res_RFslopeRE2levdisprealm10, trends10$tempave_metab.sc[i10], xlab = 'tempave_metab.sc', main = '')
   plotResiduals(res_RFslopeRE2levdisprealm10, trends10$duration.sc[i10], xlab = 'duration.sc', main = '')
-  plotResiduals(res_RFslopeRE2levdisprealm10, trends10$mass.sc[i10], xlab = 'mass.sc', main = '')
-  plotResiduals(res_RFslopeRE2levdisprealm10, trends10$endothermfrac.sc[i10], xlab = 'endothermfrac.sc', main = '')
   plotResiduals(res_RFslopeRE2levdisprealm10, trends10$microclim.sc[i10], xlab = 'microclim.sc', main = '')
-  plotResiduals(res_RFslopeRE2levdisprealm10, trends10$npp.sc[i10], xlab = 'npp.sc', main = '')
   plotResiduals(res_RFslopeRE2levdisprealm10, form=trends10$human_bowler.sc[i10], xlab = 'human_bowler.sc', main = '')
 }
 ```
@@ -376,134 +371,6 @@ ggplot(slopesTsdTTRealmtsignJtu[tempave %in% vals,],
 ```
 
 
-### Plots for Horn
-#### Make/load predictions
-Uses output from scripts.
-```{r, echo = FALSE}
-# using tsign:tempchange_abs:realm
-if(file.exists(here('temp', 'slopes_modsdTRealmtsignAllHorn.rds'))){
-  slopessdTRealmtsignAllHorn <- readRDS(here('temp', 'slopes_modsdTRealmtsignAllHorn.rds'))
-  print('Loaded sdTRealmtsignAllHorn predictions from file')
-} else {
-  print('No modsdTRealmtsignAllHorn effects. Need to run code/pred_modrawXAllHorn.sh modsdTRealmtsignAllHorn')
-}
-
-# using tsign:tempchange_abs * tempave * realm
-if(file.exists(here('temp', 'slopes_rawTsdTTRealmtsignHorn.rds'))){
-  slopesTsdTTRealmtsignHorn <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignHorn.rds'))
-  print('Loaded TsdTTRealmtsignHorn predictions from file')
-} else {
-  print('No TsdTTRealmtsignHorn effects. Need to run pred_GLMMmodrawXAllHorn.R')
-}
-
-```
-#### tsign:tempchange_abs:realm plots
-##### Confidence bounds
-CIs are from a SEM fit to the trends.
-```{r, echo = FALSE}
-vals <- slopessdTRealmtsignAllHorn[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
-ggplot(slopessdTRealmtsignAllHorn[tempave %in% vals,], 
-       aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
-    geom_line() +
-    geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
-    facet_grid(cols = vars(REALM))  +
-    labs(x = 'dT [degC/yr]') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
-
-```
-
-
-
-
-#### tsign:tempchange_abs*tempave:realm effects
-```{r}
-fixef(modTsdTTRealmtsignAllHorn)
-
-```
-
-##### Interaction
-modrawTsdTTRealmtsignAllHorn model
-```{r, echo = FALSE}
-# plot
-p1 <- ggplot(slopesTsdTTRealmtsignHorn[REALM=='Marine'], aes(tempchange, tempave, z = slope)) +
-  geom_raster(aes(fill = slope)) +
-  labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Marine') +
-  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Horn slope') +
-  theme(axis.text = element_text(size = 12), 
-        axis.title = element_text(size = 14),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        legend.position = "top",
-        legend.margin = margin(c(0, 0.1, -20, 0)),
-        legend.justification = c(0.92, 0.9),
-        legend.text=element_text(size= 12),
-        legend.title=element_text(size= 18),
-        legend.title.align = 1)
-p2 <- ggplot(slopesTsdTTRealmtsignHorn[REALM=='Terrestrial'], aes(tempchange, tempave, z = slope)) +
-  geom_raster(aes(fill = slope)) +
-  labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Terrestrial') +
-  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Horn slope') +
-  theme(axis.text = element_text(size = 12), 
-        axis.title = element_text(size = 14),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        legend.position = "top",
-        legend.margin = margin(c(0, 0.1, -20, 0)),
-        legend.justification = c(0.92, 0.9),
-        legend.text=element_text(size= 12),
-        legend.title=element_text(size= 18),
-        legend.title.align = 1)
-p3 <- ggplot(slopesTsdTTRealmtsignHorn[REALM=='Freshwater'], aes(tempchange, tempave, z = slope)) +
-  geom_raster(aes(fill = slope)) +
-  labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Freshwater') +
-  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Horn slope') +
-  theme(axis.text = element_text(size = 12), 
-        axis.title = element_text(size = 14),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        legend.position = "top",
-        legend.margin = margin(c(0, 0.1, -20, 0)),
-        legend.justification = c(0.92, 0.9),
-        legend.text=element_text(size= 12),
-        legend.title=element_text(size= 18),
-        legend.title.align = 1)
-
-p1
-p2
-p3
-```
-
-##### Confidence bounds
-CIs are from a SEM fit to the trends.
-```{r, echo=FALSE}
-vals <- slopesTsdTTRealmtsignHorn[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC
-ggplot(slopesTsdTTRealmtsignHorn[tempave %in% vals,], 
-       aes(tempchange, slope, color = factor(round(tempave)), group = tempave)) +
-    geom_line() +
-    geom_pointrange(aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se), alpha = 0.25) + 
-    facet_grid(cols = vars(REALM))  +
-    labs(x = 'dT [degC/yr]') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8))  
-
-```
-
-
-#### Are endotherms common at high tempave on land?
-tempG20 means temperature > 20degC. Endotherms are common at all environmental temperatures on land, not just high temperatures.
-```{r, echo = FALSE}
-trendsall[!is.na(tempave.sc) & !duplicated(rarefyID), .(mean = round(mean(unscaleme(endothermfrac.sc, 'endothermfrac.sc')),2), sd = signif(sd(unscaleme(endothermfrac.sc, 'endothermfrac.sc')),2)), by = .(REALM, tempG20 = unscaleme(tempave.sc, 'tempave.sc') > 20 )][order(REALM, tempG20),]
-```
-
 #### Which species are common in each quadrant?
 FALSE is less than 20degC, TRUE is greater than.
 ```{r}
@@ -539,19 +406,15 @@ modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu
 # covariate models with tsign
 modrawTsdTTRealmtsignhumanAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignhumanAllJtu.rds')) # human
 modrawTsdTTRealmtsignmicroclimAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignmicroclimAllJtu.rds')) # microclim
-modrawTsdTTRealmtsignnppAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignnppAllJtu.rds')) # npp
-modrawTsdTTRealmtsignseasAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignseasAllJtu.rds')) # seas
 
 # double covariate model with tsign
-modrawTsdTTRealmtsignmicroclimhumanAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignmicroclimhumanAllJtu.rds')) # seas
+modrawTsdTTRealmtsignmicroclimhumanAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignmicroclimhumanAllJtu.rds')) 
 
 ```
 
 ### AIC
 ```{r, rows.print=15}
 aics <- AIC(modRealmAllJtu, modrawTsdTTRealmtsignAllJtu,
-            #modrawTsdTTRealmtsignnppAllJtu, 
-            #modrawTsdTTRealmtsignseasAllJtu,
             modrawTsdTTRealmtsignmicroclimAllJtu, modrawTsdTTRealmtsignhumanAllJtu,
             modrawTsdTTRealmtsignmicroclimhumanAllJtu)
 aics$dAIC <- aics$AIC - min(aics$AIC)
@@ -596,14 +459,6 @@ p1 <- ggplot(slopes_rawTsdTTRealmtsignCovariate, aes(tempchange, slope_microclim
     geom_pointrange(aes(ymin=slope_microclim-1.96*slope_microclim.se, 
                         ymax=slope_microclim+1.96*slope_microclim.se), alpha = 0.25) + 
     facet_grid(cols = vars(REALM), rows = vars(tempave), labeller = label_both)
-p2 <- ggplot(slopes_rawTsdTTRealmtsignCovariate, aes(tempchange, slope_npp, color = npp, group = npp)) +
-    geom_line() +
-    geom_pointrange(aes(ymin=slope_npp-1.96*slope_npp.se, ymax=slope_npp+1.96*slope_npp.se), alpha = 0.25) + 
-    facet_grid(cols = vars(REALM), rows = vars(tempave), labeller = label_both)
-p3 <- ggplot(slopes_rawTsdTTRealmtsignCovariate, aes(tempchange, slope_seas, color = seas, group = seas)) +
-    geom_line() +
-    geom_pointrange(aes(ymin=slope_seas-1.96*slope_seas.se, ymax=slope_seas+1.96*slope_seas.se), alpha = 0.25) + 
-    facet_grid(cols = vars(REALM), rows = vars(tempave))
 p4 <- ggplot(slopes_rawTsdTTRealmtsignCovariate, aes(tempchange, slope_human, 
                                                      color = human_bowler, group = human_bowler)) +
     geom_line() +
@@ -611,8 +466,6 @@ p4 <- ggplot(slopes_rawTsdTTRealmtsignCovariate, aes(tempchange, slope_human,
     facet_grid(cols = vars(REALM), rows = vars(tempave), labeller = label_both)
 
 p1
-p2
-p3
 p4
 ```
 
@@ -626,28 +479,6 @@ However,
 # plot
 p1 <- ggplot(slopes_rawTsdTTRealmtsignCovariate[microclim == min(microclim), ], aes(tempchange, tempave, z = slope_microclim)) +
   geom_raster(aes(fill = slope_microclim)) +
-  labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Marine') +
-  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
-  theme(axis.text = element_text(size = 12), 
-        axis.title = element_text(size = 14),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        legend.position = "top",
-        legend.margin = margin(c(0, 0.1, -10, 0)),
-        legend.justification = c(0.92, 0.9),
-        legend.text=element_text(size= 8),
-        legend.title=element_text(size= 12),
-        legend.title.align = 1) +
-  facet_grid(cols = vars(REALM))
-p1
-```
-##### seasonality model
-Predictions were only made for a few tempaves, so the plot shows only strips.  
-However, matches well to model w/out seasonality
-```{r, echo = FALSE}
-# plot
-p1 <- ggplot(slopes_rawTsdTTRealmtsignCovariate[seas == max(seas), ], aes(tempchange, tempave, z = slope_seas)) +
-  geom_raster(aes(fill = slope_seas)) +
   labs(x = 'Temperature change (degC per year)', y = 'Temperature (degC)', title = 'Marine') +
   scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Jtu slope') +
   theme(axis.text = element_text(size = 12), 
@@ -702,88 +533,6 @@ p1
 p2
 ```
 
-
-## Thermal bias test
-Does the thermal bias of a community explain the propensity to change when temperature changes? 
-
-### With metabolic temperature
-Model with thermal bias is selected
-```{r, echo = FALSE}
-modTsdTTRealmAllJtu_thermal_biasdata <- readRDS(here('temp','modTsdTTRealmAllJtu_thermal_biasdata_test.rds')) # no thermal bias, but using the thermal bias dataset
-modTsdTTRealmtsignAllJtu_thermal_biasdata <- readRDS(here('temp', 'modTsdTTRealmtsignAllJtu_thermal_biasdata_test.rds')) # adding only tsign
-modTsdTTRealmthermal_biasAllJtu_thermal_biasdata <- readRDS(here('temp','modTsdTTRealmthermal_biasAllJtu_thermal_biasdata_test.rds')) # adds thermal bias:tempave_metab:tempchange_abs
-
-aics <- AIC(modTsdTTRealmAllJtu_thermal_biasdata, modTsdTTRealmtsignAllJtu_thermal_biasdata, modTsdTTRealmthermal_biasAllJtu_thermal_biasdata)
-aics$dAIC <- aics$AIC - min(aics$AIC)
-aics
-```
-
-### With environmental temperature (rawT)
-Model with only tsign is selected
-```{r, echo = FALSE}
-modrawTsdTTRealmAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmAllJtu_thermal_biasdata.rds')) # no thermal bias, but using the thermal bias dataset
-modrawTsdTTRealmtsignAllJtu_thermal_biasdata <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu_thermal_biasdata.rds')) # adding only tsign
-modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata.rds')) # adds thermal bias:tempchange_abs:tsign
-modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata <- readRDS(here('temp','modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata.rds')) # adds thermal bias:tempave
-
-aics <- AIC(modrawTsdTTRealmAllJtu_thermal_biasdata, modrawTsdTTRealmtsignAllJtu_thermal_biasdata, modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata,  modrawTsdTTRealmthermal_biasAllJtu_thermal_biasdata)
-aics$dAIC <- aics$AIC - min(aics$AIC)
-aics
-```
-
-#### Thermal bias coefs
-Model that doesn't have a thermal_bias:tempave interaction.
-```{r, echo = FALSE}
-fixef(modrawTsdTTRealmthermal_biassdTAllJtu_thermal_biasdata)
-```
-
-#### Make or load thermal bias effect
-```{r, echo = FALSE}
-if(file.exists(here('temp', 'slopes_rawTsdTTRealmthermal_bias.rds'))){
-  slopesTB <- readRDS(here('temp', 'slopes_rawTsdTTRealmthermal_bias.rds'))
-  print('Loaded thermal bias predictions from file')
-} else {
-  print('Need to run pred_GLMMmodrawTsdTTRealmthermal_biasAllJtu.R')
-}
-```
-
-
-
-#### Plot thermal bias T:dT interaction
-Thermal bias is the Community Temperature Index minus the environmental temperature. Positive means that the species are adapted to warmer conditions than they are experiencing (and presumably are more tolerant of warming but less tolerant of cooling).  
-Plot the simpler model (only has thermal_bias:tempchange_abs:tsign and not also thermal_bias:tempave).  
-```{r, echo = FALSE, fig.height=8}
-# plot
-p1 <- ggplot(slopesTB, aes(tempchange, tempave, z = slope_thermal_biassdT)) +
-  geom_raster(aes(fill = slope_thermal_biassdT)) +
-  labs(x = 'Temperature change (degC per year)', y = 'Environmental temperature (degC)', title = 'Negative (left) or positive (right) thermal bias') +
-  scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0) +
-  facet_grid(row = vars(REALM), col = vars(thermal_bias)) +
-  theme(axis.text = element_text(size = 12), 
-        axis.title = element_text(size = 14),
-        panel.background = element_blank(),
-        axis.line = element_line(colour = "black"),
-        legend.position = "top",
-        legend.margin = margin(c(0, 0.1, -20, 0)),
-        legend.justification = c(0.92, 0.9),
-        legend.text=element_text(size= 12),
-        legend.title=element_text(size= 18),
-        legend.title.align = 1)
-
-p1
-```
-
-#### Plot interaction as lines
-```{r echo=FALSE}
-# plot
-p1 <- ggplot(slopesTB[tempave %in% c(-20, 30)], aes(tempchange, slope_thermal_biassdT, color = as.factor(thermal_bias), group = as.factor(thermal_bias))) +
-    geom_line() +
-    geom_pointrange(aes(ymin=slope_thermal_biassdT-1.96*slope_thermal_biassdT.se,
-                        ymax=slope_thermal_biassdT+1.96*slope_thermal_biassdT.se), alpha = 0.25) + 
-    facet_grid(cols = vars(REALM), rows = vars(tempave), labeller = label_both)
-
-p1
-```
 
 
 
