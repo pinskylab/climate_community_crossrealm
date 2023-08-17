@@ -109,7 +109,7 @@ trends_by_study[, median(Jtu)]
 # a) map
 world <- map_data('world')
 p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
-    geom_polygon(fill = 'lightgray', color = 'white', size = 0.1) +
+    geom_polygon(fill = 'lightgray', color = 'white', linewidth = 0.1) +
     geom_point(data = bt, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.3, alpha = 0.4, shape = 16)  +
     scale_color_brewer(palette="Dark2", name = 'Realm') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -127,7 +127,7 @@ p2 <- ggplot(temptrends[REALM == 'Terrestrial & Freshwater'], aes(x = tempchange
     scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans, 
                        breaks = c(-2, -1, -0.5, 0, 0.5, 1, 2)) +
     scale_fill_brewer(palette="Set2", name = 'Realm') +
-    labs(tag = 'B)', x = 'Temperature trend [°C/yr]', title = 'Terrestrial & Freshwater') +
+    labs(tag = 'B)', x = 'Temperature change [°C/yr]', title = 'Terrestrial & Freshwater') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -143,7 +143,7 @@ p3 <- ggplot(temptrends[REALM == 'Marine'], aes(x = tempchange, fill = type)) +
     scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans, 
                        breaks = c(-2, -1, -0.5, 0, 0.5, 1, 2)) +
     scale_fill_brewer(palette="Set2", name = 'Realm') +
-    labs(tag = 'C)', x = 'Temperature trend [°C/yr]', title = 'Marine') +
+    labs(tag = 'C)', x = 'Temperature change [°C/yr]', title = 'Marine') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -261,7 +261,7 @@ p2 <- ggplot() +
     scale_color_brewer(palette = 'Dark2') +
     scale_fill_brewer(palette = 'Dark2') +
     facet_grid(cols = vars(REALM), scales = 'free')  +
-    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
          fill = 'Average temperature [°C]', 
          color = 'Average temperature [°C]',
          size = 'Duration [years]') +
@@ -295,7 +295,7 @@ p2noT <- ggplot() +
     scale_color_brewer(palette = 'Set2') +
     scale_fill_brewer(palette = 'Set2') +
     facet_grid(cols = vars(REALM), scales = 'free')  +
-    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
          fill = 'Average temperature [°C]', 
          color = 'Average temperature [°C]',
          size = 'Duration [years]') +
@@ -325,7 +325,7 @@ p2noTT <- ggplot() +
                     ymin=slope - slope.se, 
                     ymax=slope + slope.se)) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
-    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
          fill = 'Average temperature [°C]', 
          color = 'Average temperature [°C]',
          size = 'Duration [years]') +
@@ -362,7 +362,7 @@ p1 <- ggplot(slopes2, aes(tempchange, slope_microclim, color = microclim, fill =
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'A)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Microclimate') +
+    labs(tag = 'A)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Microclimate') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -378,7 +378,7 @@ p2 <- ggplot(slopes2, aes(tempchange, slope_human, color = human_bowler, fill = 
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Human       ') +
+    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Human       ') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -402,7 +402,7 @@ p1low <- ggplot(slopes2low, aes(tempchange, slope_microclim, color = microclim, 
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'A)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Microclimate') +
+    labs(tag = 'A)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Microclimate') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -419,7 +419,7 @@ p2low <- ggplot(slopes2low, aes(tempchange, slope_human, color = human_bowler, f
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Human       ') +
+    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Human       ') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -443,7 +443,7 @@ p1high <- ggplot(slopes2high, aes(tempchange, slope_microclim, color = microclim
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'A)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Microclimate') +
+    labs(tag = 'A)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Microclimate') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -460,7 +460,7 @@ p2high <- ggplot(slopes2high, aes(tempchange, slope_human, color = human_bowler,
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'B)', x = 'Temperature trend [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Human       ') +
+    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Human       ') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -491,12 +491,12 @@ out$term <- gsub('Terrestrial|Marine|Freshwater|1|-1', '', rownames(out))
 out$term <- gsub('duration', 'Years', out$term)
 out$term <- gsub('REALM', 'Realm', out$term)
 out$term <- gsub('tsign', 'sign', out$term)
-out$term <- gsub('tempchange_abs.sc', 'Ttrend', out$term)
+out$term <- gsub('tempchange_abs.sc', 'Tchange', out$term)
 out$term <- gsub('tempave.sc', 'Tave', out$term)
 out$term[out$term == 'Years:Realm'] <- 'Realm ✕ Years'
-out$term[out$term == 'Years:Realm:sign:Ttrend'] <- 'sign ✕ |Ttrend| ✕ Realm ✕ Years'
+out$term[out$term == 'Years:Realm:sign:Ttrend'] <- 'sign ✕ |Tchange| ✕ Realm ✕ Years'
 out$term[out$term == 'Years:Realm:sign:Tave'] <- 'sign ✕ Tave ✕ Realm ✕ Years'
-out$term[out$term == 'Years:Realm:sign:Ttrend:Tave'] <- 'sign ✕ |Ttrend| ✕ Tave ✕ Realm ✕ Years'
+out$term[out$term == 'Years:Realm:sign:Ttrend:Tave'] <- 'sign ✕ |Tchange| ✕ Tave ✕ Realm ✕ Years'
 
 # get realm
 out$realm <- rownames(out)
@@ -632,6 +632,7 @@ trends[, duration := year2 - year1]
 trends <- trends[measure == 'Jtu' & duration>2, ] # trim to Jaccard turnover
 
 # load temperature slopes
+scalingall <- fread('output/turnover_w_covariates_scaling.csv') # covariate scaling data. From assemble_turnover_covariates.Rmd
 tempchange <- fread('output/turnover_w_covariates.csv.gz') # covariate data. From assemble_turnover_covariates.Rmd
 tempchange <- tempchange[, .(tempchange.sc = mean(tempchange.sc, na.rm=TRUE), duration = max(duration)), by = rarefyID] # summarize by rarefyID
 tempchange[, tempchange := tempchange.sc * scalingall[var == 'tempchange.sc', scale] + scalingall[var == 'tempchange.sc', center]]
@@ -695,7 +696,7 @@ mtext('B)', side = 3, line = -0.5, adj = -0.28)
 
 
 # part c: tempchange by duration
-tempchange[, plot(duration, tempchange, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Temperature trend [°C/yr]', bty = 'l')]
+tempchange[, plot(duration, tempchange, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Temperature change [°C/yr]', bty = 'l')]
 abline(h = 0, lty = 2)
 predsloesstemp[, lines(duration, tempchange, col = 'red')]
 mtext('C)', side = 3, line = -0.5, adj = -0.28)
@@ -737,7 +738,7 @@ mtext('F)', side = 3, line = -0.5, adj = -0.28)
 dev.off()
 
 
-### Figure S3: turnover by taxon ----------
+### Figure S4: turnover by taxon ----------
 # slopes for all timeseries
 bt <- fread('output/turnover_w_covariates.csv.gz') # covariate data
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
@@ -774,11 +775,11 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = taxa_mod2, fill = taxa_mo
     scale_fill_manual(values = pal) +
     scale_color_manual(values = pal)
 p1 <- addSmallLegend(p1, pointSize = 0.8, spaceLegend = 0.2, textSize = 8)
-ggsave('figures/figS3.png', p1, width = 6, height = 4, units = 'in')
+ggsave('figures/figS4.png', p1, width = 6, height = 4, units = 'in')
 
 
 
-### Figure S4: T trend x Ave T interaction ---------
+### Figure S5: T change x Ave T interaction ---------
 
 # read in slopes
 slopesTsdTTRealmtsignJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds')) # made by pred_modrawXAllJtu.sh/.r
@@ -786,7 +787,7 @@ slopesTsdTTRealmtsignJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds'
 # plot
 p1 <- ggplot(slopesTsdTTRealmtsignJtu, aes(tempchange, tempave, z = slope)) +
     geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature trend (°C/yr)', y = 'Average Temperature (°C)') +
+    labs(x = 'Temperature change (°C/yr)', y = 'Average Temperature (°C)') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Turnover rate') +
     facet_grid(cols = vars(REALM)) +
     theme(axis.text = element_text(size = 10), 
@@ -800,4 +801,4 @@ p1 <- ggplot(slopesTsdTTRealmtsignJtu, aes(tempchange, tempave, z = slope)) +
           legend.title=element_text(size= 12),
           legend.title.align = 1)
 
-ggsave('figures/figS4.png', p1, width = 6, height = 3, units = 'in')
+ggsave('figures/figS5.png', p1, width = 6, height = 3, units = 'in')
