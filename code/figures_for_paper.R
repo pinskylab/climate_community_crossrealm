@@ -49,6 +49,11 @@ trends_by_study[, median(Jtu)]
 groupwiseMedian(Jtu ~ 1, data = trends_by_study, conf = 0.95, R = 5000, percentile = TRUE, 
                                   bca = FALSE, basic = FALSE, normal = FALSE, wilcox = FALSE, digits = 3)
 
+# likelihood ratio tests among models
+if(!exists('modRealmAllJtu')) modRealmAllJtu <- readRDS(here('temp', 'modRealmAllJtu')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
+if(!exists('modsdTRealmtsignAllJtu')) modsdTRealmtsignAllJtu <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # tsign:tempchange_abs by realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
+
+anova(modRealmAllJtu, modsdTRealmtsignAllJtu)
 
 #### Table 1: AICs --------------
 if(!exists('modAllJtu')) modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
@@ -475,15 +480,52 @@ fig3high <- arrangeGrob(p1high, p2high, ncol = 1)
 ggsave('figures/fig3_onlyhigh.png', fig3high, width = 4, height = 4, units = 'in')
 
 
+#### Table S1?: fixed effects for Tchange x Realm x Year model --------------
+if(!exists('modsdTRealmtsignAllJtu')) modsdTRealmtsignAllJtu <- readRDS(here('temp','modsdTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
+if(!exists('sum_modrawTsdTTRealmtsignAllJtu')) sum_modsdTRealmtsignAllJtu <- summary(modsdTRealmtsignAllJtu) # slow
+out <- as.data.frame(sum_modsdTRealmtsignAllJtu$coefficients$cond)
+
+# get term names
+out$term <- gsub('Terrestrial|Marine|Freshwater|1|-1', '', rownames(out))
+out$term <- gsub('duration', 'Years', out$term)
+out$term <- gsub('REALM', 'Realm', out$term)
+out$term <- gsub('tsign', 'sign', out$term)
+out$term <- gsub('tempchange_abs.sc', 'Ttrend', out$term)
+out$term[out$term == 'Years:Realm:sign'] <- 'sign ✕ Realm ✕ Years'
+out$term[out$term == 'Years:Realm:sign:Ttrend'] <- 'sign ✕ |Ttrend| ✕ Realm ✕ Years'
+
+# get realm
+out$realm <- rownames(out)
+out$realm[grepl('Freshwater', out$realm)] <- 'Freshwater'
+out$realm[out$term == 'Years'] <- 'Freshwater' # the baseline Year term is for Freshwater
+out$term[out$term == 'Years'] <- 'Years:Realm'
+out$realm[grepl('Marine', out$realm)] <- 'Marine'
+out$realm[grepl('Terrestrial', out$realm)] <- 'Terrestrial'
+out$realm[!grepl('Terrestrial|Marine|Freshwater', out$realm)] <- ''
+
+# get tsign
+out$tsign <- rownames(out)
+out$tsign[grepl('tsign-1', out$tsign)] <- 'cooling'
+out$tsign[grepl('tsign1', out$tsign)] <- 'warming'
+out$tsign[!grepl('cooling|warming', out$tsign)] <- ''
+
+# reorder columns
+out <- out[,c('term', 'realm', 'tsign', 'Estimate', 'Std. Error', 'z value', 'Pr(>|z|)')]
+
+out
+
+# write out
+write.csv(format(out, digits=2), file = 'figures/tableS1.csv', row.names=FALSE)
+
 #### Table S1: random effects for main model --------------
 if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 if(!exists('sum_modrawTsdTTRealmtsignAllJtu')) sum_modrawTsdTTRealmtsignAllJtu <- summary(modrawTsdTTRealmtsignAllJtu)
 sum_modrawTsdTTRealmtsignAllJtu$varcor
 capture.output(print(sum_modrawTsdTTRealmtsignAllJtu$varcor), file = 'figures/tableS1.txt')
 
-#### Table S2: fixed effects for main model --------------
+#### Table S2: fixed effects for Tchange x Tave x Realm x Year model --------------
 if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
-if(!exists('sum_modrawTsdTTRealmtsignAllJtu')) sum_modrawTsdTTRealmtsignAllJtu <- summary(modrawTsdTTRealmtsignAllJtu)
+if(!exists('sum_modrawTsdTTRealmtsignAllJtu')) sum_modrawTsdTTRealmtsignAllJtu <- summary(modrawTsdTTRealmtsignAllJtu) # slow
 out <- as.data.frame(sum_modrawTsdTTRealmtsignAllJtu$coefficients$cond)
 
 # get term names

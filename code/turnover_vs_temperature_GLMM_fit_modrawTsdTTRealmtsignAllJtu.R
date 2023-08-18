@@ -39,6 +39,7 @@ library(performance) # for R2
 trendsall <- fread('output/turnover_w_covariates.csv.gz') # From assemble_turnover_covariates.Rmd
 
 trendsall[, tsign := as.factor(tsign)]
+trendsall[, tempchange_abs.sc.exp := scale(exp(tempchange_abs.sc))]
 
 # Models ############################
 
@@ -64,7 +65,7 @@ if (fitmod == 'modsdTtsignAllJtu') {
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
-            tsign:tempchange_abs.sc:duration +
+            tsign:tempchange_abs.sc.exp:duration +
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
@@ -82,7 +83,8 @@ if (fitmod == 'modsdTRealmtsignAllJtu') {
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
-            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:duration +
+            REALM:tsign:tempchange_abs.sc.exp:duration +
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
@@ -100,9 +102,9 @@ if (fitmod == 'modrawTsdTTRealmtsignAllJtu') {
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             REALM:duration +
-            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempchange_abs.sc.exp:duration +
             REALM:tsign:tempave.sc:duration +
-            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc.exp:duration +
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
