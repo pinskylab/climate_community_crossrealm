@@ -106,7 +106,7 @@ temptrends[, .(mean = mean(tempchange), se = sd(tempchange)/sqrt(.N), sd = sd(te
 # a) map
 world <- map_data('world')
 p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
-    geom_polygon(fill = 'lightgray', color = 'white', linewidth = 0.1) +
+    geom_polygon(fill = 'lightgray', color = 'white', size = 0.1) +
     geom_point(data = bt, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.3, alpha = 0.4, shape = 16)  +
     scale_color_brewer(palette="Dark2", name = 'Realm') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -169,7 +169,7 @@ conceptual[tempchange == 'Slow', tchange := 0]
 conceptual[, Jtu := 0.1 + duration*0.005 + duration*tchange/320]
 
 p5 <- ggplot(conceptual, aes(duration, Jtu, color = tempchange)) +
-    geom_line(size=2) +
+    geom_line(size=1) +
     labs(tag = 'E)', x = 'Temporal distance [years]', y = 'Turnover\n[proportion species]') +
     scale_color_brewer(palette="Set2", name = expression(T[change]), direction= -1) +
     scale_y_continuous(limits = c(0, 0.5)) +
