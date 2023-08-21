@@ -39,7 +39,7 @@ trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends[duration_group == 'All' & rarefyID =='339_1085477' & measure=='Jtu',]
 
 
-# median temporal turnover across studies
+# median and range of temporal turnover across studies
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends <- trends[duration_group == 'All' & rarefyID %in% bt$rarefyID & year2 - year1 >2,]
 trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend') # wide format for plotting
@@ -48,6 +48,9 @@ trends_by_study <- trendsw[, .(Horn = mean(Horn, na.rm=TRUE), Jbeta = mean(Jbeta
 trends_by_study[, median(Jtu)]
 groupwiseMedian(Jtu ~ 1, data = trends_by_study, conf = 0.95, R = 5000, percentile = TRUE, 
                                   bca = FALSE, basic = FALSE, normal = FALSE, wilcox = FALSE, digits = 3)
+
+trends_by_study[, range(Jtu)]
+
 
 # likelihood ratio tests among models
 if(!exists('modRealmAllJtu')) modRealmAllJtu <- readRDS(here('temp', 'modRealmAllJtu')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
@@ -96,19 +99,8 @@ bt$type <- 'BioTime'
 temptrends <- rbind(temptrends, bt[!is.na(tempchange), .(tempchange, type, REALM)])
 temptrends[REALM %in% c('Terrestrial', 'Freshwater'), REALM := 'Terrestrial & Freshwater']
 
-# make table of temporal trends by STUDY_ID
-# use the slopes that use all data points and all pairs
-trends <- trends[duration_group == 'All' & rarefyID %in% bt$rarefyID & year2 - year1 >2,]
-trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend') # wide format for plotting
-trendsw[, STUDY_ID := vapply(strsplit(rarefyID,"_"), `[`, 1, FUN.VALUE=character(1))] # extract STUDY_ID from rarefyID
-trends_by_study <- trendsw[, .(Horn = mean(Horn, na.rm=TRUE), Jbeta = mean(Jbeta), Jtu = mean(Jtu)), by = STUDY_ID]
-
-# average temperate change by realm, standard error of the mean, and standard deviation (degC per year)
+# average temperature change by realm, standard error of the mean, and standard deviation (degC per year)
 temptrends[, .(mean = mean(tempchange), se = sd(tempchange)/sqrt(.N), sd = sd(tempchange)), by = REALM]
-
-# range of trends in Fig. 1E
-trends_by_study[, range(Jtu)]
-trends_by_study[, median(Jtu)]
 
 # make plot pieces
 # a) map
@@ -170,14 +162,17 @@ p4 <- ggplot(bt[rarefyID=='339_1085477', .(dY = year2 - year1, Jtu.sc)], aes(dY,
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))
 
-# e) distribution of Jtu trends
-p5 <- ggplot(trends_by_study, aes(x = Jtu)) +
-    geom_density(color = NA, alpha = 0.5, fill = 'grey') +
-    scale_y_sqrt(breaks = c(0.1,1,3)) +
-    geom_vline(xintercept = 0, linetype = 'solid', size = 0.5) +
-    geom_vline(xintercept = 0.008, linetype = 'dashed', size = 0.5) +
-    scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.05, 0, 0.05, 0.2, 0.4)) +
-    labs(tag = 'E)', x = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), title = '') +
+# e) conceptual figure
+conceptual <- data.table(expand.grid(duration = 1:40, tempchange = c('Fast', 'Slow')))
+conceptual[tempchange == 'Fast', tchange := 2]
+conceptual[tempchange == 'Slow', tchange := 0]
+conceptual[, Jtu := 0.1 + duration*0.005 + duration*tchange/320]
+
+p5 <- ggplot(conceptual, aes(duration, Jtu, color = tempchange)) +
+    geom_line(size=2) +
+    labs(tag = 'E)', x = 'Temporal distance [years]', y = 'Turnover\n[proportion species]') +
+    scale_color_brewer(palette="Set2", name = expression(T[change]), direction= -1) +
+    scale_y_continuous(limits = c(0, 0.5)) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
