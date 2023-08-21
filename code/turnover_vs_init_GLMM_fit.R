@@ -61,7 +61,7 @@ if (fitmod == 'modInitAllJtu') {
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init.sc:duration +
-            (duration | STUDY_ID / rarefyID),
+            (1 | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
