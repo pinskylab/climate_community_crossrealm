@@ -83,7 +83,6 @@ if (fitmod == 'modsdTRealmtsignAllJtu') {
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
-            REALM:duration +
             REALM:tsign:tempchange_abs.sc.exp:duration +
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
@@ -101,7 +100,6 @@ if (fitmod == 'modrawTsdTTRealmtsignAllJtu') {
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
-            REALM:duration +
             REALM:tsign:tempchange_abs.sc.exp:duration +
             REALM:tsign:tempave.sc:duration +
             REALM:tsign:tempave.sc:tempchange_abs.sc.exp:duration +

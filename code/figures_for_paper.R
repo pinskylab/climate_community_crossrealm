@@ -16,7 +16,7 @@ source(here('code', 'util.R'))
 
 
 ### Dataset sizes ---------
-bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC
+bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC. from assemble_turnover_covariates.Rmd
 scalingall <- fread('output/turnover_w_covariates_scaling.csv') # covariate scaling data. From assemble_turnover_covariates.Rmd
 
 bt[, .(nyears = length(unique(c(year1, year2)))), by = rarefyID][, sum(nyears)] # number of assemblage composition records

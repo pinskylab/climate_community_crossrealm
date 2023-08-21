@@ -140,7 +140,7 @@ hist <- acfy1s[, hist(V1)] # histogram of AR1
 
 
 # Calculate temporal trends (temporal turnover)
-This only recalculates from scratch if temp/trendstemp.rds is not available.
+Run calc_turnover.R first if temp/trendstemp.rds is not available.
 
 
 ## Load calculations
