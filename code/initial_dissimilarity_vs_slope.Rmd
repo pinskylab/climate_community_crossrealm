@@ -1,0 +1,60 @@
+---
+title: "Initial dissimilarity and trend"
+output: 
+    github_document: default
+---
+
+```{r setup, include=FALSE}
+library(data.table) # for handling large datasets
+library(ggplot2) # for some plotting
+library(glmmTMB) # for beta regression
+if(Sys.info()['nodename'] == 'annotate.sebs.rutgers.edu'){
+  library('mgcv', lib.loc = '/usr/lib64/R/library') # when running on Annotate. Need to load 1.8-26, not 1.8-33, for geom_smooth() in ggplot
+} else {
+  library('mgcv')
+}
+source(here('code', 'util.R')) # simple utility functions
+
+# tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
+knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) 
+
+```
+
+# Load data and set up
+```{r}
+# biotime community dissimilarity data
+bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC. from assemble_turnover_covariates.Rmd
+bt[, minduration := min(duration), by = rarefyID]
+nrow(bt)
+
+# turnover rate (slope of dissimilarity vs. time)
+trends <- fread('output/slope.csv.gz') # linear slopes. from calc_turnover.R
+
+# make frame of initial dissimilarities and turnover rates
+initdiss <- bt[duration == minduration, .(Jtu.init = mean(Jtu.sc)), by = .(REALM, rarefyID)] # initial dissimilarities
+nrow(initdiss)
+
+# add slope to initdiss
+initdiss <- merge(initdiss, trends[measure == 'Jtu' & duration_group == 'All'], by = 'rarefyID')
+nrow(initdiss)
+
+# add initdiss back to bt
+bt <- merge(bt, initdiss[, .(rarefyID, Jtu.init)])
+nrow(bt)
+
+```
+
+# Plot
+There are some outliers, but the trend is completely flat
+```{r}
+ggplot(initdiss, aes(Jtu.init, disstrend)) +
+    geom_point() +
+    geom_smooth()
+```
+
+# Statistical test
+Need to first fit a one-stage ME model with beta errors with turnover_vs_init_GLMM_fit.R.
+```{r}
+if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Fit by code/turnover_vs_init_GLMM_fit.R
+summary(mod)
+```
