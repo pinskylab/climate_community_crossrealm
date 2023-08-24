@@ -46,7 +46,7 @@ nrow(bt)
 ```
 
 # Plot
-Turnover rate depends on number of temporal samples.
+Turnover rate depends somewhat on number of temporal samples.
 ```{r}
 initdiss[, log10nsamps := log10(nsamps)]
 initdiss[, nsamps_class := NA_character_]
@@ -65,6 +65,27 @@ ggplot(initdiss[!is.na(nsamps_class)], aes(Jtu.init, disstrend, color = year2 - 
   
 ```
 
+Turnover rate depends on duration of the time series.
+```{r}
+initdiss[, duration_class := NA_character_]
+initdiss[(year2 - year1) == 3, duration_class := '3']
+initdiss[(year2 - year1) >= 4 & (year2 - year1) < 6, duration_class := '4-5']
+initdiss[(year2 - year1) >=6 & (year2 - year1) < 11, duration_class := '6-10']
+initdiss[(year2 - year1) >= 11 & (year2 - year1) < 20, duration_class := '11-20']
+initdiss[(year2 - year1) >= 21 & (year2 - year1) < 50, duration_class := '21-50']
+initdiss[(year2 - year1) >= 51, duration_class := '>51']
+initdiss[, duration_class := factor(duration_class, levels = c('3', '4-5', '6-10', '11-20', '21-50', '>51'))]
+
+
+ggplot(initdiss[!is.na(duration_class) & nsamps > 2], aes(Jtu.init, disstrend, color = nsamps)) + # need at least 3 samples to get 2 dissimilarities to plot a meaningful slope
+    geom_point(alpha = 0.5) +
+    geom_smooth() +
+  facet_wrap(~duration_class, scales = "free_y") +
+  scale_color_gradient(trans = 'log10')
+  
+```
+
+
 # Statistical test
 Need to first fit a one-stage ME model with beta errors with turnover_vs_init_GLMM_fit.R.
 ```{r}
@@ -79,9 +100,33 @@ newdat <- data.table(expand.grid(duration = 1:10, REALM = c('Marine', 'Terrestri
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1
 
-preds <- predict(modInitAllJtu, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-newdat$Jtu.sc <- preds$fit
-newdat$Jtu.sc.se <- preds$se.fit
+#preds <- predict(modInitAllJtu, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+#newdat$Jtu.sc <- preds$fit
+#newdat$Jtu.sc.se <- preds$se.fit
 
+# Calculate predicted probabilities manually (since predict() is very slow)
+m <- model.matrix(~ duration + Jtu.init:duration, newdat)[,]
+newdat[, Jtu.sc.linear := fixef(modInitAllJtu)$cond %*% t(m)] # predicted values on linear scale
+newdat[, Jtu.sc := plogis(Jtu.sc.linear)] # back to response scale
+
+# convert dissimilarity values into turnover rate (slope)
+newdat.slopes <- newdat[, .(disstrend = coef(lm(Jtu.sc ~ duration))[2]), by = Jtu.init]
+```
+
+# Plot predictions
+The dissimilarity values
+```{r}
+ggplot(newdat, aes(duration, Jtu.sc, color = Jtu.init, group = Jtu.init)) +
+  geom_line()
 
 ```
+
+
+The turnover rates
+```{r}
+ggplot(newdat.slopes, aes(Jtu.init, disstrend)) +
+  geom_point()
+
+```
+
+
