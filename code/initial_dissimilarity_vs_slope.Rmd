@@ -8,6 +8,7 @@ output:
 library(data.table) # for handling large datasets
 library(ggplot2) # for some plotting
 library(glmmTMB) # for beta regression
+library(here) # for navigating directories in the repo
 if(Sys.info()['nodename'] == 'annotate.sebs.rutgers.edu'){
   library('mgcv', lib.loc = '/usr/lib64/R/library') # when running on Annotate. Need to load 1.8-26, not 1.8-33, for geom_smooth() in ggplot
 } else {
@@ -45,16 +46,42 @@ nrow(bt)
 ```
 
 # Plot
-There are some outliers, but the trend is completely flat
+Turnover rate depends on number of temporal samples.
 ```{r}
-ggplot(initdiss, aes(Jtu.init, disstrend)) +
+initdiss[, log10nsamps := log10(nsamps)]
+initdiss[, nsamps_class := NA_character_]
+initdiss[nsamps == 3, nsamps_class := '3'] # turnover rate isn't meaningful for <3 samples, since need at least 2 dissimilarity values
+initdiss[nsamps == 4, nsamps_class := '4']
+initdiss[nsamps == 5, nsamps_class := '5']
+initdiss[nsamps > 5, nsamps_class := '>5']
+initdiss[, nsamps_class := factor(nsamps_class, levels = c('3', '4', '5', '>5'))]
+
+
+ggplot(initdiss[!is.na(nsamps_class)], aes(Jtu.init, disstrend, color = year2 - year1)) +
     geom_point() +
-    geom_smooth()
+    geom_smooth() +
+  facet_wrap(~nsamps_class, scales = "free_y") +
+  scale_color_gradient(trans = 'log10')
+  
 ```
 
 # Statistical test
 Need to first fit a one-stage ME model with beta errors with turnover_vs_init_GLMM_fit.R.
 ```{r}
 if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Fit by code/turnover_vs_init_GLMM_fit.R
-summary(mod)
+summary(modInitAllJtu)
+```
+
+
+# Predictions from the model
+```{r}
+newdat <- data.table(expand.grid(duration = 1:10, REALM = c('Marine', 'Terrestrial', 'Freshwater'), Jtu.init = seq(0,1, length.out = 5)))
+newdat$STUDY_ID <- 1
+newdat$rarefyID <- 1
+
+preds <- predict(modInitAllJtu, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+newdat$Jtu.sc <- preds$fit
+newdat$Jtu.sc.se <- preds$se.fit
+
+
 ```

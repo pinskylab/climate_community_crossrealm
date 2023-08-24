@@ -60,7 +60,7 @@ if (fitmod == 'modInitAllJtu') {
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
-            Jtu.init.sc:duration +
+            Jtu.init:duration +
             (1 | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
