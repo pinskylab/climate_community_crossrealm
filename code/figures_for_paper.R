@@ -53,7 +53,7 @@ trends_by_study[, range(Jtu)]
 
 
 # likelihood ratio tests among models
-if(!exists('modRealmAllJtu')) modRealmAllJtu <- readRDS(here('temp', 'modRealmAllJtu')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
+if(!exists('modRealmAllJtu')) modRealmAllJtu <- readRDS(here('temp', 'modRealmAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 if(!exists('modsdTRealmtsignAllJtu')) modsdTRealmtsignAllJtu <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # tsign:tempchange_abs by realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 
 anova(modRealmAllJtu, modsdTRealmtsignAllJtu)
@@ -65,6 +65,7 @@ if(!exists('modTaxamod2AllJtu')) modTaxamod2AllJtu <- readRDS('temp/modTaxamod2A
 if(!exists('modsdTtsignAllJtu')) modsdTtsignAllJtu <- readRDS(here('temp', 'modsdTtsignAllJtu.rds')) # tsign, tempchange_abs. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 if(!exists('modsdTRealmtsignAllJtu')) modsdTRealmtsignAllJtu <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # tsign:tempchange_abs by realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 if(!exists('modabsLatsdTabsLatRealmtsignAllJtu')) modabsLatsdTabsLatRealmtsignAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignAllJtu.rds')) # tsign:tempchange_abs:absLat Fit by code/turnover_vs_temperature_GLMM_fit_modabsLatsdTabsLatRealmtsignAllJtu.R
+#if(!exists('modrawTsdTTRealmtsignAllJtu2021')) modrawTsdTTRealmtsignAllJtu2021 <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu_2021-12-04.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 
 # compare sdT amd TsdTT models against null
@@ -347,22 +348,20 @@ ggsave('figures/fig2_nopredsTxT.png', fig2noTT, width = 6, height = 4, units = '
 
 ### Figure 3: interactions ---------
 slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariate.rds')) # from code/pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R with argument tsign
-slopes2 <- slopes2[tempave == 10, ]
-slopes2[, ':='(microclim = as.factor(signif(microclim,2)),
-               human_bowler = as.factor(signif(human_bowler,2)))] # set as factors for plotting
+slopes2 <- slopes2[tempave == 10 & abs(tempchange_abs - 0.018)<0.01, ]
 
 # max rates by realm and covariate
 slopes2[tempave==10 & tempchange %in% c(2,-1.5), .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
         by = .(REALM, tempchange, microclim, human_bowler)]
 
 # plots
-p1 <- ggplot(slopes2, aes(tempchange, slope_microclim, color = microclim, fill = microclim, group = microclim,
-                                                 ymin=slope_microclim-slope_microclim.se,  ymax=slope_microclim+slope_microclim.se)) +
+p1 <- ggplot(slopes2, aes(microclim, slope_microclim, 
+                          ymin=slope_microclim-slope_microclim.se,  ymax=slope_microclim+slope_microclim.se)) +
     geom_hline(yintercept = 0, linetype = 'dotted') +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
-    facet_grid(cols = vars(REALM)) +
-    labs(tag = 'A)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Microclimate') +
+    facet_grid(cols = vars(REALM), rows = vars(tsign)) +
+    labs(tag = 'A)', x = 'Microclimate availability', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]'))) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
