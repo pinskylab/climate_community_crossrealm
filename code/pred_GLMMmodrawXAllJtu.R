@@ -61,6 +61,20 @@ if(predmod == 'modrawTsdTTRealmtsignAllJtu'){
     print('model loaded')
 } 
 
+if(predmod == 'modsdTRealmtsigninitAllJtu'){
+    mod <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # From turnover_vs_temperature_GLMM_fit_Jtu.init.R
+    out_preds <- 'preds_modsdTRealmtsigninitAllJtu.rds'
+    out_slopes <- 'slopes_modsdTRealmtsigninitAllJtu.rds'
+    print('model loaded')
+} 
+
+if(predmod == 'modrawTsdTTRealmtsigninitAllJtu'){
+    mod <- readRDS(here('temp', 'modrawTsdTTRealmtsigninitAllJtu.rds')) # From turnover_vs_temperature_GLMM_fit_Jtu.init.R
+    out_preds <- 'preds_rawTsdTTRealmtsigninit.rds' # note: name is not quite of same form as previous model.
+    out_slopes <- 'slopes_rawTsdTTRealmtsigninit.rds' # note: name is not quite of same form as previous model.
+    print('model loaded')
+} 
+
 if(!exists('mod')) stop('No model loaded. Make sure argument matches one of the model names')
 
 
@@ -71,12 +85,13 @@ if(!exists('mod')) stop('No model loaded. Make sure argument matches one of the 
 newdat <- data.table(expand.grid(tempave = seq(-20, 30, length.out = 100), tempchange = seq(-1.5, 2, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial', 'Freshwater')))
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1
+newdat$Jtu.init <- 0.5
 newdat[, tempave.sc := scaleme(tempave, 'tempave.sc')]
 newdat[, tempchange_abs := abs(tempchange)]
 newdat[, tsign := signneg11(tempchange)]
 newdat[, tempchange_abs.sc := scaleme(tempchange_abs, 'tempchange_abs.sc')]
 
-# predict
+# predict with SEs
 preds <- predict(mod, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')
 newdat$Jtu.sc <- preds$fit
 newdat$Jtu.sc.se <- preds$se.fit

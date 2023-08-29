@@ -94,7 +94,7 @@ summary(modInitAllJtu)
 ```
 
 
-# Predictions from the model
+## Predictions from the model
 ```{r}
 newdat <- data.table(expand.grid(duration = 1:10, REALM = c('Marine', 'Terrestrial', 'Freshwater'), Jtu.init = seq(0,1, length.out = 5)))
 newdat$STUDY_ID <- 1
@@ -113,7 +113,7 @@ newdat[, Jtu.sc := plogis(Jtu.sc.linear)] # back to response scale
 newdat.slopes <- newdat[, .(disstrend = coef(lm(Jtu.sc ~ duration))[2]), by = Jtu.init]
 ```
 
-# Plot predictions
+## Plot predictions
 The dissimilarity values
 ```{r}
 ggplot(newdat, aes(duration, Jtu.sc, color = Jtu.init, group = Jtu.init)) +
@@ -128,5 +128,87 @@ ggplot(newdat.slopes, aes(Jtu.init, disstrend)) +
   geom_point()
 
 ```
+
+
+# Examine Tchange models with Jtu.init
+Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.init.R.
+## Load models
+```{r}
+# with Jtu.init
+# if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Fit by code/turnover_vs_init_GLMM_fit.R. Can't include because fit to a larger dataset.
+if(!exists('modsdTRealmtsigninitAllJtu')) modsdTRealmtsigninitAllJtu <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.init.R
+if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsigninitAllJtu.rds')) # Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.init.R
+
+# w/out
+if(!exists('modsdTRealmtsignAllJtu')) modsdTRealmtsignAllJtu <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.R
+if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu.rds')) # Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.R
+
+
+```
+
+## Summaries
+```{r}
+if(!exists('sum.Tchange')) sum.Tchange <- summary(modsdTRealmtsigninitAllJtu)
+if(!exists('sum.TchangeTave')) sum.TchangeTave <- summary(modrawTsdTTRealmtsigninitAllJtu)
+
+sum.Tchange
+sum.TchangeTave
+```
+
+
+## AIC: Compare to models without init
+```{r}
+aics <- AIC(modAllJtu, # simple models w/out tempchange
+            modsdTRealmtsignAllJtu, modsdTRealmtsigninitAllJtu, # tsign:tempchange_abs w/out or w/ realm
+            modrawTsdTTRealmtsignAllJtu, modrawTsdTTRealmtsigninitAllJtu) # add tempave:tempchange_abs
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllJtu']
+aics
+
+```
+
+## Plots: Compare to models without init
+made by pred_modrawXAllJtu.sh
+```{r}
+# read in slopes
+slopessdTRealmtsigninitJtu <- readRDS(here('temp', 'slopes_sdTRealmtsigninitAllJtu.rds')) # made by pred_modrawXAllJtu.sh/.r
+slopesrawTsdTTRealmtsigninitJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsigninit.rds')) # made by pred_modrawXAllJtu.sh/.r
+
+# plot
+p1 <- ggplot(slopessdTRealmtsigninitJtu, aes(tempchange, tempave, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (°C/yr)', y = 'Average Temperature (°C)') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Turnover rate') +
+    facet_grid(cols = vars(REALM)) +
+    theme(axis.text = element_text(size = 10), 
+          axis.title = element_text(size = 12),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -5, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 8),
+          legend.title=element_text(size= 12),
+          legend.title.align = 1)
+
+p2 <- ggplot(slopesrawTsdTTRealmtsigninitJtu, aes(tempchange, tempave, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(x = 'Temperature change (°C/yr)', y = 'Average Temperature (°C)') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Turnover rate') +
+    facet_grid(cols = vars(REALM)) +
+    theme(axis.text = element_text(size = 10), 
+          axis.title = element_text(size = 12),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -5, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 8),
+          legend.title=element_text(size= 12),
+          legend.title.align = 1)
+
+```
+
+
 
 
