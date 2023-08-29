@@ -59,9 +59,152 @@ iallJtu <-
         human_bowler.sc
     )]
 
+iallHorn <-
+    trendsall[, complete.cases(
+        Horn.sc,
+        tempchange_abs.sc,
+        REALM,
+        tempave.sc,
+        duration.sc,
+        microclim.sc,
+        human_bowler.sc
+    )]
+
 ## choose model
 
+# Trend model #################################
+if (fitmod == 'modInitAllJtu') {
+    if (MATCHMOD) stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            Jtu.init:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+if (fitmod == 'modInitAllHorn') {
+    if (MATCHMOD) stop('Model name matched more than one model!')
+    print(paste(sum(iallHorn), 'data points'))
+    mod <- glmmTMB(
+        Horn.sc ~ duration +
+            Jtu.init:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallHorn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM,
+        control = glmmTMBControl(optimizer=optim, optArgs = list(method='BFGS'))
+    )
+    MATCHMOD <- TRUE
+}
+
+
+
+# REALM models #################################
+if (fitmod == 'modRealmInitAllJtu') {
+    if (MATCHMOD) stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            Jtu.init:duration +
+            REALM:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+if (fitmod == 'modRealmInitAllHorn') {
+    if (MATCHMOD) stop('Model name matched more than one model!')
+    print(paste(sum(iallHorn), 'data points'))
+    mod <- glmmTMB(
+        Horn.sc ~ duration +
+            Jtu.init:duration +
+            REALM:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallHorn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+# Taxa_mod models ###################################
+if (fitmod == 'modTaxamod2InitAllJtu') {
+    if (MATCHMOD) stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            Jtu.init:duration +
+            taxa_mod2:duration +
+            (duration | STUDY_ID / rarefyID), 
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM#,
+        #control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+
+if (fitmod == 'modTaxamod2InitAllHorn') {
+    if (MATCHMOD) stop('Model name matched more than one model!')
+    print(paste(sum(iallHorn), 'data points'))
+    mod <- glmmTMB(
+        Horn.sc ~ duration +
+            Jtu.init:duration +
+            taxa_mod2:duration +
+            (duration | STUDY_ID / rarefyID), 
+        data = trendsall[iallHorn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM#,
+        #control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+
 # tsign:sdT:realm #########################
+# no environmental temperature, no realm
+if (fitmod == 'modsdTtsignInitAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            Jtu.init:duration +
+            tsign:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+if (fitmod == 'modsdTtsignInitAllHorn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallHorn), 'data points'))
+    mod <- glmmTMB(
+        Horn.sc ~ duration +
+            Jtu.init:duration +
+            tsign:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallHorn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+
 # realm, no environmental temperature
 if (fitmod == 'modsdTRealmtsigninitAllJtu') {
     if (MATCHMOD)
@@ -79,6 +222,23 @@ if (fitmod == 'modsdTRealmtsigninitAllJtu') {
     MATCHMOD <- TRUE
 }
 
+if (fitmod == 'modsdTRealmtsigninitAllHorn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallHorn), 'data points'))
+    mod <- glmmTMB(
+        Horn.sc ~ duration +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallHorn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+
 # environmental temperature
 if (fitmod == 'modrawTsdTTRealmtsigninitAllJtu') {
     if (MATCHMOD)
@@ -90,6 +250,46 @@ if (fitmod == 'modrawTsdTTRealmtsigninitAllJtu') {
             REALM:tsign:tempchange_abs.sc:duration +
             REALM:tsign:tempave.sc:duration +
             REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+if (fitmod == 'modrawTsdTTRealmtsigninitAllHorn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallHorn), 'data points'))
+    mod <- glmmTMB(
+        Horn.sc ~ duration +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallHorn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+
+
+# latitude
+if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            Jtu.init:duration +
+            REALM:duration +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:absLat.sc:duration +
+            REALM:tsign:absLat.sc:tempchange_abs.sc:duration +
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
