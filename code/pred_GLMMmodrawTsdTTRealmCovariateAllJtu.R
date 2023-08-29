@@ -76,7 +76,7 @@ print(paste('Wrote preds_rawTsdTTRealmtsignCovariate.rds:', Sys.time()))
 
 
 # Calculate slopes -----------------------------
-# calculate slopes and SE of the slope using latent variables (since predictions have SE)
+# calculate slopes and SE of the slope using latent variables
 mods.microclim <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc.microclim\nJtu.sc.microclim ~~ ', mean(Jtu.sc.microclim.se), '*Jtu.sc.microclim'), data.frame(Jtu.sc.microclim, duration)))), 
                          by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)] # takes ~30 min
 print('finished microclim SEM')
@@ -85,7 +85,7 @@ mods.human <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 
 print('finished human SEM')
 
 
-# extract slopes and SEs
+# extract slopes and SEs from latent variable approach
 slopes.microclim <- mods.microclim[, parameterEstimates(mod[[1]]), 
                                    by = .(tempave, tempchange, tempchange_abs, tsign, 
                                           microclim, human_bowler, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
@@ -102,10 +102,22 @@ slopes.human <- mods.human[, parameterEstimates(mod[[1]]),
 slopes2 <- merge(slopes.microclim, slopes.human)
 
 
-# save slopes
+# save latent variable slopes
 saveRDS(slopes2, file = here('temp', 'slopes_rawTsdTTRealmtsignCovariate.rds'))
 print(paste('Wrote slopes_rawTsdTTRealmtsignCovariate.rds:', Sys.time()))
 
+
+# slopes and SEs from lm
+slopes.microclim.lm <- newdat[, .(slope_microclim = summary(lm(Jtu.sc.microclim ~ duration))$coefficients[2], slope_microclim.se = summary(lm(Jtu.sc.microclim ~ duration))$coefficients[4]), 
+                              by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)]
+slopes.human.lm <- newdat[, .(slope_human = summary(lm(Jtu.sc.human ~ duration))$coefficients[2], slope_human.se = summary(lm(Jtu.sc.human ~ duration))$coefficients[4]), 
+                              by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)]
+slopes2.lm <- merge(slopes.microclim.lm, slopes.human.lm)
+
+
+# save lm slopes
+saveRDS(slopes2.lm, file = here('temp', 'slopes_rawTsdTTRealmtsignCovariate.lm.rds'))
+print(paste('Wrote slopes_rawTsdTTRealmtsignCovariate.lm.rds:', Sys.time()))
 
 print(warnings())
 print(paste('Ended', Sys.time(), sep = ''))
