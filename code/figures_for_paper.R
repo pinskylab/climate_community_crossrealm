@@ -204,7 +204,7 @@ ave_by_realm <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstre
 ave_by_realm[, offset := c(-1, 0, 1)] # amount to vertically dodge the lines in part a
 write.csv(ave_by_realm, file='output/ave_by_realm.csv')
 
-# max tempchange by realm, for plotting limits
+# min and max tempchange by realm, for plotting limits
 tempchange_by_realm <- trends[, .(max = max(tempchange, na.rm=TRUE), min = min(tempchange, na.rm=TRUE)), by = REALM]
 
 # predicted slopes from the tsign model (no tempave)
