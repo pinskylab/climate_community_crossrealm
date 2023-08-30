@@ -1,4 +1,5 @@
 #!/usr/bin/Rscript --vanilla
+## NOTE: this script has been supplanted by turnover_vs_temperature_GLMM_fit_Jtu.init.R
 
 # Script to fit glmmTMB models
 # Set up to be run on the command line for one model at a time

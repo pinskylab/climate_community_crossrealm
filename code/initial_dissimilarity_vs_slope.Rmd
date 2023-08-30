@@ -87,9 +87,9 @@ ggplot(initdiss[!is.na(duration_class) & nsamps > 2], aes(Jtu.init, disstrend, c
 
 
 # Statistical test
-Need to first fit a one-stage ME model with beta errors with turnover_vs_init_GLMM_fit.R.
+Need to first fit a one-stage ME model with beta errors with turnover_vs_temperature_GLMM_fit_Jtu.init.R.
 ```{r}
-if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Fit by code/turnover_vs_init_GLMM_fit.R
+if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds'))
 summary(modInitAllJtu)
 ```
 
@@ -99,10 +99,6 @@ summary(modInitAllJtu)
 newdat <- data.table(expand.grid(duration = 1:10, REALM = c('Marine', 'Terrestrial', 'Freshwater'), Jtu.init = seq(0,1, length.out = 5)))
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1
-
-#preds <- predict(modInitAllJtu, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')
-#newdat$Jtu.sc <- preds$fit
-#newdat$Jtu.sc.se <- preds$se.fit
 
 # Calculate predicted probabilities manually (since predict() is very slow)
 m <- model.matrix(~ duration + Jtu.init:duration, newdat)[,]
@@ -134,10 +130,27 @@ ggplot(newdat.slopes, aes(Jtu.init, disstrend)) +
 Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.init.R.
 ## Load models
 ```{r}
-# with Jtu.init
-# if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Fit by code/turnover_vs_init_GLMM_fit.R. Can't include because fit to a larger dataset.
-if(!exists('modsdTRealmtsigninitAllJtu')) modsdTRealmtsigninitAllJtu <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.init.R
-if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsigninitAllJtu.rds')) # Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.init.R
+# with Jtu.init for Table 1
+if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Null
+if(!exists('modRealmInitAllJtu')) modRealmInitAllJtu <- readRDS('temp/modRealmInitAllJtu.rds') # Realm. 
+if(!exists('modTaxamod2InitAllJtu')) modTaxamod2InitAllJtu <- readRDS('temp/modTaxamod2InitAllJtu.rds') # Taxon. 
+if(!exists('modsdTtsignInitAllJtu')) modsdTtsignInitAllJtu <- readRDS(here('temp', 'modsdTtsignInitAllJtu.rds')) # tsign, tempchange_abs.
+if(!exists('modsdTRealmtsigninitAllJtu')) modsdTRealmtsigninitAllJtu <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # tsign:tempchange_abs by realm. 
+#if(!exists('modabsLatsdTabsLatRealmtsignInitAllJtu')) modabsLatsdTabsLatRealmtsignInitAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitAllJtu.rds')) # tsign:tempchange_abs:absLat. Not yet included since not fit yet
+if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. 
+
+# with Jtu.init for Table S3
+#if(!exists('modInitAllHorn')) modInitAllHorn <- readRDS(here('temp', 'modInitAllHorn.rds')) # Null with only duration
+if(!exists('modRealmInitAllHorn')) modRealmInitAllHorn <- readRDS('temp/modRealmInitAllHorn.rds') # Realm
+if(!exists('modTaxamod2InitAllHorn')) modTaxamod2InitAllHorn <- readRDS('temp/modTaxamod2InitAllHorn.rds') # Taxon
+if(!exists('modsdTtsignInitAllHorn')) modsdTtsignInitAllHorn <- readRDS(here('temp', 'modsdTtsignInitAllHorn.rds')) # tsign, tempchange_abs
+if(!exists('modsdTRealmtsigninitAllHorn')) modsdTRealmtsigninitAllHorn <- readRDS(here('temp', 'modsdTRealmtsigninitAllHorn.rds')) # tsign:tempchange by realm
+#if(!exists('modrawTsdTTRealmtsigninitAllHorn')) modrawTsdTTRealmtsigninitAllHorn <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllHorn.rds')) # adds tsign to tempave:tempchange:realm
+
+# with Jtu.init for Table S4
+#if(!exists('modrawTsdTTRealmtsignmicroclimInitAllJtu')) modrawTsdTTRealmtsignmicroclimInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimInitAllJtu.rds') # has microclimates
+#if(!exists('modrawTsdTTRealmtsignhumanInitAllJtu')) modrawTsdTTRealmtsignhumanInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanInitAllJtu.rds') # has human impact. 
+
 
 # w/out
 if(!exists('modsdTRealmtsignAllJtu')) modsdTRealmtsignAllJtu <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.R
@@ -156,14 +169,43 @@ sum.TchangeTave
 ```
 
 
-## AIC: Compare to models without init
+## AIC
+### Like Table 1 (main Jtu models)
 ```{r}
-aics <- AIC(modAllJtu, # simple models w/out tempchange
-            modsdTRealmtsignAllJtu, modsdTRealmtsigninitAllJtu, # tsign:tempchange_abs w/out or w/ realm
-            modrawTsdTTRealmtsignAllJtu, modrawTsdTTRealmtsigninitAllJtu) # add tempave:tempchange_abs
+
+aics <- AIC(modInitAllJtu, modRealmInitAllJtu, modTaxamod2InitAllJtu, # simple models w/out tempchange
+            modsdTtsignInitAllJtu, modsdTRealmtsigninitAllJtu, # tsign:tempchange_abs w/out or w/ realm
+            #modabsLatsdTabsLatRealmtsignInitAllJtu,
+            modrawTsdTTRealmtsigninitAllJtu) # add tempave:tempchange_abs
 aics$dAIC <- aics$AIC - min(aics$AIC)
-aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllJtu']
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllJtu']
 aics
+
+```
+
+### Like Table S3 (Horn)
+```{r}
+aics <- AIC(
+  #modInitAllHorn, 
+  modRealmInitAllHorn, modTaxamod2InitAllHorn, # simple models w/out tempchange
+  modsdTtsignInitAllHorn, modsdTRealmtsigninitAllHorn#, # tsign:tempchange_abs, also by realm
+  #          modrawTsdTTRealmtsignInitAllHorn
+) # add tempave:tempchange_abs
+aics$dAIC <- aics$AIC - min(aics$AIC)
+#aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllHorn']
+aics
+
+```
+
+### Like Table S4 (covariates)
+```{r}
+aics <- AIC(modInitAllJtu, modrawTsdTTRealmtsigninitAllJtu, 
+            modrawTsdTTRealmtsignmicroclimInitAllJtu,
+            modrawTsdTTRealmtsignhumanInitAllJtu) 
+aics$dAICTsdTT <- aics$AIC - aics$AIC[rownames(aics)=='modrawTsdTTRealmtsigninitAllJtu']
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllJtu']
+aics
+
 
 ```
 
