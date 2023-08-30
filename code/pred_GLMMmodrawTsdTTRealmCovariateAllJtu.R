@@ -74,6 +74,8 @@ print('finished human predictions')
 saveRDS(newdat, file = here('temp', 'preds_rawTsdTTRealmtsignCovariate.rds'))
 print(paste('Wrote preds_rawTsdTTRealmtsignCovariate.rds:', Sys.time()))
 
+# if reading in (eg, if running by hand)
+# newdat <- readRDS(here('temp', 'preds_rawTsdTTRealmtsignCovariate.rds'))
 
 # Calculate slopes -----------------------------
 # calculate slopes and SE of the slope using latent variables
@@ -104,6 +106,7 @@ slopes2 <- merge(slopes.microclim, slopes.human)
 
 # save latent variable slopes
 saveRDS(slopes2, file = here('temp', 'slopes_rawTsdTTRealmtsignCovariate.rds'))
+# slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariate.rds')) # to read in manually
 print(paste('Wrote slopes_rawTsdTTRealmtsignCovariate.rds:', Sys.time()))
 
 
@@ -117,6 +120,7 @@ slopes2.lm <- merge(slopes.microclim.lm, slopes.human.lm)
 
 # save lm slopes
 saveRDS(slopes2.lm, file = here('temp', 'slopes_rawTsdTTRealmtsignCovariate.lm.rds'))
+# slopes2.lm <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariate.lm.rds')) # to read in manually
 print(paste('Wrote slopes_rawTsdTTRealmtsignCovariate.lm.rds:', Sys.time()))
 
 print(warnings())
