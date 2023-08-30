@@ -23,7 +23,8 @@ newdat <- readRDS(here('temp', 'preds_rawTsdTTRealmtsignCovariate.rds'))
 
 # slopes and SEs from resampling
 # n: number of resamples, other columns are the x, y, and se of y variables
-slopesamp <- function(n, duration, Jtu.sc, Jtu.sc.se){
+# colnames refer to the output
+slopesamp <- function(n, duration, Jtu.sc, Jtu.sc.se, colnames = c('slope', 'slope.se')){
     if(length(duration) != length(Jtu.sc)) stop('duration and Jtu.sc are not the same length')
     if(length(duration) != length(Jtu.sc.se)) stop('duration and Jtu.sc.se are not the same length')
     if(length(Jtu.sc) != length(Jtu.sc.se)) stop('Jtu.sc and Jtu.sc.se are not the same length')
@@ -34,13 +35,13 @@ slopesamp <- function(n, duration, Jtu.sc, Jtu.sc.se){
         samp[j] <- coef(lm(y ~ duration))[2] # fit line, get slope
     }
     out <- c(coef(lm(Jtu.sc ~ duration))[2], sd(samp))
-    names(out) <- c('slope', 'slope.se')
+    names(out) <- colnames
     return(as.list(out)) # coercing to list will allow the data.table aggregate used later to create 2 columns
 }
 
-slopes.microclim.resamp <- newdat[, slopesamp(n, duration, Jtu.sc.microclim, Jtu.sc.microclim.se), 
+slopes.microclim.resamp <- newdat[, slopesamp(n, duration, Jtu.sc.microclim, Jtu.sc.microclim.se, colnames = c('slope_microclim', 'slope_microclim.se')), 
                               by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)]
-slopes.human.resamp <- newdat[, slopesamp(n, duration, Jtu.sc.human, Jtu.sc.human.se), 
+slopes.human.resamp <- newdat[, slopesamp(n, duration, Jtu.sc.human, Jtu.sc.human.se, colnames = c('slope_human', 'slope_human.se')), 
                           by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)]
 slopes2.resamp <- merge(slopes.microclim.resamp, slopes.human.resamp)
 
