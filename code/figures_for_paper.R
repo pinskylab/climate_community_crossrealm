@@ -65,7 +65,6 @@ if(!exists('modTaxamod2AllJtu')) modTaxamod2AllJtu <- readRDS('temp/modTaxamod2A
 if(!exists('modsdTtsignAllJtu')) modsdTtsignAllJtu <- readRDS(here('temp', 'modsdTtsignAllJtu.rds')) # tsign, tempchange_abs. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 if(!exists('modsdTRealmtsignAllJtu')) modsdTRealmtsignAllJtu <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # tsign:tempchange_abs by realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 if(!exists('modabsLatsdTabsLatRealmtsignAllJtu')) modabsLatsdTabsLatRealmtsignAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignAllJtu.rds')) # tsign:tempchange_abs:absLat Fit by code/turnover_vs_temperature_GLMM_fit_modabsLatsdTabsLatRealmtsignAllJtu.R
-#if(!exists('modrawTsdTTRealmtsignAllJtu2021')) modrawTsdTTRealmtsignAllJtu2021 <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu_2021-12-04.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 
 # compare sdT amd TsdTT models against null
