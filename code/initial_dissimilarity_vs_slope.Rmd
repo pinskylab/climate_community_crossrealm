@@ -209,6 +209,17 @@ aics
 
 ```
 
+## Likelihood ratio tests
+```{r}
+anova(modInitAllJtu, modsdTtsignInitAllJtu)
+anova(modInitAllJtu, modRealmInitAllJtu)
+
+anova(modInitAllJtu, modsdTRealmtsigninitAllJtu)
+anova(modRealmInitAllJtu, modsdTRealmtsigninitAllJtu)
+
+
+```
+
 ## Plots: Compare to models without init
 ## 2D plots
 made by pred_modrawXAllJtu.sh
