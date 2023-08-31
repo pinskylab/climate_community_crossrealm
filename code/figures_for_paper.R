@@ -346,20 +346,19 @@ ggsave('figures/fig2_nopredsTxT.png', fig2noTT, width = 6, height = 4, units = '
 
 
 ### Figure 3: interactions ---------
-slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariate.rds')) # from code/pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R with argument tsign
-slopes2 <- slopes2[tempave == 10 & abs(tempchange_abs - 0.018)<0.01, ]
+slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariate.resamp.rds')) # from code/pred_GLMMmodrawTsdTTRealmCovariateAllJtu_resamponly.R
+slopes2 <- slopes2[tempave == 10 & abs(tempchange - 0.5)<0.02, ]
 
 # max rates by realm and covariate
-slopes2[tempave==10 & tempchange %in% c(2,-1.5), .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
+slopes2[, .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
         by = .(REALM, tempchange, microclim, human_bowler)]
 
 # plots
 p1 <- ggplot(slopes2, aes(microclim, slope_microclim, 
-                          ymin=slope_microclim-slope_microclim.se,  ymax=slope_microclim+slope_microclim.se)) +
-    geom_hline(yintercept = 0, linetype = 'dotted') +
+                          ymin=slope_microclim-1.96*slope_microclim.se,  ymax=slope_microclim+1.96*slope_microclim.se)) +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
-    facet_grid(cols = vars(REALM), rows = vars(tsign)) +
+    facet_grid(cols = vars(REALM)) +
     labs(tag = 'A)', x = 'Microclimate availability', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]'))) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -369,108 +368,27 @@ p1 <- ggplot(slopes2, aes(microclim, slope_microclim,
           plot.title=element_text(size=8)) +
     scale_color_brewer(drop = FALSE, palette = 'Dark2') + # to keep missing factor levels in the plot if we drop them above
     scale_fill_brewer(drop = FALSE, palette = 'Dark2')
-
-p2 <- ggplot(slopes2, aes(tempchange, slope_human, color = human_bowler, fill = human_bowler, group = human_bowler,
-                                           ymin=slope_human-slope_human.se,  ymax=slope_human+slope_human.se)) +
-    geom_hline(yintercept = 0, linetype = 'dotted') +
+p1
+p2 <- ggplot(slopes2, aes(human_bowler, slope_human, 
+                          ymin=slope_human-1.96*slope_human.se,  ymax=slope_human+1.96*slope_human.se)) +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     facet_grid(cols = vars(REALM)) +
-    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Human       ') +
+    labs(tag = 'A)', x = 'Human impact', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]'))) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
-    scale_color_brewer(drop = FALSE, palette = 'Dark2') + 
+    scale_color_brewer(drop = FALSE, palette = 'Dark2') + # to keep missing factor levels in the plot if we drop them above
     scale_fill_brewer(drop = FALSE, palette = 'Dark2')
-
+p2
 fig3 <- arrangeGrob(p1, p2, ncol = 1)
 
 ggsave('figures/fig3.png', fig3, width = 4, height = 4, units = 'in')
 
 
-# only low values
-slopes2low <- slopes2[human_bowler == 0,] # to manually make a plot with only the low factor levels
-
-p1low <- ggplot(slopes2low, aes(tempchange, slope_microclim, color = microclim, fill = microclim, group = microclim,
-                                           ymin=slope_microclim-slope_microclim.se,  ymax=slope_microclim+slope_microclim.se)) +
-    geom_hline(yintercept = 0, linetype = 'dotted') +
-    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
-    geom_line() +
-    facet_grid(cols = vars(REALM)) +
-    labs(tag = 'A)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Microclimate') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
-    scale_color_brewer(drop = FALSE, palette = 'Dark2') + # to keep missing factor levels in the plot if we drop them above
-    scale_fill_brewer(drop = FALSE, palette = 'Dark2') +
-    ylim(-0.044, 0.102)
-
-p2low <- ggplot(slopes2low, aes(tempchange, slope_human, color = human_bowler, fill = human_bowler, group = human_bowler,
-                                           ymin=slope_human-slope_human.se,  ymax=slope_human+slope_human.se)) +
-    geom_hline(yintercept = 0, linetype = 'dotted') +
-    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
-    geom_line() +
-    facet_grid(cols = vars(REALM)) +
-    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Human       ') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
-    scale_color_brewer(drop = FALSE, palette = 'Dark2') + 
-    scale_fill_brewer(drop = FALSE, palette = 'Dark2') +
-    ylim(-0.052, 0.094)
-
-fig3low <- arrangeGrob(p1low, p2low, ncol = 1)
-ggsave('figures/fig3_onlylow.png', fig3low, width = 4, height = 4, units = 'in')
-
-
-# only high values
-slopes2high <- slopes2[human_bowler == 10,] # to manually make a plot with only the high factor levels. 
-
-p1high <- ggplot(slopes2high, aes(tempchange, slope_microclim, color = microclim, fill = microclim, group = microclim,
-                                                 ymin=slope_microclim-slope_microclim.se,  ymax=slope_microclim+slope_microclim.se)) +
-    geom_hline(yintercept = 0, linetype = 'dotted') +
-    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
-    geom_line() +
-    facet_grid(cols = vars(REALM)) +
-    labs(tag = 'A)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Microclimate') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
-    scale_color_brewer(drop = FALSE, palette = 'Dark2') + # to keep missing factor levels in the plot if we drop them above
-    scale_fill_brewer(drop = FALSE, palette = 'Dark2') +
-    ylim(-0.044, 0.102)
-
-p2high <- ggplot(slopes2high, aes(tempchange, slope_human, color = human_bowler, fill = human_bowler, group = human_bowler,
-                                                 ymin=slope_human-slope_human.se,  ymax=slope_human+slope_human.se)) +
-    geom_hline(yintercept = 0, linetype = 'dotted') +
-    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
-    geom_line() +
-    facet_grid(cols = vars(REALM)) +
-    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), color = 'Human       ') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
-    scale_color_brewer(drop = FALSE, palette = 'Dark2') + 
-    scale_fill_brewer(drop = FALSE, palette = 'Dark2') +
-    ylim(-0.052, 0.094)
-
-fig3high <- arrangeGrob(p1high, p2high, ncol = 1)
-ggsave('figures/fig3_onlyhigh.png', fig3high, width = 4, height = 4, units = 'in')
 
 
 #### Table S1?: fixed effects for Tchange x Realm x Year model --------------
