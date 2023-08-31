@@ -21,7 +21,8 @@ knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file())
 
 ```
 
-# Load data and set up
+# Look at the raw data
+## Load data and set up
 ```{r}
 # biotime community dissimilarity data
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC. from assemble_turnover_covariates.Rmd
@@ -145,7 +146,7 @@ if(!exists('modRealmInitAllHorn')) modRealmInitAllHorn <- readRDS('temp/modRealm
 if(!exists('modTaxamod2InitAllHorn')) modTaxamod2InitAllHorn <- readRDS('temp/modTaxamod2InitAllHorn.rds') # Taxon
 if(!exists('modsdTtsignInitAllHorn')) modsdTtsignInitAllHorn <- readRDS(here('temp', 'modsdTtsignInitAllHorn.rds')) # tsign, tempchange_abs
 if(!exists('modsdTRealmtsigninitAllHorn')) modsdTRealmtsigninitAllHorn <- readRDS(here('temp', 'modsdTRealmtsigninitAllHorn.rds')) # tsign:tempchange by realm
-#if(!exists('modrawTsdTTRealmtsigninitAllHorn')) modrawTsdTTRealmtsigninitAllHorn <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllHorn.rds')) # adds tsign to tempave:tempchange:realm
+if(!exists('modrawTsdTTRealmtsigninitAllHorn')) modrawTsdTTRealmtsigninitAllHorn <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllHorn.rds')) # adds tsign to tempave:tempchange:realm
 
 # with Jtu.init for Table S4
 #if(!exists('modrawTsdTTRealmtsignmicroclimInitAllJtu')) modrawTsdTTRealmtsignmicroclimInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimInitAllJtu.rds') # has microclimates
@@ -188,8 +189,8 @@ aics
 aics <- AIC(
   #modInitAllHorn, 
   modRealmInitAllHorn, modTaxamod2InitAllHorn, # simple models w/out tempchange
-  modsdTtsignInitAllHorn, modsdTRealmtsigninitAllHorn#, # tsign:tempchange_abs, also by realm
-  #          modrawTsdTTRealmtsignInitAllHorn
+  modsdTtsignInitAllHorn, modsdTRealmtsigninitAllHorn, # tsign:tempchange_abs, also by realm
+  modrawTsdTTRealmtsigninitAllHorn
 ) # add tempave:tempchange_abs
 aics$dAIC <- aics$AIC - min(aics$AIC)
 #aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllHorn']
