@@ -33,13 +33,13 @@ rarefied_beta_medians <- as.data.table(rarefied_beta_medians)
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC. from assemble_turnover_covariates.Rmd
 nrow(bt)
 
-# add initial dissimilarities
+# add initial dissimilarities to dissimilarity data
 bt[, minduration := min(duration), by = rarefyID]
 initdiss <- bt[duration == minduration, .(Jtu.init = mean(Jtu.sc)), by = .(rarefyID)] # initial dissimilarities
 bt <- merge(bt, initdiss[, .(rarefyID, Jtu.init)])
 nrow(bt)
 
-# add gains and losses
+# add gains and losses to dissimilarity data
 bt <- merge(bt, rarefied_alpha_medians[, .(rarefyID, year1 = YEAR, S1 = S)], by = c('rarefyID', 'year1')) # merge in num species in first year
 bt <- merge(bt, rarefied_alpha_medians[, .(rarefyID, year2 = YEAR, S2 = S)], by = c('rarefyID', 'year2')) # and second year
 bt <- merge(bt, rarefied_beta_medians[, .(rarefyID, year1 = as.numeric(YEAR1), year2 = as.numeric(YEAR2), gains, losses)], by = c('rarefyID', 'year1', 'year2')) # merge in num gains and losses. not clear why YEAR1 and YEAR2 got read as characters, but coercing to numeric seems fine.
@@ -49,25 +49,45 @@ nrow(bt)
 bt[, sum(is.na(gains))]
 bt[, sum(is.na(losses))]
 
-# make a long version summarized by rarefyID for plotting
-btgainloss <- rbind(bt[, .(prop = mean(gains/S1), type = 'gain'), by = .(REALM, rarefyID)],
-                    bt[, .(prop = mean(losses/S1), type = 'loss'), by = .(REALM, rarefyID)])
+# make a long version of gains/losses summarized by rarefyID for plotting
+btgainloss <- rbind(bt[, .(prop = mean(gains/S1), type = 'gain'), by = .(REALM, tempchange_abs = abs(tempchange), microclim.sc, rarefyID)],
+                    bt[, .(prop = mean(losses/S1), type = 'loss'), by = .(REALM, tempchange_abs = abs(tempchange), microclim.sc, rarefyID)],
+                    bt[, .(prop = mean(gains/losses), type = 'gainlossratio'), by = .(REALM, tempchange_abs = abs(tempchange), microclim.sc, rarefyID)])
 
+# turnover rate (slope of dissimilarity vs. time)
+trends <- fread('output/slope.csv.gz') # linear slopes. from calc_turnover.R
+
+# add turnover rate to initdiss
+trends <- merge(initdiss, trends[measure == 'Jtu' & duration_group == 'All'], by = 'rarefyID')
+nrow(trends)
+
+# add gains/losses to initdiss
+trends <- merge(trends, bt[, .(gainlossprop = mean(gains/losses)), by = .(rarefyID)])
+nrow(trends)
 ```
 
-# Plot
-
+# By realm
+## Plot
+Terrestrial tends to have a smaller proportion of gains and of losses
 ```{r}
 # plots
-ggplot(btgainloss, aes(REALM, prop)) +
+ggplot(btgainloss[type %in% c('gain', 'loss')], aes(REALM, prop)) +
   geom_boxplot() +
   scale_y_log10() + 
   facet_wrap(~type)
 
 ```
 
+```{r}
+ggplot(btgainloss[type == 'gainlossratio'], aes(REALM, prop)) +
+  geom_boxplot() +
+  scale_y_log10() + 
+  facet_wrap(~type) +
+  labs(y = 'Gain-loss ratio')
 
-# Stats
+```
+
+## Stats
 Nonparametric test of gains by realm.
 ```{r}
 kruskal.test(prop ~ REALM, data = btgainloss[type == 'gain' & is.finite(prop), .(prop, REALM = as.factor(REALM))])
@@ -79,3 +99,59 @@ Nonparametric test of losses by realm.
 kruskal.test(prop ~ REALM, data = btgainloss[type == 'loss' & is.finite(prop), .(prop, REALM = as.factor(REALM))])
 
 ```
+Nonparametric test of gains vs. losses by realm.
+```{r}
+kruskal.test(prop ~ REALM, data = btgainloss[type == 'gainlossratio' & is.finite(prop), .(prop, REALM = as.factor(REALM))])
+
+```
+
+# By tempchange_abs
+## Plot
+```{r}
+ggplot(btgainloss[type == 'gainlossratio' & !is.na(tempchange_abs)], aes(tempchange_abs, prop)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth() +
+  scale_y_log10() + 
+  scale_x_sqrt() + 
+  facet_wrap(~type) +
+  labs(y = 'Gain-loss ratio')
+
+```
+## Stats
+Nonparametric test of gains vs. losses by tempchange_abs. Suggests slightly more losses at faster temperature change.
+```{r}
+cor.test(~ prop + tempchange_abs, method = 'spearman', data = btgainloss[type == 'gainlossratio' & is.finite(prop)])
+
+```
+
+# By microclim
+## Plot
+```{r}
+ggplot(btgainloss[type == 'gainlossratio' & !is.na(microclim.sc)], aes(microclim.sc, prop)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth() +
+  scale_y_log10() + 
+  facet_wrap(~type) +
+  labs(y = 'Gain-loss ratio')
+
+```
+## Stats
+Nonparametric test of gains vs. losses by microclim. Suggests ...
+```{r}
+cor.test(~ prop + microclim.sc, method = 'spearman', data = btgainloss[type == 'gainlossratio' & is.finite(prop)])
+
+```
+# Interaction of gains/losses with initial dissimilarity
+More losses to the left, more gains to the right. Don't see any clear evidence for the hypothesis that losses have a big impact when initial dissimilarity is low.
+```{r}
+ggplot(trends, aes(gainlossprop, disstrend, color = year2 - year1)) + 
+    geom_point(alpha = 0.5) +
+    geom_smooth() +
+  geom_vline(xintercept = 1, linetype = 'dashed') +
+  facet_wrap(~cut(Jtu.init, breaks = 4), scales = "free_y") +
+  scale_color_gradient(trans = 'log10') +
+  scale_x_log10()
+ 
+```
+
+

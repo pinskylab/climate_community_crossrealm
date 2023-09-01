@@ -141,7 +141,7 @@ if(!exists('modsdTRealmtsigninitAllJtu')) modsdTRealmtsigninitAllJtu <- readRDS(
 if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. 
 
 # with Jtu.init for Table S3
-#if(!exists('modInitAllHorn')) modInitAllHorn <- readRDS(here('temp', 'modInitAllHorn.rds')) # Null with only duration
+if(!exists('modInitAllHorn')) modInitAllHorn <- readRDS(here('temp', 'modInitAllHorn.rds')) # Null with only duration
 if(!exists('modRealmInitAllHorn')) modRealmInitAllHorn <- readRDS('temp/modRealmInitAllHorn.rds') # Realm
 if(!exists('modTaxamod2InitAllHorn')) modTaxamod2InitAllHorn <- readRDS('temp/modTaxamod2InitAllHorn.rds') # Taxon
 if(!exists('modsdTtsignInitAllHorn')) modsdTtsignInitAllHorn <- readRDS(here('temp', 'modsdTtsignInitAllHorn.rds')) # tsign, tempchange_abs
@@ -187,7 +187,7 @@ aics
 ### Like Table S3 (Horn)
 ```{r}
 aics <- AIC(
-  #modInitAllHorn, 
+  modInitAllHorn, 
   modRealmInitAllHorn, modTaxamod2InitAllHorn, # simple models w/out tempchange
   modsdTtsignInitAllHorn, modsdTRealmtsigninitAllHorn, # tsign:tempchange_abs, also by realm
   modrawTsdTTRealmtsigninitAllHorn
