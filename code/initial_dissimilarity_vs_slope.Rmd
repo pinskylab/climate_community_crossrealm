@@ -137,7 +137,7 @@ if(!exists('modRealmInitAllJtu')) modRealmInitAllJtu <- readRDS('temp/modRealmIn
 if(!exists('modTaxamod2InitAllJtu')) modTaxamod2InitAllJtu <- readRDS('temp/modTaxamod2InitAllJtu.rds') # Taxon. 
 if(!exists('modsdTtsignInitAllJtu')) modsdTtsignInitAllJtu <- readRDS(here('temp', 'modsdTtsignInitAllJtu.rds')) # tsign, tempchange_abs.
 if(!exists('modsdTRealmtsigninitAllJtu')) modsdTRealmtsigninitAllJtu <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # tsign:tempchange_abs by realm. 
-#if(!exists('modabsLatsdTabsLatRealmtsignInitAllJtu')) modabsLatsdTabsLatRealmtsignInitAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitAllJtu.rds')) # tsign:tempchange_abs:absLat. Not yet included since not fit yet
+if(!exists('modabsLatsdTabsLatRealmtsignInitAllJtu')) modabsLatsdTabsLatRealmtsignInitAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitAllJtu.rds')) # tsign:tempchange_abs:absLat. Not yet included since not fit yet
 if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. 
 
 # with Jtu.init for Table S3
@@ -149,8 +149,8 @@ if(!exists('modsdTRealmtsigninitAllHorn')) modsdTRealmtsigninitAllHorn <- readRD
 if(!exists('modrawTsdTTRealmtsigninitAllHorn')) modrawTsdTTRealmtsigninitAllHorn <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllHorn.rds')) # adds tsign to tempave:tempchange:realm
 
 # with Jtu.init for Table S4
-#if(!exists('modrawTsdTTRealmtsignmicroclimInitAllJtu')) modrawTsdTTRealmtsignmicroclimInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimInitAllJtu.rds') # has microclimates
-#if(!exists('modrawTsdTTRealmtsignhumanInitAllJtu')) modrawTsdTTRealmtsignhumanInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanInitAllJtu.rds') # has human impact. 
+if(!exists('modrawTsdTTRealmtsignmicroclimInitAllJtu')) modrawTsdTTRealmtsignmicroclimInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimInitAllJtu.rds') # has microclimates
+if(!exists('modrawTsdTTRealmtsignhumanInitAllJtu')) modrawTsdTTRealmtsignhumanInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanInitAllJtu.rds') # has human impact. 
 
 
 # w/out
@@ -176,7 +176,7 @@ sum.TchangeTave
 
 aics <- AIC(modInitAllJtu, modRealmInitAllJtu, modTaxamod2InitAllJtu, # simple models w/out tempchange
             modsdTtsignInitAllJtu, modsdTRealmtsigninitAllJtu, # tsign:tempchange_abs w/out or w/ realm
-            #modabsLatsdTabsLatRealmtsignInitAllJtu,
+            modabsLatsdTabsLatRealmtsignInitAllJtu,
             modrawTsdTTRealmtsigninitAllJtu) # add tempave:tempchange_abs
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllJtu']
@@ -193,7 +193,7 @@ aics <- AIC(
   modrawTsdTTRealmtsigninitAllHorn
 ) # add tempave:tempchange_abs
 aics$dAIC <- aics$AIC - min(aics$AIC)
-#aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllHorn']
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllHorn']
 aics
 
 ```
@@ -211,18 +211,42 @@ aics
 ```
 
 ## Likelihood ratio tests
+### Jtu models
 ```{r}
-anova(modInitAllJtu, modsdTtsignInitAllJtu)
 anova(modInitAllJtu, modRealmInitAllJtu)
+anova(modInitAllJtu, modTaxamod2InitAllJtu)
+anova(modInitAllJtu, modsdTtsignInitAllJtu)
 
 anova(modInitAllJtu, modsdTRealmtsigninitAllJtu)
 anova(modRealmInitAllJtu, modsdTRealmtsigninitAllJtu)
+anova(modsdTtsignInitAllJtu, modsdTRealmtsigninitAllJtu)
 
+anova(modsdTRealmtsigninitAllJtu, modrawTsdTTRealmtsigninitAllJtu)
 
 ```
 
+### Horn models
+```{r}
+anova(modInitAllHorn, modRealmInitAllHorn)
+anova(modInitAllHorn, modTaxamod2InitAllHorn)
+anova(modInitAllHorn, modsdTtsignInitAllHorn)
+
+anova(modInitAllHorn, modsdTRealmtsigninitAllHorn)
+anova(modRealmInitAllHorn, modsdTRealmtsigninitAllHorn)
+anova(modsdTtsignInitAllHorn, modsdTRealmtsigninitAllHorn)
+
+anova(modsdTRealmtsigninitAllHorn, modrawTsdTTRealmtsigninitAllHorn)
+
+```
+
+### Covariate models
+```{r}
+anova(modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignmicroclimInitAllJtu)
+anova(modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignhumanInitAllJtu)
+
+```
 ## Plots: Compare to models without init
-## 2D plots
+### 2D plots
 made by pred_modrawXAllJtu.sh
 ```{r}
 # read in slopes

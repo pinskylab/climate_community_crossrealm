@@ -70,6 +70,8 @@ iallHorn <-
         human_bowler.sc
     )]
 
+trendsall[iallJtu, absLat.sc := scale(abs(rarefyID_y))]
+
 ## choose model
 
 # Trend model #################################
@@ -276,7 +278,7 @@ if (fitmod == 'modrawTsdTTRealmtsigninitAllHorn') {
     MATCHMOD <- TRUE
 }
 
-
+# latitude instead of tempave #########################
 
 # latitude
 if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
@@ -286,7 +288,6 @@ if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
-            REALM:duration +
             REALM:tsign:tempchange_abs.sc:duration +
             REALM:tsign:absLat.sc:duration +
             REALM:tsign:absLat.sc:tempchange_abs.sc:duration +
@@ -295,6 +296,43 @@ if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
     )
+    MATCHMOD <- TRUE
+}
+
+# covariates #########################
+
+### microclim
+if (fitmod == 'modrawTsdTTRealmtsignmicroclimInitAllJtu') {
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+            REALM:microclim.sc:duration +
+            REALM:microclim.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM)
+    MATCHMOD <- TRUE
+}
+
+if (fitmod == 'modrawTsdTTRealmtsignhumanInitAllJtu') {
+    print(paste(sum(iallJtu), 'data points'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+            REALM:human_bowler.sc:duration +
+            REALM:human_bowler.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM)
     MATCHMOD <- TRUE
 }
 
