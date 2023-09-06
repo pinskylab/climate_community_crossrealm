@@ -11,8 +11,11 @@
 print(paste('This is process #', Sys.getpid()))
 print(Sys.time())
 
-# load functions and data ----------------
+### set arguments -----------------
+n = 1000 # number of resamples to do for each timeseries
 
+
+### load functions and data ----------------
 # needed to run this from the Annotate R console. Not needed in RStudio on Annotate. Not clear why.
 if(Sys.getenv('RSTUDIO')=='' & Sys.info()[[4]]=='annotate.sebs.rutgers.edu'){
     dyn.load('/usr/local/lib64/libgfortran.so.5')
@@ -24,24 +27,41 @@ library(here) # for relative paths
 library(lavaan) # for SEM models of slopes
 source(here('code', 'util.R'))
 
+# function for slopes and SEs from resampling
+# n: number of resamples, other columns are the x, y, and se of y variables
+# colnames refer to the output
+slopesamp <- function(n, duration, Jtu.sc, Jtu.sc.se, colnames = c('slope', 'slope.se')){
+    if(length(duration) != length(Jtu.sc)) stop('duration and Jtu.sc are not the same length')
+    if(length(duration) != length(Jtu.sc.se)) stop('duration and Jtu.sc.se are not the same length')
+    if(length(Jtu.sc) != length(Jtu.sc.se)) stop('Jtu.sc and Jtu.sc.se are not the same length')
+    
+    samp <- rep(NA, n) # will hold the slopes of the sampled data
+    for(j in 1:n){
+        y <- rnorm(length(Jtu.sc), mean = Jtu.sc, sd = Jtu.sc.se) # one sample
+        samp[j] <- coef(lm(y ~ duration))[2] # fit line, get slope
+    }
+    out <- c(coef(lm(Jtu.sc ~ duration))[2], sd(samp))
+    names(out) <- colnames
+    return(as.list(out)) # coercing to list will allow the data.table aggregate used later to create 2 columns
+}
 
 
 # The scaling factors
 scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv'))
 
-
-# The model
-modrawTsdTTRealmtsignmicroclimAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimAllJtu.rds') # has microclimates
-modrawTsdTTRealmtsignhumanAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanAllJtu.rds') # has human impact
+# The models
+modmicroclim <- readRDS('temp/modrawTsdTTRealmtsignmicroclimInitAllJtu.rds') # has microclimates
+modhuman <- readRDS('temp/modrawTsdTTRealmtsignhumanInitAllJtu.rds') # has human impact
 print('models loaded')
 
 
-# Make predictions -------------------------
+### Make predictions -------------------------
 # set up prediction frame
 newdat <- data.table(expand.grid(tempave = c(0, 8, 10, 13, 30), tempchange = seq(-1.5, 2, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial'), microclim.sc = seq(-2, 2, length.out=10)))
 newdat[, ':='(human_bowler.sc = microclim.sc)]
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1
+newdat$Jtu.init <- 0.5
 newdat[, tempave.sc := scaleme(tempave, 'tempave.sc')]
 newdat[, tempchange_abs := abs(tempchange)]
 newdat[, tsign := signneg11(tempchange)]
@@ -60,68 +80,38 @@ if(newdat[, max(human_bowler)>10]){
 }
 
 # predict
-preds.microclim <- predict(modrawTsdTTRealmtsignmicroclimAllJtu, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+preds.microclim <- predict(modmicroclim, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')
 newdat$Jtu.sc.microclim <- preds.microclim$fit
 newdat$Jtu.sc.microclim.se <- preds.microclim$se.fit
 print('finished microclim predictions')
 
-preds.human <- predict(modrawTsdTTRealmtsignhumanAllJtu, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')
+preds.human <- predict(modhuman, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')
 newdat$Jtu.sc.human <- preds.human$fit
 newdat$Jtu.sc.human.se <- preds.human$se.fit
 print('finished human predictions')
 
 # write out
-saveRDS(newdat, file = here('temp', 'preds_rawTsdTTRealmtsignCovariate.rds'))
-print(paste('Wrote preds_rawTsdTTRealmtsignCovariate.rds:', Sys.time()))
+saveRDS(newdat, file = here('temp', 'preds_rawTsdTTRealmtsignCovariateInit.rds'))
+print(paste('Wrote preds_rawTsdTTRealmtsignCovariateInit.rds:', Sys.time()))
 
 # if reading in (eg, if running by hand)
-# newdat <- readRDS(here('temp', 'preds_rawTsdTTRealmtsignCovariate.rds'))
-
-# Calculate slopes -----------------------------
-# calculate slopes and SE of the slope using latent variables
-mods.microclim <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc.microclim\nJtu.sc.microclim ~~ ', mean(Jtu.sc.microclim.se), '*Jtu.sc.microclim'), data.frame(Jtu.sc.microclim, duration)))), 
-                         by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)] # takes ~30 min
-print('finished microclim SEM')
-mods.human <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc.human\nJtu.sc.human ~~ ', mean(Jtu.sc.human.se), '*Jtu.sc.human'), data.frame(Jtu.sc.human, duration)))), 
-                     by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)]
-print('finished human SEM')
+# newdat <- readRDS(here('temp', 'preds_rawTsdTTRealmtsignCovariateInit.rds'))
 
 
-# extract slopes and SEs from latent variable approach
-slopes.microclim <- mods.microclim[, parameterEstimates(mod[[1]]), 
-                                   by = .(tempave, tempchange, tempchange_abs, tsign, 
-                                          microclim, human_bowler, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
-                                                                                            .(tempave, tempchange, tempchange_abs, 
-                                                                                              microclim, human_bowler, REALM, 
-                                                                                              slope_microclim = est, slope_microclim.se = se)]
-slopes.human <- mods.human[, parameterEstimates(mod[[1]]), 
-                           by = .(tempave, tempchange, tempchange_abs, tsign, 
-                                  microclim, human_bowler, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
-                                                                                    .(tempave, tempchange, tempchange_abs, tsign, 
-                                                                                      microclim, human_bowler, REALM, 
-                                                                                      slope_human = est, slope_human.se = se)]
 
+### Calculate slopes -----------------------------
+slopes.microclim <- newdat[, slopesamp(n, duration, Jtu.sc.microclim, Jtu.sc.microclim.se, colnames = c('slope_microclim', 'slope_microclim.se')), 
+                                  by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)]
+slopes.human <- newdat[, slopesamp(n, duration, Jtu.sc.human, Jtu.sc.human.se, colnames = c('slope_human', 'slope_human.se')), 
+                              by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)]
 slopes2 <- merge(slopes.microclim, slopes.human)
 
-
-# save latent variable slopes
-saveRDS(slopes2, file = here('temp', 'slopes_rawTsdTTRealmtsignCovariate.rds'))
-# slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariate.rds')) # to read in manually
-print(paste('Wrote slopes_rawTsdTTRealmtsignCovariate.rds:', Sys.time()))
-
-
-# slopes and SEs from lm
-slopes.microclim.lm <- newdat[, .(slope_microclim = summary(lm(Jtu.sc.microclim ~ duration))$coefficients[2], slope_microclim.se = summary(lm(Jtu.sc.microclim ~ duration))$coefficients[4]), 
-                              by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)]
-slopes.human.lm <- newdat[, .(slope_human = summary(lm(Jtu.sc.human ~ duration))$coefficients[2], slope_human.se = summary(lm(Jtu.sc.human ~ duration))$coefficients[4]), 
-                              by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)]
-slopes2.lm <- merge(slopes.microclim.lm, slopes.human.lm)
+# save slopes
+saveRDS(slopes2, file = here('temp', 'slopes_rawTsdTTRealmtsignCovariateInit.rds'))
+# slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariateInit.rds')) # to read in manually
+print(paste('Wrote slopes_rawTsdTTRealmtsignCovariateInit.rds:', Sys.time()))
 
 
-# save lm slopes
-saveRDS(slopes2.lm, file = here('temp', 'slopes_rawTsdTTRealmtsignCovariate.lm.rds'))
-# slopes2.lm <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariate.lm.rds')) # to read in manually
-print(paste('Wrote slopes_rawTsdTTRealmtsignCovariate.lm.rds:', Sys.time()))
 
 print(warnings())
 print(paste('Ended', Sys.time(), sep = ''))

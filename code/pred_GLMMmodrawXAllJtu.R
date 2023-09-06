@@ -18,7 +18,10 @@
 print(paste('This is process #', Sys.getpid()))
 print(Sys.time())
 
-# read arguments ----------------
+### set arguments -----------------
+n = 1000 # number of resamples to do for each timeseries
+
+### read arguments ----------------
 args <- commandArgs(trailingOnly = TRUE)
 print(args)
 
@@ -43,10 +46,30 @@ library(lavaan) # for SEM models of slopes
 source(here('code', 'util.R'))
 
 
+# slopes and SEs from resampling
+# n: number of resamples, other columns are the x, y, and se of y variables
+slopesamp <- function(n, duration, Jtu.sc, Jtu.sc.se){
+    if(length(duration) != length(Jtu.sc)) stop('duration and Jtu.sc are not the same length')
+    if(length(duration) != length(Jtu.sc.se)) stop('duration and Jtu.sc.se are not the same length')
+    if(length(Jtu.sc) != length(Jtu.sc.se)) stop('Jtu.sc and Jtu.sc.se are not the same length')
+    
+    samp <- rep(NA, n) # will hold the slopes of the sampled data
+    for(j in 1:n){
+        y <- rnorm(length(Jtu.sc), mean = Jtu.sc, sd = Jtu.sc.se) # one sample
+        samp[j] <- coef(lm(y ~ duration))[2] # fit line, get slope
+    }
+    out <- c(coef(lm(Jtu.sc ~ duration))[2], sd(samp))
+    names(out) <- c('slope', 'slope.se')
+    return(as.list(out)) # coercing to list will allow the data.table aggregate used later to create 2 columns
+}
+
+
 # The scaling factors
 scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From assemble_turnover_covariates.Rmd
 
-# Choose a model
+
+
+### Choose a model ---------------------------------
 if(predmod == 'modsdTRealmtsignAllJtu'){
     mod <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # From turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
     out_preds <- 'preds_modsdTRealmtsignAllJtu.rds'
@@ -102,16 +125,8 @@ saveRDS(newdat, file = here('temp', out_preds))
 
 
 ### Slope calculations -------------------
-# calculate slopes and SE of the slope using latent variables (since predictions have SE)
-slopemods <- newdat[, .(mod = list(lavaan(paste0('fithat ~ duration\nfithat =~ 1*Jtu.sc\nJtu.sc ~~ ', mean(Jtu.sc.se), '*Jtu.sc'), data.frame(Jtu.sc, duration)))), 
-                         by = .(tempave, tempchange, REALM)]
-print('finished SEM')
-
-
-# extract slopes and SEs
-slopes <- slopemods[, parameterEstimates(mod[[1]]), 
-                           by = .(tempave, tempchange, REALM)][lhs == 'fithat' & op == '~' & rhs == 'duration', 
-                                                               .(tempave, tempchange, REALM, slope = est, slope.se = se)]
+slopes <- newdat[, slopesamp(n, duration, Jtu.sc, Jtu.sc.se), 
+                 by = .(tempave, tempchange, REALM)]
 
 ### Write slopes -------------
 saveRDS(slopes, file = here('temp', out_slopes))
