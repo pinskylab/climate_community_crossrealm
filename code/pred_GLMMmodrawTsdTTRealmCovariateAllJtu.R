@@ -24,7 +24,6 @@ if(Sys.getenv('RSTUDIO')=='' & Sys.info()[[4]]=='annotate.sebs.rutgers.edu'){
 library(data.table) # for handling large datasets
 library(glmmTMB, lib.loc = "/usr/lib64/R/library") # for ME models
 library(here) # for relative paths
-library(lavaan) # for SEM models of slopes
 source(here('code', 'util.R'))
 
 # function for slopes and SEs from resampling
@@ -99,17 +98,33 @@ print(paste('Wrote preds_rawTsdTTRealmtsignCovariateInit.rds:', Sys.time()))
 
 
 
-### Calculate slopes -----------------------------
+### Calculate turnover rates (change in turnover per year) -----------------------------
 slopes.microclim <- newdat[, slopesamp(n, duration, Jtu.sc.microclim, Jtu.sc.microclim.se, colnames = c('slope_microclim', 'slope_microclim.se')), 
                                   by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)]
 slopes.human <- newdat[, slopesamp(n, duration, Jtu.sc.human, Jtu.sc.human.se, colnames = c('slope_human', 'slope_human.se')), 
                               by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)]
 slopes2 <- merge(slopes.microclim, slopes.human)
 
-# save slopes
+# save turnover rates
 saveRDS(slopes2, file = here('temp', 'slopes_rawTsdTTRealmtsignCovariateInit.rds'))
 # slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariateInit.rds')) # to read in manually
 print(paste('Wrote slopes_rawTsdTTRealmtsignCovariateInit.rds:', Sys.time()))
+
+### Calculate sensitivity of turnover rates to covariates ----------------------
+slopes2 <- slopes2[tempave == 10 & tempchange > 0, ] # pick median tempave and warming
+
+sensitivity.microclim <- slopes2[, slopesamp(n, tempchange, slope_microclim, slope_microclim.se, colnames = c('sensitivity_microclim', 'sensitivity_microclim.se')), 
+                                 by = .(microclim, human_bowler, REALM)]
+sensitivity.human <- slopes2[, slopesamp(n, tempchange, slope_human, slope_human.se, colnames = c('sensitivity_human', 'sensitivity_human.se')), 
+                                 by = .(microclim, human_bowler, REALM)]
+
+
+sensitivity2 <- merge(sensitivity.microclim, sensitivity.human)
+
+# save sensitivities
+saveRDS(sensitivity2, file = here('temp', 'sensitivity_rawTsdTTRealmtsignCovariateInit.rds'))
+# sensitivity2 <- readRDS(here('temp', 'sensitivity_rawTsdTTRealmtsignCovariateInit.rds')) # to read in manually
+print(paste('Wrote sensitivity_rawTsdTTRealmtsignCovariateInit.rds:', Sys.time()))
 
 
 
