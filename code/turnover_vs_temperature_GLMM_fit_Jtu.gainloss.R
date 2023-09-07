@@ -92,7 +92,7 @@ if (fitmod == 'modGainLossAllJtu') {
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             gainlossprop:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -106,7 +106,7 @@ if (fitmod == 'modGainLossAllHorn') {
     mod <- glmmTMB(
         Horn.sc ~ duration +
             gainlossprop:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM,
@@ -125,7 +125,7 @@ if (fitmod == 'modRealmGainLossAllJtu') {
         Jtu.sc ~ duration +
             gainlossprop:duration +
             REALM:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -140,7 +140,7 @@ if (fitmod == 'modRealmGainLossAllHorn') {
         Horn.sc ~ duration +
             gainlossprop:duration +
             REALM:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -156,7 +156,7 @@ if (fitmod == 'modTaxamod2GainLossAllJtu') {
         Jtu.sc ~ duration +
             gainlossprop:duration +
             taxa_mod2:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM#,
@@ -173,7 +173,7 @@ if (fitmod == 'modTaxamod2GainLossAllHorn') {
         Horn.sc ~ duration +
             gainlossprop:duration +
             taxa_mod2:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM#,
@@ -193,7 +193,7 @@ if (fitmod == 'modsdTtsignGainLossAllJtu') {
         Jtu.sc ~ duration +
             gainlossprop:duration +
             tsign:tempchange_abs.sc:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -209,7 +209,7 @@ if (fitmod == 'modsdTtsignGainLossAllHorn') {
         Horn.sc ~ duration +
             gainlossprop:duration +
             tsign:tempchange_abs.sc:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -227,7 +227,7 @@ if (fitmod == 'modsdTRealmtsignGainLossAllJtu') {
         Jtu.sc ~ duration +
             gainlossprop:duration +
             REALM:tsign:tempchange_abs.sc:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -243,7 +243,7 @@ if (fitmod == 'modsdTRealmtsignGainLossAllHorn') {
         Horn.sc ~ duration +
             gainlossprop:duration +
             REALM:tsign:tempchange_abs.sc:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -263,7 +263,7 @@ if (fitmod == 'modrawTsdTTRealmtsignGainLossAllJtu') {
             REALM:tsign:tempchange_abs.sc:duration +
             REALM:tsign:tempave.sc:duration +
             REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -281,7 +281,7 @@ if (fitmod == 'modrawTsdTTRealmtsignGainLossAllHorn') {
             REALM:tsign:tempchange_abs.sc:duration +
             REALM:tsign:tempave.sc:duration +
             REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -302,7 +302,7 @@ if (fitmod == 'modabsLatsdTabsLatRealmtsignGainLossAllJtu') {
             REALM:tsign:tempchange_abs.sc:duration +
             REALM:tsign:absLat.sc:duration +
             REALM:tsign:absLat.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -323,7 +323,7 @@ if (fitmod == 'modrawTsdTTRealmtsignmicroclimGainLossAllJtu') {
             REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
             REALM:microclim.sc:duration +
             REALM:microclim.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM)
@@ -340,7 +340,7 @@ if (fitmod == 'modrawTsdTTRealmtsignhumanGainLossAllJtu') {
             REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
             REALM:human_bowler.sc:duration +
             REALM:human_bowler.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID ) + (1 | STUDY_ID/rarefyID),
+            (duration | STUDY_ID ),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM)
