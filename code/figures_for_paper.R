@@ -346,7 +346,7 @@ ggsave('figures/fig2_nopredsTxT.png', fig2noTT, width = 6, height = 4, units = '
 
 
 ### Figure 3: interactions ---------
-slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariate.resamp.rds')) # from code/pred_GLMMmodrawTsdTTRealmCovariateAllJtu_resamponly.R
+slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariateInit.rds')) # from code/pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R
 slopes2 <- slopes2[tempave == 10 & abs(tempchange - 0.5)<0.02, ]
 
 # max rates by realm and covariate
@@ -367,8 +367,9 @@ p1 <- ggplot(slopes2, aes(microclim, slope_microclim,
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
     scale_color_brewer(drop = FALSE, palette = 'Dark2') + # to keep missing factor levels in the plot if we drop them above
-    scale_fill_brewer(drop = FALSE, palette = 'Dark2')
-p1
+    scale_fill_brewer(drop = FALSE, palette = 'Dark2') +
+    scale_x_log10()
+
 p2 <- ggplot(slopes2, aes(human_bowler, slope_human, 
                           ymin=slope_human-1.96*slope_human.se,  ymax=slope_human+1.96*slope_human.se)) +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
@@ -382,8 +383,9 @@ p2 <- ggplot(slopes2, aes(human_bowler, slope_human,
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
     scale_color_brewer(drop = FALSE, palette = 'Dark2') + # to keep missing factor levels in the plot if we drop them above
-    scale_fill_brewer(drop = FALSE, palette = 'Dark2')
-p2
+    scale_fill_brewer(drop = FALSE, palette = 'Dark2') +
+    scale_x_log10()
+
 fig3 <- arrangeGrob(p1, p2, ncol = 1)
 
 ggsave('figures/fig3.png', fig3, width = 4, height = 4, units = 'in')
