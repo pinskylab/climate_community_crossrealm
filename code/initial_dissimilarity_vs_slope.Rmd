@@ -162,11 +162,13 @@ if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRD
 
 ## Summaries
 ```{r}
-if(!exists('sum.Tchange')) sum.Tchange <- summary(modsdTRealmtsigninitAllJtu)
-if(!exists('sum.TchangeTave')) sum.TchangeTave <- summary(modrawTsdTTRealmtsigninitAllJtu)
+if(!exists('sum.init.null')) sum.init.null <- summary(modInitAllJtu)
+if(!exists('sum.init.Tchange')) sum.init.Tchange <- summary(modsdTRealmtsigninitAllJtu)
+if(!exists('sum.init.TchangeTave')) sum.init.TchangeTave <- summary(modrawTsdTTRealmtsigninitAllJtu)
 
-sum.Tchange
-sum.TchangeTave
+sum.init.null
+sum.init.Tchange
+sum.init.TchangeTave
 ```
 
 

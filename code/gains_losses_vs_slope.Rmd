@@ -66,8 +66,9 @@ trends <- merge(trends, bt[, .(gainlossprop = mean(gains/losses)), by = .(rarefy
 nrow(trends)
 ```
 
-# By realm
-## Plot
+# Examine gainloss differences across the dataset
+## By realm
+### Plot
 Terrestrial tends to have a smaller proportion of gains and of losses
 ```{r}
 # plots
@@ -87,7 +88,7 @@ ggplot(btgainloss[type == 'gainlossratio'], aes(REALM, prop)) +
 
 ```
 
-## Stats
+### Stats
 Nonparametric test of gains by realm.
 ```{r}
 kruskal.test(prop ~ REALM, data = btgainloss[type == 'gain' & is.finite(prop), .(prop, REALM = as.factor(REALM))])
@@ -105,8 +106,8 @@ kruskal.test(prop ~ REALM, data = btgainloss[type == 'gainlossratio' & is.finite
 
 ```
 
-# By tempchange_abs
-## Plot
+## By tempchange_abs
+### Plot
 ```{r}
 ggplot(btgainloss[type == 'gainlossratio' & !is.na(tempchange_abs)], aes(tempchange_abs, prop)) +
   geom_point(alpha = 0.3) +
@@ -117,15 +118,15 @@ ggplot(btgainloss[type == 'gainlossratio' & !is.na(tempchange_abs)], aes(tempcha
   labs(y = 'Gain-loss ratio')
 
 ```
-## Stats
+### Stats
 Nonparametric test of gains vs. losses by tempchange_abs. Suggests slightly more losses at faster temperature change.
 ```{r}
 cor.test(~ prop + tempchange_abs, method = 'spearman', data = btgainloss[type == 'gainlossratio' & is.finite(prop)])
 
 ```
 
-# By microclim
-## Plot
+## By microclim
+### Plot
 ```{r}
 ggplot(btgainloss[type == 'gainlossratio' & !is.na(microclim.sc)], aes(microclim.sc, prop)) +
   geom_point(alpha = 0.3) +
@@ -135,13 +136,14 @@ ggplot(btgainloss[type == 'gainlossratio' & !is.na(microclim.sc)], aes(microclim
   labs(y = 'Gain-loss ratio')
 
 ```
-## Stats
+### Stats
 Nonparametric test of gains vs. losses by microclim. Suggests ...
 ```{r}
 cor.test(~ prop + microclim.sc, method = 'spearman', data = btgainloss[type == 'gainlossratio' & is.finite(prop)])
 
 ```
-# Interaction of gains/losses with initial dissimilarity
+## Interaction of gains/losses with initial dissimilarity
+### Plot
 More losses to the left, more gains to the right. Don't see any clear evidence for the hypothesis that losses have a big impact when initial dissimilarity is low.
 ```{r}
 ggplot(trends, aes(gainlossprop, disstrend, color = year2 - year1)) + 
@@ -154,4 +156,67 @@ ggplot(trends, aes(gainlossprop, disstrend, color = year2 - year1)) +
  
 ```
 
+# Examine Tchange models with gainlossprop
+Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.gainloss.R.
+## Load models
+```{r}
+# with gainlossprop for Table 1
+if(!exists('modGainLossAllJtu')) modGainLossAllJtu <- readRDS(here('temp', 'modGainLossAllJtu.rds')) # Null
+#if(!exists('modRealmGainLossAllJtu')) modRealmGainLossAllJtu <- readRDS('temp/modRealmGainLossAllJtu.rds') # Realm. 
+#if(!exists('modTaxamod2GainLossAllJtu')) modTaxamod2GainLossAllJtu <- readRDS('temp/modTaxamod2GainLossAllJtu.rds') # Taxon. 
+#if(!exists('modsdTtsignGainLossAllJtu')) modsdTtsignGainLossAllJtu <- readRDS(here('temp', 'modsdTtsignGainLossAllJtu.rds')) # tsign, tempchange_abs.
+if(!exists('modsdTRealmtsignGainLossAllJtu')) modsdTRealmtsignGainLossAllJtu <- readRDS(here('temp', 'modsdTRealmtsignGainLossAllJtu.rds')) # tsign:tempchange_abs by realm. 
+#if(!exists('modabsLatsdTabsLatRealmtsignGainLossAllJtu')) modabsLatsdTabsLatRealmtsignGainLossAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignGainLossAllJtu.rds')) # tsign:tempchange_abs:absLat. Not yet included since not fit yet
+if(!exists('modrawTsdTTRealmtsignGainLossAllJtu')) modrawTsdTTRealmtsignGainLossAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignGainLossAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. 
+
+# with GainLoss for Table S3
+#if(!exists('modGainLossAllHorn')) modGainLossAllHorn <- readRDS(here('temp', 'modGainLossAllHorn.rds')) # Null with only duration
+#if(!exists('modRealmGainLossAllHorn')) modRealmGainLossAllHorn <- readRDS('temp/modRealmGainLossAllHorn.rds') # Realm
+#if(!exists('modTaxamod2GainLossAllHorn')) modTaxamod2GainLossAllHorn <- readRDS('temp/modTaxamod2GainLossAllHorn.rds') # Taxon
+#if(!exists('modsdTtsignGainLossAllHorn')) modsdTtsignGainLossAllHorn <- readRDS(here('temp', 'modsdTtsignGainLossAllHorn.rds')) # tsign, tempchange_abs
+#if(!exists('modsdTRealmtsignGainLossAllHorn')) modsdTRealmtsignGainLossAllHorn <- readRDS(here('temp', 'modsdTRealmtsignGainLossAllHorn.rds')) # tsign:tempchange by realm
+#if(!exists('modrawTsdTTRealmtsignGainLossAllHorn')) modrawTsdTTRealmtsignGainLossAllHorn <- readRDS(here('temp','modrawTsdTTRealmtsignGainLossAllHorn.rds')) # adds tsign to tempave:tempchange:realm
+
+# with GainLoss for Table S4
+#if(!exists('modrawTsdTTRealmtsignmicroclimGainLossAllJtu')) modrawTsdTTRealmtsignmicroclimGainLossAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimGainLossAllJtu.rds') # has microclimates
+#if(!exists('modrawTsdTTRealmtsignhumanGainLossAllJtu')) modrawTsdTTRealmtsignhumanGainLossAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanGainLossAllJtu.rds') # has human impact. 
+
+
+# w/out
+if(!exists('modsdTRealmtsignAllJtu')) modsdTRealmtsignAllJtu <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.R
+if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu.rds')) # Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.R
+
+
+```
+
+## Summaries
+```{r}
+# calculating these are slow, so only do if they don't yet exist
+if(!exists('sum.null')) sum.null <- summary(modGainLossAllJtu)
+if(!exists('sum.Tchange')) sum.Tchange <- summary(modsdTRealmtsignGainLossAllJtu)
+if(!exists('sum.TchangeTave')) sum.TchangeTave <- summary(modrawTsdTTRealmtsignGainLossAllJtu)
+
+# display
+sum.null
+sum.Tchange
+sum.TchangeTave
+```
+
+
+## AIC
+### Like Table 1 (main Jtu models)
+```{r}
+
+aics <- AIC(modGainLossAllJtu, 
+            #modRealmGainLossAllJtu, 
+            #modTaxamod2GainLossAllJtu, # simple models w/out tempchange
+            #modsdTtsignGainLossAllJtu, 
+            modsdTRealmtsignGainLossAllJtu, # tsign:tempchange_abs w/out or w/ realm
+            #modabsLatsdTabsLatRealmtsignGainLossAllJtu,
+            modrawTsdTTRealmtsignGainLossAllJtu) # add tempave:tempchange_abs
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modGainLossAllJtu']
+aics
+
+```
 
