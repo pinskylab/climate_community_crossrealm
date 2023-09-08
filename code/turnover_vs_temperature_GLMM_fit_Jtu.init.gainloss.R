@@ -97,8 +97,8 @@ if (fitmod == 'modInitGainLossAllJtu') {
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
-            (duration | STUDY_ID / rarefyID),
+            Jtu.init:gainlossprop:duration +
+            (duration | STUDY_ID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -112,8 +112,8 @@ if (fitmod == 'modInitGainLossAllHorn') {
     mod <- glmmTMB(
         Horn.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
-            (duration | STUDY_ID / rarefyID),
+            Jtu.init:gainlossprop:duration +
+            (duration | STUDY_ID),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM,
@@ -131,9 +131,9 @@ if (fitmod == 'modRealmInitGainLossAllJtu') {
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
+            Jtu.init:gainlossprop:duration +
             REALM:duration +
-            (duration | STUDY_ID / rarefyID),
+            (duration | STUDY_ID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -147,9 +147,9 @@ if (fitmod == 'modRealmInitGainLossAllHorn') {
     mod <- glmmTMB(
         Horn.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
+            Jtu.init:gainlossprop:duration +
             REALM:duration +
-            (duration | STUDY_ID / rarefyID),
+            (duration | STUDY_ID),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -164,9 +164,9 @@ if (fitmod == 'modTaxamod2InitGainLossAllJtu') {
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
+            Jtu.init:gainlossprop:duration +
             taxa_mod2:duration +
-            (duration | STUDY_ID / rarefyID), 
+            (duration | STUDY_ID), 
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM#,
@@ -182,9 +182,9 @@ if (fitmod == 'modTaxamod2InitGainLossAllHorn') {
     mod <- glmmTMB(
         Horn.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
+            Jtu.init:gainlossprop:duration +
             taxa_mod2:duration +
-            (duration | STUDY_ID / rarefyID), 
+            (duration | STUDY_ID), 
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM#,
@@ -203,9 +203,9 @@ if (fitmod == 'modsdTtsignInitGainLossAllJtu') {
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
+            Jtu.init:gainlossprop:duration +
             tsign:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
+            (duration | STUDY_ID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -220,9 +220,9 @@ if (fitmod == 'modsdTtsignInitGainLossAllHorn') {
     mod <- glmmTMB(
         Horn.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
+            Jtu.init:gainlossprop:duration +
             tsign:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
+            (duration | STUDY_ID),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -239,9 +239,9 @@ if (fitmod == 'modsdTRealmtsignInitGainLossAllJtu') {
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
+            Jtu.init:gainlossprop:duration +
             REALM:tsign:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
+            (duration | STUDY_ID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -256,9 +256,9 @@ if (fitmod == 'modsdTRealmtsignInitGainLossAllHorn') {
     mod <- glmmTMB(
         Horn.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
+            Jtu.init:gainlossprop:duration +
             REALM:tsign:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
+            (duration | STUDY_ID),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -275,11 +275,11 @@ if (fitmod == 'modrawTsdTTRealmtsignInitGainLossAllJtu') {
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
+            Jtu.init:gainlossprop:duration +
             REALM:tsign:tempchange_abs.sc:duration +
             REALM:tsign:tempave.sc:duration +
             REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
+            (duration | STUDY_ID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -294,11 +294,11 @@ if (fitmod == 'modrawTsdTTRealmtsignInitGainLossAllHorn') {
     mod <- glmmTMB(
         Horn.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
+            Jtu.init:gainlossprop:duration +
             REALM:tsign:tempchange_abs.sc:duration +
             REALM:tsign:tempave.sc:duration +
             REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
+            (duration | STUDY_ID),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -316,11 +316,11 @@ if (fitmod == 'modabsLatsdTabsLatRealmtsignInitGainLossAllJtu') {
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
+            Jtu.init:gainlossprop:duration +
             REALM:tsign:tempchange_abs.sc:duration +
             REALM:tsign:absLat.sc:duration +
             REALM:tsign:absLat.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
+            (duration | STUDY_ID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
@@ -336,13 +336,13 @@ if (fitmod == 'modrawTsdTTRealmtsignmicroclimInitGainLossAllJtu') {
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
+            Jtu.init:gainlossprop:duration +
             REALM:tsign:tempchange_abs.sc:duration +
             REALM:tsign:tempave.sc:duration +
             REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
             REALM:microclim.sc:duration +
             REALM:microclim.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
+            (duration | STUDY_ID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM)
@@ -354,13 +354,13 @@ if (fitmod == 'modrawTsdTTRealmtsignhumanInitGainLossAllJtu') {
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
-            gainlossprop:duration +
+            Jtu.init:gainlossprop:duration +
             REALM:tsign:tempchange_abs.sc:duration +
             REALM:tsign:tempave.sc:duration +
             REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
             REALM:human_bowler.sc:duration +
             REALM:human_bowler.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
+            (duration | STUDY_ID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM)
