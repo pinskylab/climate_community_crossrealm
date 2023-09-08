@@ -352,19 +352,21 @@ sensitivity2 <- readRDS(here('temp', 'sensitivity_rawTsdTTRealmtsignCovariateIni
 #slopes2[, .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
 #        by = .(REALM, tempchange, microclim, human_bowler)]
 
+ylims.microclimate <- c(-0.02, 0.035)
+ylims.human <- c(-0.02, 0.035)
+
 # plots
-p1 <- ggplot(sensitivity2, aes(microclim, sensitivity_microclim, 
+p1 <- ggplot(sensitivity2[REALM=='Marine'], aes(microclim, sensitivity_microclim, 
                                ymin=sensitivity_microclim-1.96*sensitivity_microclim.se,  ymax=sensitivity_microclim+1.96*sensitivity_microclim.se)) +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
-    facet_grid(cols = vars(REALM)) +
     labs(tag = 'A)', 
          x = 'Microclimate availability',
          y = '') +
     coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=5)), xmin = -2.2, xmax = -2.2, ymin = 0.01, ymax = 0.01) + # note x-axis is in log10 units
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=5)), xmin = -2.1, xmax = -2.1, ymin = 0.01, ymax = 0.01) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=5)), xmin = -2, xmax = -2, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.4, xmax = -2.4, ymin = 0.01, ymax = 0.01) + # note x-axis is in log10 units
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.25, xmax = -2.25, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.1, xmax = -2.1, ymin = 0.01, ymax = 0.01) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -373,32 +375,62 @@ p1 <- ggplot(sensitivity2, aes(microclim, sensitivity_microclim,
           axis.title.y=element_text(vjust = 6),
           plot.title=element_text(size=8)) +
     scale_x_log10(limits = c(0.03, 1)) +
-    geom_rect(data = data.frame(REALM = 'Marine'), aes(xmin = 0.3, xmax = 1, ymin = -0.005, ymax = 0.025), fill="red", inherit.aes = FALSE) # draw over the extra y-axis labels
+    lims(y = ylims.microclimate)
 
+p2 <- ggplot(sensitivity2[REALM=='Terrestrial'], aes(microclim, sensitivity_microclim, 
+                               ymin=sensitivity_microclim-1.96*sensitivity_microclim.se,  ymax=sensitivity_microclim+1.96*sensitivity_microclim.se)) +
+    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
+    geom_line() +
+    labs(tag = 'B)', 
+         x = 'Microclimate availability',
+         y = '') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          axis.title.y=element_text(vjust = 6),
+          plot.title=element_text(size=8)) +
+    scale_x_log10(limits = c(0.03, 1)) +
+    lims(y = ylims.microclimate)
 
-p2 <- ggplot(sensitivity2, aes(human_bowler, sensitivity_human, 
+p3 <- ggplot(sensitivity2[REALM=='Marine'], aes(human_bowler, sensitivity_human, 
                                ymin=sensitivity_human-1.96*sensitivity_human.se,  ymax=sensitivity_human+1.96*sensitivity_human.se)) +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
-    facet_grid(cols = vars(REALM)) +
-    labs(tag = 'A)', 
+    labs(tag = 'C)', 
          x = 'Human impact', 
          y = '') +
     coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=5)), xmin = -1.5, xmax = -1.5, ymin = 0.01, ymax = 0.01) + # note x-axis is in log10 units
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=5)), xmin = -1.4, xmax = -1.4, ymin = 0.01, ymax = 0.01) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=5)), xmin = -1.3, xmax = -1.3, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -1.7, xmax = -1.7, ymin = 0.01, ymax = 0.01) + # note x-axis is in log10 units
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -1.55, xmax = -1.55, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -1.4, xmax = -1.4, ymin = 0.01, ymax = 0.01) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
-    scale_x_log10() +
-    geom_rect(data = data.frame(REALM = 'Marine'), aes(xmin = 3, xmax = 10, ymin = -0.005, ymax = 0.025), fill="red", inherit.aes = FALSE) # draw over the extra y-axis labels
+    scale_x_log10()  +
+    lims(y = ylims.human)
 
+p4 <- ggplot(sensitivity2[REALM=='Terrestrial'], aes(human_bowler, sensitivity_human, 
+                                                ymin=sensitivity_human-1.96*sensitivity_human.se,  ymax=sensitivity_human+1.96*sensitivity_human.se)) +
+    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
+    geom_line() +
+    labs(tag = 'D)', 
+         x = 'Human impact', 
+         y = '') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8)) +
+    scale_x_log10()  +
+    lims(y = ylims.microclimate)
 
-fig3 <- arrangeGrob(p1, p2, ncol = 1)
+fig3 <- arrangeGrob(p1, p2, p3, p4, ncol = 2)
 
 ggsave('figures/fig3.png', fig3, width = 4, height = 4, units = 'in')
 
