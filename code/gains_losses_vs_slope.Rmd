@@ -156,7 +156,7 @@ ggplot(trends, aes(gainlossprop, disstrend, color = year2 - year1)) +
  
 ```
 
-# Examine Tchange models with gainlossprop
+# Examine gainlossprop models
 Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.gainloss.R.
 ## Load models
 ```{r}
@@ -220,50 +220,84 @@ aics
 
 ```
 
-## Plot predictions
-### Gainloss vs. init effect
-```{r}
-# predicted slopes from the tsign model (no tempave)
-slopes <- readRDS(here('temp', 'slopes_modInitGainLossAllJtu.rds')) # made by pred_modrawInitGainLossAllJtu.sh/.r
 
-ggplot(slopes[tempave == -20 & tempchange == 2], aes(gainlossprop, slope, ymin=slope-1.96*slope.se,  ymax=slope+1.96*slope.se)) +
-  geom_ribbon(alpha = 0.5) +
-  geom_line() +
-  facet_grid(Jtu.init ~REALM)
+# Examine Jtu.init:gainlossprop models
+Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.init.gainloss.R
+## Load models
+```{r}
+# with Jtu.init:gainlossprop for Table 1
+if(!exists('modInitGainLossAllJtu')) modInitGainLossAllJtu <- readRDS(here('temp', 'modInitGainLossAllJtu.rds')) # Null
+#if(!exists('modRealmInitGainLossAllJtu')) modRealmInitGainLossAllJtu <- readRDS('temp/modRealmInitGainLossAllJtu.rds') # Realm. 
+#if(!exists('modTaxamod2InitGainLossAllJtu')) modTaxamod2InitGainLossAllJtu <- readRDS('temp/modTaxamod2InitGainLossAllJtu.rds') # Taxon. 
+#if(!exists('modsdTtsignInitGainLossAllJtu')) modsdTtsignInitGainLossAllJtu <- readRDS(here('temp', 'modsdTtsignInitGainLossAllJtu.rds')) # tsign, tempchange_abs.
+if(!exists('modsdTRealmtsignInitGainLossAllJtu')) modsdTRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'modsdTRealmtsignInitGainLossAllJtu.rds')) # tsign:tempchange_abs by realm. 
+#if(!exists('modabsLatsdTabsLatRealmtsignInitGainLossAllJtu')) modabsLatsdTabsLatRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitGainLossAllJtu.rds')) # tsign:tempchange_abs:absLat. Not yet included since not fit yet
+if(!exists('modrawTsdTTRealmtsignInitGainLossAllJtu')) modrawTsdTTRealmtsignInitGainLossAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignInitGainLossAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. 
+
 
 ```
 
-### 1D plot like Fig. 2
+## AIC
+### Like Table 1 (main Jtu models)
 ```{r}
 
+aics <- AIC(modInitGainLossAllJtu, 
+            #modRealmInitGainLossAllJtu, 
+            #modTaxamod2InitGainLossAllJtu, # simple models w/out tempchange
+            #modsdTtsignInitGainLossAllJtu, 
+            modsdTRealmtsignInitGainLossAllJtu, # tsign:tempchange_abs w/out or w/ realm
+            #modabsLatsdTabsLatRealmtsignInitGainLossAllJtu,
+            modrawTsdTTRealmtsignInitGainLossAllJtu) # add tempave:tempchange_abs
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitGainLossAllJtu']
+aics
+
+```
+
+## Plot predictions
+### Gainloss vs. init effect
+Expectation: effect of Jtu.init depends on gainlossprop
+
+- for Jtu.init near 1, gains increase turnover rates and losses decrease them
+- for Jtu.init near 0, gains decrease turnover rates and losses increase them
+
+But not what we see. The interaction is the opposite (for Jtu.init near 1, gains decrease turnover rates and losses increase them).
+
+```{r}
 # predicted slopes from the tsign model (no tempave)
-slopessdTRealmtsigninitJtu <- readRDS(here('temp', 'slopes_modsdTRealmtsigninitAllJtu.rds')) # made by pred_modrawXAllJtu.sh/.r
+slopes_modInitGainLossAllJtu <- readRDS(here('temp', 'slopes_modInitGainLossAllJtu.rds')) # made by pred_modrawInitGainLossAllJtu.r
 
-# predicted slopes from the tempave interaction model
-slopesrawTsdTTRealmtsigninitJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsigninit.rds')) # made by pred_modrawXAllJtu.sh/.r
-vals <- slopesrawTsdTTRealmtsigninitJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC (+/-2SD from the mean)
-slopesrawTsdTTRealmtsigninitJtu <- slopesrawTsdTTRealmtsigninitJtu[tempave %in% vals,]
-slopesrawTsdTTRealmtsigninitJtu[, tempave := factor(as.character(round(tempave)), levels = c('0', '25'))] # re-order factor for nicer plotting
+ggplot(slopes_modInitGainLossAllJtu[tempave == -20 & tempchange == 2 & REALM == 'Marine'], # the same across these, so can arbitrarily pick one
+       aes(gainlossprop, slope, ymin=slope-1.96*slope.se,  ymax=slope+1.96*slope.se)) +
+  geom_ribbon(alpha = 0.5) +
+  geom_line() +
+  facet_grid(~ Jtu.init)
 
-# b) plot of change vs. dT
+```
+
+### Like Fig. 2, only tempchange model
+```{r, fig.height = 10, fig.width=10}
+
+# predicted slopes from the tsign model (no tempave)
+slopes_modsdTRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'slopes_modsdTRealmtsignInitGainLossAllJtu.rds')) # made by pred_modrawInitGainLossAllJtu.r
+slopes_modsdTRealmtsignInitGainLossAllJtu <- slopes_modsdTRealmtsignInitGainLossAllJtu[tempave == -20,] # all the same, so choose one
+
+# plot of change vs. dT
 p2 <- ggplot() +
     geom_hline(yintercept = 0, linetype = 'dotted') +
-    geom_line(data = slopessdTRealmtsigninitJtu, mapping=aes(tempchange, slope), size=0.5) +
-    geom_ribbon(data = slopessdTRealmtsigninitJtu, alpha = 0.2, color = NA, 
+    geom_line(data = slopes_modsdTRealmtsignInitGainLossAllJtu, 
+              mapping=aes(tempchange, slope, color = as.factor(gainlossprop), group = as.factor(gainlossprop)), 
+              size=0.5) +
+    geom_ribbon(data = slopes_modsdTRealmtsignInitGainLossAllJtu, alpha = 0.2, color = NA, 
                 aes(tempchange, slope,
                     ymin=slope - slope.se, 
-                    ymax=slope + slope.se)) +
-    geom_line(data = slopesrawTsdTTRealmtsigninitJtu, mapping=aes(tempchange, slope, color = tempave, group = tempave), linetype = 'dashed') +
-    geom_ribbon(data = slopesrawTsdTTRealmtsigninitJtu, alpha = 0.2, color = NA,
-                aes(tempchange, slope, fill = tempave,
-                    ymin=slope - slope.se,
-                    ymax=slope + slope.se)) +
+                    ymax=slope + slope.se,
+                    color = as.factor(gainlossprop), 
+                    group = as.factor(gainlossprop))) +
     scale_color_brewer(palette = 'Dark2') +
     scale_fill_brewer(palette = 'Dark2') +
-    facet_grid(cols = vars(REALM), scales = 'free')  +
+    facet_grid(Jtu.init ~ REALM, scales = 'free', labeller = label_both)  +
     labs(tag = 'B)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
-         fill = 'Average temperature [°C]', 
-         color = 'Average temperature [°C]',
          size = 'Duration [years]') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -280,48 +314,43 @@ p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 p2
 ```
 
-### 1D plot like Fig. 3
-```{r}
-### Figure 3: interactions ---------
-# read in sensitivities with resampling CIs
-sensitivity2 <- readRDS(here('temp', 'sensitivity_rawTsdTTRealmtsignCovariateInit.rds')) # from code/pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R
 
-# calc change in turnover rate per °C/yr (simple linear regression, no resampling)
-# sensitivity.microclim <- slopes2[, .(sensitivity_microclim = coef(lm(slope_microclim ~ tempchange))[2],
-#                                      sensitivity_microclim.se = summary(lm(slope_microclim ~ tempchange))$coefficients[2,2]), 
-#                                  by = .(microclim, REALM)]
-# sensitivity.human <- slopes2[, .(rate_human = coef(lm(slope_human ~ tempchange))[2]), by = .(human_bowler,REALM)]
-# sensitivity2 <- merge(sensitivity.microclim, sensitivity.human)
 
-# plots
-p1 <- ggplot(sensitivity2, aes(microclim, sensitivity_microclim, 
-                          ymin=sensitivity_microclim-1.96*sensitivity_microclim.se,  ymax=sensitivity_microclim+1.96*sensitivity_microclim.se)) +
-  geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
-  geom_line() +
-  facet_grid(cols = vars(REALM)) +
-  labs(tag = 'A)', x = 'Microclimate availability', y = expression(atop('Sensitivity of turnover rate to temperature change','[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'))) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=8),
-        plot.title=element_text(size=8)) +
-  scale_x_log10()
+```{r, fig.height = 30, fig.width=8}
 
-p2 <- ggplot(sensitivity2, aes(human_bowler, sensitivity_human, 
-                          ymin=sensitivity_human-1.96*sensitivity_human.se,  ymax=sensitivity_human+1.96*sensitivity_human.se)) +
-  geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
-  geom_line() +
-  facet_grid(cols = vars(REALM)) +
-  labs(tag = 'A)', x = 'Human impact', y = expression(atop('Sensitivity of turnover rate to temperature change','[('~Delta~'Turnover rate)/('~Delta~'°C/year)]'))) +
-  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-        panel.background = element_blank(), axis.line = element_line(colour = "black"),
-        legend.key=element_blank(),
-        axis.text=element_text(size=8),
-        axis.title=element_text(size=8),
-        plot.title=element_text(size=8)) +
-  scale_x_log10()
-p1
+# predicted slopes from the tempave interaction model
+slopes_modrawTsdTTRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'slopes_modrawTsdTTRealmtsignInitGainLossAllJtu.rds')) # made by pred_modrawXAllJtu.sh/.r
+vals <- slopes_modrawTsdTTRealmtsignInitGainLossAllJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC (+/-2SD from the mean)
+slopes_modrawTsdTTRealmtsignInitGainLossAllJtu <- slopes_modrawTsdTTRealmtsignInitGainLossAllJtu[tempave %in% vals,]
+slopes_modrawTsdTTRealmtsignInitGainLossAllJtu[, tempave := factor(as.character(round(tempave)), levels = c('2', '24'))] # re-order factor for nicer plotting
+
+# b) plot of change vs. dT
+p2 <- ggplot() +
+    geom_hline(yintercept = 0, linetype = 'dotted') +
+    geom_line(data = slopes_modrawTsdTTRealmtsignInitGainLossAllJtu, mapping=aes(tempchange, slope, color = tempave, group = tempave), linetype = 'dashed') +
+    geom_ribbon(data = slopes_modrawTsdTTRealmtsignInitGainLossAllJtu, alpha = 0.2, color = NA,
+                aes(tempchange, slope, fill = tempave,
+                    ymin=slope - slope.se,
+                    ymax=slope + slope.se)) +
+    scale_color_brewer(palette = 'Dark2') +
+    scale_fill_brewer(palette = 'Dark2') +
+    facet_grid(Jtu.init + gainlossprop ~ REALM, scales = 'free', labeller = label_both)  +
+    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+         size = 'Duration [years]') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8)) +
+    scale_y_continuous(trans = signedsqrttrans, 
+                       breaks = c(seq(-1,-0.2, by = 0.2), -0.1, 0, 0.1, seq(0.2, 1, by=0.2))) +
+    scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
+    guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
+    
+p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 p2
 ```
+
+
 
