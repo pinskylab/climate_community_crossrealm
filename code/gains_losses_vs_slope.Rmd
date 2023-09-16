@@ -220,3 +220,108 @@ aics
 
 ```
 
+## Plot predictions
+### Gainloss vs. init effect
+```{r}
+# predicted slopes from the tsign model (no tempave)
+slopes <- readRDS(here('temp', 'slopes_modInitGainLossAllJtu.rds')) # made by pred_modrawInitGainLossAllJtu.sh/.r
+
+ggplot(slopes[tempave == -20 & tempchange == 2], aes(gainlossprop, slope, ymin=slope-1.96*slope.se,  ymax=slope+1.96*slope.se)) +
+  geom_ribbon(alpha = 0.5) +
+  geom_line() +
+  facet_grid(Jtu.init ~REALM)
+
+```
+
+### 1D plot like Fig. 2
+```{r}
+
+# predicted slopes from the tsign model (no tempave)
+slopessdTRealmtsigninitJtu <- readRDS(here('temp', 'slopes_modsdTRealmtsigninitAllJtu.rds')) # made by pred_modrawXAllJtu.sh/.r
+
+# predicted slopes from the tempave interaction model
+slopesrawTsdTTRealmtsigninitJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsigninit.rds')) # made by pred_modrawXAllJtu.sh/.r
+vals <- slopesrawTsdTTRealmtsigninitJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC (+/-2SD from the mean)
+slopesrawTsdTTRealmtsigninitJtu <- slopesrawTsdTTRealmtsigninitJtu[tempave %in% vals,]
+slopesrawTsdTTRealmtsigninitJtu[, tempave := factor(as.character(round(tempave)), levels = c('0', '25'))] # re-order factor for nicer plotting
+
+# b) plot of change vs. dT
+p2 <- ggplot() +
+    geom_hline(yintercept = 0, linetype = 'dotted') +
+    geom_line(data = slopessdTRealmtsigninitJtu, mapping=aes(tempchange, slope), size=0.5) +
+    geom_ribbon(data = slopessdTRealmtsigninitJtu, alpha = 0.2, color = NA, 
+                aes(tempchange, slope,
+                    ymin=slope - slope.se, 
+                    ymax=slope + slope.se)) +
+    geom_line(data = slopesrawTsdTTRealmtsigninitJtu, mapping=aes(tempchange, slope, color = tempave, group = tempave), linetype = 'dashed') +
+    geom_ribbon(data = slopesrawTsdTTRealmtsigninitJtu, alpha = 0.2, color = NA,
+                aes(tempchange, slope, fill = tempave,
+                    ymin=slope - slope.se,
+                    ymax=slope + slope.se)) +
+    scale_color_brewer(palette = 'Dark2') +
+    scale_fill_brewer(palette = 'Dark2') +
+    facet_grid(cols = vars(REALM), scales = 'free')  +
+    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+         fill = 'Average temperature [°C]', 
+         color = 'Average temperature [°C]',
+         size = 'Duration [years]') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8)) +
+    scale_y_continuous(trans = signedsqrttrans, 
+                       breaks = c(seq(-1,-0.2, by = 0.2), -0.1, 0, 0.1, seq(0.2, 1, by=0.2))) +
+    scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
+    guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
+    
+p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
+p2
+```
+
+### 1D plot like Fig. 3
+```{r}
+### Figure 3: interactions ---------
+# read in sensitivities with resampling CIs
+sensitivity2 <- readRDS(here('temp', 'sensitivity_rawTsdTTRealmtsignCovariateInit.rds')) # from code/pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R
+
+# calc change in turnover rate per °C/yr (simple linear regression, no resampling)
+# sensitivity.microclim <- slopes2[, .(sensitivity_microclim = coef(lm(slope_microclim ~ tempchange))[2],
+#                                      sensitivity_microclim.se = summary(lm(slope_microclim ~ tempchange))$coefficients[2,2]), 
+#                                  by = .(microclim, REALM)]
+# sensitivity.human <- slopes2[, .(rate_human = coef(lm(slope_human ~ tempchange))[2]), by = .(human_bowler,REALM)]
+# sensitivity2 <- merge(sensitivity.microclim, sensitivity.human)
+
+# plots
+p1 <- ggplot(sensitivity2, aes(microclim, sensitivity_microclim, 
+                          ymin=sensitivity_microclim-1.96*sensitivity_microclim.se,  ymax=sensitivity_microclim+1.96*sensitivity_microclim.se)) +
+  geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
+  geom_line() +
+  facet_grid(cols = vars(REALM)) +
+  labs(tag = 'A)', x = 'Microclimate availability', y = expression(atop('Sensitivity of turnover rate to temperature change','[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'))) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=8),
+        plot.title=element_text(size=8)) +
+  scale_x_log10()
+
+p2 <- ggplot(sensitivity2, aes(human_bowler, sensitivity_human, 
+                          ymin=sensitivity_human-1.96*sensitivity_human.se,  ymax=sensitivity_human+1.96*sensitivity_human.se)) +
+  geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
+  geom_line() +
+  facet_grid(cols = vars(REALM)) +
+  labs(tag = 'A)', x = 'Human impact', y = expression(atop('Sensitivity of turnover rate to temperature change','[('~Delta~'Turnover rate)/('~Delta~'°C/year)]'))) +
+  theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+        panel.background = element_blank(), axis.line = element_line(colour = "black"),
+        legend.key=element_blank(),
+        axis.text=element_text(size=8),
+        axis.title=element_text(size=8),
+        plot.title=element_text(size=8)) +
+  scale_x_log10()
+p1
+p2
+```
+

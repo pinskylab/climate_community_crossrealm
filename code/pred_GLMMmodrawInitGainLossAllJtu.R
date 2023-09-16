@@ -101,7 +101,6 @@ newdat <- data.table(expand.grid(tempave = seq(-20, 30, length.out = 10),
                                  gainlossprop = seq(-2.5, 2.5, length.out = 5)))
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1
-newdat$Jtu.init <- 0.5
 newdat[, tempave.sc := scaleme(tempave, 'tempave.sc')]
 newdat[, tempchange_abs := abs(tempchange)]
 newdat[, tsign := signneg11(tempchange)]
@@ -119,7 +118,7 @@ saveRDS(newdat, file = here('temp', out_preds))
 
 ### Slope calculations -------------------
 slopes <- newdat[, slopesamp(n, duration, Jtu.sc, Jtu.sc.se), 
-                 by = .(tempave, tempchange, REALM)]
+                 by = .(tempave, tempchange, Jtu.init, gainlossprop, REALM)]
 
 ### Write slopes -------------
 saveRDS(slopes, file = here('temp', out_slopes))
