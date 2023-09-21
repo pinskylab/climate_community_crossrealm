@@ -172,7 +172,9 @@ gg_color_hue <- function(n) {
 signedsqrt = function(x) sign(x)*sqrt(abs(x))
 signedsq = function(x) sign(x) * x^2
 signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, inverse = signedsq)
-
+signedsqrt2 = function(x) sign(x)*(abs(x)^(1/4))
+signedsq2 = function(x) sign(x) * x^4
+signedsqrt2trans <- trans_new(name = 'signedsqrt2', transform = signedsqrt2, inverse = signedsq2)
 
 # from https://stackoverflow.com/questions/52297978/decrease-overal-legend-size-elements-and-text
 addSmallLegend <- function(myPlot, pointSize = 0.5, textSize = 3, spaceLegend = 0.1) {

@@ -582,6 +582,31 @@ write.csv(out, here('figures', 'tableS5.csv'))
 
 
 
+##### Table S6: AICs for initgainloss models ------------------
+# with Jtu.init:gainlossprop for Table 1
+if(!exists('modInitGainLossAllJtu')) modInitGainLossAllJtu <- readRDS(here('temp', 'modInitGainLossAllJtu.rds')) # Null
+if(!exists('modRealmInitGainLossAllJtu')) modRealmInitGainLossAllJtu <- readRDS('temp/modRealmInitGainLossAllJtu.rds') # Realm. 
+if(!exists('modTaxamod2InitGainLossAllJtu')) modTaxamod2InitGainLossAllJtu <- readRDS('temp/modTaxamod2InitGainLossAllJtu.rds') # Taxon. 
+if(!exists('modsdTtsignInitGainLossAllJtu')) modsdTtsignInitGainLossAllJtu <- readRDS(here('temp', 'modsdTtsignInitGainLossAllJtu.rds')) # tsign, tempchange_abs.
+if(!exists('modsdTRealmtsignInitGainLossAllJtu')) modsdTRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'modsdTRealmtsignInitGainLossAllJtu.rds')) # tsign:tempchange_abs by realm. 
+if(!exists('modabsLatsdTabsLatRealmtsignInitGainLossAllJtu')) modabsLatsdTabsLatRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitGainLossAllJtu.rds')) # tsign:tempchange_abs:absLat. Not yet included since not fit yet
+if(!exists('modrawTsdTTRealmtsignInitGainLossAllJtu')) modrawTsdTTRealmtsignInitGainLossAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignInitGainLossAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. 
+
+aicsIGL <- AIC(modInitGainLossAllJtu, 
+            modRealmInitGainLossAllJtu, 
+            modTaxamod2InitGainLossAllJtu, # simple models w/out tempchange
+            modsdTtsignInitGainLossAllJtu, 
+            modsdTRealmtsignInitGainLossAllJtu, # tsign:tempchange_abs w/out or w/ realm
+            modabsLatsdTabsLatRealmtsignInitGainLossAllJtu,
+            modrawTsdTTRealmtsignInitGainLossAllJtu) # add tempave:tempchange_abs
+aicsIGL$dAIC <- aicsIGL$AIC - min(aicsIGL$AIC)
+aicsIGL$dAICnull <- aicsIGL$AIC - aicsIGL$AIC[rownames(aics)=='modInitGainLossAllJtu']
+aicsIGL
+
+write.csv(aicsIGL, here('figures', 'tableS6.csv'))
+
+
+
 ### Figure S1: time-series info----------
 bt <- fread('output/turnover_w_covariates.csv.gz') # from assemble_turnover_covariates.Rmd
 btts <- bt[, .(year1 = min(year1), year2 = max(year2), nsamp = length(unique(c(year1, year2)))), by = .(rarefyID, STUDY_ID)] # summarize by time-series

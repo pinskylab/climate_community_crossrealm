@@ -227,11 +227,11 @@ Fit by code/turnover_vs_temperature_GLMM_fit_Jtu.init.gainloss.R
 ```{r}
 # with Jtu.init:gainlossprop for Table 1
 if(!exists('modInitGainLossAllJtu')) modInitGainLossAllJtu <- readRDS(here('temp', 'modInitGainLossAllJtu.rds')) # Null
-#if(!exists('modRealmInitGainLossAllJtu')) modRealmInitGainLossAllJtu <- readRDS('temp/modRealmInitGainLossAllJtu.rds') # Realm. 
-#if(!exists('modTaxamod2InitGainLossAllJtu')) modTaxamod2InitGainLossAllJtu <- readRDS('temp/modTaxamod2InitGainLossAllJtu.rds') # Taxon. 
-#if(!exists('modsdTtsignInitGainLossAllJtu')) modsdTtsignInitGainLossAllJtu <- readRDS(here('temp', 'modsdTtsignInitGainLossAllJtu.rds')) # tsign, tempchange_abs.
+if(!exists('modRealmInitGainLossAllJtu')) modRealmInitGainLossAllJtu <- readRDS('temp/modRealmInitGainLossAllJtu.rds') # Realm. 
+if(!exists('modTaxamod2InitGainLossAllJtu')) modTaxamod2InitGainLossAllJtu <- readRDS('temp/modTaxamod2InitGainLossAllJtu.rds') # Taxon. 
+if(!exists('modsdTtsignInitGainLossAllJtu')) modsdTtsignInitGainLossAllJtu <- readRDS(here('temp', 'modsdTtsignInitGainLossAllJtu.rds')) # tsign, tempchange_abs.
 if(!exists('modsdTRealmtsignInitGainLossAllJtu')) modsdTRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'modsdTRealmtsignInitGainLossAllJtu.rds')) # tsign:tempchange_abs by realm. 
-#if(!exists('modabsLatsdTabsLatRealmtsignInitGainLossAllJtu')) modabsLatsdTabsLatRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitGainLossAllJtu.rds')) # tsign:tempchange_abs:absLat. Not yet included since not fit yet
+if(!exists('modabsLatsdTabsLatRealmtsignInitGainLossAllJtu')) modabsLatsdTabsLatRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitGainLossAllJtu.rds')) # tsign:tempchange_abs:absLat. Not yet included since not fit yet
 if(!exists('modrawTsdTTRealmtsignInitGainLossAllJtu')) modrawTsdTTRealmtsignInitGainLossAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignInitGainLossAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. 
 
 
@@ -242,11 +242,11 @@ if(!exists('modrawTsdTTRealmtsignInitGainLossAllJtu')) modrawTsdTTRealmtsignInit
 ```{r}
 
 aics <- AIC(modInitGainLossAllJtu, 
-            #modRealmInitGainLossAllJtu, 
-            #modTaxamod2InitGainLossAllJtu, # simple models w/out tempchange
-            #modsdTtsignInitGainLossAllJtu, 
+            modRealmInitGainLossAllJtu, 
+            modTaxamod2InitGainLossAllJtu, # simple models w/out tempchange
+            modsdTtsignInitGainLossAllJtu, 
             modsdTRealmtsignInitGainLossAllJtu, # tsign:tempchange_abs w/out or w/ realm
-            #modabsLatsdTabsLatRealmtsignInitGainLossAllJtu,
+            modabsLatsdTabsLatRealmtsignInitGainLossAllJtu,
             modrawTsdTTRealmtsignInitGainLossAllJtu) # add tempave:tempchange_abs
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitGainLossAllJtu']
