@@ -247,9 +247,9 @@ anova(modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignmicroclimInitAllJtu)
 anova(modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignhumanInitAllJtu)
 
 ```
-## Plots: Compare to models without init
+## Plots
 ### 2D plots
-made by pred_modrawXAllJtu.sh
+made by pred_modrawXAllJtu.sh. Compare the plots below to models without init
 ```{r}
 # read in slopes
 slopessdTRealmtsigninitJtu <- readRDS(here('temp', 'slopes_modsdTRealmtsigninitAllJtu.rds')) # made by pred_modrawXAllJtu.sh/.r
@@ -303,9 +303,9 @@ slopessdTRealmtsigninitJtu <- readRDS(here('temp', 'slopes_modsdTRealmtsigninitA
 
 # predicted slopes from the tempave interaction model
 slopesrawTsdTTRealmtsigninitJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsigninit.rds')) # made by pred_modrawXAllJtu.sh/.r
-vals <- slopesrawTsdTTRealmtsigninitJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC (+/-2SD from the mean)
+vals <- slopesrawTsdTTRealmtsigninitJtu[c(which.min(abs(tempave - 0)), which.min(abs(tempave - 10)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC (+/-2SD from the mean)
 slopesrawTsdTTRealmtsigninitJtu <- slopesrawTsdTTRealmtsigninitJtu[tempave %in% vals,]
-slopesrawTsdTTRealmtsigninitJtu[, tempave := factor(as.character(round(tempave)), levels = c('0', '25'))] # re-order factor for nicer plotting
+slopesrawTsdTTRealmtsigninitJtu[, tempave := factor(as.character(round(tempave)), levels = c('0', '10', '25'))] # re-order factor for nicer plotting
 
 # b) plot of change vs. dT
 p2 <- ggplot() +

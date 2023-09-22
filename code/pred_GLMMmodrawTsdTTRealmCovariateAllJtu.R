@@ -110,6 +110,8 @@ saveRDS(slopes2, file = here('temp', 'slopes_rawTsdTTRealmtsignCovariateInit.rds
 # slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariateInit.rds')) # to read in manually
 print(paste('Wrote slopes_rawTsdTTRealmtsignCovariateInit.rds:', Sys.time()))
 
+
+
 ### Calculate sensitivity of turnover rates to covariates ----------------------
 slopes2 <- slopes2[tempave == 10 & tempchange > 0, ] # pick median tempave and warming
 

@@ -42,13 +42,13 @@ if(Sys.getenv('RSTUDIO')=='' & Sys.info()[[4]]=='annotate.sebs.rutgers.edu'){
 library(data.table) # for handling large datasets
 library(glmmTMB, lib.loc = "/usr/lib64/R/library") # for ME models
 library(here) # for relative paths
-library(lavaan) # for SEM models of slopes
 source(here('code', 'util.R'))
 
 
 # slopes and SEs from resampling
 # n: number of resamples, other columns are the x, y, and se of y variables
-slopesamp <- function(n, duration, Jtu.sc, Jtu.sc.se){
+# colnames refer to the output
+slopesamp <- function(n, duration, Jtu.sc, Jtu.sc.se, colnames = c('slope', 'slope.se')){
     if(length(duration) != length(Jtu.sc)) stop('duration and Jtu.sc are not the same length')
     if(length(duration) != length(Jtu.sc.se)) stop('duration and Jtu.sc.se are not the same length')
     if(length(Jtu.sc) != length(Jtu.sc.se)) stop('Jtu.sc and Jtu.sc.se are not the same length')
@@ -59,7 +59,7 @@ slopesamp <- function(n, duration, Jtu.sc, Jtu.sc.se){
         samp[j] <- coef(lm(y ~ duration))[2] # fit line, get slope
     }
     out <- c(coef(lm(Jtu.sc ~ duration))[2], sd(samp))
-    names(out) <- c('slope', 'slope.se')
+    names(out) <- colnames
     return(as.list(out)) # coercing to list will allow the data.table aggregate used later to create 2 columns
 }
 
@@ -70,24 +70,11 @@ scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From 
 
 
 ### Choose a model ---------------------------------
-if(predmod == 'modsdTRealmtsignAllJtu'){
-    mod <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # From turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
-    out_preds <- 'preds_modsdTRealmtsignAllJtu.rds'
-    out_slopes <- 'slopes_modsdTRealmtsignAllJtu.rds'
-    print('model loaded')
-} 
-
-if(predmod == 'modrawTsdTTRealmtsignAllJtu'){
-    mod <- readRDS(here('temp', 'modrawTsdTTRealmtsignAllJtu.rds')) # From turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
-    out_preds <- 'preds_rawTsdTTRealmtsign.rds' # note: name is not quite of same form as previous model.
-    out_slopes <- 'slopes_rawTsdTTRealmtsign.rds' # note: name is not quite of same form as previous model.
-    print('model loaded')
-} 
-
 if(predmod == 'modsdTRealmtsigninitAllJtu'){
     mod <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # From turnover_vs_temperature_GLMM_fit_Jtu.init.R
     out_preds <- 'preds_modsdTRealmtsigninitAllJtu.rds'
     out_slopes <- 'slopes_modsdTRealmtsigninitAllJtu.rds'
+    doSensitivity <- FALSE # calculate sensitivity to Tave?
     print('model loaded')
 } 
 
@@ -95,6 +82,8 @@ if(predmod == 'modrawTsdTTRealmtsigninitAllJtu'){
     mod <- readRDS(here('temp', 'modrawTsdTTRealmtsigninitAllJtu.rds')) # From turnover_vs_temperature_GLMM_fit_Jtu.init.R
     out_preds <- 'preds_rawTsdTTRealmtsigninit.rds' # note: name is not quite of same form as previous model.
     out_slopes <- 'slopes_rawTsdTTRealmtsigninit.rds' # note: name is not quite of same form as previous model.
+    doSensitivity <- TRUE # calculate sensitivity to Tave?
+    out_sensitivity <- 'sensitivity_rawTsdTTRealmtsigninit.rds'
     print('model loaded')
 } 
 
@@ -120,16 +109,32 @@ newdat$Jtu.sc <- preds$fit
 newdat$Jtu.sc.se <- preds$se.fit
 print('finished  predictions')
 
-### Write dissimilarities ------------------
+# Write dissimilarities
 saveRDS(newdat, file = here('temp', out_preds))
+print(paste('Wrote', out_preds, ':', Sys.time()))
 
 
 ### Slope calculations -------------------
 slopes <- newdat[, slopesamp(n, duration, Jtu.sc, Jtu.sc.se), 
                  by = .(tempave, tempchange, REALM)]
 
-### Write slopes -------------
+# Write slopes
 saveRDS(slopes, file = here('temp', out_slopes))
+print(paste('Wrote', out_slopes, ':', Sys.time()))
+#slopes <- readRDS(file = here('temp', out_slopes)) # to read back in
+
+
+
+### Calculate sensitivity of turnover rates to Tave ----------------------
+# if we have a model with Tave
+if(doSensitivity){
+    sensitivity <- slopes[, slopesamp(n, abs(tempchange), slope, slope.se, colnames = c('sensitivity', 'sensitivity.se')), 
+                                     by = .(tempave, tsign = sign(tempchange), REALM)]
+    
+    # write sensitivities
+    saveRDS(sensitivity, file = here('temp', out_sensitivity))
+    print(paste('Wrote', out_sensitivity, ':', Sys.time()))
+}
 
 
 print(warnings())

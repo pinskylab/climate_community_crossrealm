@@ -194,6 +194,7 @@ trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends <- trends[duration_group == 'All' & measure == 'Jtu',]
 trends <- merge(trends, bt[!duplicated(rarefyID),. (rarefyID, STUDY_ID, REALM, tempchange)])
 trends[, duration := year2 - year1]
+trends[, tsign := factor(sign(tempchange), levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 trends[, REALM := factor(REALM, levels = c('Marine', 'Terrestrial', 'Freshwater'))] # re-order for nicer plotting in part B
 trends_by_study <- trends[duration>2, .(disstrend = mean(disstrend, na.rm=TRUE), tempchange = mean(tempchange, na.rm=TRUE), duration = mean(duration)), by = .(STUDY_ID, REALM)] # average by studyID. Can't use 2-year trends since they assume dissimilarity at y0 is 0.
 trends_by_study[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting in part A
@@ -207,18 +208,17 @@ write.csv(ave_by_realm, file='output/ave_by_realm.csv')
 tempchange_by_realm <- trends[, .(max = max(tempchange, na.rm=TRUE), min = min(tempchange, na.rm=TRUE)), by = REALM]
 
 # predicted slopes from the tsign model (no tempave)
-slopespredsdT <- readRDS(here('temp', 'slopes_modsdTRealmtsignAllJtu.rds')) # from pred_modrawXAllJtu.sh
+slopespredsdT <- readRDS(here('temp', 'slopes_modsdTRealmtsigninitAllJtu.rds')) # from pred_GLMMmodrawXAllJtu.sh/.R
 slopespredsdT <- merge(slopespredsdT, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
 slopespredsdT <- slopespredsdT[tempchange > min & tempchange < max & !duplicated(cbind(tempchange, REALM)), ] # trim to min & max by realm
+slopespredsdT[, tsign := factor(sign(tempchange), levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 
-# predicted slopes from the tempave interaction model
-slopespred <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds')) # from pred_GLMMmodrawXAllJtu.sh/.R
-vals <- slopespred[c(which.min(abs(tempave - 0)), which.min(abs(tempave-25))), unique(tempave)] # show 0 and 25degC (+/-2SD from the mean)
-slopespred <- slopespred[tempave %in% vals,]
-slopespred <- merge(slopespred, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
-slopespred <- slopespred[tempchange > min & tempchange < max, ] # trim to min & max by realm
-slopespred[, tempave := factor(as.character(round(tempave)), levels = c('0', '25'))] # re-order factor for nicer plotting
-
+# predicted turnover and sensitivity of turnover rate to temperature change from the tempave interaction model
+slopespred <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsigninit.rds')) # from pred_GLMMmodrawXAllJtu.sh/.R
+senspred <- readRDS(here('temp', 'sensitivity_rawTsdTTRealmtsigninit.rds')) # from pred_GLMMmodrawXAllJtu.sh/.R
+senspred[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', 'warming'))]
+vals <- senspred[c(which.min(abs(tempave - 0)), which.min(abs(tempave - 25))), tempave]
+senspred <- senspred[tempave %in% vals]
 
 # fastest turnover at highest observed rate of temperature change
 slopespredsdT[, max(slope)] # just looking at tempchange
@@ -245,25 +245,22 @@ p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
 
 # b) plot of change vs. dT
 p2 <- ggplot() +
-    geom_point(data = trends[!is.na(tempchange)], mapping = aes(tempchange, disstrend, size = duration), 
-             color='#AAAAAA', alpha = 0.1, stroke = 0) +
-    geom_hline(yintercept = 0, linetype = 'dotted') +
-    geom_line(data = slopespredsdT, mapping=aes(tempchange, slope), size=0.5) +
+    geom_point(data = trends[!is.na(tempchange)], mapping = aes(abs(tempchange), disstrend, size = duration, color = as.factor(tsign)), 
+             color='#AAAAAA', alpha = 0.2, stroke = 0) +
+    #geom_hline(yintercept = 0, linetype = 'dotted') +
+    geom_line(data = slopespredsdT, mapping=aes(abs(tempchange), slope, color = tsign, group = tsign), size=0.5) +
     geom_ribbon(data = slopespredsdT, alpha = 0.2, color = NA, 
-                aes(tempchange, slope,
+                aes(abs(tempchange), slope,
                     ymin=slope - slope.se, 
-                    ymax=slope + slope.se)) +
-    geom_line(data = slopespred, mapping=aes(tempchange, slope, color = tempave, group = tempave), linetype = 'dashed') +
-    geom_ribbon(data = slopespred, alpha = 0.2, color = NA,
-                aes(tempchange, slope, fill = tempave,
-                    ymin=slope - slope.se,
-                    ymax=slope + slope.se)) +
+                    ymax=slope + slope.se,
+                    fill = tsign,
+                    group = tsign)) +
     scale_color_brewer(palette = 'Dark2') +
     scale_fill_brewer(palette = 'Dark2') +
     facet_grid(cols = vars(REALM), scales = 'free')  +
-    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
-         fill = 'Average temperature [°C]', 
-         color = 'Average temperature [°C]',
+    labs(tag = 'B)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+         fill = 'Direction', 
+         color = 'Direction',
          size = 'Duration [years]') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -271,18 +268,85 @@ p2 <- ggplot() +
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
-    scale_y_continuous(trans = signedsqrttrans, 
-                       breaks = c(seq(-1,-0.2, by = 0.2), -0.1, 0, 0.1, seq(0.2, 1, by=0.2))) +
+    scale_y_continuous(trans = signedsqrt2trans, 
+                       breaks = c(seq(-1,-0.2, by = 0.2), -0.1, -0.05, 0, 0.05, 0.1, seq(0.2, 1, by=0.2))) +
+    scale_x_continuous(trans = signedsqrttrans,
+                       breaks = c(-1, -0.5, -0.1, 0, 0.1, 0.5, 1)) +
     scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
     guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
     
 p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
-fig2 <- arrangeGrob(p1, p2, nrow = 2, heights = c(1,2))
 
-ggsave('figures/fig2.png', fig2, width = 6, height = 4, units = 'in')
+p3 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
+    #geom_line()+
+    #geom_ribbon(alpha = 0.2)+
+    geom_point()+
+    geom_line(linetype='dashed')+
+    geom_errorbar()+
+    facet_grid(col = vars(REALM))+
+        labs(tag = 'C)', x = '', 
+         y = '') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          legend.position='none', # no legend
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8)) +
+    coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -20, xmax = -20, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -17, xmax = -17, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -14, xmax = -14, ymin = 0.01, ymax = 0.01) +
+    lims(x=c(0,25))
+    
+p4 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
+    #geom_line()+
+    #geom_ribbon(alpha = 0.2)+
+    geom_point()+
+    geom_line(linetype='dashed')+
+    geom_errorbar()+
+    facet_grid(col = vars(REALM))+
+    labs(x = 'Average temperature [°C]', 
+         y = '') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          legend.position='none', # no legend
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8)) +
+    coord_cartesian(clip = 'off') +
+    lims(x=c(0,25))
 
 
-# w/out T predictions
+p5 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
+    # geom_line()+
+    # geom_ribbon(alpha = 0.2)+
+    geom_point()+
+    geom_line(linetype='dashed')+
+    geom_errorbar()+
+    facet_grid(col = vars(REALM))+
+    labs(x = '', 
+         y = '',
+         fill = 'Direction',
+         color = 'Direction') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8)) +
+    lims(x=c(0,25))
+
+p5 <- addSmallLegend(p5, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
+
+fig2 <- arrangeGrob(p1, p2, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix = matrix(c(1,1,1,2,2,2,3,4,5), nrow=3, byrow=TRUE), 
+                    heights = c(1,2,2), widths = c(3,3,4))
+
+ggsave('figures/fig2.png', fig2, width = 6, height = 8, units = 'in')
+
+
+# w/out T predictions. NEED TO UPDATE THIS
 p2noT <- ggplot() +
     geom_point(data = trends[!is.na(tempchange)], mapping = aes(tempchange, disstrend, size = duration), 
                color='#AAAAAA', alpha = 0.1, stroke = 0) +
@@ -314,35 +378,6 @@ fig2noT <- arrangeGrob(p1, p2noT, nrow = 2, heights = c(1,2))
 ggsave('figures/fig2_nopredsT.png', fig2noT, width = 6, height = 4, units = 'in')
 
 
-# w/out Tempav x Temptrend predictions
-p2noTT <- ggplot() +
-    geom_point(data = trends[!is.na(tempchange)], mapping = aes(tempchange, disstrend, size = duration), 
-               color='#AAAAAA', alpha = 0.1, stroke = 0) +
-    geom_hline(yintercept = 0, linetype = 'dotted') +
-    geom_line(data = slopespredsdT, mapping=aes(tempchange, slope), size=0.5) +
-    geom_ribbon(data = slopespredsdT, alpha = 0.2, color = NA, 
-                aes(tempchange, slope,
-                    ymin=slope - slope.se, 
-                    ymax=slope + slope.se)) +
-    facet_grid(cols = vars(REALM), scales = 'free')  +
-    labs(tag = 'B)', x = 'Temperature change [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
-         fill = 'Average temperature [°C]', 
-         color = 'Average temperature [°C]',
-         size = 'Duration [years]') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
-    scale_y_continuous(trans = signedsqrttrans, 
-                       breaks = c(seq(-1,-0.2, by = 0.2), -0.1, 0, 0.1, seq(0.2, 1, by=0.2))) +
-    scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
-    guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
-p2noTT <- addSmallLegend(p2noTT, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
-fig2noTT <- arrangeGrob(p1, p2noTT, nrow = 2, heights = c(1,2))
-
-ggsave('figures/fig2_nopredsTxT.png', fig2noTT, width = 6, height = 4, units = 'in')
 
 
 ### Figure 3: interactions ---------
