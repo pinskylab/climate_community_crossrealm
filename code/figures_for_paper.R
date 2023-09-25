@@ -229,7 +229,7 @@ ht <- 6.3
 p1 <- ggplot(trends_by_study, aes(x=disstrend, group = REALM, fill = REALM)) +
     geom_density(color = NA, alpha = 0.4) +
     scale_y_sqrt(breaks = c(0.1, 1, 2, 6)) +
-    scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.1, -0.05, 0, 0.05, 0.1, 0.2, 0.4)) +
+    scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.2, 0.4)) +
     geom_segment(data = ave_by_realm, aes(x=disstrend - 1.96*se, xend = disstrend + 1.96*se, y= ht+offset, yend = ht+offset, color = REALM), alpha = 1) +
     geom_segment(data = ave_by_realm, aes(x = disstrend, y = 0, xend = disstrend, yend = ht+offset, color = REALM), size=0.5, linetype = 'dashed') +
     labs(tag = 'A)', x = expression('Turnover rate ['~Delta~'Turnover/year]'), y = 'Density', title = '') +
@@ -246,7 +246,7 @@ p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
 # b) plot of change vs. dT
 p2 <- ggplot() +
     geom_point(data = trends[!is.na(tempchange)], mapping = aes(abs(tempchange), disstrend, size = duration, color = as.factor(tsign)), 
-             color='#AAAAAA', alpha = 0.2, stroke = 0) +
+             color='#AAAAAA', alpha = 0.1, stroke = 0) +
     #geom_hline(yintercept = 0, linetype = 'dotted') +
     geom_line(data = slopespredsdT, mapping=aes(abs(tempchange), slope, color = tsign, group = tsign), size=0.5) +
     geom_ribbon(data = slopespredsdT, alpha = 0.2, color = NA, 
@@ -269,7 +269,7 @@ p2 <- ggplot() +
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
     scale_y_continuous(trans = signedsqrt2trans, 
-                       breaks = c(seq(-1,-0.2, by = 0.2), -0.1, -0.05, 0, 0.05, 0.1, seq(0.2, 1, by=0.2))) +
+                       breaks = c(-1,-0.3, -0.1, -0.03, -0.01, 0, 0.01, 0.03, 0.1, 0.3, 1)) +
     scale_x_continuous(trans = signedsqrttrans,
                        breaks = c(-1, -0.5, -0.1, 0, 0.1, 0.5, 1)) +
     scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
@@ -278,14 +278,14 @@ p2 <- ggplot() +
 p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
 p3 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
-    #geom_line()+
-    #geom_ribbon(alpha = 0.2)+
     geom_point()+
     geom_line(linetype='dashed')+
     geom_errorbar()+
     facet_grid(col = vars(REALM))+
-        labs(tag = 'C)', x = '', 
+    labs(tag = 'C)', x = '', 
          y = '') +
+    scale_color_brewer(palette = 'Dark2') +
+    scale_fill_brewer(palette = 'Dark2') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -294,20 +294,21 @@ p3 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, ymin = sensiti
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
     coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -20, xmax = -20, ymin = 0.01, ymax = 0.01) +
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -17, xmax = -17, ymin = 0.01, ymax = 0.01) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -14, xmax = -14, ymin = 0.01, ymax = 0.01) +
-    lims(x=c(0,25))
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -40, xmax = -40, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -35, xmax = -35, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -30, xmax = -30, ymin = 0.01, ymax = 0.01) +
+    scale_x_continuous(name='', breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
     
 p4 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
-    #geom_line()+
-    #geom_ribbon(alpha = 0.2)+
     geom_point()+
     geom_line(linetype='dashed')+
     geom_errorbar()+
     facet_grid(col = vars(REALM))+
-    labs(x = 'Average temperature [°C]', 
+    labs(tag='',
+         x = 'Average temperature [°C]', 
          y = '') +
+    scale_color_brewer(palette = 'Dark2') +
+    scale_fill_brewer(palette = 'Dark2') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -316,27 +317,28 @@ p4 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = se
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
     coord_cartesian(clip = 'off') +
-    lims(x=c(0,25))
+    scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
 
 p5 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
-    # geom_line()+
-    # geom_ribbon(alpha = 0.2)+
     geom_point()+
     geom_line(linetype='dashed')+
     geom_errorbar()+
     facet_grid(col = vars(REALM))+
-    labs(x = '', 
+    labs(tag = '',
+         x = '', 
          y = '',
          fill = 'Direction',
          color = 'Direction') +
+    scale_color_brewer(palette = 'Dark2') +
+    scale_fill_brewer(palette = 'Dark2') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
-    lims(x=c(0,25))
+    scale_x_continuous(name='', breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
 p5 <- addSmallLegend(p5, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
