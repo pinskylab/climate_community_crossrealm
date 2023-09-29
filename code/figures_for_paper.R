@@ -63,14 +63,14 @@ anova(modRealmAllJtu, modsdTRealmtsignAllJtu)
 if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 if(!exists('modRealmInitAllJtu')) modRealmInitAllJtu <- readRDS('temp/modRealmInitAllJtu.rds') # Realm. Fit by code/turnover_GLMM_fit.R
 if(!exists('modTaxamod2InitAllJtu')) modTaxamod2InitAllJtu <- readRDS('temp/modTaxamod2InitAllJtu.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
-if(!exists('modsdTRealmtsignInitAllJtu')) modsdTRealmtsignInitAllJtu <- readRDS(here('temp', 'modsdTRealmtsignInitAllJtu.rds')) # tsign:tempchange_abs by realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
+if(!exists('modsdTRealmtsigninitAllJtu')) modsdTRealmtsigninitAllJtu <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # tsign:tempchange_abs by realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 if(!exists('modabsLatsdTabsLatRealmtsignInitAllJtu')) modabsLatsdTabsLatRealmtsignInitAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitAllJtu.rds')) # tsign:tempchange_abs:absLat Fit by code/turnover_vs_temperature_GLMM_fit_modabsLatsdTabsLatRealmtsignAllJtu.R
-if(!exists('modrawTsdTTRealmtsignInitAllJtu')) modrawTsdTTRealmtsignInitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignInitAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
+if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 
 # compare sdT amd TsdTT models against null
 aics <- AIC(modInitAllJtu, modRealmInitAllJtu, modTaxamod2InitAllJtu, # simple models w/out tempchange
-            modsdTRealmtsignInitAllJtu, # tsign:tempchange_abs
-            modabsLatsdTabsLatRealmtsignInitAllJtu, modrawTsdTTRealmtsignInitAllJtu) # add tempave:tempchange_abs
+            modsdTRealmtsigninitAllJtu, # tsign:tempchange_abs
+            modabsLatsdTabsLatRealmtsignInitAllJtu, modrawTsdTTRealmtsigninitAllJtu) # add tempave:tempchange_abs
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllJtu']
 aics
@@ -388,93 +388,77 @@ ggsave('figures/fig2_nopredsT.png', fig2noT, width = 6, height = 4, units = 'in'
 
 
 ### Figure 3: interactions ---------
+slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariateInit.rds')) # from code/pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R
 sensitivity2 <- readRDS(here('temp', 'sensitivity_rawTsdTTRealmtsignCovariateInit.rds')) # from code/pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R
+sensitivity2[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting
 
-# max sensitivity by realm and covariate
-#slopes2[, .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
-#        by = .(REALM, tempchange, microclim, human_bowler)]
+# max turnover rate by realm and covariate
+slopes2[tempave==10 & tempchange %in% c(2,-1.5) & human_bowler %in% c(0,10), .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
+        by = .(REALM, microclim, human_bowler, tempchange)][order(REALM, microclim, tempchange)]
 
+# plots
 ylims.microclimate <- c(-0.02, 0.035)
 ylims.human <- c(-0.02, 0.035)
 
-# plots
-p1 <- ggplot(sensitivity2[REALM=='Marine'], aes(microclim, sensitivity_microclim, 
-                               ymin=sensitivity_microclim-1.96*sensitivity_microclim.se,  ymax=sensitivity_microclim+1.96*sensitivity_microclim.se)) +
+p1 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')], 
+             aes(microclim, sensitivity_microclim, 
+                 ymin=sensitivity_microclim-1.96*sensitivity_microclim.se,  
+                 ymax=sensitivity_microclim+1.96*sensitivity_microclim.se,
+                 color = REALM,
+                 group = REALM,
+                 fill = REALM)) +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     labs(tag = 'A)', 
          x = 'Microclimate availability',
          y = '') +
     coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.45, xmax = -2.45, ymin = 0.005, ymax = 0.005) + # note x-axis is in log10 units
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.3, xmax = -2.3, ymin = 0.005, ymax = 0.005) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.15, xmax = -2.15, ymin = 0.005, ymax = 0.005) +
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.7, xmax = -2.7, ymin = 0.005, ymax = 0.005) + # note x-axis is in log10 units
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.5, xmax = -2.5, ymin = 0.005, ymax = 0.005) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.3, xmax = -2.3, ymin = 0.005, ymax = 0.005) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
+          legend.position='none', # no legend
           axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
+          axis.title=element_text(size=7),
           axis.title.y=element_text(vjust = 6),
-          plot.title=element_text(size=8)) +
+          plot.title=element_text(size=8),
+          plot.margin = unit(c(0.05, 0.05, 0.05, 0.05), 'in')) +
     scale_x_log10(limits = c(0.03, 1)) +
-    lims(y = ylims.microclimate)
+    lims(y = ylims.microclimate) +
+    scale_fill_manual(values = c('#66c2a5', '#8da0cb')) +
+    scale_color_manual(values = c('#66c2a5', '#8da0cb'))
 
-p2 <- ggplot(sensitivity2[REALM=='Terrestrial'], aes(microclim, sensitivity_microclim, 
-                               ymin=sensitivity_microclim-1.96*sensitivity_microclim.se,  ymax=sensitivity_microclim+1.96*sensitivity_microclim.se)) +
+p2 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')], 
+             aes(human_bowler, sensitivity_human, 
+                 ymin=sensitivity_human-1.96*sensitivity_human.se,  
+                 ymax=sensitivity_human+1.96*sensitivity_human.se,
+                 color = REALM,
+                 group = REALM,
+                 fill = REALM)) +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     labs(tag = 'B)', 
-         x = 'Microclimate availability',
-         y = '') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          axis.title.y=element_text(vjust = 6),
-          plot.title=element_text(size=8)) +
-    scale_x_log10(limits = c(0.03, 1)) +
-    lims(y = ylims.microclimate)
-
-p3 <- ggplot(sensitivity2[REALM=='Marine'], aes(human_bowler, sensitivity_human, 
-                               ymin=sensitivity_human-1.96*sensitivity_human.se,  ymax=sensitivity_human+1.96*sensitivity_human.se)) +
-    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
-    geom_line() +
-    labs(tag = 'C)', 
-         x = 'Human impact', 
-         y = '') +
-    coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -1.85, xmax = -1.85, ymin = 0.005, ymax = 0.005) + # note x-axis is in log10 units
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -1.65, xmax = -1.65, ymin = 0.005, ymax = 0.005) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -1.45, xmax = -1.45, ymin = 0.005, ymax = 0.005) +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
-    scale_x_log10()  +
-    lims(y = ylims.human)
-
-p4 <- ggplot(sensitivity2[REALM=='Terrestrial'], aes(human_bowler, sensitivity_human, 
-                                                ymin=sensitivity_human-1.96*sensitivity_human.se,  ymax=sensitivity_human+1.96*sensitivity_human.se)) +
-    geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
-    geom_line() +
-    labs(tag = 'D)', 
          x = 'Human impact', 
          y = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
+          axis.title=element_text(size=7),
+          axis.title.y=element_blank(),
+          plot.title=element_text(size=8),
+          plot.margin = unit(c(0.05, 0.05, 0.05, 0.01), 'in')) +
     scale_x_log10()  +
-    lims(y = ylims.human)
+    lims(y = ylims.human) +
+    scale_fill_manual(values = c('#66c2a5', '#8da0cb')) +
+    scale_color_manual(values = c('#66c2a5', '#8da0cb'))
+p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
-fig3 <- arrangeGrob(p1, p2, p3, p4, ncol = 2)
+fig3 <- arrangeGrob(p1, p2, ncol = 2, widths = c(3,4))
 
-ggsave('figures/fig3.png', fig3, width = 4, height = 4, units = 'in')
+ggsave('figures/fig3.png', fig3, width = 4, height = 2, units = 'in')
 
 
 
