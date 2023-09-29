@@ -107,13 +107,13 @@ slopes2 <- merge(slopes.microclim, slopes.human)
 
 # save turnover rates
 saveRDS(slopes2, file = here('temp', 'slopes_rawTsdTTRealmtsignCovariateInit.rds'))
-# slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariateInit.rds')) # to read in manually
 print(paste('Wrote slopes_rawTsdTTRealmtsignCovariateInit.rds:', Sys.time()))
 
 
 
 ### Calculate sensitivity of turnover rates to covariates ----------------------
-slopes2 <- slopes2[tempave == 10 & tempchange > 0, ] # pick median tempave and warming
+# slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariateInit.rds')) # to read in manually
+slopes2 <- slopes2[tempave == 13 & tempchange > 0, ] # pick tempave and warming
 
 sensitivity.microclim <- slopes2[, slopesamp(n, tempchange, slope_microclim, slope_microclim.se, colnames = c('sensitivity_microclim', 'sensitivity_microclim.se')), 
                                  by = .(microclim, human_bowler, REALM)]
