@@ -59,20 +59,20 @@ if(!exists('modsdTRealmtsignAllJtu')) modsdTRealmtsignAllJtu <- readRDS(here('te
 anova(modRealmAllJtu, modsdTRealmtsignAllJtu)
 
 #### Table 1: AICs --------------
-if(!exists('modAllJtu')) modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
-if(!exists('modRealmAllJtu')) modRealmAllJtu <- readRDS('temp/modRealmAllJtu.rds') # Realm. Fit by code/turnover_GLMM_fit.R
-if(!exists('modTaxamod2AllJtu')) modTaxamod2AllJtu <- readRDS('temp/modTaxamod2AllJtu.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
-if(!exists('modsdTtsignAllJtu')) modsdTtsignAllJtu <- readRDS(here('temp', 'modsdTtsignAllJtu.rds')) # tsign, tempchange_abs. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
-if(!exists('modsdTRealmtsignAllJtu')) modsdTRealmtsignAllJtu <- readRDS(here('temp', 'modsdTRealmtsignAllJtu.rds')) # tsign:tempchange_abs by realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
-if(!exists('modabsLatsdTabsLatRealmtsignAllJtu')) modabsLatsdTabsLatRealmtsignAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignAllJtu.rds')) # tsign:tempchange_abs:absLat Fit by code/turnover_vs_temperature_GLMM_fit_modabsLatsdTabsLatRealmtsignAllJtu.R
-if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
+## NEED TO UPDATE THE COMMENTS ABOUT WHICH SCRIPT FIT THESE MODELS
+if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
+if(!exists('modRealmInitAllJtu')) modRealmInitAllJtu <- readRDS('temp/modRealmInitAllJtu.rds') # Realm. Fit by code/turnover_GLMM_fit.R
+if(!exists('modTaxamod2InitAllJtu')) modTaxamod2InitAllJtu <- readRDS('temp/modTaxamod2InitAllJtu.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
+if(!exists('modsdTRealmtsignInitAllJtu')) modsdTRealmtsignInitAllJtu <- readRDS(here('temp', 'modsdTRealmtsignInitAllJtu.rds')) # tsign:tempchange_abs by realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
+if(!exists('modabsLatsdTabsLatRealmtsignInitAllJtu')) modabsLatsdTabsLatRealmtsignInitAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitAllJtu.rds')) # tsign:tempchange_abs:absLat Fit by code/turnover_vs_temperature_GLMM_fit_modabsLatsdTabsLatRealmtsignAllJtu.R
+if(!exists('modrawTsdTTRealmtsignInitAllJtu')) modrawTsdTTRealmtsignInitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignInitAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 
 # compare sdT amd TsdTT models against null
-aics <- AIC(modAllJtu, modRealmAllJtu, modTaxamod2AllJtu, # simple models w/out tempchange
-            modsdTtsignAllJtu, modsdTRealmtsignAllJtu, # tsign:tempchange_abs w/out or w/ realm
-            modabsLatsdTabsLatRealmtsignAllJtu, modrawTsdTTRealmtsignAllJtu) # add tempave:tempchange_abs
+aics <- AIC(modInitAllJtu, modRealmInitAllJtu, modTaxamod2InitAllJtu, # simple models w/out tempchange
+            modsdTRealmtsignInitAllJtu, # tsign:tempchange_abs
+            modabsLatsdTabsLatRealmtsignInitAllJtu, modrawTsdTTRealmtsignInitAllJtu) # add tempave:tempchange_abs
 aics$dAIC <- aics$AIC - min(aics$AIC)
-aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modAllJtu']
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllJtu']
 aics
 
 write.csv(aics, here('figures', 'table1.csv'))
@@ -221,8 +221,13 @@ vals <- senspred[c(which.min(abs(tempave - 0)), which.min(abs(tempave - 25))), t
 senspred <- senspred[tempave %in% vals]
 
 # fastest turnover at highest observed rate of temperature change
-slopespredsdT[, max(slope)] # just looking at tempchange
-slopespred[, max(slope)] # also considering tempave
+slopespredsdT[, .SD[which.max(slope), .(tempchange, slope)], by = REALM] # just looking at tempchange
+slopespred[, .SD[which.max(slope), .(tempave, tempchange, slope)], by = REALM] # also considering tempave
+
+# predicted turnover at moderate rates of temperature change
+slopespredsdT[, .SD[which.min(abs(tempchange - 0.5)), .(tempchange, slope)], by = REALM] # just looking at tempchange
+slopespred[, .SD[which.max(slope), .(tempave, tempchange, slope)], by = REALM] # also considering tempave
+
 
 # a) across realms
 ht <- 6.3
@@ -343,9 +348,9 @@ p5 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sen
 p5 <- addSmallLegend(p5, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
 fig2 <- arrangeGrob(p1, p2, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix = matrix(c(1,1,1,2,2,2,3,4,5), nrow=3, byrow=TRUE), 
-                    heights = c(1,2,2), widths = c(3,3,4))
+                    heights = c(1,2,1), widths = c(3,3,4))
 
-ggsave('figures/fig2.png', fig2, width = 6, height = 8, units = 'in')
+ggsave('figures/fig2.png', fig2, width = 6, height = 6, units = 'in')
 
 
 # w/out T predictions. NEED TO UPDATE THIS
