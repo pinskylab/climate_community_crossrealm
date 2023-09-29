@@ -15,7 +15,7 @@ library(rcompanion) # for CIs on median
 source(here('code', 'util.R'))
 
 
-### Dataset sizes ---------
+### Dataset sizes and descriptive stats ---------
 bt <- fread('output/turnover_w_covariates.csv.gz') # the timeseries that pass QA/QC. from assemble_turnover_covariates.Rmd
 scalingall <- fread('output/turnover_w_covariates_scaling.csv') # covariate scaling data. From assemble_turnover_covariates.Rmd
 
@@ -27,6 +27,7 @@ bt[, .(N = length(unique(rarefyID))), by = REALM] # numbers of time-series by re
 bt[, length(unique(rarefyID)), by = taxa_mod2] # number of time-series by taxon group
 bt[, .(Nts = length(unique(rarefyID))), by = STUDY_ID][Nts >1, .N] # number of studies with >1 rarefyID
 bt[, range(duration+1)] # range of years sampled (2 to 119)
+bt[, median(duration+1)] # median time series length
 bt[unscaleme(tempave.sc, 'tempave.sc') >10 & REALM=='Marine', length(unique(rarefyID))] # number of timeseries >10degC
 bt[unscaleme(tempave.sc, 'tempave.sc') >10  & REALM=='Marine', length(unique(rarefyID))]/bt[REALM=='Marine', length(unique(rarefyID))] # proportion of timeseries >10degC
 
@@ -58,7 +59,7 @@ if(!exists('modsdTRealmtsignAllJtu')) modsdTRealmtsignAllJtu <- readRDS(here('te
 
 anova(modRealmAllJtu, modsdTRealmtsignAllJtu)
 
-#### Table 1: AICs --------------
+### Table 1: AICs --------------
 if(!exists('modAllJtu')) modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 if(!exists('modRealmAllJtu')) modRealmAllJtu <- readRDS('temp/modRealmAllJtu.rds') # Realm. Fit by code/turnover_GLMM_fit.R
 if(!exists('modTaxamod2AllJtu')) modTaxamod2AllJtu <- readRDS('temp/modTaxamod2AllJtu.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
@@ -82,7 +83,7 @@ write.csv(aics, here('figures', 'table1.csv'))
 
 
 
-#### Figure 1: map and data --------
+### Figure 1: map and data --------
 # load BioTime data
 bt <- fread('output/turnover_w_covariates.csv.gz') # from assemble_turnover_covariates.Rmd
 bt[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting in part A
@@ -277,6 +278,7 @@ p2 <- ggplot() +
     
 p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
+# c) in three parts
 p3 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
     geom_point()+
     geom_line(linetype='dashed')+
@@ -474,7 +476,7 @@ ggsave('figures/fig3.png', fig3, width = 4, height = 4, units = 'in')
 
 
 
-#### Table S1?: fixed effects for Tchange x Realm x Year model --------------
+### Table S1?: fixed effects for Tchange x Realm x Year model --------------
 if(!exists('modsdTRealmtsignAllJtu')) modsdTRealmtsignAllJtu <- readRDS(here('temp','modsdTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 if(!exists('sum_modrawTsdTTRealmtsignAllJtu')) sum_modsdTRealmtsignAllJtu <- summary(modsdTRealmtsignAllJtu) # slow
 out <- as.data.frame(sum_modsdTRealmtsignAllJtu$coefficients$cond)
@@ -511,13 +513,14 @@ out
 # write out
 write.csv(format(out, digits=2), file = 'figures/tableS1.csv', row.names=FALSE)
 
-#### Table S1: random effects for main model --------------
+### Table S1: random effects for main model --------------
 if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 if(!exists('sum_modrawTsdTTRealmtsignAllJtu')) sum_modrawTsdTTRealmtsignAllJtu <- summary(modrawTsdTTRealmtsignAllJtu)
 sum_modrawTsdTTRealmtsignAllJtu$varcor
 capture.output(print(sum_modrawTsdTTRealmtsignAllJtu$varcor), file = 'figures/tableS1.txt')
 
-#### Table S2: fixed effects for Tchange x Tave x Realm x Year model --------------
+
+### Table S2: fixed effects for Tchange x Tave x Realm x Year model --------------
 if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
 if(!exists('sum_modrawTsdTTRealmtsignAllJtu')) sum_modrawTsdTTRealmtsignAllJtu <- summary(modrawTsdTTRealmtsignAllJtu) # slow
 out <- as.data.frame(sum_modrawTsdTTRealmtsignAllJtu$coefficients$cond)
@@ -558,7 +561,7 @@ out
 write.csv(format(out, digits=2), file = 'figures/tableS2.csv', row.names=FALSE)
 
 
-#### Table S3: Horn AICs --------------
+### Table S3: Horn AICs --------------
 modAllHorn <- readRDS(here('temp', 'modAllHorn.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 modRealmAllHorn <- readRDS('temp/modRealmAllHorn.rds') # Realm. Fit by code/turnover_GLMM_fit.R
 modTaxamod2AllHorn <- readRDS('temp/modTaxamod2AllHorn.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
@@ -577,7 +580,7 @@ aics
 write.csv(aics, here('figures', 'tableS3.csv'))
 
 
-#### Table S4: covariate AICs --------------
+### Table S4: covariate AICs --------------
 # load models for AICs
 if(!exists('modAllJtu')) modAllJtu <- readRDS(here('temp', 'modAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 if(!exists('modrawTsdTTRealmtsignAllJtu')) modrawTsdTTRealmtsignAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignAllJtu.rds')) # adds tsign to tempave:tempchange:realm. Fit by code/turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
@@ -598,7 +601,7 @@ write.csv(aics, here('figures', 'tableS4.csv'))
 
 
 
-#### Table S5: Dispersion estimates ----------------
+### Table S5: Dispersion estimates ----------------
 modnms <- c('modAllJtu.rds', 'modRealmAllJtu.rds', 
           'modTaxamod2AllJtu.rds', 'modsdTtsignAllJtu.rds', 
           'modsdTRealmtsignAllJtu.rds', 'modrawTsdTTRealmtsignAllJtu.rds', 
@@ -619,7 +622,7 @@ write.csv(out, here('figures', 'tableS5.csv'))
 
 
 
-##### Table S6: AICs for initgainloss models ------------------
+### Table S6: AICs for initgainloss models ------------------
 # with Jtu.init:gainlossprop for Table 1
 if(!exists('modInitGainLossAllJtu')) modInitGainLossAllJtu <- readRDS(here('temp', 'modInitGainLossAllJtu.rds')) # Null
 if(!exists('modRealmInitGainLossAllJtu')) modRealmInitGainLossAllJtu <- readRDS('temp/modRealmInitGainLossAllJtu.rds') # Realm. 
