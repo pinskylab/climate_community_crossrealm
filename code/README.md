@@ -31,6 +31,11 @@ The libraries included:
 - DHARMa 0.3.3.0
 - performance 0.7.0
 
+In addition, we use custom functions here:
+
+- util.R: some utility functions used in multiple scripts
+
+
 The code is organized in five main steps:
 ## 1. Examine alternative statistical approaches
 - duration_sim.R: simulate data and fit models
@@ -46,20 +51,14 @@ The code is organized in five main steps:
 - sample_global_temp.Rmd: make a representative sample of global temperature trends
 
 ## 3. Fit models
-- turnover_GLMM_fit.R
-- turnover_GLMM_fit.sh
-- turnover_vs_temperature_GLMM_fit_modabsLatsdTabsLatRealmtsignAllJtu.R
-- turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmhumanAllJtu.R
-- turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmmicroclimAllJtu.R
-- turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllHorn.R
-- turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
-- util.R: some utility functions used in multiple scripts
+- turnover_GLMM_fit.R: fit one mixed effects model (specified as an argument)
+- turnover_GLMM_fit.sh: bash script to initiate multiple threads, one to fit each model specified as an argument. Calls turnover_GLMM_fit.R.
+- turnover_GLMMgainloss_fit.R: fit mixed effects models with the relative proportions of species gains and losses as a covariate (a sensitivity analysis)
 
 ## 4. Make predictions from the models
-- pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R
-- pred_GLMMmodrawTsdTTRealmmicroclimhumanAllJtu.R
-- pred_GLMMmodrawXAllJtu.R
+- pred_GLMMmodrawXAllJtu.R: make predictions from the models for plotting, including turnover rates and sensitivity of turnover to temperature change
 - pred_modrawXAllJtu.sh: Shell script to spawn multiple instances of pred_GLMMmodrawXAllJtu.R
+- pred_GLMMmodrawCovariate.R: make predictions for the covariate models
 
 ## 5. Make outputs for communication
 - figures_for_paper.R: figures and tables and stats for paper
