@@ -360,7 +360,7 @@ fig2 <- arrangeGrob(p1, p2, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix = matr
 ggsave('figures/fig2.png', fig2, width = 6, height = 6, units = 'in')
 
 
-# w/out T predictions. NEED TO UPDATE THIS
+# w/out T predictions
 p2noT <- ggplot() +
     geom_point(data = trends[!is.na(tempchange)], mapping = aes(abs(tempchange), disstrend, size = duration, color = as.factor(tsign)), 
                color='#AAAAAA', alpha = 0.1, stroke = 0) +
@@ -398,6 +398,43 @@ fig2noT <- arrangeGrob(p1, p2noT, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix 
                     heights = c(1,2,1), widths = c(3,3,4))
 ggsave('figures/fig2_nopredsT.png', fig2noT, width = 6, height = 6, units = 'in')
 
+# points colored by warming vs. cooling
+# b) plot of change vs. dT
+p2colorpoints <- ggplot() +
+    geom_point(data = trends[!is.na(tempchange)], mapping = aes(abs(tempchange), disstrend, size = duration, color = as.factor(tsign)), 
+               alpha = 0.1, stroke = 0) +
+    #geom_hline(yintercept = 0, linetype = 'dotted') +
+    geom_line(data = slopespredsdT, mapping=aes(abs(tempchange), slope, color = tsign, group = tsign), size=0.5) +
+    geom_ribbon(data = slopespredsdT, alpha = 0.2, color = NA, 
+                aes(abs(tempchange), slope,
+                    ymin=slope - slope.se, 
+                    ymax=slope + slope.se,
+                    fill = tsign,
+                    group = tsign)) +
+    scale_color_brewer(palette = 'Dark2') +
+    scale_fill_brewer(palette = 'Dark2') +
+    facet_grid(cols = vars(REALM), scales = 'free')  +
+    labs(tag = 'B)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+         fill = 'Direction', 
+         color = 'Direction',
+         size = 'Duration [years]') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8)) +
+    scale_y_continuous(trans = signedsqrt2trans, 
+                       breaks = c(-1,-0.3, -0.1, -0.03, -0.01, 0, 0.01, 0.03, 0.1, 0.3, 1)) +
+    scale_x_continuous(trans = signedsqrttrans,
+                       breaks = c(-1, -0.5, -0.1, 0, 0.1, 0.5, 1)) +
+    scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
+    guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
+
+p2colorpoints <- addSmallLegend(p2colorpoints, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
+fig2colorpoints <- arrangeGrob(p1, p2colorpoints, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix = matrix(c(1,1,1,2,2,2,3,4,5), nrow=3, byrow=TRUE), 
+                       heights = c(1,2,1), widths = c(3,3,4))
+ggsave('figures/fig2_colorpoints.png', fig2colorpoints, width = 6, height = 6, units = 'in')
 
 
 
@@ -607,11 +644,11 @@ write.csv(out, here('figures', 'tableS5.csv'))
 
 
 ### Table S6: AICs for initgainloss models ------------------
+## NEED TO UPDATE THE COMMENTS ABOUT WHICH SCRIPT FIT THESE MODELS
 # with Jtu.init:gainlossprop for Table 1
 if(!exists('modInitGainLossAllJtu')) modInitGainLossAllJtu <- readRDS(here('temp', 'modInitGainLossAllJtu.rds')) # Null
 if(!exists('modRealmInitGainLossAllJtu')) modRealmInitGainLossAllJtu <- readRDS('temp/modRealmInitGainLossAllJtu.rds') # Realm. 
 if(!exists('modTaxamod2InitGainLossAllJtu')) modTaxamod2InitGainLossAllJtu <- readRDS('temp/modTaxamod2InitGainLossAllJtu.rds') # Taxon. 
-if(!exists('modsdTtsignInitGainLossAllJtu')) modsdTtsignInitGainLossAllJtu <- readRDS(here('temp', 'modsdTtsignInitGainLossAllJtu.rds')) # tsign, tempchange_abs.
 if(!exists('modsdTRealmtsignInitGainLossAllJtu')) modsdTRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'modsdTRealmtsignInitGainLossAllJtu.rds')) # tsign:tempchange_abs by realm. 
 if(!exists('modabsLatsdTabsLatRealmtsignInitGainLossAllJtu')) modabsLatsdTabsLatRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitGainLossAllJtu.rds')) # tsign:tempchange_abs:absLat. Not yet included since not fit yet
 if(!exists('modrawTsdTTRealmtsignInitGainLossAllJtu')) modrawTsdTTRealmtsignInitGainLossAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignInitGainLossAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. 
@@ -619,12 +656,11 @@ if(!exists('modrawTsdTTRealmtsignInitGainLossAllJtu')) modrawTsdTTRealmtsignInit
 aicsIGL <- AIC(modInitGainLossAllJtu, 
             modRealmInitGainLossAllJtu, 
             modTaxamod2InitGainLossAllJtu, # simple models w/out tempchange
-            modsdTtsignInitGainLossAllJtu, 
             modsdTRealmtsignInitGainLossAllJtu, # tsign:tempchange_abs w/out or w/ realm
             modabsLatsdTabsLatRealmtsignInitGainLossAllJtu,
             modrawTsdTTRealmtsignInitGainLossAllJtu) # add tempave:tempchange_abs
 aicsIGL$dAIC <- aicsIGL$AIC - min(aicsIGL$AIC)
-aicsIGL$dAICnull <- aicsIGL$AIC - aicsIGL$AIC[rownames(aics)=='modInitGainLossAllJtu']
+aicsIGL$dAICnull <- aicsIGL$AIC - aicsIGL$AIC[rownames(aicsIGL)=='modInitGainLossAllJtu']
 aicsIGL
 
 write.csv(aicsIGL, here('figures', 'tableS6.csv'))
@@ -828,13 +864,14 @@ ggsave('figures/figS4.png', p1, width = 6, height = 4, units = 'in')
 
 
 
+
 ### Figure S5: T change x Ave T interaction ---------
 
 # read in slopes
-slopesTsdTTRealmtsignJtu <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsign.rds')) # made by pred_modrawXAllJtu.sh/.r
+slopesTsdTTRealmtsigninit <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsigninit.rds')) # made by pred_modrawXAllJtu.sh/.r
 
 # plot
-p1 <- ggplot(slopesTsdTTRealmtsignJtu, aes(tempchange, tempave, z = slope)) +
+p1 <- ggplot(slopesTsdTTRealmtsigninit, aes(tempchange, tempave, z = slope)) +
     geom_raster(aes(fill = slope)) +
     labs(x = 'Temperature change (°C/yr)', y = 'Average Temperature (°C)') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Turnover rate') +
