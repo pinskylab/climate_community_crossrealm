@@ -1,7 +1,8 @@
 # climate_community_crossrealm/data
 Contains files processed from BioTime.
 
-- all_pairs_beta.Rdata: pairwise dissimilarity between each observation within each BioTime timeseries after gridding to 96 km<sup>2</sup> and removal of observations with <85% coverage. Has Jaccard replacement component dissimilarity (Jtu) and Morisita-Horn similarity (Horn).
+- all_pairs_beta.Rdata: pairwise dissimilarity between each observation (year1 vs. year2) within each BioTime timeseries (rarefyID) after gridding to 96 km<sup>2</sup> and removal of observations with <85% coverage. Has Jaccard replacement component dissimilarity (Jtu) and Morisita-Horn _similarity_ (Hornsim).
+- bt_rarefy_collate.Rdata: Has rarefied_beta_medians, a data frame with the number of species gains (gains) and losses (losses) in each pairwise comparison of years (YEAR1 vs. YEAR2) within each time series (rarefyID).
 - bt_grid_spp_list_abund.Rdata: Has two objects (bt_grid_spp_list_abund and bt_grid_spp_list_abund_year). The first has total abundance (all samples, all years). The second has total annual abundance (all samples).
 - bt_grid_spp_list.Rdata: species list for each time series
 - bt_malin.Rdata: has metadata on each timeseries, including
