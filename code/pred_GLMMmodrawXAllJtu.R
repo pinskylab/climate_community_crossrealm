@@ -94,7 +94,7 @@ if(!exists('mod')) stop('No model loaded. Make sure argument matches one of the 
 
 ### Make predictions -------------------
 # set up prediction frame
-newdat <- data.table(expand.grid(tempave = seq(-20, 30, length.out = 100), tempchange = seq(-1.5, 2, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial', 'Freshwater')))
+newdat <- data.table(expand.grid(tempave = c(0, 25), tempchange = seq(-1.5, 2, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial', 'Freshwater')))
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1
 newdat$Jtu.init <- 0.5
