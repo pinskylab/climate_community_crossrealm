@@ -1,13 +1,7 @@
-###Laura Antao
+###Laura Antao & Malin Pinsky
 ###06-05-2020; updated 13-05-2020
-
-##script to send to Malin extracting temperature values from Wordclim to use in turnover~Year analysis from the BioTIME gridded data
-
-
-# DISCLAIMER: code is under development
+##script to extract temperature values from Wordclim to use in turnover~Year analysis from the BioTIME gridded data
 ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
-
-
 
 ##18-05-2020
 ##new approach - get values within radius around each central lat-long
@@ -19,11 +13,11 @@ library(ggplot2) # for a plot at the end
 library(maps) # for a plot at the end
 
 ##load raster files as before
-tempbio1 <- raster("dataDL/worldclim/wc2.0_bio_30s_01.tif")   ##downloaded from site
+tempbio1 <- raster("dataDL/worldclim/wc2.0_bio_30s_01.tif")   ## WorldClim climatology from https://worldclim.org (wc2.0_bio_30s_01.tif)
 temp_sstmean <- load_layers("BO_sstmean") # direct download of BIO-Oracle layers
 
 # load BioTime change
-load('data/biotime_blowes/bt_malin.Rdata')
+load('data/biotime_blowes/bt_malin.Rdata') # metadata on each BioTime time series
 trends <- bt_malin[!duplicated(bt_malin$rarefyID), c('REALM', 'STUDY_ID', 'rarefyID', 'rarefyID_x', 'rarefyID_y')]; rm(bt_malin) # rename to bt
 
 ##for terrestrial & freshwater
@@ -137,14 +131,6 @@ Temp_sd6_ALL<- rbind(Temp_sd_Ter%>%
                       rename(Temp_sd6km ="Temp_sd"))
 
 
-
-
-
-
-
-
-##added 19-05-2020 ####
-##to use a larger buffer hoping to overcome having so many NAs
 
 ##for terrestrial
 ##setting a buffer with 20Km radius (~1256.64 km2)

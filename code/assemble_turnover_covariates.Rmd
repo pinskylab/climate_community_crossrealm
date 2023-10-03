@@ -49,7 +49,7 @@ microclim <- fread(here('output', 'microclimates.csv.gz'), drop = 1) # from asse
 rich <- fread(here('output', 'richness_by_rarefyID.csv.gz')) # number of species. from extract_richness.R
 
 # human impact
-human <- fread(here('output', 'humanimpact_by_rarefyID.csv.gz'))
+human <- fread(here('output', 'humanimpact_by_rarefyID.csv.gz')) # from extract_human_impacts.R
 
 ```
 
