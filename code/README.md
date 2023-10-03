@@ -2,7 +2,7 @@
 
 The scripts in this analysis were run in two computer environments:
 - A MacBook Pro 16 GB RAM with R version 4.0.3 and RStudio 1.3.1093
-- A scientific workstation with 72 CPUs (Intel Xeon CPU E5-2697 v4 @ 2.30GHz) running CentOS 7.6.1810 with R version 3.5.2 and RStudio 1.3.1093
+- A scientific workstation ('Annotate') with 72 CPUs (Intel Xeon CPU E5-2697 v4 @ 2.30GHz) running CentOS 7.6.1810 with R version 3.5.2 and RStudio 1.3.1093
 
 The libraries included:
 - tidyverse 1.2.1
@@ -31,35 +31,34 @@ The libraries included:
 - DHARMa 0.3.3.0
 - performance 0.7.0
 
+In addition, we use custom functions here:
+
+- `util.R`: some utility functions used in multiple scripts
+
+
 The code is organized in five main steps:
 ## 1. Examine alternative statistical approaches
-- duration_sim.R: simulate data and fit models
-- duration_sim.Rmd: examine results
+- `duration_sim.R`: simulate data and fit models. Writes `output/simulated_ts.csv.gz`
+- `duration_sim.Rmd`: examine simulation results
 
 ## 2. Prep data
-- assemble_microclimates.R: extract microclimate variability for each time series
-- assemble_temp.Rmd: calculate temperature averages and trends
-- extract_human_impacts.R: extract human impact values for each time series
-- extract_richness.R: extract species richness data for each time series
-- assemble_turnover_covariates.Rmd: put dissimilarity data together with covariates
-- calc_turnover.R: calculate temporal turnover as the slope of dissimilarity vs. year
-- sample_global_temp.Rmd: make a representative sample of global temperature trends
+- `assemble_microclimates.R`: extract microclimate variability for each time series. Writes `output/microclimates.csv.gz`
+- `assemble_temp.Rmd`: calculate temperature averages and trends. Writes `output/temperature_byrarefyID.csv.gz`
+- `extract_human_impacts.R`: extract human impact values for each time series. Writes `output/humanimpact_by_rarefyID.csv.gz`
+- `extract_richness.R`: extract species richness data for each time series. Writes `output/richness_by_rarefyID.csv.gz`
+- `assemble_turnover_covariates.Rmd`: put dissimilarity data together with covariates. Writes `output/turnover_w_covariates_scaling.csv`
+- `calc_turnover.R`: calculate temporal turnover as the slope of dissimilarity vs. year. Writes `output/slope.csv.gz`
+- `sample_global_temp.Rmd`: make a representative sample of global temperature trends. Writes `output/temperature_trends_sampled.csv.gz`
 
 ## 3. Fit models
-- turnover_GLMM_fit.R
-- turnover_GLMM_fit.sh
-- turnover_vs_temperature_GLMM_fit_modabsLatsdTabsLatRealmtsignAllJtu.R
-- turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmhumanAllJtu.R
-- turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmmicroclimAllJtu.R
-- turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllHorn.R
-- turnover_vs_temperature_GLMM_fit_modrawTsdTTRealmtsignAllJtu.R
-- util.R: some utility functions used in multiple scripts
+- `turnover_GLMM_fit.R`: fit one mixed effects model (specified as an argument). Writes `temp/mod*.rds`
+- `turnover_GLMM_fit.sh`: bash script to initiate multiple threads, one to fit each model specified as an argument. Calls `turnover_GLMM_fit.R`
+- `turnover_GLMMgainloss_fit.R`: fit mixed effects models with the relative proportions of species gains and losses as a covariate (a sensitivity analysis). Writes `temp/mod*InitGainLossAll*.rds`
 
 ## 4. Make predictions from the models
-- pred_GLMMmodrawTsdTTRealmCovariateAllJtu.R
-- pred_GLMMmodrawTsdTTRealmmicroclimhumanAllJtu.R
-- pred_GLMMmodrawXAllJtu.R
-- pred_modrawXAllJtu.sh: Shell script to spawn multiple instances of pred_GLMMmodrawXAllJtu.R
+- `pred_GLMMmodrawXAllJtu.R`: make predictions from the models for plotting, including turnover rates and sensitivity of turnover to temperature change. Writes `temp/preds_modsdTRealmtsigninitAllJtu.rds` and `preds_rawTsdTTRealmtsigninit.rds` (dissimilarity), `temp/slopes_modsdTRealmtsigninitAllJtu.rds` and `slopes_rawTsdTTRealmtsigninit.rds` (turnover rate), and `sensitivity_rawTsdTTRealmtsigninit.rds` (sensitivity of turnover rates to temperature change)
+- `pred_modrawXAllJtu.sh`: Shell script to spawn multiple instances of `pred_GLMMmodrawXAllJtu.R`
+- `pred_GLMMmodrawCovariate.R`: make predictions for the covariate models. Writes `temp/preds_rawTsdTTRealmtsignCovariateInit.rds` (dissimilarity), `temp/slopes_rawTsdTTRealmtsignCovariateInit.rds` (turnover rates), and `temp/sensitivity_rawTsdTTRealmtsignCovariateInit.rds` (sensitivity)
 
 ## 5. Make outputs for communication
-- figures_for_paper.R: figures and tables and stats for paper
+- `figures_for_paper.R`: figures and tables and stats for paper
