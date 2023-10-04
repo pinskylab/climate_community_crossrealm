@@ -31,10 +31,6 @@ bt[, median(duration+1)] # median time series length
 bt[unscaleme(tempave.sc, 'tempave.sc') >10 & REALM=='Marine', length(unique(rarefyID))] # number of timeseries >10degC
 bt[unscaleme(tempave.sc, 'tempave.sc') >10  & REALM=='Marine', length(unique(rarefyID))]/bt[REALM=='Marine', length(unique(rarefyID))] # proportion of timeseries >10degC
 
-
-
-### Miscellaneous statistics -----------
-
 # temporal turnover for Swedish birds
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends[duration_group == 'All' & rarefyID =='339_1085477' & measure=='Jtu',]
@@ -53,7 +49,8 @@ groupwiseMedian(Jtu ~ 1, data = trends_by_study, conf = 0.95, R = 5000, percenti
 trends_by_study[, range(Jtu)]
 
 
-# likelihood ratio tests among models
+
+### Likelihood ratio tests among models ----------------
 if(!exists('modRealmInitAllJtu')) modRealmInitAllJtu <- readRDS(here('temp', 'modRealmInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 if(!exists('modsdTRealmtsigninitAllJtu')) modsdTRealmtsigninitAllJtu <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # tsign:tempchange_abs by realm. Fit by code/turnover_GLMM_fit.R
 if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # tsign:tempchange_abs:tempave:realm. Fit by code/turnover_GLMM_fit.R
@@ -65,6 +62,7 @@ anova(modRealmInitAllJtu, modsdTRealmtsigninitAllJtu) # Realm vs. Tchange model
 anova(modsdTRealmtsigninitAllJtu, modrawTsdTTRealmtsigninitAllJtu) # Tchange vs. Tchange x Tave model
 anova(modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignmicroclimInitAllJtu) # Tchange x Tave model vs. microclimate
 anova(modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignhumanInitAllJtu) # Tchange x Tave model vs. human
+
 
 
 ### Table 1: AICs --------------
@@ -203,7 +201,7 @@ trends <- trends[duration_group == 'All' & measure == 'Jtu',]
 trends <- merge(trends, bt[!duplicated(rarefyID),. (rarefyID, STUDY_ID, REALM, tempchange)])
 trends[, duration := year2 - year1]
 trends[, tsign := factor(sign(tempchange), levels = c('-1', '1'), labels = c('cooling', 'warming'))]
-trends[, REALM := factor(REALM, levels = c('Marine', 'Terrestrial', 'Freshwater'))] # re-order for nicer plotting in part B
+trends[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting in part B
 trends_by_study <- trends[duration>2, .(disstrend = mean(disstrend, na.rm=TRUE), tempchange = mean(tempchange, na.rm=TRUE), duration = mean(duration)), by = .(STUDY_ID, REALM)] # average by studyID. Can't use 2-year trends since they assume dissimilarity at y0 is 0.
 trends_by_study[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting in part A
 
@@ -289,12 +287,13 @@ p2 <- ggplot() +
 p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
 # c) in three parts
-p3 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
+p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
     geom_point()+
     geom_line(linetype='dashed')+
     geom_errorbar()+
     facet_grid(col = vars(REALM))+
-    labs(tag = 'C)', x = '', 
+    labs(tag='C)',
+         x = '', 
          y = '') +
     scale_color_manual(values=c('#0072B2', '#D55E00')) +
     scale_fill_manual(values=c('#0072B2', '#D55E00')) +
@@ -309,15 +308,16 @@ p3 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, ymin = sensiti
     annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -40, xmax = -40, ymin = 0.01, ymax = 0.01) +
     annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -35, xmax = -35, ymin = 0.01, ymax = 0.01) +
     annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -30, xmax = -30, ymin = 0.01, ymax = 0.01) +
-    scale_x_continuous(name='', breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
-    
-p4 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
+    scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
+
+
+p4 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
     geom_point()+
     geom_line(linetype='dashed')+
     geom_errorbar()+
     facet_grid(col = vars(REALM))+
-    labs(tag='',
-         x = 'Average temperature [°C]', 
+    labs(tag = '',
+         x = 'Ave. temperature [°C]', 
          y = '') +
     scale_color_manual(values=c('#0072B2', '#D55E00')) +
     scale_fill_manual(values=c('#0072B2', '#D55E00')) +
@@ -328,17 +328,15 @@ p4 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = se
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
-    coord_cartesian(clip = 'off') +
+    coord_cartesian(clip = 'off') + 
     scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
-
-p5 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
+p5 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
     geom_point()+
     geom_line(linetype='dashed')+
     geom_errorbar()+
     facet_grid(col = vars(REALM))+
-    labs(tag = '',
-         x = '', 
+    labs(tag = '', x = '', 
          y = '',
          fill = 'Direction',
          color = 'Direction') +
@@ -350,7 +348,7 @@ p5 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sen
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
-    scale_x_continuous(name='', breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
+    scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
 p5 <- addSmallLegend(p5, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
