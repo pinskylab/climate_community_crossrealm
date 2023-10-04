@@ -131,7 +131,7 @@ p2 <- ggplot(temptrends[REALM == 'Terrestrial & Freshwater'], aes(x = tempchange
     scale_y_sqrt() +
     scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans, 
                        breaks = c(-2, -1, -0.5, 0, 0.5, 1, 2)) +
-    scale_fill_brewer(palette="Set2", name = 'Realm') +
+    scale_fill_manual(values=c('#E69F00', '#56B4E9'), name = 'Dataset') +
     labs(tag = 'B)', x = 'Temperature change [°C/yr]', title = 'Terrestrial & Freshwater') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -147,7 +147,7 @@ p3 <- ggplot(temptrends[REALM == 'Marine'], aes(x = tempchange, fill = type)) +
     scale_y_sqrt() +
     scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans, 
                        breaks = c(-2, -1, -0.5, 0, 0.5, 1, 2)) +
-    scale_fill_brewer(palette="Set2", name = 'Realm') +
+    scale_fill_manual(values=c('#E69F00', '#56B4E9'), name = 'Dataset') +
     labs(tag = 'C)', x = 'Temperature change [°C/yr]', title = 'Marine') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -179,7 +179,7 @@ conceptual[, Jtu := 0.1 + duration*0.005 + duration*tchange/320]
 p5 <- ggplot(conceptual, aes(duration, Jtu, color = tempchange)) +
     geom_line(size=1) +
     labs(tag = 'E)', x = 'Temporal distance [years]', y = 'Turnover\n[proportion species]') +
-    scale_color_brewer(palette="Set2", name = expression(T[change]), direction= -1) +
+    scale_color_manual(values=c('#0072B2', '#D55E00'), name = expression(T[change])) +
     scale_y_continuous(limits = c(0, 0.5)) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -225,8 +225,6 @@ slopespredsdT[, tsign := factor(sign(tempchange), levels = c('-1', '1'), labels 
 slopespred <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsigninit.rds')) # from pred_GLMMmodrawXAllJtu.R
 senspred <- readRDS(here('temp', 'sensitivity_rawTsdTTRealmtsigninit.rds')) # from pred_GLMMmodrawXAllJtu.R
 senspred[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', 'warming'))]
-vals <- senspred[c(which.min(abs(tempave - 0)), which.min(abs(tempave - 25))), tempave]
-senspred <- senspred[tempave %in% vals]
 
 # fastest turnover at highest observed rate of temperature change
 slopespredsdT[, .SD[which.max(slope), .(tempchange, slope)], by = REALM] # just looking at tempchange
@@ -252,8 +250,8 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = REALM, fill = REALM)) +
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
-    scale_fill_brewer(palette = 'Set2') +
-    scale_color_brewer(palette = 'Set2')
+    scale_fill_brewer(palette = 'Dark2') +
+    scale_color_brewer(palette = 'Dark2')
 p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
 
 # b) plot of change vs. dT
@@ -268,8 +266,8 @@ p2 <- ggplot() +
                     ymax=slope + slope.se,
                     fill = tsign,
                     group = tsign)) +
-    scale_color_brewer(palette = 'Dark2') +
-    scale_fill_brewer(palette = 'Dark2') +
+    scale_color_manual(values=c('#0072B2', '#D55E00')) +
+    scale_fill_manual(values=c('#0072B2', '#D55E00')) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
     labs(tag = 'B)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
          fill = 'Direction', 
@@ -298,8 +296,8 @@ p3 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, ymin = sensiti
     facet_grid(col = vars(REALM))+
     labs(tag = 'C)', x = '', 
          y = '') +
-    scale_color_brewer(palette = 'Dark2') +
-    scale_fill_brewer(palette = 'Dark2') +
+    scale_color_manual(values=c('#0072B2', '#D55E00')) +
+    scale_fill_manual(values=c('#0072B2', '#D55E00')) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -321,8 +319,8 @@ p4 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = se
     labs(tag='',
          x = 'Average temperature [°C]', 
          y = '') +
-    scale_color_brewer(palette = 'Dark2') +
-    scale_fill_brewer(palette = 'Dark2') +
+    scale_color_manual(values=c('#0072B2', '#D55E00')) +
+    scale_fill_manual(values=c('#0072B2', '#D55E00')) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -344,8 +342,8 @@ p5 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sen
          y = '',
          fill = 'Direction',
          color = 'Direction') +
-    scale_color_brewer(palette = 'Dark2') +
-    scale_fill_brewer(palette = 'Dark2') +
+    scale_color_manual(values=c('#0072B2', '#D55E00')) +
+    scale_fill_manual(values=c('#0072B2', '#D55E00')) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -480,8 +478,8 @@ p1 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')],
           plot.margin = unit(c(0.05, 0.07, 0.05, 0.05), 'in')) +
     scale_x_log10(limits = c(0.03, 1)) +
     lims(y = ylims.microclimate) +
-    scale_fill_manual(values = c('#66c2a5', '#8da0cb')) +
-    scale_color_manual(values = c('#66c2a5', '#8da0cb'))
+    scale_fill_manual(values = c('#1b9e77', '#7570b3')) + # ColorBrewer2 Dark2 green and blue
+    scale_color_manual(values = c('#1b9e77', '#7570b3'))
 
 p2 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')], 
              aes(human_bowler, sensitivity_human, 
