@@ -1,4 +1,4 @@
-## Make predictions data.frame from some of the covariate models with environmental temperature (rawT)
+## Make predictions data.frame from the environmental covariate models
 ## From turnover_vs_temperature_GLMM.Rmd, but set up to run in the background
 ## so that we can also calculate SEs
 #

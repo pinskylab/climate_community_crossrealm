@@ -75,7 +75,7 @@ trendsall[iallJtu, absLat.sc := scale(abs(rarefyID_y))]
 
 ## choose model
 
-# Trend model #################################
+# Baseline trend (null) model #################################
 if (fitmod == 'modInitAllJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
@@ -107,7 +107,7 @@ if (fitmod == 'modInitAllHorn') {
 
 
 
-# REALM models #################################
+# Realm models #################################
 if (fitmod == 'modRealmInitAllJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
@@ -138,7 +138,7 @@ if (fitmod == 'modRealmInitAllHorn') {
     MATCHMOD <- TRUE
 }
 
-# Taxa_mod models ###################################
+# Taxa models ###################################
 if (fitmod == 'modTaxamod2InitAllJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
@@ -173,42 +173,7 @@ if (fitmod == 'modTaxamod2InitAllHorn') {
 }
 
 
-# tsign:sdT:realm #########################
-# no environmental temperature, no realm
-if (fitmod == 'modsdTtsignInitAllJtu') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            Jtu.init:duration +
-            tsign:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
-    )
-    MATCHMOD <- TRUE
-}
-
-if (fitmod == 'modsdTtsignInitAllHorn') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallHorn), 'data points'))
-    mod <- glmmTMB(
-        Horn.sc ~ duration +
-            Jtu.init:duration +
-            tsign:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallHorn, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
-    )
-    MATCHMOD <- TRUE
-}
-
-
-# realm, no environmental temperature
+# Tchange models #########################
 if (fitmod == 'modsdTRealmtsigninitAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -241,8 +206,7 @@ if (fitmod == 'modsdTRealmtsigninitAllHorn') {
     MATCHMOD <- TRUE
 }
 
-
-# environmental temperature
+# Tchange x Tave models #########################
 if (fitmod == 'modrawTsdTTRealmtsigninitAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -279,9 +243,7 @@ if (fitmod == 'modrawTsdTTRealmtsigninitAllHorn') {
     MATCHMOD <- TRUE
 }
 
-# latitude instead of tempave #########################
-
-# latitude
+# Tchange x latitude #########################
 if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -300,8 +262,7 @@ if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
     MATCHMOD <- TRUE
 }
 
-# covariates #########################
-
+# Environmental covariates #########################
 ### microclim
 if (fitmod == 'modrawTsdTTRealmtsignmicroclimInitAllJtu') {
     print(paste(sum(iallJtu), 'data points'))
@@ -320,6 +281,7 @@ if (fitmod == 'modrawTsdTTRealmtsignmicroclimInitAllJtu') {
     MATCHMOD <- TRUE
 }
 
+### human
 if (fitmod == 'modrawTsdTTRealmtsignhumanInitAllJtu') {
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(

@@ -1,7 +1,7 @@
 #!/usr/bin/Rscript --vanilla
 
 
-## Make predictions data.frame from sdT and TsdT models with environmental temperature (rawT)
+## Make predictions data.frame from Tchange and Tchange x Tave models
 ## From turnover_vs_temperature_GLMM.Rmd, but set up to run in the background
 ## so that we can also calculate SEs
 #
@@ -70,7 +70,7 @@ scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From 
 
 
 ### Choose a model ---------------------------------
-if(predmod == 'modsdTRealmtsigninitAllJtu'){
+if(predmod == 'modsdTRealmtsigninitAllJtu'){ # Tchange model
     mod <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # From turnover_vs_temperature_GLMM_fit_Jtu.init.R
     out_preds <- 'preds_modsdTRealmtsigninitAllJtu.rds'
     out_slopes <- 'slopes_modsdTRealmtsigninitAllJtu.rds'
@@ -78,7 +78,7 @@ if(predmod == 'modsdTRealmtsigninitAllJtu'){
     print('model loaded')
 } 
 
-if(predmod == 'modrawTsdTTRealmtsigninitAllJtu'){
+if(predmod == 'modrawTsdTTRealmtsigninitAllJtu'){ # Tchange x Tave model
     mod <- readRDS(here('temp', 'modrawTsdTTRealmtsigninitAllJtu.rds')) # From turnover_vs_temperature_GLMM_fit_Jtu.init.R
     out_preds <- 'preds_rawTsdTTRealmtsigninit.rds' # note: name is not quite of same form as previous model.
     out_slopes <- 'slopes_rawTsdTTRealmtsigninit.rds' # note: name is not quite of same form as previous model.
