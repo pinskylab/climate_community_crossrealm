@@ -601,43 +601,8 @@ write.csv(aics, here('figures', 'tableS4.csv'))
 
 
 
-### Table S5: Dispersion estimates ----------------
-modnms <- c('modInitAllJtu', 'modRealmInitAllJtu', 
-          'modTaxamod2InitAllJtu', 
-          'modsdTRealmtsigninitAllJtu', 'modrawTsdTTRealmtsigninitAllJtu', 
-          'modInitAllHorn', 'modRealmInitAllHorn', 
-          'modTaxamod2InitAllHorn', 
-          'modsdTRealmtsigninitAllHorn', 'modrawTsdTTRealmtsigninitAllHorn')
-out <- data.frame(modnms, freshwater = numeric(10), marine = numeric(10), terrestrial = numeric(10))
-for(i in 1:length(modnms)){ # a bit slow to load each model
-    cat(i)
-    if(!exists(modnms[i])){
-        print(paste0('Reading ', modnms[i]))
-        mod <- readRDS(here('temp', paste0(modnms[i], '.rds')))
-    } else {
-        mod <- get(modnms[i])
-    }
-    out[i, 2:4] <- fixef(mod)$disp
-}
 
-# clean up table
-out[,2:4] <- signif(out[,2:4], 3)
-out$Dissimilarity[grepl('Jtu', out$modnms)] <- 'Jaccard'
-out$Dissimilarity[grepl('Horn', out$modnms)] <- 'Morisita-Horn'
-out$Model[grepl('modInitAll', out$modnms)] <- 'Year'
-out$Model[grepl('modRealmInitAll', out$modnms)] <- 'Realm x Year'
-out$Model[grepl('modTaxamod2InitAll', out$modnms)] <- 'Taxon x Year'
-out$Model[grepl('modsdTRealmtsigninitAll', out$modnms)] <- 'Tchange x Realm Year'
-out$Model[grepl('modrawTsdTTRealmtsigninitAll', out$modnms)] <- 'Tchange x Tave x Realm x Year'
-out <- out[,c('modnms', 'Model', 'Dissimilarity', 'freshwater', 'marine', 'terrestrial')]
-
-out
-
-write.csv(out, here('figures', 'tableS5.csv'))
-
-
-
-### Table S6: AICs for initgainloss models ------------------
+### Table S5: AICs for initgainloss models ------------------
 # with Jtu.init:gainlossprop for Table 1. All fit by code/turnover_GLMMgainloss_fit.R
 if(!exists('modInitGainLossAllJtu')) modInitGainLossAllJtu <- readRDS(here('temp', 'modInitGainLossAllJtu.rds')) # Null
 if(!exists('modRealmInitGainLossAllJtu')) modRealmInitGainLossAllJtu <- readRDS('temp/modRealmInitGainLossAllJtu.rds') # Realm. 
@@ -656,7 +621,7 @@ aicsIGL$dAIC <- aicsIGL$AIC - min(aicsIGL$AIC)
 aicsIGL$dAICnull <- aicsIGL$AIC - aicsIGL$AIC[rownames(aicsIGL)=='modInitGainLossAllJtu']
 aicsIGL
 
-write.csv(aicsIGL, here('figures', 'tableS6.csv'))
+write.csv(aicsIGL, here('figures', 'tableS5.csv'))
 
 
 
