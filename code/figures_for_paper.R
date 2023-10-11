@@ -383,7 +383,7 @@ p2noT <- ggplot() +
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
-    scale_y_continuous(trans = signedsqrt2trans, 
+    scale_y_continuous(trans = signedsqrttrans, 
                        breaks = c(-1,-0.3, -0.1, -0.03, -0.01, 0, 0.01, 0.03, 0.1, 0.3, 1)) +
     scale_x_continuous(trans = signedsqrttrans,
                        breaks = c(-1, -0.5, -0.1, 0, 0.1, 0.5, 1)) +
@@ -391,7 +391,6 @@ p2noT <- ggplot() +
     guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
 p2noT <- addSmallLegend(p2noT, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
-p2noT <- addSmallLegend(p2noT, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 fig2noT <- arrangeGrob(p1, p2noT, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix = matrix(c(1,1,1,2,2,2,3,4,5), nrow=3, byrow=TRUE), 
                     heights = c(1,2,1), widths = c(3,3,4))
 ggsave('figures/fig2_nopredsT.png', fig2noT, width = 6, height = 6, units = 'in')
@@ -423,7 +422,7 @@ p2colorpoints <- ggplot() +
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
-    scale_y_continuous(trans = signedsqrt2trans, 
+    scale_y_continuous(trans = signedsqrttrans, 
                        breaks = c(-1,-0.3, -0.1, -0.03, -0.01, 0, 0.01, 0.03, 0.1, 0.3, 1)) +
     scale_x_continuous(trans = signedsqrttrans,
                        breaks = c(-1, -0.5, -0.1, 0, 0.1, 0.5, 1)) +
