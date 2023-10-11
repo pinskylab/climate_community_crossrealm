@@ -277,8 +277,8 @@ p2 <- ggplot() +
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
-    scale_y_continuous(trans = signedsqrt2trans, 
-                       breaks = c(-1,-0.3, -0.1, -0.03, -0.01, 0, 0.01, 0.03, 0.1, 0.3, 1)) +
+    scale_y_continuous(trans = signedsqrttrans, 
+                       breaks = c(-1,-0.5, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.5, 1)) +
     scale_x_continuous(trans = signedsqrttrans,
                        breaks = c(-1, -0.5, -0.1, 0, 0.1, 0.5, 1)) +
     scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
