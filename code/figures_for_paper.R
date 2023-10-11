@@ -211,7 +211,7 @@ ave_by_realm[, offset := c(-1, 0, 1)] # amount to vertically dodge the lines in 
 write.csv(ave_by_realm, file='output/ave_by_realm.csv')
 
 # min and max tempchange by realm, for plotting limits
-tempchange_by_realm <- trends[, .(max = quantile(tempchange, na.rm=TRUE, probs = 0.99), min = quantile(tempchange, na.rm=TRUE, probs = 0.01)), by = REALM]
+tempchange_by_realm <- trends[, .(max = quantile(tempchange, na.rm=TRUE, probs = 0.999), min = quantile(tempchange, na.rm=TRUE, probs = 0.001)), by = REALM]
 
 # predicted slopes from the Tchange model
 slopespredsdT <- readRDS(here('temp', 'slopes_modsdTRealmtsigninitAllJtu.rds')) # from pred_GLMMmodrawXAllJtu.R
@@ -409,8 +409,8 @@ p2colorpoints <- ggplot() +
                     ymax=slope + slope.se,
                     fill = tsign,
                     group = tsign)) +
-    scale_color_brewer(palette = 'Dark2') +
-    scale_fill_brewer(palette = 'Dark2') +
+    scale_color_manual(values=c('#0072B2', '#D55E00')) +
+    scale_fill_manual(values=c('#0072B2', '#D55E00')) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
     labs(tag = 'B)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
          fill = 'Direction', 
