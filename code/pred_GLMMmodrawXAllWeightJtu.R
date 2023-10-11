@@ -6,11 +6,8 @@
 ## so that we can also calculate SEs
 #
 # run as
-# nohup Rscript --vanilla code/pred_GLMMmodrawXAllJtu.R X > logs/pred_GLMMmodrawXAllJtu_X.Rout &
+# nohup code/pred_GLMMmodrawXLongJtu.R X > logs/pred_GLMMmodrawXLongJtu_X.Rout &
 # where X is an argument (see below)
-# or as:
-# pred_modrawXAllJtu.sh X1 X2
-# which spawns a job for each argument
 # or run by hand to, for example, start after the predictions have been made (line 93). would need to read the predictions in by hand.
 # set to run on Annotate
 
@@ -70,20 +67,20 @@ scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From 
 
 
 ### Choose a model ---------------------------------
-if(predmod == 'modsdTRealmtsigninitAllJtu'){ # Tchange model
-    mod <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # From turnover_GLMM_fit.R
-    out_preds <- 'preds_modsdTRealmtsigninitAllJtu.rds'
-    out_slopes <- 'slopes_modsdTRealmtsigninitAllJtu.rds'
+if(predmod == 'modsdTRealmtsigninitAllWeightJtu'){ # Tchange model
+    mod <- readRDS(here('temp', 'modsdTRealmtsigninitAllWeightJtu.rds')) # From turnover_GLMMweighted_fit.R
+    out_preds <- 'preds_modsdTRealmtsigninitAllWeightJtu.rds'
+    out_slopes <- 'slopes_modsdTRealmtsigninitAllWeightJtu.rds'
     doSensitivity <- FALSE # calculate sensitivity to Tave?
     print('model loaded')
 } 
 
-if(predmod == 'modrawTsdTTRealmtsigninitAllJtu'){ # Tchange x Tave model
-    mod <- readRDS(here('temp', 'modrawTsdTTRealmtsigninitAllJtu.rds')) # From turnover_GLMM_fit.R
-    out_preds <- 'preds_rawTsdTTRealmtsigninit.rds' # note: name is not quite of same form as previous model.
-    out_slopes <- 'slopes_rawTsdTTRealmtsigninit.rds' # note: name is not quite of same form as previous model.
+if(predmod == 'modrawTsdTTRealmtsigninitAllWeightJtu'){ # Tchange x Tave model
+    mod <- readRDS(here('temp', 'modrawTsdTTRealmtsigninitAllWeightJtu.rds')) # From turnover_GLMMweighted_fit.R
+    out_preds <- 'preds_rawTsdTTRealmtsigninitAllWeight.rds' # note: name is not quite of same form as previous model.
+    out_slopes <- 'slopes_rawTsdTTRealmtsigninitAllWeight.rds' # note: name is not quite of same form as previous model.
     doSensitivity <- TRUE # calculate sensitivity to Tave?
-    out_sensitivity <- 'sensitivity_rawTsdTTRealmtsigninit.rds'
+    out_sensitivity <- 'sensitivity_rawTsdTTRealmtsigninitAllWeight.rds'
     print('model loaded')
 } 
 
@@ -102,6 +99,8 @@ newdat[, tempave.sc := scaleme(tempave, 'tempave.sc')]
 newdat[, tempchange_abs := abs(tempchange)]
 newdat[, tsign := signneg11(tempchange)]
 newdat[, tempchange_abs.sc := scaleme(tempchange_abs, 'tempchange_abs.sc')]
+newdat[, maxduration := 10]
+
 
 # predict with SEs
 preds <- predict(mod, newdata = newdat, se.fit = TRUE, re.form = NA, allow.new.levels=TRUE, type = 'response')

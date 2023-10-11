@@ -6,11 +6,8 @@
 ## so that we can also calculate SEs
 #
 # run as
-# nohup Rscript --vanilla code/pred_GLMMmodrawXAllJtu.R X > logs/pred_GLMMmodrawXAllJtu_X.Rout &
+# nohup code/pred_GLMMmodrawXLongJtu.R X > logs/pred_GLMMmodrawXLongJtu_X.Rout &
 # where X is an argument (see below)
-# or as:
-# pred_modrawXAllJtu.sh X1 X2
-# which spawns a job for each argument
 # or run by hand to, for example, start after the predictions have been made (line 93). would need to read the predictions in by hand.
 # set to run on Annotate
 
@@ -70,20 +67,20 @@ scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From 
 
 
 ### Choose a model ---------------------------------
-if(predmod == 'modsdTRealmtsigninitAllJtu'){ # Tchange model
-    mod <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # From turnover_GLMM_fit.R
-    out_preds <- 'preds_modsdTRealmtsigninitAllJtu.rds'
-    out_slopes <- 'slopes_modsdTRealmtsigninitAllJtu.rds'
+if(predmod == 'modsdTRealmtsigninitLongJtu'){ # Tchange model
+    mod <- readRDS(here('temp', 'modsdTRealmtsigninitLongJtu.rds')) # From turnover_GLMMlong_fit.R
+    out_preds <- 'preds_modsdTRealmtsigninitLongJtu.rds'
+    out_slopes <- 'slopes_modsdTRealmtsigninitLongJtu.rds'
     doSensitivity <- FALSE # calculate sensitivity to Tave?
     print('model loaded')
 } 
 
-if(predmod == 'modrawTsdTTRealmtsigninitAllJtu'){ # Tchange x Tave model
-    mod <- readRDS(here('temp', 'modrawTsdTTRealmtsigninitAllJtu.rds')) # From turnover_GLMM_fit.R
-    out_preds <- 'preds_rawTsdTTRealmtsigninit.rds' # note: name is not quite of same form as previous model.
-    out_slopes <- 'slopes_rawTsdTTRealmtsigninit.rds' # note: name is not quite of same form as previous model.
+if(predmod == 'modrawTsdTTRealmtsigninitLongJtu'){ # Tchange x Tave model
+    mod <- readRDS(here('temp', 'modrawTsdTTRealmtsigninitLongJtu.rds')) # From turnover_GLMMlong_fit.R
+    out_preds <- 'preds_rawTsdTTRealmtsigninitLong.rds' # note: name is not quite of same form as previous model.
+    out_slopes <- 'slopes_rawTsdTTRealmtsigninitLong.rds' # note: name is not quite of same form as previous model.
     doSensitivity <- TRUE # calculate sensitivity to Tave?
-    out_sensitivity <- 'sensitivity_rawTsdTTRealmtsigninit.rds'
+    out_sensitivity <- 'sensitivity_rawTsdTTRealmtsigninitLong.rds'
     print('model loaded')
 } 
 

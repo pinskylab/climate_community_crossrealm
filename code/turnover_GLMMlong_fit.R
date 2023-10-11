@@ -1,9 +1,9 @@
 #!/usr/bin/Rscript --vanilla
 
-# Script to fit glmmTMB models only to time-series >= 10 years
+# Script to fit glmmTMB models only to time-series >= 7 years
 # Set up to be run on the command line for one model at a time
 # Argument is model name to run (see below for options), e.g.
-# nohup code/turnover_GLMM_fit.R modInitAllJtu > logs/turnover_vs_temperature_GLMMmodInitAllJtu.Rout &
+# nohup code/turnover_GLMMlong_fit.R modInitLongJtu > logs/turnover_GLMMlong_modInitLongJtu.Rout &
 # (this works if code is executable, e.g., chmod u+x code/turnover_GLMM_fit.R)
 # (otherwise using nohup Rscript ...)
 
@@ -22,7 +22,7 @@ MATCHMOD <-
 
 # print basic info about the job ############################
 
-print(paste('This is script turnover_vs_temperature_GLMM_fit_Jtu.init.R'))
+print(paste('This is script turnover_GLMMlong_fit.R'))
 print(paste('This is process #', Sys.getpid()))
 print(Sys.time())
 
@@ -53,7 +53,7 @@ trendsall[, maxduration := max(duration), by = rarefyID]
 
 ## Choose dataset
 iallJtu <-
-    trendsall[, maxduration >= 10 & complete.cases(
+    trendsall[, maxduration >= 7 & complete.cases(
         Jtu.sc,
         tempchange_abs.sc,
         REALM,
@@ -64,7 +64,7 @@ iallJtu <-
     )]
 
 iallHorn <-
-    trendsall[, maxduration >= 10 & complete.cases(
+    trendsall[, maxduration >= 7 & complete.cases(
         Horn.sc,
         tempchange_abs.sc,
         REALM,
@@ -79,7 +79,7 @@ trendsall[iallJtu, absLat.sc := scale(abs(rarefyID_y))] # scale here so that onl
 ## choose model
 
 # Baseline trend (null) model #################################
-if (fitmod == 'modInitAllJtu') {
+if (fitmod == 'modInitLongJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
@@ -93,7 +93,7 @@ if (fitmod == 'modInitAllJtu') {
     MATCHMOD <- TRUE
 }
 
-if (fitmod == 'modInitAllHorn') {
+if (fitmod == 'modInitLongHorn') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
     mod <- glmmTMB(
@@ -111,7 +111,7 @@ if (fitmod == 'modInitAllHorn') {
 
 
 # Realm models #################################
-if (fitmod == 'modRealmInitAllJtu') {
+if (fitmod == 'modRealmInitLongJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
@@ -126,7 +126,7 @@ if (fitmod == 'modRealmInitAllJtu') {
     MATCHMOD <- TRUE
 }
 
-if (fitmod == 'modRealmInitAllHorn') {
+if (fitmod == 'modRealmInitLongHorn') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
     mod <- glmmTMB(
@@ -142,7 +142,7 @@ if (fitmod == 'modRealmInitAllHorn') {
 }
 
 # Taxa models ###################################
-if (fitmod == 'modTaxamod2InitAllJtu') {
+if (fitmod == 'modTaxamod2InitLongJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
@@ -159,7 +159,7 @@ if (fitmod == 'modTaxamod2InitAllJtu') {
 }
 
 
-if (fitmod == 'modTaxamod2InitAllHorn') {
+if (fitmod == 'modTaxamod2InitLongHorn') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
     mod <- glmmTMB(
@@ -177,7 +177,7 @@ if (fitmod == 'modTaxamod2InitAllHorn') {
 
 
 # Tchange models #########################
-if (fitmod == 'modsdTRealmtsigninitAllJtu') {
+if (fitmod == 'modsdTRealmtsigninitLongJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
@@ -193,7 +193,7 @@ if (fitmod == 'modsdTRealmtsigninitAllJtu') {
     MATCHMOD <- TRUE
 }
 
-if (fitmod == 'modsdTRealmtsigninitAllHorn') {
+if (fitmod == 'modsdTRealmtsigninitLongHorn') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
@@ -210,7 +210,7 @@ if (fitmod == 'modsdTRealmtsigninitAllHorn') {
 }
 
 # Tchange x Tave models #########################
-if (fitmod == 'modrawTsdTTRealmtsigninitAllJtu') {
+if (fitmod == 'modrawTsdTTRealmtsigninitLongJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
@@ -228,7 +228,7 @@ if (fitmod == 'modrawTsdTTRealmtsigninitAllJtu') {
     MATCHMOD <- TRUE
 }
 
-if (fitmod == 'modrawTsdTTRealmtsigninitAllHorn') {
+if (fitmod == 'modrawTsdTTRealmtsigninitLongHorn') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
@@ -247,7 +247,7 @@ if (fitmod == 'modrawTsdTTRealmtsigninitAllHorn') {
 }
 
 # Tchange x latitude #########################
-if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
+if (fitmod == 'modabsLatsdTabsLatRealmtsignInitLongJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
@@ -267,7 +267,7 @@ if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
 
 # Environmental covariates #########################
 ### microclim
-if (fitmod == 'modrawTsdTTRealmtsignmicroclimInitAllJtu') {
+if (fitmod == 'modrawTsdTTRealmtsignmicroclimInitLongJtu') {
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
@@ -285,7 +285,7 @@ if (fitmod == 'modrawTsdTTRealmtsignmicroclimInitAllJtu') {
 }
 
 ### human
-if (fitmod == 'modrawTsdTTRealmtsignhumanInitAllJtu') {
+if (fitmod == 'modrawTsdTTRealmtsignhumanInitLongJtu') {
     print(paste(sum(iallJtu), 'data points'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
