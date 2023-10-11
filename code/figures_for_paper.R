@@ -770,9 +770,9 @@ mtext('E)', side = 3, line = -0.5, adj = -0.28)
 # part f: an example negative slope
 bt[rarefyID == '213_435199', plot(dY, Jtu, xlab = 'Temporal difference (years)', ylab = 'Turnover [proportion of species]', col = '#00000044', bty = 'l', 
                                   ylim = c(0,1))]
-mod <- bt[rarefyID == '213_435199', lm(Jtu~dY)] # calc trendline
+mod <- glmmTMB(I(transform01(Jtu))~dY, data = bt[rarefyID == '213_435199',], family = beta_family(link = 'logit')) # calc trendline
 preds <- data.table(dY = 1:35)
-preds[, c('Jtu', 'se', 'df', 'residual.scale') := predict(mod, preds, se.fit=TRUE)]
+preds[, c('Jtu', 'se') := predict(mod, preds, se.fit=TRUE, type = 'response')]
 preds[, polygon(x = c(dY, rev(dY)), y= c(Jtu+se, rev(Jtu-se)), col = '#88888855', border = NA)]
 preds[, lines(dY, Jtu, col = '#a6cee3', lwd = 3)]
 mtext('F)', side = 3, line = -0.5, adj = -0.28)
