@@ -227,6 +227,7 @@ slopespredsdT[, tsign := factor(sign(tempchange), levels = c('-1', '1'), labels 
 # predicted turnover and sensitivity of turnover rate to temperature change from the Tchange x Tave model
 slopespred <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsigninit.rds')) # from pred_GLMMmodrawXAllJtu.R
 senspred <- readRDS(here('temp', 'sensitivity_rawTsdTTRealmtsigninit.rds')) # from pred_GLMMmodrawXAllJtu.R
+senspred <- senspred[tempave %in% c(0,25), ]
 senspred[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 
 # fastest turnover at highest observed rate of temperature change
@@ -640,9 +641,9 @@ write.csv(aicsIGL, here('figures', 'tableS5.csv'))
 bt <- fread('output/turnover_w_covariates.csv.gz') # from assemble_turnover_covariates.Rmd
 btts <- bt[, .(year1 = min(year1), year2 = max(year2), nsamp = length(unique(c(year1, year2)))), by = .(rarefyID, STUDY_ID)] # summarize by time-series
 
-labpos <- -0.3 # horizontal position for the subfigure label
+labpos <- -0.2 # horizontal position for the subfigure label
 
-png(file = 'figures/figS1.png', width = 6, height = 6, units = 'in', res = 300)
+png(file = 'figures/figS1.png', width = 183, height = 183, units = 'mm', res = 300, pointsize=7)
 par(mfrow=c(2,2), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(2.5, 0.5, 0), tcl = -0.2, cex.axis = 0.8)
 
 # part a: start dates
@@ -716,7 +717,7 @@ predsloesstemp[, c('tempchange', 'se') := predict(modloesstemp, newdata = predsl
 
 
 # make plots of dissimilarity vs. duration with different durations plotted
-png(file = 'figures/figS2.png', width = 6.5, height = 5, units = 'in', res = 300)
+png(file = 'figures/figS2.png', width = 183, height = 141, units = 'mm', res = 300, pointsize=7)
 par(mfrow=c(2,3), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(1.9, 0.5, 0), tcl = -0.2, cex.axis = 0.8)
 
 # part a
@@ -730,7 +731,7 @@ mtext('a)', side = 3, line = -0.5, adj = -0.28, font = 2)
 
 # part a inset
 oldpar <- par(no.readonly=TRUE)
-par(fig = c(0.05,0.3, 0.8, 1), new = T, mgp = c(0.7, 0.12, 0), cex.lab = 0.7, cex.axis = 0.5, tcl = -0.1)
+par(fig = c(0.05,0.3, 0.8, 1), new = T, mgp = c(1, 0.2, 0), cex.lab = 0.8, cex.axis = 0.8, tcl = -0.1)
 plot(-1, -1, xlim=c(0,20), ylim=c(0,1), xlab = 'Temporal difference', ylab = 'Tturnover', bty = 'l')
 abline(h = 1, lty= 2)
 segments(0,0,5,1, col = '#b2df8a', lwd = 3)
@@ -774,7 +775,7 @@ prop[variable == 'glmmonegauss.p', error.bar(range+dg[3], prop, lower = prop-low
 prop[variable == 'glmmonebeta.p', points(range+dg[4], prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = cols[4], type = 'o')]
 prop[variable == 'glmmonebeta.p', error.bar(range+dg[4], prop, lower = prop-lower, upper = upper-prop, length = 0.02, col = cols[4])]
 abline(h = 0.05, lty = 2, col = 'red')
-legend('topleft', legend = c('Pearson correlation', 'Meta-analysis', 'One-stage Gaussian ME', 'One-stage beta ME'), col = cols, pch = 1, cex=0.5)
+legend('topleft', legend = c('Pearson correlation', 'Meta-analysis', 'One-stage Gaussian ME', 'One-stage beta ME'), col = cols, pch = 1, cex=0.8)
 mtext('e)', side = 3, line = -0.5, adj = -0.28, font = 2)
 
 
@@ -823,13 +824,13 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = taxa_mod2, fill = taxa_mo
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
+          axis.text=element_text(size=7),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
     scale_fill_manual(values = pal) +
     scale_color_manual(values = pal)
 p1 <- addSmallLegend(p1, pointSize = 0.8, spaceLegend = 0.2, textSize = 8)
-ggsave('figures/figS4.png', p1, width = 6, height = 4, units = 'in')
+ggsave('figures/figS4.png', p1, width = 183, height = 122, units = 'mm')
 
 
 
@@ -852,8 +853,8 @@ p1 <- ggplot(slopesTsdTTRealmtsigninit, aes(tempchange, tempave, z = slope)) +
           legend.position = "top",
           legend.margin = margin(c(0, 0.1, -5, 0)),
           legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 8),
-          legend.title=element_text(size= 12),
+          legend.text=element_text(size= 5),
+          legend.title=element_text(size= 7),
           legend.title.align = 1)
 
-ggsave('figures/figS5.png', p1, width = 6, height = 3, units = 'in')
+ggsave('figures/figS5.png', p1, width = 183, height = 92, units = 'mm')
