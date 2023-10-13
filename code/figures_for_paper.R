@@ -119,8 +119,9 @@ p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           axis.text=element_text(size=8),
+          plot.tag=element_text(face='bold'),
           axis.title=element_text(size=8)) +
-    labs(x = 'Longitude (°)', y = 'Latitude (°)', tag = 'A)') +
+    labs(x = 'Longitude (°)', y = 'Latitude (°)', tag = 'a)') +
     guides(color = guide_legend(override.aes = list(size=2, alpha = 1)))
 
 # b) temperature trends on land and freshwater
@@ -130,12 +131,13 @@ p2 <- ggplot(temptrends[REALM == 'Terrestrial & Freshwater'], aes(x = tempchange
     scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans, 
                        breaks = c(-2, -1, -0.5, 0, 0.5, 1, 2)) +
     scale_fill_manual(values=c('#E69F00', '#56B4E9'), name = 'Dataset') +
-    labs(tag = 'B)', x = 'Temperature change [°C/yr]', title = 'Terrestrial & Freshwater') +
+    labs(tag = 'b)', x = 'Temperature change [°C/yr]', title = 'Terrestrial & Freshwater') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           legend.position = 'none',
           axis.text=element_text(size=7),
+          plot.tag=element_text(face='bold'),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))
 
@@ -146,11 +148,12 @@ p3 <- ggplot(temptrends[REALM == 'Marine'], aes(x = tempchange, fill = type)) +
     scale_x_continuous(limits = c(-2, 2.5), trans = signedsqrttrans, 
                        breaks = c(-2, -1, -0.5, 0, 0.5, 1, 2)) +
     scale_fill_manual(values=c('#E69F00', '#56B4E9'), name = 'Dataset') +
-    labs(tag = 'C)', x = 'Temperature change [°C/yr]', title = 'Marine') +
+    labs(tag = 'c)', x = 'Temperature change [°C/yr]', title = 'Marine') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           legend.position = c(0.8, 0.95),
+          plot.tag=element_text(face='bold'),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))
@@ -160,10 +163,11 @@ p3 <- addSmallLegend(p3, pointSize = 0.7, spaceLegend = 0.15, textSize = 7)
 p4 <- ggplot(bt[rarefyID=='339_1085477', .(dY = year2 - year1, Jtu.sc)], aes(dY, Jtu.sc)) +
     geom_point(alpha = 0.2, size = 0.5, shape = 16) +
     geom_smooth(method = 'glm', method.args = list(family = beta_family(link='logit')), color = '#a6cee3') + # a beta regression
-    labs(tag = 'D)', x = 'Temporal distance [years]', y = 'Turnover\n[proportion species]') +
+    labs(tag = 'd)', x = 'Temporal distance [years]', y = 'Turnover\n[proportion species]') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))
@@ -176,12 +180,13 @@ conceptual[, Jtu := 0.1 + duration*0.005 + duration*tchange/320]
 
 p5 <- ggplot(conceptual, aes(duration, Jtu, color = tempchange)) +
     geom_line(size=1) +
-    labs(tag = 'E)', x = 'Temporal distance [years]', y = 'Turnover\n[proportion species]') +
+    labs(tag = 'e)', x = 'Temporal distance [years]', y = 'Turnover\n[proportion species]') +
     scale_color_manual(values=c('#0072B2', '#D55E00'), name = expression(T[change])) +
     scale_y_continuous(limits = c(0, 0.5)) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
           axis.text=element_text(size=7),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8))
@@ -241,10 +246,11 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = REALM, fill = REALM)) +
     scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.2, 0.4)) +
     geom_segment(data = ave_by_realm, aes(x=disstrend - 1.96*se, xend = disstrend + 1.96*se, y= ht+offset, yend = ht+offset, color = REALM), alpha = 1) +
     geom_segment(data = ave_by_realm, aes(x = disstrend, y = 0, xend = disstrend, yend = ht+offset, color = REALM), size=0.5, linetype = 'dashed') +
-    labs(tag = 'A)', x = expression('Turnover rate ['~Delta~'Turnover/year]'), y = 'Density', title = '') +
+    labs(tag = 'a)', x = expression('Turnover rate ['~Delta~'Turnover/year]'), y = 'Density', title = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
@@ -267,13 +273,14 @@ p2 <- ggplot() +
     scale_color_manual(values=c('#0072B2', '#D55E00')) +
     scale_fill_manual(values=c('#0072B2', '#D55E00')) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
-    labs(tag = 'B)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+    labs(tag = 'b)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
          fill = 'Direction', 
          color = 'Direction',
          size = 'Duration [years]') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
@@ -292,7 +299,7 @@ p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = se
     geom_line(linetype='dashed')+
     geom_errorbar()+
     facet_grid(col = vars(REALM))+
-    labs(tag='C)',
+    labs(tag='c)',
          x = '', 
          y = '') +
     scale_color_manual(values=c('#0072B2', '#D55E00')) +
@@ -300,6 +307,7 @@ p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = se
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
           legend.position='none', # no legend
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
@@ -373,13 +381,14 @@ p2noT <- ggplot() +
     scale_color_brewer(palette = 'Dark2') +
     scale_fill_brewer(palette = 'Dark2') +
     facet_grid(cols = vars(REALM), scales = 'free')  +
-    labs(tag = 'B)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+    labs(tag = 'b)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
          fill = 'Direction', 
          color = 'Direction',
          size = 'Duration [years]') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
@@ -412,13 +421,14 @@ p2colorpoints <- ggplot() +
     scale_color_manual(values=c('#0072B2', '#D55E00')) +
     scale_fill_manual(values=c('#0072B2', '#D55E00')) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
-    labs(tag = 'B)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+    labs(tag = 'b)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
          fill = 'Direction', 
          color = 'Direction',
          size = 'Duration [years]') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
           axis.text=element_text(size=8),
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
@@ -458,16 +468,17 @@ p1 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')],
                  fill = REALM)) +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
-    labs(tag = 'A)', 
+    labs(tag = 'a)', 
          x = 'Microclimate availability',
          y = '') +
     coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.7, xmax = -2.7, ymin = 0.005, ymax = 0.005) + # note x-axis is in log10 units
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.5, xmax = -2.5, ymin = 0.005, ymax = 0.005) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.3, xmax = -2.3, ymin = 0.005, ymax = 0.005) +
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.65, xmax = -2.65, ymin = 0.005, ymax = 0.005) + # note x-axis is in log10 units
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.45, xmax = -2.45, ymin = 0.005, ymax = 0.005) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.25, xmax = -2.25, ymin = 0.005, ymax = 0.005) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
           legend.position='none', # no legend
           axis.text=element_text(size=8),
           axis.title=element_text(size=7),
@@ -488,12 +499,13 @@ p2 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')],
                  fill = REALM)) +
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
-    labs(tag = 'B)', 
+    labs(tag = 'b)', 
          x = 'Human impact', 
          y = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
           axis.text=element_text(size=8),
           axis.title=element_text(size=7),
           axis.title.y=element_blank(),
@@ -636,22 +648,22 @@ par(mfrow=c(2,2), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(2.5, 0.5, 0), tc
 # part a: start dates
 btts[, hist(year1, main = '', xlab = '', col = 'grey')]
 mtext('Start year', side = 1, line = 1.5, cex=0.8)
-mtext('A)', side = 3, line = -0.5, adj = labpos)
+mtext('a)', side = 3, line = -0.5, adj = labpos, font = 2)
 
 # part b: end dates
 btts[, hist(year2, main = '', xlab = '', col = 'grey')]
 mtext('End year', side = 1, line = 1.5, cex=0.8)
-mtext('B)', side = 3, line = -0.5, adj = labpos)
+mtext('b)', side = 3, line = -0.5, adj = labpos, font = 2)
 
 # part c: durations
 btts[, hist(year2-year1+1, main = '', xlab = '', col = 'grey')]
 mtext('Number of years', side = 1, line = 1.5, cex=0.8)
-mtext('C)', side = 3, line = -0.5, adj = labpos)
+mtext('c)', side = 3, line = -0.5, adj = labpos, font = 2)
 
 # part d: number of samples
 btts[, hist(nsamp, main = '', xlab = '', col = 'grey')]
 mtext('Number of samples', side = 1, line = 1.5, cex=0.8)
-mtext('D)', side = 3, line = -0.5, adj = labpos)
+mtext('d)', side = 3, line = -0.5, adj = labpos, font = 2)
 
 dev.off()
 
@@ -714,7 +726,7 @@ mod5 <- bt[rarefyID == '339_1085477' & dY <=5, lm(Jtu~dY)] # calc trendline
 preds <- data.table(dY = 1:20)
 preds$Jtu5 <- predict(mod5, preds)
 preds[dY <=10, lines(dY, Jtu5, col = '#b2df8a', lwd = 3)]
-mtext('A)', side = 3, line = -0.5, adj = -0.28)
+mtext('a)', side = 3, line = -0.5, adj = -0.28, font = 2)
 
 # part a inset
 oldpar <- par(no.readonly=TRUE)
@@ -733,21 +745,21 @@ par(mfg = c(1,2)) # start with top-right
 trends[, plot(duration, disstrend, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), bty = 'l')]
 abline(h = 0, lty = 2)
 predsloess[, lines(duration, disstrend, col = 'red')]
-mtext('B)', side = 3, line = -0.5, adj = -0.28)
+mtext('b)', side = 3, line = -0.5, adj = -0.28, font = 2)
 
 
 # part c: tempchange by duration
 tempchange[, plot(duration, tempchange, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Temperature change [°C/yr]', bty = 'l')]
 abline(h = 0, lty = 2)
 predsloesstemp[, lines(duration, tempchange, col = 'red')]
-mtext('C)', side = 3, line = -0.5, adj = -0.28)
+mtext('c)', side = 3, line = -0.5, adj = -0.28, font = 2)
 
 
 # part d: Gaussian white noise slope by duration
 trends[, plot(duration, gauss.slope, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Slope of Gaussian white noise', bty = 'l')]
 abline(h = 0, lty = 2)
 predsloess[, lines(duration, gauss.slope, col = 'red')]
-mtext('D)', side = 3, line = -0.5, adj = -0.28)
+mtext('d)', side = 3, line = -0.5, adj = -0.28, font = 2)
 
 
 # part e: type I error
@@ -763,7 +775,7 @@ prop[variable == 'glmmonebeta.p', points(range+dg[4], prop, xlab = 'Range of dur
 prop[variable == 'glmmonebeta.p', error.bar(range+dg[4], prop, lower = prop-lower, upper = upper-prop, length = 0.02, col = cols[4])]
 abline(h = 0.05, lty = 2, col = 'red')
 legend('topleft', legend = c('Pearson correlation', 'Meta-analysis', 'One-stage Gaussian ME', 'One-stage beta ME'), col = cols, pch = 1, cex=0.5)
-mtext('E)', side = 3, line = -0.5, adj = -0.28)
+mtext('e)', side = 3, line = -0.5, adj = -0.28, font = 2)
 
 
 # part f: an example negative slope
@@ -774,7 +786,7 @@ preds <- data.table(dY = 1:35)
 preds[, c('Jtu', 'se') := predict(mod, preds, se.fit=TRUE, type = 'response')]
 preds[, polygon(x = c(dY, rev(dY)), y= c(Jtu+se, rev(Jtu-se)), col = '#88888855', border = NA)]
 preds[, lines(dY, Jtu, col = '#a6cee3', lwd = 3)]
-mtext('F)', side = 3, line = -0.5, adj = -0.28)
+mtext('f)', side = 3, line = -0.5, adj = -0.28, font = 2)
 
 dev.off()
 
