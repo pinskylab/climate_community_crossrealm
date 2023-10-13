@@ -88,7 +88,7 @@ if (fitmod == 'modInitAllWeightJtu') {
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM + 1/maxduration
+        dispformula = ~ REALM + I(1/maxduration)
     )
     MATCHMOD <- TRUE
 }
@@ -102,7 +102,7 @@ if (fitmod == 'modInitAllWeightHorn') {
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM + 1/maxduration,
+        dispformula = ~ REALM + I(1/maxduration),
         control = glmmTMBControl(optimizer=optim, optArgs = list(method='BFGS'))
     )
     MATCHMOD <- TRUE
@@ -121,7 +121,7 @@ if (fitmod == 'modRealmInitAllWeightJtu') {
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM + 1/maxduration
+        dispformula = ~ REALM + I(1/maxduration)
     )
     MATCHMOD <- TRUE
 }
@@ -136,7 +136,7 @@ if (fitmod == 'modRealmInitAllWeightHorn') {
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM + 1/maxduration
+        dispformula = ~ REALM + I(1/maxduration)
     )
     MATCHMOD <- TRUE
 }
@@ -152,7 +152,7 @@ if (fitmod == 'modTaxamod2InitAllWeightJtu') {
             (duration | STUDY_ID / rarefyID), 
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM + 1/maxduration
+        dispformula = ~ REALM + I(1/maxduration)
     )
     MATCHMOD <- TRUE
 }
@@ -168,7 +168,7 @@ if (fitmod == 'modTaxamod2InitAllWeightHorn') {
             (duration | STUDY_ID / rarefyID), 
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM + 1/maxduration
+        dispformula = ~ REALM + I(1/maxduration)
     )
     MATCHMOD <- TRUE
 }
@@ -186,7 +186,7 @@ if (fitmod == 'modsdTRealmtsigninitAllWeightJtu') {
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM + 1/maxduration
+        dispformula = ~ REALM + I(1/maxduration)
     )
     MATCHMOD <- TRUE
 }
@@ -202,7 +202,7 @@ if (fitmod == 'modsdTRealmtsigninitAllWeightHorn') {
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM + 1/maxduration
+        dispformula = ~ REALM + I(1/maxduration)
     )
     MATCHMOD <- TRUE
 }
@@ -221,7 +221,7 @@ if (fitmod == 'modrawTsdTTRealmtsigninitAllWeightJtu') {
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM + 1/maxduration
+        dispformula = ~ REALM + I(1/maxduration)
     )
     MATCHMOD <- TRUE
 }
@@ -239,7 +239,7 @@ if (fitmod == 'modrawTsdTTRealmtsigninitAllWeightHorn') {
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM + 1/maxduration
+        dispformula = ~ REALM + I(1/maxduration)
     )
     MATCHMOD <- TRUE
 }
@@ -258,7 +258,7 @@ if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllWeightJtu') {
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM + 1/maxduration
+        dispformula = ~ REALM + I(1/maxduration)
     )
     MATCHMOD <- TRUE
 }
@@ -278,7 +278,7 @@ if (fitmod == 'modrawTsdTTRealmtsignmicroclimInitAllWeightJtu') {
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM + 1/maxduration
+        dispformula = ~ REALM + I(1/maxduration)
     )
     MATCHMOD <- TRUE
 }
@@ -297,7 +297,7 @@ if (fitmod == 'modrawTsdTTRealmtsignhumanInitAllWeightJtu') {
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = beta_family(link = 'logit'),
-        dispformula = ~ REALM + 1/maxduration
+        dispformula = ~ REALM + I(1/maxduration)
     )
     MATCHMOD <- TRUE
 }
