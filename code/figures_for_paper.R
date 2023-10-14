@@ -846,8 +846,9 @@ p1 <- ggplot(slopesTsdTTRealmtsigninit, aes(tempchange, tempave, z = slope)) +
     labs(x = 'Temperature change (°C/yr)', y = 'Average Temperature (°C)') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Turnover rate') +
     facet_grid(cols = vars(REALM)) +
-    theme(axis.text = element_text(size = 10), 
-          axis.title = element_text(size = 12),
+    theme(axis.text = element_text(size = 5), 
+          axis.title = element_text(size = 7),
+          strip.text = element_text(size=7),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
           legend.position = "top",
