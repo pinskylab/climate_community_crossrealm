@@ -74,18 +74,6 @@ iallJtu <-
         gainlossprop
     )]
 
-iallHorn <-
-    trendsall[, complete.cases(
-        Horn.sc,
-        tempchange_abs.sc,
-        REALM,
-        tempave.sc,
-        duration.sc,
-        microclim.sc,
-        human_bowler.sc,
-        gainlossprop
-    )]
-
 trendsall[iallJtu, absLat.sc := scale(abs(rarefyID_y))]
 
 ## choose model
@@ -94,6 +82,8 @@ trendsall[iallJtu, absLat.sc := scale(abs(rarefyID_y))]
 if (fitmod == 'modInitGainLossAllJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
@@ -105,29 +95,14 @@ if (fitmod == 'modInitGainLossAllJtu') {
     )
     MATCHMOD <- TRUE
 }
-
-if (fitmod == 'modInitGainLossAllHorn') {
-    if (MATCHMOD) stop('Model name matched more than one model!')
-    print(paste(sum(iallHorn), 'data points'))
-    mod <- glmmTMB(
-        Horn.sc ~ duration +
-            Jtu.init:duration +
-            Jtu.init:gainlossprop:duration +
-            (duration | STUDY_ID),
-        data = trendsall[iallHorn, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM,
-        control = glmmTMBControl(optimizer=optim, optArgs = list(method='BFGS'))
-    )
-    MATCHMOD <- TRUE
-}
-
 
 
 # Realm models #################################
 if (fitmod == 'modRealmInitGainLossAllJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
@@ -141,26 +116,13 @@ if (fitmod == 'modRealmInitGainLossAllJtu') {
     MATCHMOD <- TRUE
 }
 
-if (fitmod == 'modRealmInitGainLossAllHorn') {
-    if (MATCHMOD) stop('Model name matched more than one model!')
-    print(paste(sum(iallHorn), 'data points'))
-    mod <- glmmTMB(
-        Horn.sc ~ duration +
-            Jtu.init:duration +
-            Jtu.init:gainlossprop:duration +
-            REALM:duration +
-            (duration | STUDY_ID),
-        data = trendsall[iallHorn, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
-    )
-    MATCHMOD <- TRUE
-}
 
 # Taxa models ###################################
 if (fitmod == 'modTaxamod2InitGainLossAllJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
@@ -175,23 +137,6 @@ if (fitmod == 'modTaxamod2InitGainLossAllJtu') {
     MATCHMOD <- TRUE
 }
 
-
-if (fitmod == 'modTaxamod2InitGainLossAllHorn') {
-    if (MATCHMOD) stop('Model name matched more than one model!')
-    print(paste(sum(iallHorn), 'data points'))
-    mod <- glmmTMB(
-        Horn.sc ~ duration +
-            Jtu.init:duration +
-            Jtu.init:gainlossprop:duration +
-            taxa_mod2:duration +
-            (duration | STUDY_ID), 
-        data = trendsall[iallHorn, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM#,
-        #control = glmmTMBControl(profile = TRUE)
-    ) # add dispersion formula
-    MATCHMOD <- TRUE
-}
 
 
 # Tchange models #########################
@@ -199,6 +144,8 @@ if (fitmod == 'modsdTRealmtsignInitGainLossAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
@@ -206,23 +153,6 @@ if (fitmod == 'modsdTRealmtsignInitGainLossAllJtu') {
             REALM:tsign:tempchange_abs.sc:duration +
             (duration | STUDY_ID),
         data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
-    )
-    MATCHMOD <- TRUE
-}
-
-if (fitmod == 'modsdTRealmtsignInitGainLossAllHorn') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallHorn), 'data points'))
-    mod <- glmmTMB(
-        Horn.sc ~ duration +
-            Jtu.init:duration +
-            Jtu.init:gainlossprop:duration +
-            REALM:tsign:tempchange_abs.sc:duration +
-            (duration | STUDY_ID),
-        data = trendsall[iallHorn, ],
         family = beta_family(link = 'logit'),
         dispformula = ~ REALM
     )
@@ -235,6 +165,8 @@ if (fitmod == 'modrawTsdTTRealmtsignInitGainLossAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
@@ -250,30 +182,14 @@ if (fitmod == 'modrawTsdTTRealmtsignInitGainLossAllJtu') {
     MATCHMOD <- TRUE
 }
 
-if (fitmod == 'modrawTsdTTRealmtsignInitGainLossAllHorn') {
-    if (MATCHMOD)
-        stop('Model name matched more than one model!')
-    print(paste(sum(iallHorn), 'data points'))
-    mod <- glmmTMB(
-        Horn.sc ~ duration +
-            Jtu.init:duration +
-            Jtu.init:gainlossprop:duration +
-            REALM:tsign:tempchange_abs.sc:duration +
-            REALM:tsign:tempave.sc:duration +
-            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID),
-        data = trendsall[iallHorn, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM
-    )
-    MATCHMOD <- TRUE
-}
 
 # Tchange x latitude models #########################
 if (fitmod == 'modabsLatsdTabsLatRealmtsignInitGainLossAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
@@ -288,46 +204,6 @@ if (fitmod == 'modabsLatsdTabsLatRealmtsignInitGainLossAllJtu') {
     )
     MATCHMOD <- TRUE
 }
-
-# Environmental covariate models #########################
-### microclim
-if (fitmod == 'modrawTsdTTRealmtsignmicroclimInitGainLossAllJtu') {
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            Jtu.init:duration +
-            Jtu.init:gainlossprop:duration +
-            REALM:tsign:tempchange_abs.sc:duration +
-            REALM:tsign:tempave.sc:duration +
-            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
-            REALM:microclim.sc:duration +
-            REALM:microclim.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM)
-    MATCHMOD <- TRUE
-}
-
-### human
-if (fitmod == 'modrawTsdTTRealmtsignhumanInitGainLossAllJtu') {
-    print(paste(sum(iallJtu), 'data points'))
-    mod <- glmmTMB(
-        Jtu.sc ~ duration +
-            Jtu.init:duration +
-            Jtu.init:gainlossprop:duration +
-            REALM:tsign:tempchange_abs.sc:duration +
-            REALM:tsign:tempave.sc:duration +
-            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
-            REALM:human_bowler.sc:duration +
-            REALM:human_bowler.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID),
-        data = trendsall[iallJtu, ],
-        family = beta_family(link = 'logit'),
-        dispformula = ~ REALM)
-    MATCHMOD <- TRUE
-}
-
 
 
 # print and save results ############################
