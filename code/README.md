@@ -30,6 +30,7 @@ The libraries included:
 - raster 2.7-15
 - RColorBrewer 1.1-2
 - rcompanion 2.3.27
+- reshape2 1.4.4
 - rstudioapi 0.13
 - scales 1.0.0
 - sdmpredictors 0.2.9
@@ -37,7 +38,7 @@ The libraries included:
 - *tibble*
 - *tidyr*
 - tidyverse 1.2.1
-- *vegan*
+- *vegan* 2.6-4
 
 In addition, we use custom functions here:
 
@@ -50,6 +51,7 @@ The code is organized in six main steps. Run time for each step should be less t
 ## 1. Examine alternative statistical approaches
 - `duration_sim.R`: simulate data and fit models. Writes `output/simulated_ts.csv.gz`
 - `duration_sim.Rmd`: examine simulation results
+- `turnover_richness_sim.Rmd`: examine the effects of species richness on turnover rates
 
 ## 2. Prep dissimilarity data
 - `01_Study_to_Grid.R`: grids the observations to 96 km2 hexagons
