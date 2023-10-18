@@ -43,8 +43,10 @@ In addition, we use custom functions here:
 
 - `util.R`: some utility functions used in multiple scripts
 
+We expect install time will take a couple hours on a standard desktop computer.
 
-The code is organized in six main steps:
+The code is organized in six main steps. Run time for each step should be less than an hour, except for steps 2 and 4. Each model in step 4 takes up to 48 hrs to fit,
+
 ## 1. Examine alternative statistical approaches
 - `duration_sim.R`: simulate data and fit models. Writes `output/simulated_ts.csv.gz`
 - `duration_sim.Rmd`: examine simulation results

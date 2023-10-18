@@ -54,7 +54,6 @@ trends_by_study[, range(Jtu)]
 if(!exists('modRealmInitAllJtu')) modRealmInitAllJtu <- readRDS(here('temp', 'modRealmInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 if(!exists('modsdTRealmtsigninitAllJtu')) modsdTRealmtsigninitAllJtu <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # Tchange model Fit by code/turnover_GLMM_fit.R
 if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
-if(!exists('modabsLatsdTabsLatRealmtsignInitAllJtu')) modabsLatsdTabsLatRealmtsignInitAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitAllJtu.rds')) # Tchange x Latitude model. Fit by code/turnover_GLMM_fit.R
 if(!exists('modrawTsdTTRealmtsignmicroclimInitAllJtu')) modrawTsdTTRealmtsignmicroclimInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimInitAllJtu.rds') # Microclimate model. Fit by code/turnover_GLMM_fit.R
 if(!exists('modrawTsdTTRealmtsignhumanInitAllJtu')) modrawTsdTTRealmtsignhumanInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanInitAllJtu.rds') # Human impact model. Fit by code/turnover_GLMM_fit.R
 

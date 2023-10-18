@@ -1,0 +1,133 @@
+---
+title: "simulations to test effects of random sampling and species richness interactions"
+output:
+    github_document: default
+---
+```{r setup, echo=TRUE}
+# set parameters for simulations
+require(vegan)
+require(reshape2)
+require(data.table)
+lown <- 100 # number of species in low richness treatment
+highn <- 1000 # number of species in high richness treatment
+ngen <- 10 # number of sampling periods
+frac <- 0.05 # fraction of species added and removed each sampling period
+prob <- 0.5 # probability of seeing a species that is present
+reps <- 1000 # number of times to repeat the sampling
+set.seed(1001)
+```
+
+# simple scenario of species turnover
+Add 5% new species and remove 5% of existing species each time step. A high and a low richness treatment
+
+## 100% of species sampled
+Results don't depend on species richness.
+```{r}
+# make the communities
+low <- matrix(c(rep(1, lown), rep(0, 2*lown*ngen - lown)), nrow=2*lown, ncol = ngen) # rows are species. in first time step, half are present
+high <- matrix(c(rep(1, highn), rep(0, 2*highn*ngen - highn)), nrow = 2*highn, ncol = ngen)
+for(i in 2:10){
+    low[,i] <- low[,i-1] * c(rep(0, (i-1)*frac*lown), rep(1, 2*lown - (i-1)*frac*lown)) + c(rep(0, lown + (i-2)*frac*lown), rep(1, frac*lown), rep(0, lown - (i-1)*frac*lown)) # remove frac existing species and add frac new species
+    high[,i] <- high[,i-1] * c(rep(0, (i-1)*frac*highn), rep(1, 2*highn - (i-1)*frac*highn)) + c(rep(0, highn + (i-2)*frac*highn), rep(1, frac*highn), rep(0, highn - (i-1)*frac*highn))
+}
+
+# calculate dissimilarities
+lowdist <- vegdist(t(low), method='jaccard', binary=TRUE) # vegan expects spp in columns
+highdist <- vegdist(t(high), method='jaccard', binary=TRUE)
+
+# examine distances
+print('low species richness')
+lowdist
+print('high species richness')
+highdist
+```
+
+
+
+## 50% of species sampled
+This adds sampling noise
+```{r}
+for(i in 1:reps){
+    if(i %% 50 == 0) cat(paste0('#', i, " "))
+    # make the observed communities with only X% of species observed
+    lowobs <- low * sample(c(rep(1, prob*2*lown*ngen), rep(0, (1-prob)*2*lown*ngen)), 2*lown*ngen, replace=FALSE) # turn X% of obs to absent, randomly
+    highobs <- high * sample(c(rep(1, prob*2*highn*ngen), rep(0, (1-prob)*2*highn*ngen)), 2*highn*ngen, replace=FALSE)
+    
+    
+    # calculate dissimilarities
+    lowobsdist <- as.matrix(vegdist(t(lowobs), method='jaccard', binary=TRUE)) # vegan expects spp in columns
+    highobsdist <- as.matrix(vegdist(t(highobs), method='jaccard', binary=TRUE))
+    
+    # examine distances (first example only)
+    if(i == 1){
+        print('low species richness with obs error')
+        print(lowobsdist)
+        print('high species richness')
+        print(highobsdist)
+    }
+    
+    # convert to long format (only one triangle)
+    dimnames(lowobsdist) <- list(1:ngen, 1:ngen)
+    lownms <- t(combn(colnames(lowobsdist), 2))
+    thislowobslong <- data.frame(lownms, dist=lowobsdist[lownms])
+    thislowobslong$rep <- i
+    
+    dimnames(highobsdist) <- list(1:ngen, 1:ngen)
+    highnms <- t(combn(colnames(highobsdist), 2))
+    thishighobslong <- data.frame(highnms, dist=highobsdist[highnms])
+    thishighobslong$rep <- i
+    
+    if(i == 1){
+        lowobslong <- thislowobslong
+        highobslong <- thishighobslong
+    } else {
+        lowobslong <- rbind(lowobslong, thislowobslong)
+        highobslong <- rbind(highobslong, thishighobslong)
+    }
+}
+
+lowobslong$X1 <- as.numeric(lowobslong$X1)
+lowobslong$X2 <- as.numeric(lowobslong$X2)
+
+highobslong$X1 <- as.numeric(highobslong$X1)
+highobslong$X2 <- as.numeric(highobslong$X2)
+
+lowobslong <- data.table(lowobslong)
+highobslong <- data.table(highobslong)
+```
+
+
+# calc turnover rates
+same central tendencies in both high and low species richness scenarios
+```{r}
+lowslopes <- lowobslong[, as.list(coef(lm(dist ~ I(X2-X1)))), by=rep]
+highslopes <- highobslong[, as.list(coef(lm(dist ~ I(X2-X1)))), by=rep]
+setnames(lowslopes, c('rep', 'int', 'slope'))
+setnames(highslopes, c('rep', 'int', 'slope'))
+
+print('low richness slopes')
+lowslopes[, summary(slope)]
+
+print('high richness slopes')
+highslopes[, summary(slope)]
+```
+
+# plot turnover rates as lines
+More variance in turnover rates for the lower richness scenario. This doesn't plot correctly in the github document.
+```{r}
+par(mfrow=c(1,2))
+plot(c(0,10), c(0,1), col='white', xlab = 'temporal distance', ylab='dissimilarity', main = 'low richness')
+lowslopes[, abline(a = int, b = slope, col = '#00000033'), by = rep]
+
+plot(c(0,10), c(0,1), col='white', xlab = 'temporal distance', ylab='dissimilarity', main = 'high richness')
+highslopes[, abline(a = int, b = slope, col = '#00000033'), by = rep]
+```
+
+# plot turnover rates as densities
+More variance in turnover rates for the lower richness scenario (black) compared to higher richness (red)
+```{r}
+lowslopes[, plot(density(slope), ylim =c(0,500), main = 'Turnover rates')]
+highslopes[, lines(density(slope), col='red')]
+```
+
+

@@ -79,6 +79,8 @@ trendsall[iallJtu, absLat.sc := scale(abs(rarefyID_y))]
 if (fitmod == 'modInitAllJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
@@ -93,6 +95,8 @@ if (fitmod == 'modInitAllJtu') {
 if (fitmod == 'modInitAllHorn') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
+    print(paste(trendsall[iallHorn, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallHorn, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Horn.sc ~ duration +
             Jtu.init:duration +
@@ -111,6 +115,8 @@ if (fitmod == 'modInitAllHorn') {
 if (fitmod == 'modRealmInitAllJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
@@ -126,6 +132,8 @@ if (fitmod == 'modRealmInitAllJtu') {
 if (fitmod == 'modRealmInitAllHorn') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
+    print(paste(trendsall[iallHorn, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallHorn, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Horn.sc ~ duration +
             Jtu.init:duration +
@@ -142,6 +150,8 @@ if (fitmod == 'modRealmInitAllHorn') {
 if (fitmod == 'modTaxamod2InitAllJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
@@ -159,6 +169,8 @@ if (fitmod == 'modTaxamod2InitAllJtu') {
 if (fitmod == 'modTaxamod2InitAllHorn') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
+    print(paste(trendsall[iallHorn, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallHorn, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Horn.sc ~ duration +
             Jtu.init:duration +
@@ -178,6 +190,8 @@ if (fitmod == 'modsdTRealmtsigninitAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
@@ -194,6 +208,8 @@ if (fitmod == 'modsdTRealmtsigninitAllHorn') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
+    print(paste(trendsall[iallHorn, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallHorn, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Horn.sc ~ duration +
             Jtu.init:duration +
@@ -211,6 +227,8 @@ if (fitmod == 'modrawTsdTTRealmtsigninitAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
@@ -229,6 +247,8 @@ if (fitmod == 'modrawTsdTTRealmtsigninitAllHorn') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
+    print(paste(trendsall[iallHorn, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallHorn, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Horn.sc ~ duration +
             Jtu.init:duration +
@@ -248,6 +268,8 @@ if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
@@ -266,6 +288,8 @@ if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
 ### microclim
 if (fitmod == 'modrawTsdTTRealmtsignmicroclimInitAllJtu') {
     print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
@@ -284,6 +308,8 @@ if (fitmod == 'modrawTsdTTRealmtsignmicroclimInitAllJtu') {
 ### human
 if (fitmod == 'modrawTsdTTRealmtsignhumanInitAllJtu') {
     print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu.sc ~ duration +
             Jtu.init:duration +
