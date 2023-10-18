@@ -1,8 +1,12 @@
 ---
-title: "simulations to test effects of random sampling and species richness interactions"
+title: "Simulations to test effects of random sampling and species richness interactions"
 output:
-    github_document: default
+    github_document: 
+        toc: true
+        toc_depth: 3
 ---
+Do assemblages with higher species richness have higher turnover rates? Let's test this with some simple simulations. If true, it might explain higher turnover rates at higher temperatures, since species richness is often higher in the tropics.
+
 ```{r setup, echo=TRUE}
 # set parameters for simulations
 require(vegan)
@@ -17,11 +21,11 @@ reps <- 1000 # number of times to repeat the sampling
 set.seed(1001)
 ```
 
-# simple scenario of species turnover
-Add 5% new species and remove 5% of existing species each time step. A high and a low richness treatment
+# Simple scenario of species turnover
+Add 5% new species and remove 5% of existing species each time step. A high and a low richness treatment.
 
 ## 100% of species sampled
-Results don't depend on species richness.
+When we sample all species present, the turnover rates don't depend on species richness. They are exactly the same in both species richness treatments.
 ```{r}
 # make the communities
 low <- matrix(c(rep(1, lown), rep(0, 2*lown*ngen - lown)), nrow=2*lown, ncol = ngen) # rows are species. in first time step, half are present
@@ -45,7 +49,7 @@ highdist
 
 
 ## 50% of species sampled
-This adds sampling noise
+This simulation adds sampling noise such that a random 50% of species are observed. This is repeated many times to understand central tendencies.
 ```{r}
 for(i in 1:reps){
     if(i %% 50 == 0) cat(paste0('#', i, " "))
@@ -97,8 +101,8 @@ highobslong <- data.table(highobslong)
 ```
 
 
-# calc turnover rates
-same central tendencies in both high and low species richness scenarios
+### Calculate turnover rates
+Calculate turnover rates as the slope of dissimilarity vs. time. We find the same central tendencies in both high and low species richness scenarios.
 ```{r}
 lowslopes <- lowobslong[, as.list(coef(lm(dist ~ I(X2-X1)))), by=rep]
 highslopes <- highobslong[, as.list(coef(lm(dist ~ I(X2-X1)))), by=rep]
@@ -112,8 +116,8 @@ print('high richness slopes')
 highslopes[, summary(slope)]
 ```
 
-# plot turnover rates as lines
-More variance in turnover rates for the lower richness scenario. This doesn't plot correctly in the github document.
+### Plot turnover rates as lines
+We can plot all the turnover rates as sloping slopes. We find more variance in turnover rates for the lower richness scenario, though note this doesn't plot correctly in the github document (only one line is shown when there should be 1000).
 ```{r}
 par(mfrow=c(1,2))
 plot(c(0,10), c(0,1), col='white', xlab = 'temporal distance', ylab='dissimilarity', main = 'low richness')
@@ -123,8 +127,8 @@ plot(c(0,10), c(0,1), col='white', xlab = 'temporal distance', ylab='dissimilari
 highslopes[, abline(a = int, b = slope, col = '#00000033'), by = rep]
 ```
 
-# plot turnover rates as densities
-More variance in turnover rates for the lower richness scenario (black) compared to higher richness (red)
+### Plot turnover rates as densities
+Another way to plot the turnover rates for high and low richness scenarios. In addition to the same central tendencies irrespective of richness, we do see more variance in turnover rates for the lower richness scenario (black) compared to higher richness (red).
 ```{r}
 lowslopes[, plot(density(slope), ylim =c(0,500), main = 'Turnover rates')]
 highslopes[, lines(density(slope), col='red')]

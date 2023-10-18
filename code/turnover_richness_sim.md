@@ -1,6 +1,20 @@
-simulations to test effects of random sampling and species richness
+Simulations to test effects of random sampling and species richness
 interactions
 ================
+
+- [Simple scenario of species
+  turnover](#simple-scenario-of-species-turnover)
+  - [100% of species sampled](#100-of-species-sampled)
+  - [50% of species sampled](#50-of-species-sampled)
+    - [Calculate turnover rates](#calculate-turnover-rates)
+    - [Plot turnover rates as lines](#plot-turnover-rates-as-lines)
+    - [Plot turnover rates as
+      densities](#plot-turnover-rates-as-densities)
+
+Do assemblages with higher species richness have higher turnover rates?
+Let’s test this with some simple simulations. If true, it might explain
+higher turnover rates at higher temperatures, since species richness is
+often higher in the tropics.
 
 ``` r
 # set parameters for simulations
@@ -44,14 +58,16 @@ reps <- 1000 # number of times to repeat the sampling
 set.seed(1001)
 ```
 
-# simple scenario of species turnover
+# Simple scenario of species turnover
 
 Add 5% new species and remove 5% of existing species each time step. A
-high and a low richness treatment
+high and a low richness treatment.
 
 ## 100% of species sampled
 
-Results don’t depend on species richness.
+When we sample all species present, the turnover rates don’t depend on
+species richness. They are exactly the same in both species richness
+treatments.
 
 ``` r
 # make the communities
@@ -130,7 +146,9 @@ highdist
 
 ## 50% of species sampled
 
-This adds sampling noise
+This simulation adds sampling noise such that a random 50% of species
+are observed. This is repeated many times to understand central
+tendencies.
 
 ``` r
 for(i in 1:reps){
@@ -175,50 +193,50 @@ for(i in 1:reps){
 
     ## [1] "low species richness with obs error"
     ##            1         2         3         4         5         6         7
-    ## 1  0.0000000 0.7619048 0.6621622 0.7710843 0.7640449 0.7701149 0.8414634
-    ## 2  0.7619048 0.0000000 0.6621622 0.6923077 0.7209302 0.8111111 0.7820513
-    ## 3  0.6621622 0.6621622 0.0000000 0.7721519 0.7349398 0.6400000 0.7837838
-    ## 4  0.7710843 0.6923077 0.7721519 0.0000000 0.6153846 0.6708861 0.8076923
-    ## 5  0.7640449 0.7209302 0.7349398 0.6153846 0.0000000 0.5875000 0.7051282
-    ## 6  0.7701149 0.8111111 0.6400000 0.6708861 0.5875000 0.0000000 0.6575342
-    ## 7  0.8414634 0.7820513 0.7837838 0.8076923 0.7051282 0.6575342 0.0000000
-    ## 8  0.7901235 0.7901235 0.8518519 0.7532468 0.6315789 0.6710526 0.7101449
-    ## 9  0.8372093 0.8235294 0.8271605 0.7594937 0.6913580 0.7125000 0.7534247
-    ## 10 0.8620690 0.6973684 0.8101266 0.7564103 0.7195122 0.7710843 0.7142857
+    ## 1  0.0000000 0.7236842 0.6666667 0.7468354 0.7333333 0.7750000 0.7738095
+    ## 2  0.7236842 0.0000000 0.7051282 0.6849315 0.8051948 0.7974684 0.8636364
+    ## 3  0.6666667 0.7051282 0.0000000 0.6623377 0.6800000 0.7710843 0.7977528
+    ## 4  0.7468354 0.6849315 0.6623377 0.0000000 0.7466667 0.7402597 0.6923077
+    ## 5  0.7333333 0.8051948 0.6800000 0.7466667 0.0000000 0.7083333 0.7594937
+    ## 6  0.7750000 0.7974684 0.7710843 0.7402597 0.7083333 0.0000000 0.6533333
+    ## 7  0.7738095 0.8636364 0.7977528 0.6923077 0.7594937 0.6533333 0.0000000
+    ## 8  0.7710843 0.8352941 0.7674419 0.7530864 0.8024691 0.7341772 0.6538462
+    ## 9  0.7875000 0.8250000 0.7375000 0.7532468 0.7222222 0.7500000 0.5915493
+    ## 10 0.8313253 0.9195402 0.8522727 0.8148148 0.8354430 0.7662338 0.6301370
     ##            8         9        10
-    ## 1  0.7901235 0.8372093 0.8620690
-    ## 2  0.7901235 0.8235294 0.6973684
-    ## 3  0.8518519 0.8271605 0.8101266
-    ## 4  0.7532468 0.7594937 0.7564103
-    ## 5  0.6315789 0.6913580 0.7195122
-    ## 6  0.6710526 0.7125000 0.7710843
-    ## 7  0.7101449 0.7534247 0.7142857
-    ## 8  0.0000000 0.7297297 0.7432432
-    ## 9  0.7297297 0.0000000 0.6619718
-    ## 10 0.7432432 0.6619718 0.0000000
+    ## 1  0.7710843 0.7875000 0.8313253
+    ## 2  0.8352941 0.8250000 0.9195402
+    ## 3  0.7674419 0.7375000 0.8522727
+    ## 4  0.7530864 0.7532468 0.8148148
+    ## 5  0.8024691 0.7222222 0.8354430
+    ## 6  0.7341772 0.7500000 0.7662338
+    ## 7  0.6538462 0.5915493 0.6301370
+    ## 8  0.0000000 0.7307692 0.6800000
+    ## 9  0.7307692 0.0000000 0.7631579
+    ## 10 0.6800000 0.7631579 0.0000000
     ## [1] "high species richness"
     ##            1         2         3         4         5         6         7
-    ## 1  0.0000000 0.6611675 0.7326478 0.7306733 0.7506266 0.7647059 0.7909739
-    ## 2  0.6611675 0.0000000 0.7046036 0.6888331 0.7135678 0.7269373 0.7662338
-    ## 3  0.7326478 0.7046036 0.0000000 0.7072848 0.7283622 0.7615385 0.7341115
-    ## 4  0.7306733 0.6888331 0.7072848 0.0000000 0.6996047 0.6954248 0.7509294
-    ## 5  0.7506266 0.7135678 0.7283622 0.6996047 0.0000000 0.6973333 0.7148438
-    ## 6  0.7647059 0.7269373 0.7615385 0.6954248 0.6973333 0.0000000 0.7089263
-    ## 7  0.7909739 0.7662338 0.7341115 0.7509294 0.7148438 0.7089263 0.0000000
-    ## 8  0.8000000 0.7965116 0.7909887 0.7493734 0.7195282 0.7202073 0.6920052
-    ## 9  0.8172293 0.7815421 0.8078335 0.7701711 0.7656642 0.7392405 0.6985770
-    ## 10 0.8337156 0.8109339 0.8210399 0.7983294 0.7534766 0.7537500 0.7253165
+    ## 1  0.0000000 0.6747759 0.7182741 0.7424623 0.7183272 0.7500000 0.7882070
+    ## 2  0.6747759 0.0000000 0.6907895 0.6818182 0.7146433 0.7327478 0.7887668
+    ## 3  0.7182741 0.6907895 0.0000000 0.7271523 0.7316456 0.7124183 0.7759494
+    ## 4  0.7424623 0.6818182 0.7271523 0.0000000 0.6760000 0.7157895 0.7590674
+    ## 5  0.7183272 0.7146433 0.7316456 0.6760000 0.0000000 0.6877419 0.7042802
+    ## 6  0.7500000 0.7327478 0.7124183 0.7157895 0.6877419 0.0000000 0.6976127
+    ## 7  0.7882070 0.7887668 0.7759494 0.7590674 0.7042802 0.6976127 0.0000000
+    ## 8  0.8179775 0.7885514 0.7643468 0.7678133 0.7283800 0.6867008 0.7030848
+    ## 9  0.8257840 0.8014440 0.7997528 0.8019925 0.7586634 0.7534766 0.7110519
+    ## 10 0.8422857 0.8231132 0.8105134 0.7843632 0.7531017 0.7741935 0.7336815
     ##            8         9        10
-    ## 1  0.8000000 0.8172293 0.8337156
-    ## 2  0.7965116 0.7815421 0.8109339
-    ## 3  0.7909887 0.8078335 0.8210399
-    ## 4  0.7493734 0.7701711 0.7983294
-    ## 5  0.7195282 0.7656642 0.7534766
-    ## 6  0.7202073 0.7392405 0.7537500
-    ## 7  0.6920052 0.6985770 0.7253165
-    ## 8  0.0000000 0.6946265 0.7201540
-    ## 9  0.6946265 0.0000000 0.6793693
-    ## 10 0.7201540 0.6793693 0.0000000
+    ## 1  0.8179775 0.8257840 0.8422857
+    ## 2  0.7885514 0.8014440 0.8231132
+    ## 3  0.7643468 0.7997528 0.8105134
+    ## 4  0.7678133 0.8019925 0.7843632
+    ## 5  0.7283800 0.7586634 0.7531017
+    ## 6  0.6867008 0.7534766 0.7741935
+    ## 7  0.7030848 0.7110519 0.7336815
+    ## 8  0.0000000 0.6912145 0.7053571
+    ## 9  0.6912145 0.0000000 0.6873315
+    ## 10 0.7053571 0.6873315 0.0000000
     ## #50 #100 #150 #200 #250 #300 #350 #400 #450 #500 #550 #600 #650 #700 #750 #800 #850 #900 #950 #1000
 
 ``` r
@@ -232,9 +250,11 @@ lowobslong <- data.table(lowobslong)
 highobslong <- data.table(highobslong)
 ```
 
-# calc turnover rates
+### Calculate turnover rates
 
-same central tendencies in both high and low species richness scenarios
+Calculate turnover rates as the slope of dissimilarity vs. time. We find
+the same central tendencies in both high and low species richness
+scenarios.
 
 ``` r
 lowslopes <- lowobslong[, as.list(coef(lm(dist ~ I(X2-X1)))), by=rep]
@@ -251,8 +271,8 @@ print('low richness slopes')
 lowslopes[, summary(slope)]
 ```
 
-    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-    ## -0.004760  0.001912  0.003810  0.003699  0.005450  0.013818
+    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+    ## 0.007309 0.016866 0.019464 0.019356 0.021881 0.030277
 
 ``` r
 print('high richness slopes')
@@ -264,13 +284,15 @@ print('high richness slopes')
 highslopes[, summary(slope)]
 ```
 
-    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
-    ## 0.001273 0.003236 0.003807 0.003782 0.004315 0.006207
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ## 0.01604 0.01866 0.01939 0.01940 0.02012 0.02323
 
-# plot turnover rates as lines
+### Plot turnover rates as lines
 
-More variance in turnover rates for the lower richness scenario. This
-doesn’t plot correctly in the github document.
+We can plot all the turnover rates as sloping slopes. We find more
+variance in turnover rates for the lower richness scenario, though note
+this doesn’t plot correctly in the github document (only one line is
+shown when there should be 1000).
 
 ``` r
 par(mfrow=c(1,2))
@@ -289,10 +311,12 @@ highslopes[, abline(a = int, b = slope, col = '#00000033'), by = rep]
 
     ## Empty data.table (0 rows and 1 cols): rep
 
-# plot turnover rates as densities
+### Plot turnover rates as densities
 
-More variance in turnover rates for the lower richness scenario (black)
-compared to higher richness (red)
+Another way to plot the turnover rates for high and low richness
+scenarios. In addition to the same central tendencies irrespective of
+richness, we do see more variance in turnover rates for the lower
+richness scenario (black) compared to higher richness (red).
 
 ``` r
 lowslopes[, plot(density(slope), ylim =c(0,500), main = 'Turnover rates')]
