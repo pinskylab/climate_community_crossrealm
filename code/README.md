@@ -3,14 +3,14 @@
 The scripts in this analysis were run in three computer environments:
 - A MacBook Pro 16 GB RAM with R version 4.0.3 and RStudio 1.3.1093
 - A scientific workstation ('Annotate') with 72 CPUs (Intel Xeon CPU E5-2697 v4 @ 2.30GHz) running CentOS 7.6.1810 with R version 3.5.2 and RStudio 1.3.1093
-- A higher performance computing environment with SLURM job management.
+- A high performance computing environment with SLURM job management (Step 2 below).
 
 The libraries included:
 - bbmle 1.0.23.1
 - beanplot 1.2
-- *betapart*
+- betapart
 - data.table 1.11.8
-- *dggridR*
+- dggridR
 - DHARMa 0.3.3.0
 - ggplot2 3.3.5
 - ggpubr 0.4.0
@@ -18,15 +18,15 @@ The libraries included:
 - grid 3.5.2
 - gridExtra 2.3
 - here 0.3.3
-- *iNext*
-- *lazyeval*
+- iNext
+- lazyeval
 - lme4 1.1-27.1
 - maps 3.3.0
 - mgcv 1.8.26
 - ncdf4 1.17
 - nlme 3.1-137
 - performance 0.7.0
-- *purrr*
+- purrr
 - raster 2.7-15
 - RColorBrewer 1.1-2
 - rcompanion 2.3.27
@@ -35,10 +35,10 @@ The libraries included:
 - scales 1.0.0
 - sdmpredictors 0.2.9
 - taxize 0.9.99
-- *tibble*
-- *tidyr*
+- tibble
+- tidyr
 - tidyverse 1.2.1
-- *vegan* 2.6-4
+- vegan 2.6-4
 
 In addition, we use custom functions here:
 
