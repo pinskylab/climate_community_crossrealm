@@ -71,11 +71,13 @@ The code is organized in six main steps. Run time for each step should be less t
 - `turnover_GLMM_fit.R`: fit one mixed effects model (specified as an argument). Writes `temp/mod*.rds`
 - `turnover_GLMM_fit.sh`: bash script to initiate multiple threads, one to fit each model specified as an argument. Calls `turnover_GLMM_fit.R`
 - `turnover_GLMMgainloss_fit.R`: fit mixed effects models with the relative proportions of species gains and losses as a covariate (a sensitivity analysis). Writes `temp/mod*InitGainLossAll*.rds`
+- `turnover_GLMMlong_fit.R`: fit mixed effects models to time series >= 7 years long. Writes `temp/mod*LongJtu.rds`
 
 ## 5. Make predictions from the models
 - `pred_GLMMmodrawXAllJtu.R`: make predictions from the models for plotting, including turnover rates and sensitivity of turnover to temperature change. Writes `temp/preds_modsdTRealmtsigninitAllJtu.rds` and `preds_rawTsdTTRealmtsigninit.rds` (dissimilarity), `temp/slopes_modsdTRealmtsigninitAllJtu.rds` and `slopes_rawTsdTTRealmtsigninit.rds` (turnover rate), and `sensitivity_rawTsdTTRealmtsigninit.rds` (sensitivity of turnover rates to temperature change)
 - `pred_modrawXAllJtu.sh`: Shell script to spawn multiple instances of `pred_GLMMmodrawXAllJtu.R`
 - `pred_GLMMmodrawCovariate.R`: make predictions for the covariate models. Writes `temp/preds_rawTsdTTRealmtsignCovariateInit.rds` (dissimilarity), `temp/slopes_rawTsdTTRealmtsignCovariateInit.rds` (turnover rates), and `temp/sensitivity_rawTsdTTRealmtsignCovariateInit.rds` (sensitivity)
+- `pred_GLMMmodrawXLongJtu.R`: make predictions from the models fit to longer time series. Writes `temp/preds_*Long*.rds`, `temp/slopes_*Long*.rds` and `temp/sensitivity_*Long*.rds`
 
 ## 6. Make outputs for communication
 - `figures_for_paper.R`: figures and tables and stats for paper
