@@ -230,12 +230,12 @@ senspred <- senspred[tempave %in% c(0,25), ]
 senspred[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 
 # fastest turnover at highest observed rate of temperature change
-slopespredsdT[, .SD[which.max(slope), .(tempchange, slope)], by = REALM] # just looking at tempchange
-slopespred[, .SD[which.max(slope), .(tempave, tempchange, slope)], by = REALM] # also considering tempave
+slopespredsdT[, .SD[which.max(slope), .(tempchange, slope, slope.se)], by = REALM] # just looking at tempchange
+slopespred[, .SD[which.max(slope), .(tempave, tempchange, slope, slope.se)], by = REALM] # also considering tempave
 
 # predicted turnover at moderate rates of temperature change
-slopespredsdT[, .SD[which.min(abs(tempchange - 0.5)), .(tempchange, slope)], by = REALM] # just looking at tempchange
-slopespred[, .SD[which.max(slope), .(tempave, tempchange, slope)], by = REALM] # also considering tempave
+slopespredsdT[, .SD[which.min(abs(tempchange - 0.5)), .(tempchange, slope, slope.se)], by = REALM] # just looking at tempchange
+slopespred[, .SD[which.max(slope), .(tempave, tempchange, slope, slope.se)], by = REALM] # also considering tempave
 
 
 # a) across realms

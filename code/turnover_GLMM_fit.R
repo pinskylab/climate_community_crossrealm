@@ -222,6 +222,45 @@ if (fitmod == 'modsdTRealmtsigninitAllHorn') {
     MATCHMOD <- TRUE
 }
 
+# Tchange models with main effects #########################
+if (fitmod == 'modsdTMERealmtsigninitAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc +
+            REALM:tsign:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+if (fitmod == 'modsdTMERealmtsigninitAllHorn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallHorn), 'data points'))
+    print(paste(trendsall[iallHorn, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallHorn, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Horn.sc ~ duration +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc +
+            REALM:tsign:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallHorn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
 # Tchange x Tave models #########################
 if (fitmod == 'modrawTsdTTRealmtsigninitAllJtu') {
     if (MATCHMOD)
@@ -263,6 +302,51 @@ if (fitmod == 'modrawTsdTTRealmtsigninitAllHorn') {
     MATCHMOD <- TRUE
 }
 
+# Tchange x Tave models with main effects #########################
+if (fitmod == 'modrawTsdTTMERealmtsigninitAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc +
+            REALM:tsign:tempave.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+if (fitmod == 'modrawTsdTTMERealmtsigninitAllHorn') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallHorn), 'data points'))
+    print(paste(trendsall[iallHorn, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallHorn, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Horn.sc ~ duration +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc +
+            REALM:tsign:tempave.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallHorn, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
 # Tchange x latitude #########################
 if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
     if (MATCHMOD)
@@ -274,6 +358,29 @@ if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
         Jtu.sc ~ duration +
             Jtu.init:duration +
             REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:absLat.sc:duration +
+            REALM:tsign:absLat.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+# Tchange x latitude with main effects #########################
+if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:absLat.sc +
             REALM:tsign:absLat.sc:duration +
             REALM:tsign:absLat.sc:tempchange_abs.sc:duration +
             (duration | STUDY_ID / rarefyID),
