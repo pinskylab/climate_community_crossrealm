@@ -369,7 +369,7 @@ if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
 }
 
 # Tchange x latitude with main effects #########################
-if (fitmod == 'modabsLatsdTabsLatRealmtsignInitAllJtu') {
+if (fitmod == 'modabsLatsdTabsLatMERealmtsignInitAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))

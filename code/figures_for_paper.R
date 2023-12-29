@@ -65,17 +65,23 @@ anova(modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignhumanInitAllJtu) # T
 
 
 ### Table 1: AICs --------------
+
+# use ME models. needs lat ME model
 if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
 if(!exists('modRealmInitAllJtu')) modRealmInitAllJtu <- readRDS('temp/modRealmInitAllJtu.rds') # Realm. Fit by code/turnover_GLMM_fit.R
 if(!exists('modTaxamod2InitAllJtu')) modTaxamod2InitAllJtu <- readRDS('temp/modTaxamod2InitAllJtu.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
 if(!exists('modsdTRealmtsigninitAllJtu')) modsdTRealmtsigninitAllJtu <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
+if(!exists('modsdTMERealmtsigninitAllJtu')) modsdTMERealmtsigninitAllJtu <- readRDS(here('temp', 'modsdTMERealmtsigninitAllJtu.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
 if(!exists('modabsLatsdTabsLatRealmtsignInitAllJtu')) modabsLatsdTabsLatRealmtsignInitAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitAllJtu.rds')) # Tchange x Latitude model. Fit by code/turnover_GLMM_fit.R
 if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
+if(!exists('modrawTsdTTMERealmtsigninitAllJtu')) modrawTsdTTMERealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTMERealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
+
 
 # compare Tchange amd Tchange x Tave models against null
 aics <- AIC(modInitAllJtu, modRealmInitAllJtu, modTaxamod2InitAllJtu, # simple models w/out Tchange
-            modsdTRealmtsigninitAllJtu, # Tchange
-            modabsLatsdTabsLatRealmtsignInitAllJtu, modrawTsdTTRealmtsigninitAllJtu) # add Tchange x Tave
+            modsdTRealmtsigninitAllJtu, modsdTMERealmtsigninitAllJtu, # Tchange
+            modabsLatsdTabsLatRealmtsignInitAllJtu, 
+            modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTMERealmtsigninitAllJtu) # add Tchange x Tave
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllJtu']
 aics
@@ -522,6 +528,20 @@ fig3 <- arrangeGrob(p1, p2, ncol = 2, widths = c(3,4))
 ggsave('figures/fig3.png', fig3, width = 4, height = 2, units = 'in')
 
 
+
+
+### Table S0: linear, quadratic, or log in time --------------
+if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
+if(!exists('modSqInitAllJtu')) modSqInitAllJtu <- readRDS(here('temp', 'modSqInitAllJtu.rds'))
+if(!exists('modLogDurInitAllJtu')) modLogDurInitAllJtu <- readRDS(here('temp', 'modLogDurInitAllJtu.rds'))
+
+# compare models
+aics <- AIC(modInitAllJtu, 
+            modSqInitAllJtu, 
+            modLogDurInitAllJtu) # simple models w/out Tchange
+aics$dAIC <- aics$AIC - min(aics$AIC)
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllJtu']
+aics
 
 
 ### Table S1: random effects for main model --------------
