@@ -433,6 +433,55 @@ if (fitmod == 'modrawTsdTTRealmtsignhumanInitAllJtu') {
 }
 
 
+# Environmental covariates w/ main effects #########################
+### microclim
+if (fitmod == 'modrawTsdTTMERealmtsignmicroclimInitAllJtu') {
+    print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc +
+            REALM:tsign:tempave.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+            REALM:microclim.sc +
+            REALM:microclim.sc:duration +
+            REALM:microclim.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM)
+    MATCHMOD <- TRUE
+}
+
+### human
+if (fitmod == 'modrawTsdTTMERealmtsignhumanInitAllJtu') {
+    print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Jtu.sc ~ duration +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc +
+            REALM:tsign:tempave.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+            REALM:human_bowler.sc +
+            REALM:human_bowler.sc:duration +
+            REALM:human_bowler.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = beta_family(link = 'logit'),
+        dispformula = ~ REALM)
+    MATCHMOD <- TRUE
+}
+
+
+
 
 # print and save results ############################
 if (MATCHMOD == FALSE)

@@ -93,6 +93,14 @@ if(predmod == 'modsdTMERealmtsigninitAllJtu'){ # Tchange model
     print('model loaded')
 } 
 
+if(predmod == 'modLogDursdTMERealmtsigninitAllJtu'){ # Tchange model with log duration
+    mod <- readRDS(here('temp', 'modLogDursdTMERealmtsigninitAllJtu.rds')) # From ...
+    out_preds <- 'preds_modLogDursdTMERealmtsigninitAllJtu.rds'
+    out_slopes <- 'slopes_modLogDursdTMERealmtsigninitAllJtu.rds'
+    doSensitivity <- FALSE # calculate sensitivity to Tave?
+    print('model loaded')
+} 
+
 if(predmod == 'modrawTsdTTMERealmtsigninitAllJtu'){ # Tchange x Tave model
     mod <- readRDS(here('temp', 'modrawTsdTTMERealmtsigninitAllJtu.rds')) # From turnover_GLMM_fit.R
     out_preds <- 'preds_rawTsdTTMERealmtsigninit.rds' # note: name is not quite of same form as previous model.
@@ -100,7 +108,16 @@ if(predmod == 'modrawTsdTTMERealmtsigninitAllJtu'){ # Tchange x Tave model
     doSensitivity <- TRUE # calculate sensitivity to Tave?
     out_sensitivity <- 'sensitivity_rawTsdTTMERealmtsigninit.rds'
     print('model loaded')
-} 
+}
+
+if(predmod == 'modLogDurrawTsdTTMERealmtsigninitAllJtu'){ # Tchange x Tave model with log duration
+    mod <- readRDS(here('temp', 'modLogDurrawTsdTTMERealmtsigninitAllJtu.rds')) # From ...
+    out_preds <- 'preds_LogDurrawTsdTTMERealmtsigninit.rds' # note: name is not quite of same form as previous model.
+    out_slopes <- 'slopes_LogDurrawTsdTTMERealmtsigninit.rds' # note: name is not quite of same form as previous model.
+    doSensitivity <- TRUE # calculate sensitivity to Tave?
+    out_sensitivity <- 'sensitivity_LogDurrawTsdTTMERealmtsigninit.rds'
+    print('model loaded')
+}
 
 if(!exists('mod')) stop('No model loaded. Make sure argument matches one of the model names')
 
@@ -113,6 +130,7 @@ newdat <- data.table(expand.grid(tempave = seq(-10, 36, by = 1), tempchange = se
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1
 newdat$Jtu.init <- 0.5
+newdat[, duration.log := log(duration)]
 newdat[, tempave.sc := scaleme(tempave, 'tempave.sc')]
 newdat[, tempchange_abs := abs(tempchange)]
 newdat[, tsign := signneg11(tempchange)]

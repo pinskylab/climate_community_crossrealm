@@ -66,24 +66,22 @@ anova(modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignhumanInitAllJtu) # T
 
 ### Table 1: AICs --------------
 
-# use ME models. needs lat ME model
-if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
-if(!exists('modRealmInitAllJtu')) modRealmInitAllJtu <- readRDS('temp/modRealmInitAllJtu.rds') # Realm. Fit by code/turnover_GLMM_fit.R
-if(!exists('modTaxamod2InitAllJtu')) modTaxamod2InitAllJtu <- readRDS('temp/modTaxamod2InitAllJtu.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
-if(!exists('modsdTRealmtsigninitAllJtu')) modsdTRealmtsigninitAllJtu <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
-if(!exists('modsdTMERealmtsigninitAllJtu')) modsdTMERealmtsigninitAllJtu <- readRDS(here('temp', 'modsdTMERealmtsigninitAllJtu.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
-if(!exists('modabsLatsdTabsLatRealmtsignInitAllJtu')) modabsLatsdTabsLatRealmtsignInitAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitAllJtu.rds')) # Tchange x Latitude model. Fit by code/turnover_GLMM_fit.R
-if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
-if(!exists('modrawTsdTTMERealmtsigninitAllJtu')) modrawTsdTTMERealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTMERealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
+# use models
+modInit <- readRDS(here('temp', 'modInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
+modRealm <- readRDS('temp/modRealmInitAllJtu.rds') # Realm. Fit by code/turnover_GLMM_fit.R
+modTaxamod2 <- readRDS('temp/modTaxamod2InitAllJtu.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
+modTchange <- readRDS(here('temp', 'modsdTMERealmtsigninitAllJtu.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
+modLat <- readRDS(here('temp', 'modabsLatsdTabsLatMERealmtsignInitAllJtu'))
+modTchangeTave <- readRDS(here('temp','modrawTsdTTMERealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
 
 
 # compare Tchange amd Tchange x Tave models against null
-aics <- AIC(modInitAllJtu, modRealmInitAllJtu, modTaxamod2InitAllJtu, # simple models w/out Tchange
-            modsdTRealmtsigninitAllJtu, modsdTMERealmtsigninitAllJtu, # Tchange
-            modabsLatsdTabsLatRealmtsignInitAllJtu, 
-            modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTMERealmtsigninitAllJtu) # add Tchange x Tave
+aics <- AIC(modInit, modRealm, modTaxamod2, # simple models w/out Tchange
+            modTchange, # Tchange
+ #           modLat,
+            modTchangeTave) # add Tchange x Tave
 aics$dAIC <- aics$AIC - min(aics$AIC)
-aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllJtu']
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInit']
 aics
 
 write.csv(aics, here('figures', 'table1.csv'))
@@ -224,14 +222,14 @@ write.csv(ave_by_realm, file='output/ave_by_realm.csv')
 tempchange_by_realm <- trends[, .(max = quantile(tempchange, na.rm=TRUE, probs = 0.999), min = quantile(tempchange, na.rm=TRUE, probs = 0.001)), by = REALM]
 
 # predicted slopes from the Tchange model
-slopespredsdT <- readRDS(here('temp', 'slopes_modsdTRealmtsigninitAllJtu.rds')) # from pred_GLMMmodrawXAllJtu.R
+slopespredsdT <- readRDS(here('temp', 'slopes_modsdTMERealmtsigninitAllJtu.rds')) # from pred_GLMMmodrawXAllJtu.R
 slopespredsdT <- merge(slopespredsdT, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
 slopespredsdT <- slopespredsdT[tempchange > min & tempchange < max & !duplicated(cbind(tempchange, REALM)), ] # trim to min & max by realm
 slopespredsdT[, tsign := factor(sign(tempchange), levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 
 # predicted turnover and sensitivity of turnover rate to temperature change from the Tchange x Tave model
-slopespred <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsigninit.rds')) # from pred_GLMMmodrawXAllJtu.R
-senspred <- readRDS(here('temp', 'sensitivity_rawTsdTTRealmtsigninit.rds')) # from pred_GLMMmodrawXAllJtu.R
+slopespred <- readRDS(here('temp', 'slopes_rawTsdTTMERealmtsigninit.rds')) # from pred_GLMMmodrawXAllJtu.R
+senspred <- readRDS(here('temp', 'sensitivity_rawTsdTTMERealmtsigninit.rds')) # from pred_GLMMmodrawXAllJtu.R
 senspred <- senspred[tempave %in% c(0,25), ]
 senspred[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 
@@ -453,8 +451,8 @@ ggsave('figures/fig2_colorpoints.png', fig2colorpoints, width = 6, height = 6, u
 
 
 ### Figure 3: environmental interactions ---------
-slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariateInit.rds')) # turnover rates from code/pred_GLMMmodrawCovariate.R
-sensitivity2 <- readRDS(here('temp', 'sensitivity_rawTsdTTRealmtsignCovariateInit.rds')) # sensitivities from code/pred_GLMMmodrawCovariate.R
+slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTMERealmtsignCovariateInit.rds')) # turnover rates from code/pred_GLMMmodrawCovariate.R
+sensitivity2 <- readRDS(here('temp', 'sensitivity_rawTsdTTMERealmtsignCovariateInit.rds')) # sensitivities from code/pred_GLMMmodrawCovariate.R
 sensitivity2[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting
 
 # max turnover rate by realm and covariate
@@ -462,8 +460,8 @@ slopes2[tempave==10 & tempchange == 2 & human_bowler %in% c(0,10), .(slope_micro
         by = .(REALM, microclim, human_bowler, tempchange)][order(REALM, microclim, tempchange)]
 
 # plots
-ylims.microclimate <- c(-0.02, 0.035)
-ylims.human <- c(-0.02, 0.035)
+ylims.microclimate <- c(-0.09, 0.11)
+ylims.human <- c(-0.085, 0.12)
 
 p1 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')], 
              aes(microclim, sensitivity_microclim, 
@@ -530,20 +528,6 @@ ggsave('figures/fig3.png', fig3, width = 4, height = 2, units = 'in')
 
 
 
-### Table S0: linear, quadratic, or log in time --------------
-if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
-if(!exists('modSqInitAllJtu')) modSqInitAllJtu <- readRDS(here('temp', 'modSqInitAllJtu.rds'))
-if(!exists('modLogDurInitAllJtu')) modLogDurInitAllJtu <- readRDS(here('temp', 'modLogDurInitAllJtu.rds'))
-
-# compare models
-aics <- AIC(modInitAllJtu, 
-            modSqInitAllJtu, 
-            modLogDurInitAllJtu) # simple models w/out Tchange
-aics$dAIC <- aics$AIC - min(aics$AIC)
-aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllJtu']
-aics
-
-
 ### Table S1: random effects for main model --------------
 if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # Tchange x Tave model Fit by code/turnover_GLMM_fit.R
 if(!exists('sum_modrawTsdTTRealmtsigninitAllJtu')) sum_modrawTsdTTRealmtsigninitAllJtu <- summary(modrawTsdTTRealmtsigninitAllJtu)
@@ -596,18 +580,18 @@ write.csv(format(out, digits=2), file = 'figures/tableS2.csv', row.names=FALSE)
 
 
 ### Table S3: Horn AICs --------------
-modInitAllHorn <- readRDS(here('temp', 'modInitAllHorn.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
-modRealmInitAllHorn <- readRDS('temp/modRealmInitAllHorn.rds') # Realm. Fit by code/turnover_GLMM_fit.R
-modTaxamod2InitAllHorn <- readRDS('temp/modTaxamod2InitAllHorn.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
-modsdTRealmtsigninitAllHorn <- readRDS(here('temp', 'modsdTRealmtsigninitAllHorn.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
-modrawTsdTTRealmtsigninitAllHorn <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllHorn.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
+modInitHorn <- readRDS(here('temp', 'modInitAllHorn.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
+modRealmHorn <- readRDS('temp/modRealmInitAllHorn.rds') # Realm. Fit by code/turnover_GLMM_fit.R
+modTaxamod2Horn <- readRDS('temp/modTaxamod2InitAllHorn.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
+modTchangeHorn <- readRDS(here('temp', 'modsdTMERealmtsigninitAllHorn.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
+modTchangeTaveHorn <- readRDS(here('temp','modrawTsdTTMERealmtsigninitAllHorn.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
 
 # compare Tchange amd Tchange x Tave models against null
-aics <- AIC(modInitAllHorn, modRealmInitAllHorn, modTaxamod2InitAllHorn, # simple models w/out Tchange
-            modsdTRealmtsigninitAllHorn, # Tchange
-            modrawTsdTTRealmtsigninitAllHorn) # Tchange x Tave
+aics <- AIC(modInitHorn, modRealmHorn, modTaxamod2Horn, # simple models w/out Tchange
+            modTchangeHorn, # Tchange
+            modTchangeTaveHorn) # Tchange x Tave
 aics$dAIC <- aics$AIC - min(aics$AIC)
-aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllHorn']
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitHorn']
 aics
 
 write.csv(aics, here('figures', 'tableS3.csv'))
@@ -615,16 +599,18 @@ write.csv(aics, here('figures', 'tableS3.csv'))
 
 ### Table S4: covariate AICs --------------
 # load models for AICs
-if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
-if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
-if(!exists('modrawTsdTTRealmtsignmicroclimInitAllJtu')) modrawTsdTTRealmtsignmicroclimInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimInitAllJtu.rds') # Microclimates. Fit by turnover_GLMM_fit.R.
-if(!exists('modrawTsdTTRealmtsignhumanInitAllJtu')) modrawTsdTTRealmtsignhumanInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanInitAllJtu.rds') # Human impact. Fit by turnover_GLMM_fit.R
+modInit <- readRDS(here('temp', 'modInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
+modTchange <- readRDS(here('temp','modrawTsdTTMERealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
+modmicroclim <- readRDS('temp/modrawTsdTTMERealmtsignmicroclimInitAllJtu.rds') # Microclimates. Fit by turnover_GLMM_fit.R.
+modhuman <- readRDS('temp/modrawTsdTTMERealmtsignhumanInitAllJtu.rds') # Human impact. Fit by turnover_GLMM_fit.R
 
 # compare covariate models against null
-aics <- AIC(modInitAllJtu, modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignmicroclimInitAllJtu,
-            modrawTsdTTRealmtsignhumanInitAllJtu) 
-aics$dAICtemp <- aics$AIC - aics$AIC[rownames(aics)=='modrawTsdTTRealmtsigninitAllJtu']
-aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllJtu']
+aics <- AIC(modInit, 
+            modTchange, 
+            modmicroclim,
+            modhuman) 
+aics$dAICtemp <- aics$AIC - aics$AIC[rownames(aics)=='modTchange']
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInit']
 aics
 
 write.csv(aics, here('figures', 'tableS4.csv'))
