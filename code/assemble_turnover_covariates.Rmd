@@ -127,9 +127,7 @@ btall[, ':='(tempave.sc = scale(tempave),
            microclim.sc = scale(log(microclim)),
            tempchange.sc = scale(tempchange, center = TRUE), 
            tempchange_abs.sc = scale(abs(tempchange), center = TRUE),
-           nspp.sc = scale(log(Nspp)),
-           duration.sc = scale(duration),
-           durationlog.sc = scale(log(duration)))]
+           nspp.sc = scale(log(Nspp)))]
 btall[, human_bowler.sc := scale(log(human_bowler+1)), by = REALM2] # separate scaling by realm
 
 
@@ -162,11 +160,11 @@ btall[, length(unique(rarefyID)), by = REALM]
 
 ## Write out
 ```{r write out}
-write.csv(btall[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
-                   Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
+write.csv(btall[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, Nspp, year1, year2, duration, 
+                   Jtu, Jtu.sc, Horn, Horn.sc, 
                    tempave.sc, 
                    microclim.sc, tempchange, tsign, tempchange.sc, tempchange_abs.sc,
-                   duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
+                   duration.sc, human_bowler.sc, REALM2)], 
           gzfile(here('output', 'turnover_w_covariates.csv.gz')), row.names = FALSE)
 write.csv(scalingall, here('output','turnover_w_covariates_scaling.csv'), row.names = FALSE)
 ```

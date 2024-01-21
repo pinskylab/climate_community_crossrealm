@@ -30,7 +30,8 @@ print(Sys.time())
 # load libraries ############################
 
 library(data.table) # for handling large datasets
-library(glmmTMB, lib.loc = "/usr/lib64/R/library") # for ME models when loading on Annotate
+#library(glmmTMB, lib.loc = "/usr/lib64/R/library") # for ME models when loading on Annotate
+library(glmmTMB) # for ME models
 library(DHARMa) # for simulating residuals
 
 # load model ###############################
@@ -92,8 +93,15 @@ print(warnings())
 # res <- readRDS('temp/modrawTsdTTMERealmtsigninitAllJtu_residuals.rds')
 # res <- readRDS('temp/modLogDurrawTsdTTMERealmtsigninitAllJtu_residuals.rds')
 # res <- readRDS('temp/modSqInitAllJtu_residuals.rds')
+# res <- readRDS('temp/modOBsdTMERealmtsigninitAllJtu_residuals.rds')
+# res <- readRDS('temp/modSqInitAllJtu_residuals.rds')
+# res <- readRDS('temp/modSqInitAllJtu_residuals.rds')
 # plot(res)
 # plotResiduals(res, form=trendsall$duration[iallJtu], xlab = 'duration', main = '')
+# plotResiduals(res, form=trendsall$duration[iallJtu], xlab = 'duration', main = '', rank = FALSE)
+# plotResiduals(res, form=trendsall$Nspp[iallJtu], main = '')
+# plotResiduals(res, form=trendsall$Nspp[iallJtu], main = '', rank = FALSE)
+# plotResiduals(res, form=trendsall$REALM[iallJtu], main = '')
 # testDispersion(res)
 # tq <- testQuantiles(res, predictor = trendsall$duration[iallJtu], plot = F)
 
