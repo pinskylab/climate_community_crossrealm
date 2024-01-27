@@ -94,14 +94,19 @@ print(warnings())
 # res <- readRDS('temp/modLogDurrawTsdTTMERealmtsigninitAllJtu_residuals.rds')
 # res <- readRDS('temp/modSqInitAllJtu_residuals.rds')
 # res <- readRDS('temp/modOBsdTMERealmtsigninitAllJtu_residuals.rds')
-# res <- readRDS('temp/modSqInitAllJtu_residuals.rds')
-# res <- readRDS('temp/modSqInitAllJtu_residuals.rds')
+# res <- readRDS('temp/modOBsdTMERealmtsigninitAllJtu_dispDUR_residuals.rds')
+# res <- readRDS('temp/modOBsdTMERealmtsigninitAllJtu_dispDURNSP_residuals.rds')
 # plot(res)
 # plotResiduals(res, form=trendsall$duration[iallJtu], xlab = 'duration', main = '')
 # plotResiduals(res, form=trendsall$duration[iallJtu], xlab = 'duration', main = '', rank = FALSE)
 # plotResiduals(res, form=trendsall$Nspp[iallJtu], main = '')
 # plotResiduals(res, form=trendsall$Nspp[iallJtu], main = '', rank = FALSE)
 # plotResiduals(res, form=trendsall$REALM[iallJtu], main = '')
+# plotResiduals(res, form=trendsall$tempchange_abs.sc[iallJtu], main = '')
+# plotResiduals(res, form=trendsall$tempchange_abs.sc[iallJtu], main = '', rank = FALSE)
+# plotResiduals(res, form=trendsall$tsign[iallJtu], main = '')
 # testDispersion(res)
-# tq <- testQuantiles(res, predictor = trendsall$duration[iallJtu], plot = F)
-
+# hist(as.vector(unlist(ranef(mod)$cond$STUDY_ID))) # distribution of random effects
+# qqplot(as.vector(unlist(ranef(mod)$cond$STUDY_ID))) # distribution of random effects
+# shapiro.test(as.vector(unlist(ranef(mod)$cond$STUDY_ID)))
+# hist(as.vector(unlist(ranef(mod)$cond$`rarefyID:STUDY_ID`))) # distribution of random effects
