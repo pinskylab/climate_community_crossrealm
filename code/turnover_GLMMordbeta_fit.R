@@ -149,6 +149,42 @@ if (fitmod == 'modOBRealmInitAllHorn') {
     MATCHMOD <- TRUE
 }
 
+if (fitmod == 'modOBRRealmInitAllJtu') { # adds realm main effect
+    if (MATCHMOD) stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Jtu ~ duration +
+            Jtu.init:duration +
+            REALM +
+            REALM:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = ordbeta(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+if (fitmod == 'modOBRRealmInitAllHorn') { # adds realm main effect
+    if (MATCHMOD) stop('Model name matched more than one model!')
+    print(paste(sum(iallHorn), 'data points'))
+    print(paste(trendsall[iallHorn, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallHorn, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Horn ~ duration +
+            Jtu.init:duration +
+            REALM +
+            REALM:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallHorn, ],
+        family = ordbeta(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
 # Taxa models ###################################
 if (fitmod == 'modOBTaxamod2InitAllJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
@@ -177,6 +213,45 @@ if (fitmod == 'modOBTaxamod2InitAllHorn') {
     mod <- glmmTMB(
         Horn ~ duration +
             Jtu.init:duration +
+            taxa_mod2:duration +
+            (duration | STUDY_ID / rarefyID), 
+        data = trendsall[iallHorn, ],
+        family = ordbeta(link = 'logit'),
+        dispformula = ~ REALM#,
+        #control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+if (fitmod == 'modOBTTaxamod2InitAllJtu') { # adds taxa main effect
+    if (MATCHMOD) stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Jtu ~ duration +
+            Jtu.init:duration +
+            taxa_mod2 +
+            taxa_mod2:duration +
+            (duration | STUDY_ID / rarefyID), 
+        data = trendsall[iallJtu, ],
+        family = ordbeta(link = 'logit'),
+        dispformula = ~ REALM#,
+        #control = glmmTMBControl(profile = TRUE)
+    ) # add dispersion formula
+    MATCHMOD <- TRUE
+}
+
+
+if (fitmod == 'modOBTTaxamod2InitAllHorn') { # adds taxa main effect
+    if (MATCHMOD) stop('Model name matched more than one model!')
+    print(paste(sum(iallHorn), 'data points'))
+    print(paste(trendsall[iallHorn, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallHorn, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Horn ~ duration +
+            Jtu.init:duration +
+            taxa_mod2 +
             taxa_mod2:duration +
             (duration | STUDY_ID / rarefyID), 
         data = trendsall[iallHorn, ],
