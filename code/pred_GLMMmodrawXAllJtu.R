@@ -38,7 +38,11 @@ if(Sys.getenv('RSTUDIO')=='' & Sys.info()[[4]]=='annotate.sebs.rutgers.edu'){
 }
 
 library(data.table) # for handling large datasets
-library(glmmTMB, lib.loc = "/usr/lib64/R/library") # for ME models
+if(Sys.info()[[4]]=='annotate.sebs.rutgers.edu'){ # location of the library on Annotate
+    library(glmmTMB, lib.loc = "/usr/lib64/R/library") # for ME models
+} else {
+    library(glmmTMB)
+}
 library(here) # for relative paths
 source(here('code', 'util.R'))
 
@@ -93,10 +97,10 @@ if(predmod == 'modsdTMERealmtsigninitAllJtu'){ # Tchange model
     print('model loaded')
 } 
 
-if(predmod == 'modLogDursdTMERealmtsigninitAllJtu'){ # Tchange model with log duration
-    mod <- readRDS(here('temp', 'modLogDursdTMERealmtsigninitAllJtu.rds')) # From ...
-    out_preds <- 'preds_modLogDursdTMERealmtsigninitAllJtu.rds'
-    out_slopes <- 'slopes_modLogDursdTMERealmtsigninitAllJtu.rds'
+if(predmod == 'modOBsdTMERtsRealmtsigninitAllJtu'){ # Tchange model with ordbeta and MERts main effects
+    mod <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllJtu.rds')) # From ...
+    out_preds <- 'preds_modOBsdTMERtsRealmtsigninitAllJtu.rds'
+    out_slopes <- 'slopes_modOBsdTMERtsRealmtsigninitAllJtu.rds'
     doSensitivity <- FALSE # calculate sensitivity to Tave?
     print('model loaded')
 } 
@@ -110,12 +114,12 @@ if(predmod == 'modrawTsdTTMERealmtsigninitAllJtu'){ # Tchange x Tave model
     print('model loaded')
 }
 
-if(predmod == 'modLogDurrawTsdTTMERealmtsigninitAllJtu'){ # Tchange x Tave model with log duration
-    mod <- readRDS(here('temp', 'modLogDurrawTsdTTMERealmtsigninitAllJtu.rds')) # From ...
-    out_preds <- 'preds_LogDurrawTsdTTMERealmtsigninit.rds' # note: name is not quite of same form as previous model.
-    out_slopes <- 'slopes_LogDurrawTsdTTMERealmtsigninit.rds' # note: name is not quite of same form as previous model.
+if(predmod == 'modOBrawTsdTTMERtsRealmtsigninitAllJtu'){ # Tchange x Tave model with ordbeta and MERts main effects
+    mod <- readRDS(here('temp', 'modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # From ...
+    out_preds <- 'preds_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds' 
+    out_slopes <- 'slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds'
     doSensitivity <- TRUE # calculate sensitivity to Tave?
-    out_sensitivity <- 'sensitivity_LogDurrawTsdTTMERealmtsigninit.rds'
+    out_sensitivity <- 'sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds'
     print('model loaded')
 }
 
@@ -130,7 +134,6 @@ newdat <- data.table(expand.grid(tempave = seq(-10, 36, by = 1), tempchange = se
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1
 newdat$Jtu.init <- 0.5
-newdat[, duration.log := log(duration)]
 newdat[, tempave.sc := scaleme(tempave, 'tempave.sc')]
 newdat[, tempchange_abs := abs(tempchange)]
 newdat[, tsign := signneg11(tempchange)]

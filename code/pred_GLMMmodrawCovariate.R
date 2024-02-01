@@ -13,7 +13,9 @@ print(Sys.time())
 
 ### set arguments -----------------
 n = 1000 # number of resamples to do for each timeseries
-
+micromodel <- 'modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu'
+humanmodel <- 'modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu'
+modname <- 'modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu'
 
 ### load functions and data ----------------
 # needed to run this from the Annotate R console. Not needed in RStudio on Annotate. Not clear why.
@@ -22,7 +24,11 @@ if(Sys.getenv('RSTUDIO')=='' & Sys.info()[[4]]=='annotate.sebs.rutgers.edu'){
 }
 
 library(data.table) # for handling large datasets
-library(glmmTMB, lib.loc = "/usr/lib64/R/library") # for ME models
+if(Sys.info()[[4]]=='annotate.sebs.rutgers.edu'){ # location of the library on Annotate
+    library(glmmTMB, lib.loc = "/usr/lib64/R/library") # for ME models
+} else {
+    library(glmmTMB)
+}
 library(here) # for relative paths
 source(here('code', 'util.R'))
 
@@ -49,9 +55,14 @@ slopesamp <- function(n, duration, Jtu.sc, Jtu.sc.se, colnames = c('slope', 'slo
 scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv'))
 
 # The models
-modmicroclim <- readRDS('temp/modLogDurrawTsdTTMERealmtsignmicroclimInitAllJtu.rds') # has microclimates
-modhuman <- readRDS('temp/modLogDurrawTsdTTMERealmtsignhumanInitAllJtu.rds') # has human impact
+microinfile <- paste0('temp/', micromodel, '.rds')
+humaninfile <- paste0('temp/', humanmodel, '.rds')
+
+modmicroclim <- readRDS(microinfile) # has microclimates
+modhuman <- readRDS(humaninfile) # has human impact
 print('models loaded')
+print(microinfile)
+print(humaninfile)
 
 
 ### Make predictions -------------------------
@@ -91,8 +102,9 @@ newdat$Jtu.sc.human.se <- preds.human$se.fit
 print('finished human predictions')
 
 # write out
-saveRDS(newdat, file = here('temp', 'preds_LogDurrawTsdTTMERealmtsignCovariateInit.rds'))
-print(paste('Wrote preds_LogDurrawTsdTTMERealmtsignCovariateInit.rds:', Sys.time()))
+predsfile <- paste0('preds_', modname, '.rds')
+saveRDS(newdat, file = here('temp', predsfile))
+print(paste('Wrote', predsfile, ':', Sys.time()))
 
 # if reading in (eg, if running by hand)
 # newdat <- readRDS(here('temp', 'preds_LogDurrawTsdTTMERealmtsignCovariateInit.rds'))
@@ -107,9 +119,9 @@ slopes.human <- newdat[, slopesamp(n, duration.log, Jtu.sc.human, Jtu.sc.human.s
 slopes2 <- merge(slopes.microclim, slopes.human)
 
 # save turnover rates
-saveRDS(slopes2, file = here('temp', 'slopes_LogDurrawTsdTTMERealmtsignCovariateInit.rds'))
-print(paste('Wrote slopes_LogDurrawTsdTTMERealmtsignCovariateInit.rds:', Sys.time()))
-
+slopesfile <- paste0('slopes_', modname, '.rds')
+saveRDS(slopes2, file = here('temp', slopesfile))
+print(paste('Wrote', slopesfile, ':', Sys.time()))
 
 
 ### Calculate sensitivity of turnover rates to covariates ----------------------
@@ -124,10 +136,10 @@ sensitivity.human <- slopes2[, slopesamp(n, tempchange, slope_human, slope_human
 sensitivity2 <- merge(sensitivity.microclim, sensitivity.human)
 
 # save sensitivities
-saveRDS(sensitivity2, file = here('temp', 'sensitivity_LogDurrawTsdTTMERealmtsignCovariateInit.rds'))
+sensfile <- paste0('sensitivity_', modname, '.rds')
+saveRDS(sensitivity2, file = here('temp', sensfile))
 # sensitivity2 <- readRDS(here('temp', 'sensitivity_LogDurrawTsdTTMERealmtsignCovariateInit.rds')) # to read in manually
-print(paste('Wrote sensitivity_LogDurrawTsdTTMERealmtsignCovariateInit.rds:', Sys.time()))
-
+print(paste('Wrote', sensfile, ':', Sys.time()))
 
 
 print(warnings())
