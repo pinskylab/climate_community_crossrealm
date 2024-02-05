@@ -1,16 +1,18 @@
 # code
 
-The scripts in this analysis were run in three computer environments:
+The scripts in this analysis were run in four computer environments:
 - A MacBook Pro 16 GB RAM with R version 4.0.3 and RStudio 1.3.1093
-- A scientific workstation ('Annotate') with 72 CPUs (Intel Xeon CPU E5-2697 v4 @ 2.30GHz) running CentOS 7.6.1810 with R version 3.5.2 and RStudio 1.3.1093
-- A high performance computing environment with SLURM job management (Step 2 below).
+- A scientific workstation ('Annotate') with 36 cores (Intel Xeon CPU E5-2697 v4 @ 2.30GHz) running CentOS 7.6.1810 with R version 3.5.2 and RStudio 1.3.1093
+- A scientific workstation ('Annotate2') with 56 cores (Intel Xeon CPU w9-3495X @ 4.8GHz) running Red Hat 8 with R version 4.3.1 and RStudio 2023.06.2 (fitting ordered beta GLMMs)
+- A compute cluster with 64-bit x86 processors running Rocky Linux 9.1 with SLURM job management and R version 4.2.2 (Step 2 below).
 
 The libraries included:
 - bbmle 1.0.23.1
 - beanplot 1.2
-- betapart
+- betapart 1.6
 - data.table 1.11.8
 - dggridR
+- dplyr 1.1.0
 - DHARMa 0.3.3.0
 - ggplot2 3.3.5
 - ggpubr 0.4.0
@@ -19,14 +21,16 @@ The libraries included:
 - gridExtra 2.3
 - here 0.3.3
 - iNext
-- lazyeval
+- lattice 0.20-45
+- lazyeval 0.2.2
 - lme4 1.1-27.1
 - maps 3.3.0
 - mgcv 1.8.26
 - ncdf4 1.17
 - nlme 3.1-137
 - performance 0.7.0
-- purrr
+- permut 0.9-7
+- purrr 1.0.1
 - raster 2.7-15
 - RColorBrewer 1.1-2
 - rcompanion 2.3.27
@@ -35,8 +39,8 @@ The libraries included:
 - scales 1.0.0
 - sdmpredictors 0.2.9
 - taxize 0.9.99
-- tibble
-- tidyr
+- tibble 3.2.0
+- tidyr 1.3.0
 - tidyverse 1.2.1
 - vegan 2.6-4
 
