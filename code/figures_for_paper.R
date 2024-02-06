@@ -67,11 +67,11 @@ anova(modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignhumanInitAllJtu) # T
 ### Table 1: AICs --------------
 
 # load models
-modInit <- readRDS(here('temp', 'modOBRInitAllJtu.rds')) # Null with only duration and realm. Fit by code/turnover_?
-modRealm <- readRDS('temp/modOBRRealmInitAllJtu.rds') # Realm:duration. Fit by code/turnover_GLMM_?
-modTaxamod2 <- readRDS('temp/modOBTTaxamod2InitAllJtu.rds') # Taxon:duration. Fit by code/turnover_GLMM_?
+modInit <- readRDS(here('temp', 'modOBRInitAllJtu.rds')) # Null with only duration and realm. Fit by code/turnover_GLMM_fit.R
+modRealm <- readRDS('temp/modOBRRealmInitAllJtu.rds') # Realm:duration. Fit by code/turnover_GLMM_fit.R
+modTaxamod2 <- readRDS('temp/modOBTTaxamod2InitAllJtu.rds') # Taxon:duration. Fit by code/turnover_GLMM_fit.R
 modTchange <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllJtu.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
-modLat <- readRDS(here('temp', 'modOBabsLatsdTabsLatMERtsRealmtsignInitAllJtu.rds')) # Lat model
+modLat <- readRDS(here('temp', 'modOBabsLatsdTabsLatMERtsRealmtsignInitAllJtu.rds')) # Lat model. Fit by code/turnover_GLMM_fit.R
 modTchangeTave <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
 
 
@@ -85,8 +85,6 @@ aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInit']
 aics
 
 write.csv(aics, here('figures', 'table1.csv'))
-
-
 
 
 

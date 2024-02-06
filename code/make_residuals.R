@@ -89,13 +89,6 @@ print(warnings())
 
 #### Plot residuals for model fit to all data
 # not run here
-# res <- readRDS('temp/modInitAllJtu_residuals.rds')
-# res <- readRDS('temp/modrawTsdTTMERealmtsigninitAllJtu_residuals.rds')
-# res <- readRDS('temp/modLogDurrawTsdTTMERealmtsigninitAllJtu_residuals.rds')
-# res <- readRDS('temp/modSqInitAllJtu_residuals.rds')
-# res <- readRDS('temp/modOBsdTMERealmtsigninitAllJtu_residuals.rds')
-# res <- readRDS('temp/modOBsdTMERealmtsigninitAllJtu_dispDUR_residuals.rds')
-# res <- readRDS('temp/modOBsdTMERealmtsigninitAllJtu_dispDURNSP_residuals.rds')
 # res <- readRDS('temp/modOBsdTMERtsRealmtsigninitAllJtu_residuals.rds')
 # plot(res)
 # plot(res, quantreg = T) # force quantile regression. slow (~15 min)
