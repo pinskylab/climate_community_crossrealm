@@ -66,12 +66,12 @@ anova(modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignhumanInitAllJtu) # T
 
 ### Table 1: AICs --------------
 
-# use models
-modInit <- readRDS(here('temp', 'modOBInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_?
-modRealm <- readRDS('temp/modOBRRealmInitAllJtu.rds') # Realm. Fit by code/turnover_GLMM_?
-modTaxamod2 <- readRDS('temp/modOBTTaxamod2InitAllJtu.rds') # Taxon. Fit by code/turnover_GLMM_?
+# load models
+modInit <- readRDS(here('temp', 'modOBRInitAllJtu.rds')) # Null with only duration and realm. Fit by code/turnover_?
+modRealm <- readRDS('temp/modOBRRealmInitAllJtu.rds') # Realm:duration. Fit by code/turnover_GLMM_?
+modTaxamod2 <- readRDS('temp/modOBTTaxamod2InitAllJtu.rds') # Taxon:duration. Fit by code/turnover_GLMM_?
 modTchange <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllJtu.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
-modLat <- readRDS(here('temp', 'modOBabsLatsdTabsLatMERtsRealmtsignInitAllJtu.rds'))
+modLat <- readRDS(here('temp', 'modOBabsLatsdTabsLatMERtsRealmtsignInitAllJtu.rds')) # Lat model
 modTchangeTave <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
 
 
@@ -582,22 +582,20 @@ write.csv(aics, here('figures', 'tableS4.csv'))
 
 
 ### Table S5: AICs for initgainloss models ------------------
-# with Jtu.init:gainlossprop for Table 1. All fit by code/turnover_GLMMgainloss_fit.R
-if(!exists('modInitGainLossAllJtu')) modInitGainLossAllJtu <- readRDS(here('temp', 'modInitGainLossAllJtu.rds')) # Null
-if(!exists('modRealmInitGainLossAllJtu')) modRealmInitGainLossAllJtu <- readRDS('temp/modRealmInitGainLossAllJtu.rds') # Realm. 
-if(!exists('modTaxamod2InitGainLossAllJtu')) modTaxamod2InitGainLossAllJtu <- readRDS('temp/modTaxamod2InitGainLossAllJtu.rds') # Taxon. 
-if(!exists('modsdTRealmtsignInitGainLossAllJtu')) modsdTRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'modsdTRealmtsignInitGainLossAllJtu.rds')) # Tchange model
-if(!exists('modabsLatsdTabsLatRealmtsignInitGainLossAllJtu')) modabsLatsdTabsLatRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitGainLossAllJtu.rds')) # Tchange x Latitude model
-if(!exists('modrawTsdTTRealmtsignInitGainLossAllJtu')) modrawTsdTTRealmtsignInitGainLossAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignInitGainLossAllJtu.rds')) # Tchange x Tave model
+# with Jtu.init:gainlossprop for Table 1. All fit by code/turnover_GLMMordbeta_fit.R
+modInitGL <- readRDS(here('temp', 'modOBRInitGLAllJtu.rds')) # Null. Switch to modOBRInitGLAllJtu
+modRealmGL <- readRDS('temp/modOBRRealmInitGLAllJtu.rds') # Realm.
+modTaxaGL <- readRDS('temp/modOBTTaxamod2InitGLAllJtu.rds') # Taxon. 
+modTchangeGL <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitGLAllJtu.rds')) # Tchange model
+modTchangeTaveGL <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitGLAllJtu.rds')) # Tchange x Tave model
 
-aicsIGL <- AIC(modInitGainLossAllJtu, 
-            modRealmInitGainLossAllJtu, 
-            modTaxamod2InitGainLossAllJtu, # simple models w/out Tchange
-            modsdTRealmtsignInitGainLossAllJtu, # Tchange model
-            modabsLatsdTabsLatRealmtsignInitGainLossAllJtu,
-            modrawTsdTTRealmtsignInitGainLossAllJtu) # Tchange x Tave model
+aicsIGL <- AIC(modInitGL, 
+            modRealmGL, 
+            modTaxaGL, # simple models w/out Tchange
+            modTchangeGL, # Tchange model
+            modTchangeTaveGL) # Tchange x Tave model
 aicsIGL$dAIC <- aicsIGL$AIC - min(aicsIGL$AIC)
-aicsIGL$dAICnull <- aicsIGL$AIC - aicsIGL$AIC[rownames(aicsIGL)=='modInitGainLossAllJtu']
+aicsIGL$dAICnull <- aicsIGL$AIC - aicsIGL$AIC[rownames(aicsIGL)=='modInitGL']
 aicsIGL
 
 write.csv(aicsIGL, here('figures', 'tableS5.csv'))
@@ -805,10 +803,10 @@ ggsave('figures/figS4.png', p1, width = 183, height = 122, units = 'mm')
 ### Figure S5: T_change x T_ave interaction ---------
 
 # read in slopes
-slopesTsdTTRealmtsigninit <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsigninit.rds')) # made by pred_modrawXAllJtu.R
+slopesTchangeTave <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # made by pred_modrawXAllJtu.R
 
 # plot
-p1 <- ggplot(slopesTsdTTRealmtsigninit, aes(tempchange, tempave, z = slope)) +
+p1 <- ggplot(slopesTchangeTave, aes(tempchange, tempave, z = slope)) +
     geom_raster(aes(fill = slope)) +
     labs(x = 'Temperature change (°C/yr)', y = 'Average Temperature (°C)') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Turnover rate') +
@@ -826,3 +824,6 @@ p1 <- ggplot(slopesTsdTTRealmtsigninit, aes(tempchange, tempave, z = slope)) +
           legend.title.align = 1)
 
 ggsave('figures/figS5.png', p1, width = 183, height = 92, units = 'mm')
+
+
+

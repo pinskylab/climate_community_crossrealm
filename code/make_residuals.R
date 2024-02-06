@@ -58,7 +58,7 @@ iallJtu <-
         tempchange_abs.sc,
         REALM,
         tempave.sc,
-        duration.sc,
+        duration,
         microclim.sc,
         human_bowler.sc
     )]
@@ -69,7 +69,7 @@ iallHorn <-
         tempchange_abs.sc,
         REALM,
         tempave.sc,
-        duration.sc,
+        duration,
         microclim.sc,
         human_bowler.sc
     )]
