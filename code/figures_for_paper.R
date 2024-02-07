@@ -222,7 +222,7 @@ ave_by_realm[, offset := c(-1, 0, 1)] # amount to vertically dodge the lines in 
 write.csv(ave_by_realm, file='output/ave_by_realm.csv')
 
 # min and max tempchange by realm, for plotting limits
-tempchange_by_realm <- trends[, .(max = quantile(tempchange, na.rm=TRUE, probs = 0.999), min = quantile(tempchange, na.rm=TRUE, probs = 0.001)), by = REALM]
+tempchange_by_realm <- trends[, .(max = max(tempchange, na.rm=TRUE), min = min(tempchange, na.rm=TRUE)), by = REALM]
 
 # predicted slopes from the Tchange model
 slopespredsdT <- merge(slopespredsdT, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
@@ -235,11 +235,9 @@ senspred[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', '
 
 # fastest turnover at highest observed rate of temperature change
 slopespredsdT[, .SD[which.max(slope), .(tempchange, slope, slope.se)], by = REALM] # just looking at tempchange
-slopespred[, .SD[which.max(slope), .(tempave, tempchange, slope, slope.se)], by = REALM] # also considering tempave
 
 # predicted turnover at moderate rates of temperature change
 slopespredsdT[, .SD[which.min(abs(tempchange - 0.5)), .(tempchange, slope, slope.se)], by = REALM] # just looking at tempchange
-slopespred[, .SD[which.max(slope), .(tempave, tempchange, slope, slope.se)], by = REALM] # also considering tempave
 
 
 # a) across realms
