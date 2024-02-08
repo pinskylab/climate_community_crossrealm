@@ -102,7 +102,7 @@ print(warnings())
 
 
 
-# Baseline trend (null) model  #################################
+# Baseline trend (Year) models  #################################
 if (fitmod == 'modOBRInitAllJtu') { # has realm main effects
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
@@ -211,7 +211,7 @@ if (fitmod == 'modOBRRealmInitAllHorn') { # adds realm main effect
     MATCHMOD <- TRUE
 }
 
-# Taxa models ###################################
+# Taxon x Year models ###################################
 if (fitmod == 'modOBTTaxamod2InitAllJtu') { # adds taxa main effect
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
@@ -252,7 +252,49 @@ if (fitmod == 'modOBTTaxamod2InitAllHorn') { # adds taxa main effect
 }
 
 
-# Tchange models with main effects #########################
+# Tchange x Realm models #########################
+# no interaction of Tchange x Year
+if (fitmod == 'modOBMERtsRealmtsignTchangeinitAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Jtu ~ duration +
+            REALM +
+            tsign +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = ordbeta(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+if (fitmod == 'modOBMERtsRealmtsignTchangeinitAllHorn') { # also tsign and REALM
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallHorn), 'data points'))
+    print(paste(trendsall[iallHorn, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallHorn, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Horn ~ duration +
+            REALM +
+            tsign +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallHorn, ],
+        family = ordbeta(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
+# Tchange x Realm x Year models #########################
 if (fitmod == 'modOBsdTMERtsRealmtsigninitAllJtu') { # also tsign and REALM
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -295,7 +337,59 @@ if (fitmod == 'modOBsdTMERtsRealmtsigninitAllHorn') { # also tsign and REALM
     MATCHMOD <- TRUE
 }
 
-# Tchange x Tave models with main effects #########################
+# Tchange x Tave x Realm models #########################
+# does not have Tchange x Tave x Realm x Year
+if (fitmod == 'modOBMERtsRealmtsignTchangeTaveinitAllJtu') {
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtu), 'data points'))
+    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Jtu ~ duration +
+            REALM + 
+            tsign + 
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc +
+            REALM:tsign:tempave.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtu, ],
+        family = ordbeta(link = 'logit'),
+        dispformula = ~ REALM,
+        control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)) # to address iteration limit reached without convergence
+    )
+    MATCHMOD <- TRUE
+}
+
+
+if (fitmod == 'modOBMERtsRealmtsignTchangeTaveinitAllHorn') {# also tsign and REALM
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallHorn), 'data points'))
+    print(paste(trendsall[iallHorn, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallHorn, length(unique(rarefyID))], 'time series'))
+    mod <- glmmTMB(
+        Horn ~ duration +
+            REALM +
+            tsign +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc +
+            REALM:tsign:tempave.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallHorn, ],
+        family = ordbeta(link = 'logit'),
+        dispformula = ~ REALM,
+        control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)) # to address iteration limit reached without convergence
+    )
+    MATCHMOD <- TRUE
+}
+
+
+# Tchange x Tave x Realm x Year models #########################
 if (fitmod == 'modOBrawTsdTTMERtsRealmtsigninitAllJtu') { # also tsign and REALM
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -345,7 +439,7 @@ if (fitmod == 'modOBrawTsdTTMERtsRealmtsigninitAllHorn') {# also tsign and REALM
     MATCHMOD <- TRUE
 }
 
-# Tchange x latitude with main effects #########################
+# Tchange x latitude x Realm x Year #########################
 if (fitmod == 'modOBabsLatsdTabsLatMERtsRealmtsignInitAllJtu') { # also REALM and tsign
     if (MATCHMOD)
         stop('Model name matched more than one model!')

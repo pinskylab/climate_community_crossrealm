@@ -51,35 +51,43 @@ trends_by_study[, range(Jtu)]
 
 
 ### Likelihood ratio tests among models ----------------
-if(!exists('modRealmInitAllJtu')) modRealmInitAllJtu <- readRDS(here('temp', 'modRealmInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
-if(!exists('modsdTRealmtsigninitAllJtu')) modsdTRealmtsigninitAllJtu <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # Tchange model Fit by code/turnover_GLMM_fit.R
-if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
-if(!exists('modrawTsdTTRealmtsignmicroclimInitAllJtu')) modrawTsdTTRealmtsignmicroclimInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimInitAllJtu.rds') # Microclimate model. Fit by code/turnover_GLMM_fit.R
-if(!exists('modrawTsdTTRealmtsignhumanInitAllJtu')) modrawTsdTTRealmtsignhumanInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanInitAllJtu.rds') # Human impact model. Fit by code/turnover_GLMM_fit.R
+modInit <- readRDS(here('temp', 'modOBRInitAllJtu.rds')) # Null with duration and realm. Fit by code/turnover_GLMM_fit.R
+modTchange <- readRDS(here('temp', 'modOBMERtsRealmtsignTchangeinitAllJtu.rds')) # Tchange x Realm model. Fit by code/turnover_GLMM_fit.R
+modTchangeYear <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Realm x Year model. Fit by code/turnover_GLMM_fit.R
+modTchangeTave <- readRDS(here('temp','modOBMERtsRealmtsignTchangeTaveinitAllJtu.rds')) # Tchange x Tave x Realm model. Fit by code/turnover_GLMM_fit.R
+modTchangeTaveYear <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave x Year x Realm model. Fit by code/turnover_GLMM_fit.R
+modmicroclim <- readRDS('temp/modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu.rds') # Microclimates. Fit by turnover_GLMM_fit.R.
+modhuman <- readRDS('temp/modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu.rds') # Human impact. Fit by turnover_GLMM_fit.R
 
-anova(modRealmInitAllJtu, modsdTRealmtsigninitAllJtu) # Realm vs. Tchange model
-anova(modsdTRealmtsigninitAllJtu, modrawTsdTTRealmtsigninitAllJtu) # Tchange vs. Tchange x Tave model
-anova(modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignmicroclimInitAllJtu) # Tchange x Tave model vs. microclimate
-anova(modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignhumanInitAllJtu) # Tchange x Tave model vs. human
+anova(modInit, modTchangeYear) # Realm vs. Tchange x Realm x Year model
+anova(modTchange, modTchangeYear) # Tchange x Realm vs. Tchange x Realm x Year model
+anova(modTchangeYear, modTchangeTaveYear) # Tchange x Realm x Year vs. Tchange x Tave x Realm x Year model
+anova(modTchangeTave, modTchangeTaveYear) # Tchange x Tave x Realm vs. Tchange x Tave x Year model
+anova(modTchangeTaveYear, modmicroclim) # Tchange x Tave x Realm x Year model vs. microclimate
+anova(modTchangeTaveYear, modhuman) # Tchange x Tave x Realm x Year model vs. human
 
 
 
 ### Table 1: AICs --------------
 
 # load models
-modInit <- readRDS(here('temp', 'modOBRInitAllJtu.rds')) # Null with only duration and realm. Fit by code/turnover_GLMM_fit.R
-modRealm <- readRDS('temp/modOBRRealmInitAllJtu.rds') # Realm:duration. Fit by code/turnover_GLMM_fit.R
-modTaxamod2 <- readRDS('temp/modOBTTaxamod2InitAllJtu.rds') # Taxon:duration. Fit by code/turnover_GLMM_fit.R
-modTchange <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllJtu.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
-modLat <- readRDS(here('temp', 'modOBabsLatsdTabsLatMERtsRealmtsignInitAllJtu.rds')) # Lat model. Fit by code/turnover_GLMM_fit.R
-modTchangeTave <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
+modInit <- readRDS(here('temp', 'modOBRInitAllJtu.rds')) # Null with duration and realm. Fit by code/turnover_GLMM_fit.R
+modRealmYear <- readRDS('temp/modOBRRealmInitAllJtu.rds') # Realm x Year. Fit by code/turnover_GLMM_fit.R
+modTaxonYear <- readRDS('temp/modOBTTaxamod2InitAllJtu.rds') # Taxon x Year. Fit by code/turnover_GLMM_fit.R
+modTchange <- readRDS(here('temp', 'modOBMERtsRealmtsignTchangeinitAllJtu.rds')) # Tchange x Year x Realm model. Fit by code/turnover_GLMM_fit.R
+modTchangeYear <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Year x Realm model. Fit by code/turnover_GLMM_fit.R
+modLatYear <- readRDS(here('temp', 'modOBabsLatsdTabsLatMERtsRealmtsignInitAllJtu.rds')) # Tchange x Lat x Year x Realm model. Fit by code/turnover_GLMM_fit.R
+modTchangeTave <- readRDS(here('temp','modOBMERtsRealmtsignTchangeTaveinitAllJtu.rds')) # Tchange x Tave x Realm model. Fit by code/turnover_GLMM_fit.R
+modTchangeTaveYear <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave x Year x Realm model. Fit by code/turnover_GLMM_fit.R
 
 
 # compare Tchange amd Tchange x Tave models against null
-aics <- AIC(modInit, modRealm, modTaxamod2, # simple models w/out Tchange
-            modTchange, # Tchange
-            modLat, # latitude
-            modTchangeTave) # add Tchange x Tave
+aics <- AIC(modInit, modRealmYear, modTaxonYear, # simple models w/out Tchange
+            modTchange,
+            modTchangeYear, # Tchange x Year
+            modLatYear, # latitude x Year
+            modTchangeTave,
+            modTchangeTaveYear) # add Tchange x Tave x Year
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInit']
 aics
