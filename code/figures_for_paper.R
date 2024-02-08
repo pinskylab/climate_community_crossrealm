@@ -51,20 +51,20 @@ trends_by_study[, range(Jtu)]
 
 
 ### Likelihood ratio tests among models ----------------
-modInit <- readRDS(here('temp', 'modOBRInitAllJtu.rds')) # Null with duration and realm. Fit by code/turnover_GLMM_fit.R
 modTchange <- readRDS(here('temp', 'modOBMERtsRealmtsignTchangeinitAllJtu.rds')) # Tchange x Realm model. Fit by code/turnover_GLMM_fit.R
 modTchangeYear <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Realm x Year model. Fit by code/turnover_GLMM_fit.R
 modTchangeTave <- readRDS(here('temp','modOBMERtsRealmtsignTchangeTaveinitAllJtu.rds')) # Tchange x Tave x Realm model. Fit by code/turnover_GLMM_fit.R
 modTchangeTaveYear <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave x Year x Realm model. Fit by code/turnover_GLMM_fit.R
 modmicroclim <- readRDS('temp/modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu.rds') # Microclimates. Fit by turnover_GLMM_fit.R.
 modhuman <- readRDS('temp/modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu.rds') # Human impact. Fit by turnover_GLMM_fit.R
+modTchangeTaveYearTerr <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu_terr.rds')) # Tchange x Tave x Year terrestrial model. Fit by code/turnover_GLMM_fit.R
+modhumanTerr <- readRDS('temp/modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu_terr.rds') # Human impact terrestrial model. Fit by turnover_GLMM_fit.R
 
-anova(modInit, modTchangeYear) # Realm vs. Tchange x Realm x Year model
-anova(modTchange, modTchangeYear) # Tchange x Realm vs. Tchange x Realm x Year model
-anova(modTchangeYear, modTchangeTaveYear) # Tchange x Realm x Year vs. Tchange x Tave x Realm x Year model
-anova(modTchangeTave, modTchangeTaveYear) # Tchange x Tave x Realm vs. Tchange x Tave x Year model
+anova(modTchange, modTchangeYear) # Tchange x Realm vs. Tchange x Year x Realm model
+anova(modTchangeTave, modTchangeTaveYear) # Tchange x Tave x Realm vs. Tchange x Tave x Year x Realm model
 anova(modTchangeTaveYear, modmicroclim) # Tchange x Tave x Realm x Year model vs. microclimate
 anova(modTchangeTaveYear, modhuman) # Tchange x Tave x Realm x Year model vs. human
+anova(modTchangeTaveYearTerr, modhumanTerr) # Tchange x Tave x Year model vs. human, terrestrial only
 
 
 
@@ -241,11 +241,11 @@ slopespredsdT[, tsign := factor(sign(tempchange), levels = c('-1', '1'), labels 
 senspred <- senspred[tempave %in% c(0,25), ]
 senspred[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 
-# fastest turnover at highest observed rate of temperature change
-slopespredsdT[, .SD[which.max(slope), .(tempchange, slope, slope.se)], by = REALM] # just looking at tempchange
+# fastest turnover predicted from Tchange model
+slopespredsdT[, .SD[which.max(slope), .(tempchange, slope, slope.se)], by = REALM]
 
-# predicted turnover at moderate rates of temperature change
-slopespredsdT[, .SD[which.min(abs(tempchange - 0.5)), .(tempchange, slope, slope.se)], by = REALM] # just looking at tempchange
+# predicted turnover at moderate rates of temperature change (0.5 degC/yr)
+slopespredsdT[, .SD[which.min(abs(tempchange - 0.5)), .(tempchange, slope, slope.se)], by = REALM]
 
 
 # a) across realms
