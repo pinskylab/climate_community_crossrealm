@@ -442,9 +442,9 @@ p1 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')],
          x = 'Microclimate availability',
          y = '') +
     coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.65, xmax = -2.65, ymin = 0.005, ymax = 0.005) + # note x-axis is in log10 units
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.45, xmax = -2.45, ymin = 0.005, ymax = 0.005) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.25, xmax = -2.25, ymin = 0.005, ymax = 0.005) +
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.75, xmax = -0.75, ymin = 0.05, ymax = 0.05) + # note x-axis is in log10 units
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.625, xmax = -0.625, ymin = 0.05, ymax = 0.05) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.5, xmax = -0.5, ymin = 0.05, ymax = 0.05) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
