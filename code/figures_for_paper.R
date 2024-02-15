@@ -569,7 +569,7 @@ write.csv(aics, here('figures', 'tableS3.csv'))
 
 ### Table S4: covariate AICs --------------
 # load models for AICs
-modInit <- readRDS(here('temp', 'modOBInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
+modInit <- readRDS(here('temp', 'modOBRInitAllJtu.rds')) # Null with duration and realm. Fit by code/turnover_GLMM_fit.R
 modTchange <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
 modmicroclim <- readRDS('temp/modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu.rds') # Microclimates. Fit by turnover_GLMM_fit.R.
 modhuman <- readRDS('temp/modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu.rds') # Human impact. Fit by turnover_GLMM_fit.R
