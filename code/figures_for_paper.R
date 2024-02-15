@@ -245,7 +245,7 @@ senspred[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', '
 slopespredsdT[, .SD[which.max(slope), .(tempchange, slope, slope.se)], by = REALM]
 
 # predicted turnover at moderate rates of temperature change (0.5 degC/yr)
-slopespredsdT[, .SD[which.min(abs(tempchange - 0.5)), .(tempchange, slope, slope.se)], by = REALM]
+slopespredsdT[, .SD[c(which.min(abs(tempchange - 0.5)), which.min(abs(tempchange - -0.5))), .(tempchange, slope, slope.se)], by = REALM][, .SD[which.max(slope), .(tempchange, slope, slope.se)], by = REALM]
 
 
 # a) across realms
@@ -323,9 +323,9 @@ p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = se
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
     coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -40, xmax = -40, ymin = 0.01, ymax = 0.01) +
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -35, xmax = -35, ymin = 0.01, ymax = 0.01) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -30, xmax = -30, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6)), xmin = -50, xmax = -50, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6)), xmin = -45, xmax = -45, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6)), xmin = -40, xmax = -40, ymin = 0.01, ymax = 0.01) +
     scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
 
@@ -335,7 +335,7 @@ p4 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sen
     geom_errorbar()+
     facet_grid(col = vars(REALM))+
     labs(tag = '',
-         x = 'Ave. temperature [°C]', 
+         x = 'Ave. temp. [°C]', 
          y = '') +
     scale_color_manual(values=c('#0072B2', '#D55E00')) +
     scale_fill_manual(values=c('#0072B2', '#D55E00')) +
@@ -371,9 +371,9 @@ p5 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, ymin = sensiti
 p5 <- addSmallLegend(p5, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
 fig2 <- arrangeGrob(p1, p2, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix = matrix(c(1,1,1,2,2,2,3,4,5), nrow=3, byrow=TRUE), 
-                    heights = c(1,2,1), widths = c(3,3,4))
+                    heights = c(1,2.5,1), widths = c(3,3,4))
 
-ggsave('figures/fig2.png', fig2, width = 6, height = 6, units = 'in')
+ggsave('figures/fig2.png', fig2, width = 5, height = 6, units = 'in')
 
 
 # w/out model predictions
@@ -546,16 +546,20 @@ write.csv(format(out, digits=2), file = 'figures/tableS2.csv', row.names=FALSE)
 
 
 ### Table S3: Horn AICs --------------
-modInitHorn <- readRDS(here('temp', 'modOBInitAllHorn.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
-modRealmHorn <- readRDS('temp/modOBRealmInitAllHorn.rds') # Realm. Fit by code/turnover_GLMM_fit.R
-modTaxamod2Horn <- readRDS('temp/modOBTaxamod2InitAllHorn.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
-modTchangeHorn <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllHorn.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
-modTchangeTaveHorn <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllHorn.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
+modInitHorn <- readRDS(here('temp', 'modOBRInitAllHorn.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
+modRealmHorn <- readRDS('temp/modOBRRealmInitAllHorn.rds') # Realm. Fit by code/turnover_GLMM_fit.R
+modTaxamod2Horn <- readRDS('temp/modOBTTaxamod2InitAllHorn.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
+modTchangeHorn <- readRDS(here('temp', 'modOBMERtsRealmtsignTchangeinitAllHorn.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
+modTchangeYearHorn <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllHorn.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
+modTchangeTaveHorn <- readRDS(here('temp','modOBMERtsRealmtsignTchangeTaveinitAllHorn.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
+modTchangeTaveYearHorn <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllHorn.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
 
 # compare Tchange amd Tchange x Tave models against null
 aics <- AIC(modInitHorn, modRealmHorn, modTaxamod2Horn, # simple models w/out Tchange
             modTchangeHorn, # Tchange
-            modTchangeTaveHorn) # Tchange x Tave
+            modTchangeYearHorn, # Tchange x Year
+            modTchangeTaveHorn, # Tchange x Tave
+            modTchangeTaveYearHorn) # Tchange x Tave x Year
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitHorn']
 aics
