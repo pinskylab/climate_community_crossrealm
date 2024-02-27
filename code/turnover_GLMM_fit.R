@@ -186,7 +186,7 @@ if (fitmod == 'modOBTInitAllHorn') { # has taxamod2 main effect
 
 
 # Realm x Year models #################################
-if (fitmod == 'modOBRRealmInitAllJtu') { # adds realm main effect
+if (fitmod == 'modOBRRealmInitAllJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
     print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
@@ -204,7 +204,7 @@ if (fitmod == 'modOBRRealmInitAllJtu') { # adds realm main effect
     MATCHMOD <- TRUE
 }
 
-if (fitmod == 'modOBRRealmInitAllHorn') { # adds realm main effect
+if (fitmod == 'modOBRRealmInitAllHorn') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
     print(paste(trendsall[iallHorn, length(unique(STUDY_ID))], 'studies'))
@@ -223,7 +223,7 @@ if (fitmod == 'modOBRRealmInitAllHorn') { # adds realm main effect
 }
 
 # Taxon x Year models ###################################
-if (fitmod == 'modOBTTaxamod2InitAllJtu') { # adds taxa main effect
+if (fitmod == 'modOBTTaxamod2InitAllJtu') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallJtu), 'data points'))
     print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
@@ -243,7 +243,7 @@ if (fitmod == 'modOBTTaxamod2InitAllJtu') { # adds taxa main effect
 }
 
 
-if (fitmod == 'modOBTTaxamod2InitAllHorn') { # adds taxa main effect
+if (fitmod == 'modOBTTaxamod2InitAllHorn') {
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iallHorn), 'data points'))
     print(paste(trendsall[iallHorn, length(unique(STUDY_ID))], 'studies'))
@@ -305,7 +305,7 @@ if (fitmod == 'modOBMERtsRealmtsignTchangeinitAllHorn') {
     MATCHMOD <- TRUE
 }
 
-# Tchange x Realm x Year models #########################
+# Tchange x Year x Realm models #########################
 if (fitmod == 'modOBsdTMERtsRealmtsigninitAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -400,7 +400,7 @@ if (fitmod == 'modOBMERtsRealmtsignTchangeTaveinitAllHorn') {
 }
 
 
-# Tchange x Tave x Realm x Year models #########################
+# Tchange x Tave x Year x Realm models #########################
 if (fitmod == 'modOBrawTsdTTMERtsRealmtsigninitAllJtu') {
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -473,7 +473,7 @@ if (fitmod == 'modOBrawTsdTTMERtsRealmtsigninitAllJtu_terr') { # only land
 }
 
 
-# Tchange x latitude x Realm x Year #########################
+# Tchange x latitude x Year x Realm #########################
 if (fitmod == 'modOBabsLatsdTabsLatMERtsRealmtsignInitAllJtu') { # also REALM and tsign
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -498,8 +498,8 @@ if (fitmod == 'modOBabsLatsdTabsLatMERtsRealmtsignInitAllJtu') { # also REALM an
     MATCHMOD <- TRUE
 }
 
-# Environmental covariates with main effects #########################
-### microclim
+# Environmental covariate models #########################
+### microclimate
 if (fitmod == 'modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu') {
     print(paste(sum(iallJtu), 'data points'))
     print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
@@ -574,7 +574,7 @@ if (fitmod == 'modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu_terr') {
 }
 
 # Gainloss models #########################
-if (fitmod == 'modOBRInitGLAllJtu') { # has realm main effects
+if (fitmod == 'modOBRInitGLAllJtu') { # Years model
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iGLallJtu), 'data points'))
     print(paste(trendsall[iGLallJtu, length(unique(STUDY_ID))], 'studies'))
@@ -592,7 +592,7 @@ if (fitmod == 'modOBRInitGLAllJtu') { # has realm main effects
     MATCHMOD <- TRUE
 }
 
-if (fitmod == 'modOBTInitGLAllJtu') { # has taxamod2 main effect
+if (fitmod == 'modOBTInitGLAllJtu') { # Years model with taxon instead of Realm
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iGLallJtu), 'data points'))
     print(paste(trendsall[iGLallJtu, length(unique(STUDY_ID))], 'studies'))
@@ -611,7 +611,7 @@ if (fitmod == 'modOBTInitGLAllJtu') { # has taxamod2 main effect
 }
 
 
-if (fitmod == 'modOBRRealmInitGLAllJtu') { # adds realm main effect
+if (fitmod == 'modOBRRealmInitGLAllJtu') { # Realm x Year model
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iGLallJtu), 'data points'))
     print(paste(trendsall[iGLallJtu, length(unique(STUDY_ID))], 'studies'))
@@ -631,7 +631,7 @@ if (fitmod == 'modOBRRealmInitGLAllJtu') { # adds realm main effect
 }
 
 
-if (fitmod == 'modOBTTaxamod2InitGLAllJtu') { # adds taxa main effect
+if (fitmod == 'modOBTTaxamod2InitGLAllJtu') { # Taxon x Year model
     if (MATCHMOD) stop('Model name matched more than one model!')
     print(paste(sum(iGLallJtu), 'data points'))
     print(paste(trendsall[iGLallJtu, length(unique(STUDY_ID))], 'studies'))
@@ -652,7 +652,7 @@ if (fitmod == 'modOBTTaxamod2InitGLAllJtu') { # adds taxa main effect
 
 
 
-if (fitmod == 'modOBsdTMERtsRealmtsigninitGLAllJtu') { # also tsign and REALM
+if (fitmod == 'modOBsdTMERtsRealmtsigninitGLAllJtu') { # Tchange x Year x Realm model
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iGLallJtu), 'data points'))
@@ -676,7 +676,7 @@ if (fitmod == 'modOBsdTMERtsRealmtsigninitGLAllJtu') { # also tsign and REALM
 
 
 
-if (fitmod == 'modOBrawTsdTTMERtsRealmtsigninitGLAllJtu') { # also tsign and REALM
+if (fitmod == 'modOBrawTsdTTMERtsRealmtsigninitGLAllJtu') { # Tchange x Tave x Year x Realm model
     if (MATCHMOD)
         stop('Model name matched more than one model!')
     print(paste(sum(iGLallJtu), 'data points'))

@@ -1,6 +1,6 @@
 #!/usr/bin/Rscript --vanilla
 
-# Script to fit glmmTMB models with alternative link functions
+# Script to fit glmmTMB models with Gaussian link functions
 # Set up to be run on the command line for one model at a time
 # Argument is model name to run (see below for options), e.g.
 # nohup code/turnover_GLMMlin_fit.R modOBInitAllJtu_lin > logs/turnover_GLMMmodOBInitAllJtu_lin.Rout &
@@ -144,9 +144,7 @@ if (fitmod == 'modOBTTaxamod2InitAllJtu_lin') { # adds taxa main effect
             (duration | STUDY_ID / rarefyID), 
         data = trendsall[iallJtu, ],
         family = gaussian(link='identity'),
-        dispformula = ~ REALM#,
-        #control = glmmTMBControl(profile = TRUE)
-    ) # add dispersion formula
+        dispformula = ~ REALM) # add dispersion formula
     MATCHMOD <- TRUE
 }
 

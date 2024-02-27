@@ -11,7 +11,7 @@ library(grid) # to combine ggplots together
 library(RColorBrewer)
 library(scales) # for defining signed sqrt axis transformation
 library(here)
-library(rcompanion) # for CIs on median
+#library(rcompanion) # for CIs on median
 source(here('code', 'util.R'))
 
 
@@ -261,9 +261,9 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = REALM, fill = REALM)) +
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           plot.tag=element_text(face='bold'),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
+          axis.text=element_text(size=7),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
     scale_fill_brewer(palette = 'Dark2') +
     scale_color_brewer(palette = 'Dark2')
 p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
@@ -319,13 +319,13 @@ p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = se
           legend.key=element_blank(),
           plot.tag=element_text(face='bold'),
           legend.position='none', # no legend
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
+          axis.text=element_text(size=7),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
     coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6)), xmin = -50, xmax = -50, ymin = 0.01, ymax = 0.01) +
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6)), xmin = -45, xmax = -45, ymin = 0.01, ymax = 0.01) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6)), xmin = -40, xmax = -40, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6)), xmin = -43, xmax = -43, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6)), xmin = -38, xmax = -38, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6)), xmin = -33, xmax = -33, ymin = 0.01, ymax = 0.01) +
     scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
 
@@ -343,9 +343,9 @@ p4 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sen
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           legend.position='none', # no legend
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
+          axis.text=element_text(size=7),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
     coord_cartesian(clip = 'off') + 
     scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
@@ -363,9 +363,9 @@ p5 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, ymin = sensiti
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
+          axis.text=element_text(size=7),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
     scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
 p5 <- addSmallLegend(p5, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
@@ -422,8 +422,16 @@ sensitivity2 <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsignCo
 sensitivity2[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting
 
 # max turnover rate by realm and covariate
-slopes2[tempave==10 & tempchange == 2 & human_bowler %in% c(0,10), .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
+slopes2[tempave==10 & abs(tempchange - 0.3) < 0.02 & (abs(human_bowler) < 0.1 | abs(human_bowler - 10) < 0.1), .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
         by = .(REALM, microclim, human_bowler, tempchange)][order(REALM, microclim, tempchange)]
+
+# ratio of homogenous vs. heterogeneous
+slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 0.3) < 0.02 & abs(microclim  - 0.02) < 0.01, .(slope_microclim)] / 
+    slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 0.3) < 0.02 & abs(microclim  - 1.14) < 0.01, .(slope_microclim)]
+
+# ratio of human impacted vs. not
+slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 0.3) < 0.02 & abs(human_bowler  - 10) < 0.01, .(slope_human)] / 
+    slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 0.3) < 0.02 & abs(human_bowler  - 0.055) < 0.01, .(slope_human)]
 
 # plots
 ylims.microclimate <- c(-0.05, 0.18)
