@@ -121,7 +121,7 @@ temptrends[, .(mean = mean(tempchange), se = sd(tempchange)/sqrt(.N), sd = sd(te
 # a) map
 world <- map_data('world')
 p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
-    geom_polygon(fill = 'lightgray', color = 'white', size = 0.1) +
+    geom_polygon(fill = 'lightgray', color = 'white', linewidth = 0.1) +
     geom_point(data = bt, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.3, alpha = 0.4, shape = 16)  +
     scale_color_brewer(palette="Dark2", name = 'Realm') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
@@ -169,9 +169,14 @@ p3 <- ggplot(temptrends[REALM == 'Marine'], aes(x = tempchange, fill = type)) +
 p3 <- addSmallLegend(p3, pointSize = 0.7, spaceLegend = 0.15, textSize = 7)
 
 # d) example of Jtu trend calculation
-p4 <- ggplot(bt[rarefyID=='339_1085477', .(dY = year2 - year1, Jtu.sc)], aes(dY, Jtu.sc)) +
+mod <- glmmTMB(Jtu~dY, data = bt[rarefyID == '339_1085477', .(dY = year2 - year1, Jtu)], family = ordbeta(link = 'logit')) # calc trendline
+preds <- data.table(dY = 1:max(bt[rarefyID == '339_1085477', .(year2 - year1)]))
+preds[, c('Jtu', 'se') := predict(mod, preds, se.fit=TRUE, type = 'response')]
+predspoly <- preds[, .(dY = c(dY, rev(dY)), Jtu = c(Jtu+se, rev(Jtu-se)))]
+p4 <- ggplot(bt[rarefyID=='339_1085477', .(dY = year2 - year1, Jtu)], aes(dY, Jtu)) +
     geom_point(alpha = 0.2, size = 0.5, shape = 16) +
-    geom_smooth(method = 'glm', method.args = list(family = beta_family(link='logit')), color = '#a6cee3') + # a beta regression
+    geom_polygon(data = predspoly, fill = '#a6cee355') +
+    geom_line(data = preds, color = '#a6cee3') +
     labs(tag = 'd)', x = 'Temporal distance [years]', y = 'Turnover\n[proportion species]') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -684,7 +689,7 @@ set.seed(10)
 trends[, gauss.slope := calcslopeGauss(duration), by = rarefyID]
 
 # make mean predictions of turnover rate and temperature change rate
-modloess <- trends[, loess(disstrend~duration)] # loess fit
+modloess <- trends[, loess(disstrend~duration)] # loess fit (slow)
 predsloess <- data.table(duration = 2:118)
 predsloess[, c('disstrend', 'se') := predict(modloess, newdata = predsloess, se.fit = TRUE)]
 
@@ -763,7 +768,7 @@ mtext('e)', side = 3, line = -0.5, adj = -0.28, font = 2)
 # part f: an example negative slope
 bt[rarefyID == '213_435199', plot(dY, Jtu, xlab = 'Temporal difference (years)', ylab = 'Turnover [proportion of species]', col = '#00000044', bty = 'l', 
                                   ylim = c(0,1))]
-mod <- glmmTMB(I(transform01(Jtu))~dY, data = bt[rarefyID == '213_435199',], family = beta_family(link = 'logit')) # calc trendline
+mod <- glmmTMB(Jtu~dY, data = bt[rarefyID == '213_435199',], family = ordbeta(link = 'logit')) # calc trendline
 preds <- data.table(dY = 1:35)
 preds[, c('Jtu', 'se') := predict(mod, preds, se.fit=TRUE, type = 'response')]
 preds[, polygon(x = c(dY, rev(dY)), y= c(Jtu+se, rev(Jtu-se)), col = '#88888855', border = NA)]
