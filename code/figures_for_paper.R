@@ -305,7 +305,7 @@ p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
 # c) in three parts
 p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
-    geom_point()+
+    geom_point(size = 0.1)+
     geom_line(linetype='dashed')+
     geom_errorbar()+
     facet_grid(col = vars(REALM))+
@@ -330,7 +330,7 @@ p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = se
 
 
 p4 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
-    geom_point()+
+    geom_point(size = 0.1)+
     geom_line(linetype='dashed')+
     geom_errorbar()+
     facet_grid(col = vars(REALM))+
@@ -350,7 +350,7 @@ p4 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sen
     scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
 p5 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
-    geom_point()+
+    geom_point(size = 0.1)+
     geom_line(linetype='dashed')+
     geom_errorbar()+
     facet_grid(col = vars(REALM))+
