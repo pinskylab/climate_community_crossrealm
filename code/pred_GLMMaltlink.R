@@ -1,16 +1,14 @@
 #!/usr/bin/Rscript --vanilla
 
 
-## Make predictions data.frame from Tchange and Tchange x Tave models
+## Make predictions data.frame from Tchange and Tchange x Tave models fit with alternative link functions (see turnover_GLMMaltlink_fit.R)
 #
 # run as
-# nohup Rscript --vanilla code/pred_GLMMmodrawXAllJtu.R X > logs/pred_GLMMmodrawXAllJtu_X.Rout &
+# nohup Rscript --vanilla code/pred_GLMMaltlink.R X > logs/pred_GLMMaltlink_X.Rout &
 # where X is an argument (see below)
 # or as:
 # pred_modrawXAllJtu.sh X1 X2
 # which spawns a job for each argument
-# or run by hand to, for example, start after the predictions have been made (line 93). would need to read the predictions in by hand.
-# set to run on Annotate
 
 
 print(paste('This is process #', Sys.getpid()))
@@ -73,7 +71,7 @@ scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From 
 
 ### Choose a model ---------------------------------
 inmod <- paste0(predmod, '.rds')
-mod <- readRDS(here('temp', inmod)) # From turnover_GLMMlin_fit.R
+mod <- readRDS(here('temp', inmod)) # From turnover_GLMMaltlink_fit.R
 out_preds <- paste0('preds_', predmod, '.rds')
 out_slopes <- paste0('slopes_', predmod, '.rds')
 out_sensitivity <- paste0('sensitivity_', predmod, '.rds')

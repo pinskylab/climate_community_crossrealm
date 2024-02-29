@@ -1,9 +1,7 @@
 #!/usr/bin/Rscript --vanilla
 
 
-## Make predictions data.frame from Tchange and Tchange x Tave models
-## From turnover_vs_temperature_GLMM.Rmd, but set up to run in the background
-## so that we can also calculate SEs
+## Make predictions data.frame from Tchange and Tchange x Tave models fit to longer time series (see turnover_GLMMlong_fit.R)
 #
 # run as
 # nohup code/pred_GLMMmodrawXLongJtu.R X > logs/pred_GLMMmodrawXLongJtu_X.Rout &
