@@ -86,23 +86,3 @@ print(Sys.time())
 print(warnings())
 
 
-
-#### Plot residuals for model fit to all data
-# not run here
-# res <- readRDS('temp/modOBsdTMERtsRealmtsigninitAllJtu_residuals.rds')
-# plot(res)
-# plot(res, quantreg = T) # force quantile regression. slow (~15 min)
-# plotResiduals(res, form=trendsall$duration[iallJtu], xlab = 'duration', main = '')
-# plotResiduals(res, form=trendsall$duration[iallJtu], xlab = 'duration', main = '', rank = FALSE)
-# plotResiduals(res, form=trendsall$Nspp[iallJtu], main = '')
-# plotResiduals(res, form=trendsall$Nspp[iallJtu], main = '', quantreg = T) # slow
-# plotResiduals(res, form=trendsall$Nspp[iallJtu], main = '', rank = FALSE)
-# plotResiduals(res, form=trendsall$REALM[iallJtu], main = '')
-# plotResiduals(res, form=trendsall$tempchange_abs.sc[iallJtu], main = '')
-# plotResiduals(res, form=trendsall$tempchange_abs.sc[iallJtu], main = '', rank = FALSE)
-# plotResiduals(res, form=trendsall$tsign[iallJtu], main = '')
-# testDispersion(res)
-# hist(as.vector(unlist(ranef(mod)$cond$STUDY_ID))) # distribution of random effects
-# car::qqPlot(as.vector(unlist(ranef(mod)$cond$STUDY_ID))) # distribution of random effects
-# shapiro.test(as.vector(unlist(ranef(mod)$cond$STUDY_ID)))
-# hist(as.vector(unlist(ranef(mod)$cond$`rarefyID:STUDY_ID`))) # distribution of random effects

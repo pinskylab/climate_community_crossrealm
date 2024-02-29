@@ -3,46 +3,6 @@
 # require(Hmisc) # for wtd.var
 require(scales) # for trans_new
 
-# geometric mean. remove NAs and x<0
-geomean = function(x){ 
-    exp(sum(log(x[x > 0 & !is.na(x)])) / length(x[x > 0 & !is.na(x)]))
-}
-
-# geometric standard deviation
-geosd <- function(x){ 
-    exp(sd(log(x[x > 0 & !is.na(x)])))
-}
-
-# weighted mean, but returns regular mean if any w's are NA or if sum(w)==0
-meanwt <- function(x, w){ 
-    w <- w[!is.na(x)] # remove NAs
-    x <- x[!is.na(x)]
-    if(any(is.na(w))){
-        return(mean(x))  
-    } else {
-        if(sum(w) == 0){
-            return(mean(x))
-        } else {
-            return(weighted.mean(x, w))
-        }
-    }
-}
-
-# weighted sd (need Hmisc)
-# sdwt <- function(x, w){ 
-#     w <- w[!is.na(x)] # remove NAs
-#     x <- x[!is.na(x)]
-#     if(any(is.na(w))){
-#         return(sd(x))
-#     } else {
-#         if(sum(w) == 0){
-#             return(sd(x))
-#         } else {
-#             return(sqrt(wtd.var(x = x, weights = w, normwt = TRUE)))        
-#         }
-#     }
-# }
-
 
 # Modified from http://monkeysuncle.stanford.edu/?p=485
 # Upper and lower are se (or sd)
@@ -124,19 +84,13 @@ calcslopeGauss <- function(dur){
     return(coef(lm(y~x))[2])
 }
 
-# produce ggplot-style colors
-gg_color_hue <- function(n) {
-    hues = seq(15, 375, length = n + 1)
-    hcl(h = hues, l = 65, c = 100)[1:n]
-}
+
 
 # useful transformations for ggplot axes
 signedsqrt = function(x) sign(x)*sqrt(abs(x))
 signedsq = function(x) sign(x) * x^2
 signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, inverse = signedsq)
-signedsqrt2 = function(x) sign(x)*(abs(x)^(1/4))
-signedsq2 = function(x) sign(x) * x^4
-signedsqrt2trans <- trans_new(name = 'signedsqrt2', transform = signedsqrt2, inverse = signedsq2)
+
 
 # from https://stackoverflow.com/questions/52297978/decrease-overal-legend-size-elements-and-text
 addSmallLegend <- function(myPlot, pointSize = 0.5, textSize = 3, spaceLegend = 0.1) {
