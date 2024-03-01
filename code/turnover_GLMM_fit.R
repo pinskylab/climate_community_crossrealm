@@ -38,7 +38,7 @@ library(performance) # for R2
 
 # load data ############################
 
-# Turnover and covariates assembled by assemble_turnover_covariates.Rmd
+# Turnover and covariates
 trendsall <- fread('output/turnover_w_covariates.csv.gz') # From assemble_turnover_covariates.Rmd
 
 trendsall[, tsign := as.factor(tsign)]
@@ -49,7 +49,7 @@ initdiss <- trendsall[duration == minduration, .(Jtu.init = mean(Jtu)), by = .(r
 trendsall <- merge(trendsall, initdiss[, .(rarefyID, Jtu.init)])
 
 # add gains and losses data
-load('data/biotime_blowes/bt-rarefy-collate.Rdata') # loads rarefied_alpha_medians and rarefied_beta_medians
+load('data/biotime_blowes/bt-rarefy-collate.Rdata') # loads rarefied_alpha_medians and rarefied_beta_medians. From 03_collate_resamps_cluster.R
 rarefied_beta_medians <- as.data.table(rarefied_beta_medians)
 
 # add gains and losses

@@ -1,4 +1,5 @@
 # Compare ordbeta and gaussian error models
+# Uses output from turnover_GLMMaltlink_fit.R and pred_GLMMaltlink.R
 
 ### Functions -----------
 library(data.table) # for handling large datasets

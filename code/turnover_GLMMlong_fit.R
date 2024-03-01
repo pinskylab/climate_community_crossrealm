@@ -4,7 +4,7 @@
 # Set up to be run on the command line for one model at a time
 # Argument is model name to run (see below for options), e.g.
 # nohup code/turnover_GLMMlong_fit.R modInitLongJtu > logs/turnover_GLMMlong_modInitLongJtu.Rout &
-# (this works if code is executable, e.g., chmod u+x code/turnover_GLMM_fit.R)
+# (this works if code is executable, e.g., chmod u+x code/turnover_GLMMlong_fit.R)
 # (otherwise using nohup Rscript ...)
 
 # Read command line arguments ############
@@ -36,7 +36,7 @@ library(performance) # for R2
 
 # load data ############################
 
-# Turnover and covariates assembled by assemble_turnover_covariates.Rmd
+# Turnover and covariates
 trendsall <- fread('output/turnover_w_covariates.csv.gz') # From assemble_turnover_covariates.Rmd
 
 trendsall[, tsign := as.factor(tsign)]

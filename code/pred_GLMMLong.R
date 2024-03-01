@@ -4,7 +4,7 @@
 ## Make predictions data.frame from Tchange and Tchange x Tave models fit to longer time series (see turnover_GLMMlong_fit.R)
 #
 # run as
-# nohup code/pred_GLMMmodrawXLongJtu.R X > logs/pred_GLMMmodrawXLongJtu_X.Rout &
+# nohup code/pred_GLMMLong.R X > logs/pred_GLMMLong_X.Rout &
 # where X is an argument (see below)
 # or run by hand to, for example, start after the predictions have been made (line 93). would need to read the predictions in by hand.
 # set to run on Annotate

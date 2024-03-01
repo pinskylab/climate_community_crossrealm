@@ -7,7 +7,7 @@
 # nohup Rscript --vanilla code/pred_GLMMaltlink.R X > logs/pred_GLMMaltlink_X.Rout &
 # where X is an argument (see below)
 # or as:
-# pred_modrawXAllJtu.sh X1 X2
+# pred_GLMMaltlink.sh X1 X2
 # which spawns a job for each argument
 
 

@@ -3,10 +3,10 @@
 # Script to fit glmmTMB models with Gaussian link functions
 # Set up to be run on the command line for one model at a time
 # Argument is model name to run (see below for options), e.g.
-# nohup code/turnover_GLMMlin_fit.R modOBInitAllJtu_lin > logs/turnover_GLMMmodOBInitAllJtu_lin.Rout &
+# nohup code/turnover_GLMMaltlink_fit.R modOBInitAllJtu_lin > logs/turnover_GLMMmodOBInitAllJtu_lin.Rout &
 # (this works if code is executable, e.g., chmod u+x code/turnover_GLMMlin_fit.R)
 # or use the shell script to spawn multiple model fits at once:
-# code/turnover_GLMMlin_fit.sh modOBRInitAllJtu_lin modOBRInitAllHorn_lin 
+# code/turnover_GLMMaltlink_fit.sh modOBRInitAllJtu_lin modOBRInitAllHorn_lin 
 
 # Read command line arguments ############
 
@@ -37,7 +37,7 @@ library(performance) # for R2
 
 # load data ############################
 
-# Turnover and covariates assembled by assemble_turnover_covariates.Rmd
+# Turnover and covariates
 trendsall <- fread('output/turnover_w_covariates.csv.gz') # From assemble_turnover_covariates.Rmd
 
 trendsall[, tsign := as.factor(tsign)]
@@ -48,7 +48,7 @@ initdiss <- trendsall[duration == minduration, .(Jtu.init = mean(Jtu)), by = .(r
 trendsall <- merge(trendsall, initdiss[, .(rarefyID, Jtu.init)])
 
 # add gains and losses data
-load('data/biotime_blowes/bt-rarefy-collate.Rdata') # loads rarefied_alpha_medians and rarefied_beta_medians
+load('data/biotime_blowes/bt-rarefy-collate.Rdata') # loads rarefied_alpha_medians and rarefied_beta_medians. Produced from 03_collate_resamps_cluster.R.
 rarefied_beta_medians <- as.data.table(rarefied_beta_medians)
 
 # add gains and losses

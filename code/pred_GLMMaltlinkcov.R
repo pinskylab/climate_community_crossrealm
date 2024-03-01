@@ -1,7 +1,7 @@
 ## Make predictions data.frame from the environmental covariate models with gaussian errors
 #
 # run as
-# nohup Rscript --vanilla code/pred_GLMMlincov.R > logs/pred_GLMMlincov.Rout &
+# nohup Rscript --vanilla code/pred_GLMMaltlinkcov.R > logs/pred_GLMMaltlinkcov.Rout &
 # set to run on Annotate or Annotate2
 
 

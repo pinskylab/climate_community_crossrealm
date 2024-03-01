@@ -4,10 +4,10 @@
 ## Make predictions data.frame from Tchange and Tchange x Tave models
 #
 # run as
-# nohup Rscript --vanilla code/pred_GLMMmodrawXAllJtu.R X > logs/pred_GLMMmodrawXAllJtu_X.Rout &
+# nohup Rscript --vanilla code/pred_GLMM.R X > logs/pred_GLMM_X.Rout &
 # where X is an argument (see below)
 # or as:
-# pred_modrawXAllJtu.sh X1 X2
+# pred_GLMM.sh X1 X2
 # which spawns a job for each argument
 # or run by hand to, for example, start after the predictions have been made (line 93). would need to read the predictions in by hand.
 # set to run on Annotate
@@ -72,31 +72,6 @@ scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From 
 
 
 ### Choose a model ---------------------------------
-if(predmod == 'modsdTRealmtsigninitAllJtu'){ # Tchange model
-    mod <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # From turnover_GLMM_fit.R
-    out_preds <- 'preds_modsdTRealmtsigninitAllJtu.rds'
-    out_slopes <- 'slopes_modsdTRealmtsigninitAllJtu.rds'
-    doSensitivity <- FALSE # calculate sensitivity to Tave?
-    print('model loaded')
-} 
-
-if(predmod == 'modrawTsdTTRealmtsigninitAllJtu'){ # Tchange x Tave model
-    mod <- readRDS(here('temp', 'modrawTsdTTRealmtsigninitAllJtu.rds')) # From turnover_GLMM_fit.R
-    out_preds <- 'preds_rawTsdTTRealmtsigninit.rds' # note: name is not quite of same form as previous model.
-    out_slopes <- 'slopes_rawTsdTTRealmtsigninit.rds' # note: name is not quite of same form as previous model.
-    doSensitivity <- TRUE # calculate sensitivity to Tave?
-    out_sensitivity <- 'sensitivity_rawTsdTTRealmtsigninit.rds'
-    print('model loaded')
-} 
-
-if(predmod == 'modsdTMERealmtsigninitAllJtu'){ # Tchange model
-    mod <- readRDS(here('temp', 'modsdTMERealmtsigninitAllJtu.rds')) # From turnover_GLMM_fit.R
-    out_preds <- 'preds_modsdTMERealmtsigninitAllJtu.rds'
-    out_slopes <- 'slopes_modsdTMERealmtsigninitAllJtu.rds'
-    doSensitivity <- FALSE # calculate sensitivity to Tave?
-    print('model loaded')
-} 
-
 if(predmod == 'modOBsdTMERtsRealmtsigninitAllJtu'){ # Tchange model with ordbeta and MERts main effects
     mod <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllJtu.rds')) # From ...
     out_preds <- 'preds_modOBsdTMERtsRealmtsigninitAllJtu.rds'
@@ -104,15 +79,6 @@ if(predmod == 'modOBsdTMERtsRealmtsigninitAllJtu'){ # Tchange model with ordbeta
     doSensitivity <- FALSE # calculate sensitivity to Tave?
     print('model loaded')
 } 
-
-if(predmod == 'modrawTsdTTMERealmtsigninitAllJtu'){ # Tchange x Tave model
-    mod <- readRDS(here('temp', 'modrawTsdTTMERealmtsigninitAllJtu.rds')) # From turnover_GLMM_fit.R
-    out_preds <- 'preds_rawTsdTTMERealmtsigninit.rds' # note: name is not quite of same form as previous model.
-    out_slopes <- 'slopes_rawTsdTTMERealmtsigninit.rds' # note: name is not quite of same form as previous model.
-    doSensitivity <- TRUE # calculate sensitivity to Tave?
-    out_sensitivity <- 'sensitivity_rawTsdTTMERealmtsigninit.rds'
-    print('model loaded')
-}
 
 if(predmod == 'modOBrawTsdTTMERtsRealmtsigninitAllJtu'){ # Tchange x Tave model with ordbeta and MERts main effects
     mod <- readRDS(here('temp', 'modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # From ...
