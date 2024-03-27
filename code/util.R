@@ -108,3 +108,17 @@ binomci <- function(x, n){
     out <- as.numeric(binom.test(x, n)$conf.int)
     return(list(out[1], out[2]))
 }
+
+# downsample a data.table so that there are t rows for each rarefyID, where t is the number of unique year1 and year2 values
+# (of the t*(t-1)/2 rows that currently exist for each rarefyID)
+# inds is a vector of TRUE/FALSE that indicates which rows are being kept before calling this function
+# seed is a random number seed, for reproducibility
+# returns a vector of TRUE/FALSE to indicate which rows to keep after downsampling
+downsampRarefyID <- function(dat, inds = rep(TRUE, nrow(dat)), seed=1){
+    dat[, inds := inds]
+    tslen <- dat[inds == TRUE, .(t = length(unique(c(year1, year2)))), by = rarefyID] # length of each rarefyID
+    dat <- merge(dat, tslen, all.x = TRUE) # merge back. NAs for the rarefyIDs not included by inds
+    dat[inds == TRUE , inds2 := sample(c(rep(TRUE, min(.N, unique(t))), rep(FALSE, max(0,.N-unique(t))))), by = rarefyID] # sample t rows (and make sure t <= existing number of rows)
+    dat[is.na(inds2), inds2 := FALSE]
+    return(dat$inds2)
+}
