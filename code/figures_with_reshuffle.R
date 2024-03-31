@@ -56,7 +56,7 @@ coeftable <- coeftable[order(type, shuffID), ] # nice order
 nrow(coeftable)
 
 # write out
-write.csv(coeftable, file = 'output/coeftable_reshuffle_modOBsdTMERtsRealmtsigninitAllJtu.csv')
+write.csv(coeftable, file = 'output/coeftable_reshuffle_modOBsdTMERtsRealmtsigninitAllJtu.csv', row.names=FALSE)
 
 # plot distributions
 par(mfrow=c(2,3))
@@ -80,9 +80,9 @@ coeftable[type == 'obs', abline(v=freshcool, col = 'red')]
 
 
 # empirical p-values
-print(paste0('Terr warm p=', coeftable[, sum(terrwarm >= coeftable[type=='obs', terrwarm])/.N]))
-print(paste0('Terr cool p=', coeftable[, sum(terrcool >= coeftable[type=='obs', terrcool])/.N]))
-print(paste0('Mar warm p=', coeftable[, sum(marwarm >= coeftable[type=='obs', marwarm])/.N]))
-print(paste0('Mar cool p=', coeftable[, sum(marcool >= coeftable[type=='obs', marcool])/.N]))
-print(paste0('Fresh warm p=', coeftable[, sum(freshwarm >= coeftable[type=='obs', freshwarm])/.N]))
-print(paste0('Fresh cool p=', coeftable[, sum(freshcool >= coeftable[type=='obs', freshcool])/.N]))
+print(paste0('Terr warm p=', coeftable[, signif(sum(terrwarm >= coeftable[type=='obs', terrwarm])/.N,2)]))
+print(paste0('Terr cool p=', coeftable[, signif(sum(terrcool >= coeftable[type=='obs', terrcool])/.N,2)]))
+print(paste0('Mar warm p=', coeftable[, signif(sum(marwarm >= coeftable[type=='obs', marwarm])/.N,2)]))
+print(paste0('Mar cool p=', coeftable[, signif(sum(marcool >= coeftable[type=='obs', marcool])/.N,2)]))
+print(paste0('Fresh warm p=', coeftable[, signif(sum(freshwarm >= coeftable[type=='obs', freshwarm])/.N,2)]))
+print(paste0('Fresh cool p=', coeftable[, signif(sum(freshcool >= coeftable[type=='obs', freshcool])/.N,2)]))

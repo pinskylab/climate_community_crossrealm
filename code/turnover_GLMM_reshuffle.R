@@ -81,7 +81,7 @@ for(i in 1:length(shuffIDs)){
     print(paste(temp[, length(unique(STUDY_ID))], 'studies'))
     print(paste(temp[, length(unique(rarefyID))], 'time series'))
     
-    tryCatch(
+    try(
         {
             mod <- glmmTMB(
                 Jtu ~ duration +
@@ -102,17 +102,6 @@ for(i in 1:length(shuffIDs)){
             outfile <- paste0('temp/modOBsdTMERtsRealmtsigninitAllJtu_reshuff', shuffIDs[i], '.rds')
             saveRDS(mod, file = outfile)
             print(paste0('saved ', outfile))
-        },
-        error = function(cond) {
-            message(paste("Got an error message for i=", i, ":"))
-            message(conditionMessage(cond))
-        },
-        warning = function(cond) {
-            message(paste("Got a warning message for i=", i, ":"))
-            message(conditionMessage(cond))
-        },
-        finally = {
-            message('finished tryCatch')
         })
     print(Sys.time())
     print(warnings())
