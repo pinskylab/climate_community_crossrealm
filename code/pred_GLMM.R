@@ -4,13 +4,12 @@
 ## Make predictions data.frame from Tchange and Tchange x Tave models
 #
 # run as
-# nohup Rscript --vanilla code/pred_GLMMmodrawXAllJtu.R X > logs/pred_GLMMmodrawXAllJtu_X.Rout &
+# nohup Rscript --vanilla code/pred_GLMM.R X > logs/pred_GLMM_X.Rout &
 # where X is an argument (see below)
 # or as:
-# pred_modrawXAllJtu.sh X1 X2
+# pred_GLMM.sh X1 X2
 # which spawns a job for each argument
-# or run by hand to, for example, start after the predictions have been made (line 93). would need to read the predictions in by hand.
-# set to run on Annotate
+# set to run on Annotate or Annotate2
 
 
 print(paste('This is process #', Sys.getpid()))
