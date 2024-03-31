@@ -1,11 +1,10 @@
 ## Make predictions data.frame from the environmental covariate models
-## From turnover_vs_temperature_GLMM.Rmd, but set up to run in the background
-## so that we can also calculate SEs
+## Set up to run in the background so that we can also calculate SEs
 #
 # run as
-# nohup Rscript --vanilla code/pred_GLMMmodrawCovariateAllJtu.R > logs/pred_GLMMmodrawTsdTTRealmCovariateAllJtu.Rout &
+# nohup Rscript --vanilla code/pred_GLMMcov.R > logs/pred_GLMMcov.Rout &
 # or run by hand to, for example, start after the predictions have been made (line 93). would need to read the predictions in by hand.
-# set to run on Annotate
+# set to run on Annotate or Annotate2
 
 
 print(paste('This is process #', Sys.getpid()))
@@ -107,7 +106,7 @@ saveRDS(newdat, file = here('temp', predsfile))
 print(paste('Wrote', predsfile, ':', Sys.time()))
 
 # if reading in (eg, if running by hand)
-# newdat <- readRDS(here('temp', 'preds_LogDurrawTsdTTMERealmtsignCovariateInit.rds'))
+# newdat <- readRDS(here('temp', predsfile))
 
 
 
@@ -125,7 +124,7 @@ print(paste('Wrote', slopesfile, ':', Sys.time()))
 
 
 ### Calculate sensitivity of turnover rates to covariates ----------------------
-# slopes2 <- readRDS(here('temp', 'slopes_LogDurrawTsdTTMERealmtsignCovariateInit.rds')) # to read in manually
+# slopes2 <- readRDS(here('temp', slopesfile)) # to read in manually
 slopes2 <- slopes2[tempave == 13 & tempchange > 0, ] # pick tempave and warming
 
 sensitivity.microclim <- slopes2[, slopesamp(n, tempchange, slope_microclim, slope_microclim.se, colnames = c('sensitivity_microclim', 'sensitivity_microclim.se')), 
@@ -138,7 +137,7 @@ sensitivity2 <- merge(sensitivity.microclim, sensitivity.human)
 # save sensitivities
 sensfile <- paste0('sensitivity_', modname, '.rds')
 saveRDS(sensitivity2, file = here('temp', sensfile))
-# sensitivity2 <- readRDS(here('temp', 'sensitivity_LogDurrawTsdTTMERealmtsignCovariateInit.rds')) # to read in manually
+# sensitivity2 <- readRDS(here('temp', sensfile)) # to read in manually
 print(paste('Wrote', sensfile, ':', Sys.time()))
 
 

@@ -11,7 +11,6 @@ library(grid) # to combine ggplots together
 library(RColorBrewer)
 library(scales) # for defining signed sqrt axis transformation
 library(here)
-#library(rcompanion) # for CIs on median
 source(here('code', 'util.R'))
 
 
@@ -422,8 +421,8 @@ ggsave('figures/fig2_nopredsT.png', fig2noT, width = 6, height = 6, units = 'in'
 
 
 ### Figure 3: environmental interactions ---------
-slopes2 <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds')) # turnover rates from code/pred_GLMMmodrawCovariate.R
-sensitivity2 <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds')) # sensitivities from code/pred_GLMMmodrawCovariate.R
+slopes2 <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds')) # turnover rates from code/pred_GLMMcov.R
+sensitivity2 <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds')) # sensitivities from code/pred_GLMMcov.R
 sensitivity2[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting
 
 # max turnover rate by realm and covariate
@@ -508,7 +507,7 @@ ggsave('figures/fig3.png', fig3, width = 4, height = 2, units = 'in')
 
 
 ### Table S1: random effects for main model --------------
-modTchangeTave <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_?
+modTchangeTave <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
 if(!exists('sum_modTchangeTave')) sum_modTchangeTave <- summary(modTchangeTave)
 sum_modTchangeTave$varcor
 capture.output(print(sum_modTchangeTave$varcor), file = 'figures/tableS1.txt')
@@ -516,7 +515,7 @@ capture.output(print(sum_modTchangeTave$varcor), file = 'figures/tableS1.txt')
 
 
 ### Table S2: fixed effects for Tchange x Tave model --------------
-modTchangeTave <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_?
+modTchangeTave <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
 if(!exists('sum_modTchangeTave')) sum_modTchangeTave <- summary(modTchangeTave)
 out <- as.data.frame(sum_modTchangeTave$coefficients$cond)
 
@@ -603,8 +602,8 @@ write.csv(aics, here('figures', 'tableS4.csv'))
 
 
 ### Table S5: AICs for initgainloss models ------------------
-# with Jtu.init:gainlossprop for Table 1. All fit by code/turnover_GLMMordbeta_fit.R
-modInitGL <- readRDS(here('temp', 'modOBRInitGLAllJtu.rds')) # Null. Switch to modOBRInitGLAllJtu
+# with Jtu.init:gainlossprop for Table 1. All fit by code/turnover_GLMM_fit.R
+modInitGL <- readRDS(here('temp', 'modOBRInitGLAllJtu.rds')) # Null. 
 modRealmGL <- readRDS('temp/modOBRRealmInitGLAllJtu.rds') # Realm.
 modTaxaGL <- readRDS('temp/modOBTTaxamod2InitGLAllJtu.rds') # Taxon. 
 modTchangeGL <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitGLAllJtu.rds')) # Tchange model
@@ -658,7 +657,7 @@ dev.off()
 
 ### Figure S2: duration problem ----------
 # load raw BioTime
-load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians, which has all pairwise dissimilarities
+load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians, which has all pairwise dissimilarities. From 03_collate_resamps_cluster.R
 bt <- data.table(rarefied_beta_medians); rm(rarefied_beta_medians)
 bt[, year1 := as.numeric(year1)] # not sure why it gets read in as character
 bt[, year2 := as.numeric(year2)]
@@ -780,7 +779,7 @@ dev.off()
 
 ### Figure S4: turnover by taxon ----------
 # slopes for all timeseries
-bt <- fread('output/turnover_w_covariates.csv.gz') # covariate data
+bt <- fread('output/turnover_w_covariates.csv.gz') # covariate data from assemble_turnover_covariates.Rmd
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends <- trends[duration_group == 'All' & measure == 'Jtu',] # trim to those we use
 trends[, duration := year2 - year1]
@@ -824,7 +823,7 @@ ggsave('figures/figS4.png', p1, width = 183, height = 122, units = 'mm')
 ### Figure S5: T_change x T_ave interaction ---------
 
 # read in slopes
-slopesTchangeTave <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # made by pred_modrawXAllJtu.R
+slopesTchangeTave <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # made by pred_GLMM.R
 
 # plot
 p1 <- ggplot(slopesTchangeTave, aes(tempchange, tempave, z = slope)) +

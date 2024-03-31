@@ -2,15 +2,17 @@
 
 The scripts in this analysis were run in three computer environments:
 - A MacBook Pro 16 GB RAM with R version 4.0.3 and RStudio 1.3.1093
-- A scientific workstation ('Annotate') with 72 CPUs (Intel Xeon CPU E5-2697 v4 @ 2.30GHz) running CentOS 7.6.1810 with R version 3.5.2 and RStudio 1.3.1093
-- A high performance computing environment with SLURM job management (Step 2 below).
+- A scientific workstation ('Annotate') with 36 cores (Intel Xeon CPU E5-2697 v4 @ 2.30GHz) running CentOS 7.6.1810 with R version 3.5.2 and RStudio 1.3.1093
+- A scientific workstation ('Annotate2') with 56 cores (Intel Xeon CPU w9-3495X @ 4.8GHz) running Red Hat 8 with R version 4.3.1 and RStudio 2023.06.2 (fitting ordered beta GLMMs)
+- A compute cluster with 64-bit x86 processors running Rocky Linux 9.1 with SLURM job management and R version 4.2.2 (Step 2 below).
 
 The libraries included:
 - bbmle 1.0.23.1
 - beanplot 1.2
-- betapart
+- betapart 1.6
 - data.table 1.11.8
 - dggridR
+- dplyr 1.1.0
 - DHARMa 0.3.3.0
 - ggplot2 3.3.5
 - ggpubr 0.4.0
@@ -19,14 +21,16 @@ The libraries included:
 - gridExtra 2.3
 - here 0.3.3
 - iNext
-- lazyeval
+- lattice 0.20-45
+- lazyeval 0.2.2
 - lme4 1.1-27.1
 - maps 3.3.0
 - mgcv 1.8.26
 - ncdf4 1.17
 - nlme 3.1-137
 - performance 0.7.0
-- purrr
+- permut 0.9-7
+- purrr 1.0.1
 - raster 2.7-15
 - RColorBrewer 1.1-2
 - rcompanion 2.3.27
@@ -35,14 +39,12 @@ The libraries included:
 - scales 1.0.0
 - sdmpredictors 0.2.9
 - taxize 0.9.99
-- tibble
-- tidyr
+- tibble 3.2.0
+- tidyr 1.3.0
 - tidyverse 1.2.1
 - vegan 2.6-4
 
-In addition, we use custom functions here:
-
-- `util.R`: some utility functions used in multiple scripts
+In addition, we use custom functions in `util.R`.
 
 We expect install time will take a couple hours on a standard desktop computer, with the slowest part being package installation.
 
@@ -56,7 +58,7 @@ The code is organized in six main steps. Run time for each step should be less t
 ## 2. Prep dissimilarity data
 - `01_Study_to_Grid.R`: grids the observations to 96 km2 hexagons
 - `02_all_pairs_cluster.R`: calculate rarefied dissimilarities among years within each time series. Runs in SLURM.
-- `03_collate_resamps_cluster.R`: script to combine rarefied resamples and calculate median dissimilarity. Runs in SLURM.
+- `03_collate_resamps_cluster.R`: script to combine rarefied resamples and calculate median dissimilarity. Runs in SLURM. Writes `bt-rarefy-collate.Rdata`
 
 ## 3. Prep turnover data
 - `assemble_microclimates.R`: extract microclimate variability for each time series. Writes `output/microclimates.csv.gz`
@@ -68,17 +70,16 @@ The code is organized in six main steps. Run time for each step should be less t
 - `sample_global_temp.Rmd`: make a representative sample of global temperature trends. Writes `output/temperature_trends_sampled.csv.gz`
 
 ## 4. Fit models
-- `turnover_GLMM_fit.R`: fit one mixed effects model (specified as an argument). Writes `temp/mod*.rds`
+- `turnover_GLMM_fit.R`: fit one mixed effects model at a time (specified as an argument). Writes `temp/mod*.rds`
 - `turnover_GLMM_fit.sh`: bash script to initiate multiple threads, one to fit each model specified as an argument. Calls `turnover_GLMM_fit.R`
-- `turnover_GLMMgainloss_fit.R`: fit mixed effects models with the relative proportions of species gains and losses as a covariate (a sensitivity analysis). Writes `temp/mod*InitGainLossAll*.rds`
-- `turnover_GLMMaltlink_fit.R`: fit models with Gaussian errors and linear link
-- `turnover_GLMMaltlink_fit.sh`: bash script to run associated `.R` file
+- `turnover_GLMMaltlink_fit.R`: fit models with Gaussian errors and linear link. Writes `temp/mod*_lin.rds`
+- `turnover_GLMMaltlink_fit.sh`: bash script to initiate multiple threads, one to fit each model specified as an argument. Calls `turnover_GLMMaltlink_fit.R`
 - `turnover_GLMMlong_fit.R`: fit mixed effects models to time series >= 7 years long. Writes `temp/mod*LongJtu.rds`
 
 ## 5. Make predictions from the models
-- `pred_GLMM.R`: make predictions from the models for plotting, including turnover rates and sensitivity of turnover to temperature change. Writes `temp/preds_modsdTRealmtsigninitAllJtu.rds` and `preds_rawTsdTTRealmtsigninit.rds` (dissimilarity), `temp/slopes_modsdTRealmtsigninitAllJtu.rds` and `slopes_rawTsdTTRealmtsigninit.rds` (turnover rate), and `sensitivity_rawTsdTTRealmtsigninit.rds` (sensitivity of turnover rates to temperature change)
+- `pred_GLMM.R`: make predictions from the models for plotting, including turnover rates and sensitivity of turnover to temperature change. Writes `temp/preds_modOBsdTMERtsRealmtsigninitAllJtu.rds` and `preds_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds` (dissimilarity), `temp/slopes_modOBsdTMERtsRealmtsigninitAllJtu.rds` and `slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds` (turnover rate), and `sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds` (sensitivity of turnover rates to temperature change)
 - `pred_GLMM.sh`: Shell script to spawn multiple instances of `pred_GLMM.R`
-- `pred_GLMMcov.R`: make predictions for the covariate models. Writes `temp/preds_rawTsdTTRealmtsignCovariateInit.rds` (dissimilarity), `temp/slopes_rawTsdTTRealmtsignCovariateInit.rds` (turnover rates), and `temp/sensitivity_rawTsdTTRealmtsignCovariateInit.rds` (sensitivity)
+- `pred_GLMMcov.R`: make predictions for the microcolimate and human impact covariate models. Writes `temp/preds_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds` (dissimilarity), `temp/slopes_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds` (turnover rates), and `temp/sensitivity_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds` (sensitivity)
 - `pred_GLMMaltlink.R`: for predictions from models with Gaussian errors
 - `pred_GLMMaltlink.sh`: shell script to accompany R script
 - `pred_GLMMaltlinkcov.R`: for predictions from models with covariates and Gaussian errors
