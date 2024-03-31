@@ -1,13 +1,13 @@
 #!/usr/bin/Rscript --vanilla
 
-# Script to fit glmmTMB models with ordbeta errors and bootstrapping
-# Bootstrapping picks t pairwise dissimilarities from each time series of length t species composition observations
+# Script to fit glmmTMB models with ordbeta errors and downsampling
+# Downsampling picks t pairwise dissimilarities from each time series of length t species composition observations
 # Set up to be run on the command line for one model at a time
-# Argument is model name to run (see below for options) and bootstrap ID (used as random number seed), e.g.
-# nohup code/turnover_GLMM_fit.R modOBInitAllJtu > logs/turnover_GLMMmodOBInitAllJtu.Rout &
-# (this works if code is executable, e.g., chmod u+x code/turnover_GLMM_fit.R)
+# Argument is model name to run (see below for options) and downsampling ID (used as random number seed), e.g.
+# nohup code/turnover_GLMM_fit_downsamp.R modOBInitAllJtu 1 > logs/turnover_GLMMmodOBInitAllJtu_boot1.Rout &
+# (this works if code is executable, e.g., chmod u+x code/turnover_GLMM_fit_downsamp.R)
 # or use the shell script to spawn multiple model fits at once:
-# code/turnover_GLMM_fit.sh modOBRInitAllJtu modOBRInitAllHorn 
+# code/turnover_GLMM_fit_downsamp.sh 1 modOBRInitAllJtu modOBRInitAllHorn 
 # Note: this requires a newer version of glmmTMB, e.g, 1.1.8 (installed on Annotate2 but not Annotate)
 
 # Read command line arguments ############
@@ -16,9 +16,9 @@ args <- commandArgs(trailingOnly = TRUE)
 print(args)
 
 if (length(args) < 2)
-    stop("Have to specify a model to fit and the bootstrap ID", call. = FALSE)
+    stop("Have to specify a model to fit and the downsampling ID", call. = FALSE)
 if (length(args) > 2)
-    stop("Have to specify only 1 model to fit and one bootstrap ID", call. = FALSE)
+    stop("Have to specify only 1 model to fit and one downsampling ID", call. = FALSE)
 fitmod <- args[1] # which model to fit
 bootID <- args[2] # used for random seed
 MATCHMOD <- FALSE # indicator to check if the argument matched a model name
@@ -27,7 +27,7 @@ MATCHMOD <- FALSE # indicator to check if the argument matched a model name
 
 print(paste('This is script turnover_GLMM_fit_boot.R'))
 print(paste('This is process #', Sys.getpid()))
-print(paste('Bootstrap ID', bootID))
+print(paste('Downsampling ID', bootID))
 print(Sys.time())
 
 
@@ -430,7 +430,8 @@ if (fitmod == 'modOBrawTsdTTMERtsRealmtsigninitAllJtu') {
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = ordbeta(link = 'logit'),
-        dispformula = ~ REALM
+        dispformula = ~ REALM,
+        control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)) # higher iteration limit to facilitate convergence
     )
     MATCHMOD <- TRUE
 }
@@ -503,7 +504,8 @@ if (fitmod == 'modOBabsLatsdTabsLatMERtsRealmtsignInitAllJtu') { # also REALM an
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = ordbeta(link = 'logit'),
-        dispformula = ~ REALM
+        dispformula = ~ REALM,
+        control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)) # higher iteration limit to facilitate convergence
     )
     MATCHMOD <- TRUE
 }
@@ -530,7 +532,9 @@ if (fitmod == 'modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu') {
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = ordbeta(link = 'logit'),
-        dispformula = ~ REALM)
+        dispformula = ~ REALM,
+        control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)) # higher iteration limit to facilitate convergence
+    )
     MATCHMOD <- TRUE
 }
 
@@ -555,7 +559,9 @@ if (fitmod == 'modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu') {
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = ordbeta(link = 'logit'),
-        dispformula = ~ REALM)
+        dispformula = ~ REALM,
+        control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)) # higher iteration limit to facilitate convergence
+    )
     MATCHMOD <- TRUE
 }
 

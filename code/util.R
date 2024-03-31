@@ -115,6 +115,7 @@ binomci <- function(x, n){
 # seed is a random number seed, for reproducibility
 # returns a vector of TRUE/FALSE to indicate which rows to keep after downsampling
 downsampRarefyID <- function(dat, inds = rep(TRUE, nrow(dat)), seed=1){
+    set.seed(seed)
     dat[, inds := inds]
     tslen <- dat[inds == TRUE, .(t = length(unique(c(year1, year2)))), by = rarefyID] # length of each rarefyID
     dat <- merge(dat, tslen, all.x = TRUE) # merge back. NAs for the rarefyIDs not included by inds
