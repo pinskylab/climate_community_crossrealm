@@ -94,8 +94,6 @@ aics
 write.csv(aics, here('figures', 'table1.csv'))
 
 
-
-
 ### Figure 1: map and data --------
 # load BioTime data
 bt <- fread('output/turnover_w_covariates.csv.gz') # from assemble_turnover_covariates.Rmd
