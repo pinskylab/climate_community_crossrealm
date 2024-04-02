@@ -3,8 +3,8 @@
 # Script to fit glmmTMB models only to time-series >= 7 years
 # Set up to be run on the command line for one model at a time
 # Argument is model name to run (see below for options), e.g.
-# nohup code/turnover_GLMMlong_fit.R modInitLongJtu > logs/turnover_GLMMlong_modInitLongJtu.Rout &
-# (this works if code is executable, e.g., chmod u+x code/turnover_GLMMlong_fit.R)
+# nohup code/fit_turnover_GLMMlong.R modInitLongJtu > logs/turnover_GLMMlong_modInitLongJtu.Rout &
+# (this works if code is executable, e.g., chmod u+x code/fit_turnover_GLMMlong.R)
 # (otherwise using nohup Rscript ...)
 
 # Read command line arguments ############
@@ -22,7 +22,7 @@ MATCHMOD <-
 
 # print basic info about the job ############################
 
-print(paste('This is script turnover_GLMMlong_fit.R'))
+print(paste('This is script fit_turnover_GLMMlong.R'))
 print(paste('This is process #', Sys.getpid()))
 print(Sys.time())
 

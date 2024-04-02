@@ -29,25 +29,6 @@ if(Sys.info()[[4]]=='annotate.sebs.rutgers.edu'){ # location of the library on A
 library(here) # for relative paths
 source(here('code', 'util.R'))
 
-# function for slopes and SEs from resampling
-# n: number of resamples, other columns are the x, y, and se of y variables
-# colnames refer to the output
-slopesamp <- function(n, duration, Jtu.sc, Jtu.sc.se, colnames = c('slope', 'slope.se')){
-    if(length(duration) != length(Jtu.sc)) stop('duration and Jtu.sc are not the same length')
-    if(length(duration) != length(Jtu.sc.se)) stop('duration and Jtu.sc.se are not the same length')
-    if(length(Jtu.sc) != length(Jtu.sc.se)) stop('Jtu.sc and Jtu.sc.se are not the same length')
-    
-    samp <- rep(NA, n) # will hold the slopes of the sampled data
-    for(j in 1:n){
-        y <- rnorm(length(Jtu.sc), mean = Jtu.sc, sd = Jtu.sc.se) # one sample
-        samp[j] <- coef(lm(y ~ duration))[2] # fit line, get slope
-    }
-    out <- c(coef(lm(Jtu.sc ~ duration))[2], sd(samp))
-    names(out) <- colnames
-    return(as.list(out)) # coercing to list will allow the data.table aggregate used later to create 2 columns
-}
-
-
 # The scaling factors
 scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv'))
 

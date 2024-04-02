@@ -3,8 +3,8 @@
 # Script to fit Tchange glmmTMB model with ordbeta errors and reshuffled Tchange
 # Set up to be run on the command line for multiple reshuffles
 # Arguments are the min and max reshuffling IDs
-# nohup code/turnover_GLMM_reshuffle.R 1 10 > logs/turnover_GLMM_reshuffle1-10.Rout &
-# (this works if code is executable, e.g., chmod u+x code/turnover_GLMM_reshuffle.R)
+# nohup code/fit_turnover_GLMM_reshuffle.R 1 10 > logs/fit_turnover_GLMM_reshuffle1-10.Rout &
+# (this works if code is executable, e.g., chmod u+x code/fit_turnover_GLMM_reshuffle.R)
 # Note: this requires a newer version of glmmTMB, e.g, 1.1.8 (installed on Annotate2 but not Annotate)
 
 # Read command line arguments ############
@@ -21,7 +21,7 @@ shuffIDs <- as.numeric(args[1]):as.numeric(args[2]) # used for random seeds
 
 # print basic info about the job ############################
 
-print(paste('This is script turnover_GLMM_reshuffle.R'))
+print(paste('This is script fit_turnover_GLMM_reshuffle.R'))
 print(paste('This is process #', Sys.getpid()))
 print(paste('Reshuffle IDs', paste(shuffIDs, collapse = ',')))
 print(Sys.time())

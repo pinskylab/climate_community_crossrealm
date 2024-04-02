@@ -3,10 +3,10 @@
 # Script to fit glmmTMB models with ordbeta errors
 # Set up to be run on the command line for one model at a time
 # Argument is model name to run (see below for options), e.g.
-# nohup code/turnover_GLMM_fit.R modOBInitAllJtu > logs/turnover_GLMMmodOBInitAllJtu.Rout &
-# (this works if code is executable, e.g., chmod u+x code/turnover_GLMM_fit.R)
+# nohup code/fit_turnover_GLMM.R modOBInitAllJtu > logs/fit_turnover_GLMMmodOBInitAllJtu.Rout &
+# (this works if code is executable, e.g., chmod u+x code/fit_turnover_GLMM.R)
 # or use the shell script to spawn multiple model fits at once:
-# code/turnover_GLMM_fit.sh modOBRInitAllJtu modOBRInitAllHorn 
+# code/fit_turnover_GLMM.sh modOBRInitAllJtu modOBRInitAllHorn 
 # Note: this requires a newer version of glmmTMB, e.g, 1.1.8 (installed on Annotate2 but not Annotate)
 
 # Read command line arguments ############

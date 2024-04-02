@@ -3,10 +3,10 @@
 # Script to fit glmmTMB models with Gaussian link functions
 # Set up to be run on the command line for one model at a time
 # Argument is model name to run (see below for options), e.g.
-# nohup code/turnover_GLMMaltlink_fit.R modOBInitAllJtu_lin > logs/turnover_GLMMmodOBInitAllJtu_lin.Rout &
-# (this works if code is executable, e.g., chmod u+x code/turnover_GLMMlin_fit.R)
+# nohup code/fit_turnover_GLMMaltlink.R modOBInitAllJtu_lin > logs/fit_turnover_GLMMmodOBInitAllJtu_lin.Rout &
+# (this works if code is executable, e.g., chmod u+x code/fit_turnover_GLMMaltlink.R)
 # or use the shell script to spawn multiple model fits at once:
-# code/turnover_GLMMaltlink_fit.sh modOBRInitAllJtu_lin modOBRInitAllHorn_lin 
+# code/fit_turnover_GLMMaltlink.sh modOBRInitAllJtu_lin modOBRInitAllHorn_lin 
 
 # Read command line arguments ############
 
@@ -23,7 +23,7 @@ MATCHMOD <-
 
 # print basic info about the job ############################
 
-print(paste('This is script turnover_GLMMlin_fit.R'))
+print(paste('This is script fit_turnover_GLMMlin.R'))
 print(paste('This is process #', Sys.getpid()))
 print(Sys.time())
 
