@@ -3,11 +3,7 @@
 ### Functions -----------
 library(data.table) # for handling large datasets
 library(ggplot2) # for some plotting
-library(nlme) # for ME models
 library(glmmTMB) # for beta regression
-library(maps) # for map
-library(gridExtra) # to combine ggplots together
-library(grid) # to combine ggplots together
 library(RColorBrewer)
 library(scales) # for defining signed sqrt axis transformation
 library(here)
@@ -79,18 +75,20 @@ anovamodTchangeTaveYearmodhuman
 
 ### Tchange effects ---------
 # files to read in
-n1 <- 10L # number of bootstraps
-for(i in 1:n1){
-    cat(i)
-    if(i==1){
-        slopespredsdT <- cbind(data.table(boot =i, type = 'downsamp'), 
-                               readRDS(here('temp', paste0('slopes_modOBsdTMERtsRealmtsigninitAllJtu_boot', i, '.rds')))) # from pred_GLMM_boot.R  
+slopes <- list.files(path = 'temp', pattern = glob2rx('slopes_modOBsdTMERtsRealmtsigninitAllJtu_boot*.rds'), full.names=TRUE) # from pred_GLMM_downsamp.R or fit_pred_turnover_GLMM_downsamp.R
+n <- length(slopes)
+n # number of downsample slopes made
+for(i in 1:n){
+    cat(paste0(i,','))
+    temp <- readRDS(slopes[i])
+    if(i==1){ 
+        slopespredsdT <- cbind(data.table(boot =i, type = 'downsamp'), readRDS(slopes[i])) 
     } 
     else{
         slopespredsdT <- rbind(slopespredsdT,
                                cbind(data.table(boot =i, type = 'downsamp'), 
-                                     readRDS(here('temp', paste0('slopes_modOBsdTMERtsRealmtsigninitAllJtu_boot', i, '.rds'))))) # from pred_GLMM_boot.R  
-    } 
+                                     readRDS(slopes[i])))
+    }
 }
 slopespredsdT[, tsign := factor(sign(tempchange), levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 slopespredsdT <- slopespredsdT[tempave ==15,] # no Tave effect, so trim out the various levels
@@ -99,20 +97,19 @@ slopespredsdTfull[, tsign := factor(sign(tempchange), levels = c('-1', '1'), lab
 slopespredsdTfull[, ':='(boot = NA_integer_, type = 'full')]
 slopespredsdT <- rbind(slopespredsdT, slopespredsdTfull)
 
+slopeave <- slopespredsdT[type=='downsamp', .(boot=1, slope = mean(slope), slope.u95 = quantile(slope, 0.975), slope.l95 = quantile(slope, 0.025)), by = .(tempchange, REALM)]
+
 # b) plot of turnover rate vs. Tchange
-ggplot(slopespredsdT, aes(x=tempchange, y=slope,
-                          ymin=slope - slope.se,
-                          ymax=slope + slope.se,
+ggplot(slopespredsdT[type=='downsamp',], aes(x=tempchange, y=slope,
                           group = boot)) +
-    geom_line(linewidth=0.5, aes(linetype = type, color = type)) +
-    geom_ribbon(alpha = 0.2, aes(fill = type)) +
-    scale_color_manual(values=c('#0072B2', '#D55E00')) +
-    scale_fill_manual(values=c('#0072B2', '#D55E00')) +
+    geom_line(alpha = 0.2, linewidth = 0.1, color = '#0072B2') +
+    geom_ribbon(data = slopeave, alpha = 0.2, fill = '#0072B2', aes(ymin=slope.l95, ymax=slope.u95)) +
+    geom_line(data = slopeave, color = '#0072B2') +
+    geom_ribbon(data = slopespredsdT[type=='full',], alpha = 0.2, fill = '#D55E00', aes(ymin=slope-slope.se, ymax=slope+slope.se)) +
+    geom_line(data = slopespredsdT[type=='full',], color = '#D55E00') +
     facet_grid(cols = vars(REALM), scales = 'free')  +
     labs(tag = 'b)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
-         fill = 'Direction', 
-         color = 'Direction',
-         size = 'Duration [years]') +
+         color = 'Type') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
