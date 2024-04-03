@@ -19,7 +19,6 @@ if (length(args) > 3)
     stop("Have to specify only 1 model to fit and min and max downsampling ID", call. = FALSE)
 fitmod <- args[1] # which model to fit
 bootID <- as.numeric(args[2]):as.numeric(args[3]) # used for random seed
-MATCHMOD <- FALSE # indicator to check if the argument matched a model name
 
 # print basic info about the job ############################
 
@@ -69,6 +68,8 @@ print(warnings())
 # Downsampling loop ###########################
 
 for(i in 1:length(bootID)){
+    MATCHMOD <- FALSE # indicator to check if the argument matched a model name
+
     print(paste('Starting downsampling ID', bootID[i]))
     print(Sys.time())
     
