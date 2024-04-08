@@ -1,4 +1,4 @@
-# Making tables and figures with the bootstrap model fits
+# Making tables and figures with the downsampled model fits
 
 ### Functions -----------
 library(data.table) # for handling large datasets
@@ -78,16 +78,16 @@ anovamodTchangeTaveYearmodhuman
 slopes <- list.files(path = 'temp', pattern = glob2rx('slopes_modOBsdTMERtsRealmtsigninitAllJtu_boot*.rds'), full.names=TRUE) # from pred_GLMM_downsamp.R or fit_pred_turnover_GLMM_downsamp.R
 n <- length(slopes)
 n # number of downsample slopes made
+n <- min(1000, n) # take first 1000
 for(i in 1:n){
-    cat(paste0(i,','))
+    if(i %% 20 == 0) cat(paste0(i,','))
     temp <- readRDS(slopes[i])
     if(i==1){ 
         slopespredsdT <- cbind(data.table(boot =i, type = 'downsamp'), readRDS(slopes[i])) 
     } 
     else{
-        slopespredsdT <- rbind(slopespredsdT,
-                               cbind(data.table(boot =i, type = 'downsamp'), 
-                                     readRDS(slopes[i])))
+        slopespredsdT <- rbind(slopespredsdT, cbind(data.table(boot =i, type = 'downsamp'), 
+                                                    readRDS(slopes[i])))
     }
 }
 slopespredsdT[, tsign := factor(sign(tempchange), levels = c('-1', '1'), labels = c('cooling', 'warming'))]
@@ -102,11 +102,11 @@ slopeave <- slopespredsdT[type=='downsamp', .(boot=1, slope = mean(slope), slope
 # b) plot of turnover rate vs. Tchange
 ggplot(slopespredsdT[type=='downsamp',], aes(x=tempchange, y=slope,
                           group = boot)) +
-    geom_line(alpha = 0.2, linewidth = 0.1, color = '#0072B2') +
-    geom_ribbon(data = slopeave, alpha = 0.2, fill = '#0072B2', aes(ymin=slope.l95, ymax=slope.u95)) +
-    geom_line(data = slopeave, color = '#0072B2') +
     geom_ribbon(data = slopespredsdT[type=='full',], alpha = 0.2, fill = '#D55E00', aes(ymin=slope-slope.se, ymax=slope+slope.se)) +
-    geom_line(data = slopespredsdT[type=='full',], color = '#D55E00') +
+    geom_line(data = slopespredsdT[type=='full',], color = '#D55E00', linewidth = 1) +
+    geom_ribbon(data = slopeave, alpha = 0.25, fill = '#0072B2', aes(ymin=slope.l95, ymax=slope.u95)) +
+    geom_line(alpha = 0.15, linewidth = 0.1, color = '#0072B2') +
+    geom_line(data = slopeave, color = '#0072B2', linewidth = 1) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
     labs(tag = 'b)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
          color = 'Type') +
