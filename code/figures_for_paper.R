@@ -278,8 +278,8 @@ p2 <- ggplot() +
     geom_line(data = slopespredsdT, mapping=aes(abs(tempchange), slope, color = tsign, group = tsign), linewidth=0.5) +
     geom_ribbon(data = slopespredsdT, alpha = 0.2, color = NA, 
                 aes(abs(tempchange), slope,
-                    ymin=slope - slope.se, 
-                    ymax=slope + slope.se,
+                    ymin=slope - 1.96*slope.se, 
+                    ymax=slope + 1.96*slope.se,
                     fill = tsign,
                     group = tsign)) +
     scale_color_manual(values=c('#0072B2', '#D55E00')) +
@@ -306,7 +306,9 @@ p2 <- ggplot() +
 p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
 # c) in three parts
-p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
+p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, 
+                                                 ymin = sensitivity-1.96*sensitivity.se, ymax = sensitivity+1.96*sensitivity.se, 
+                                                 group = tsign, color = tsign, fill = tsign)) +
     geom_point(size = 0.1)+
     geom_line(linetype='dashed')+
     geom_errorbar()+
@@ -331,7 +333,9 @@ p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = se
     scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
 
-p4 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
+p4 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, 
+                                                ymin = sensitivity-1.96*sensitivity.se, ymax = sensitivity+1.96*sensitivity.se, 
+                                                group = tsign, color = tsign, fill = tsign)) +
     geom_point(size = 0.1)+
     geom_line(linetype='dashed')+
     geom_errorbar()+
@@ -351,7 +355,9 @@ p4 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sen
     coord_cartesian(clip = 'off') + 
     scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
-p5 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
+p5 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, 
+                                            ymin = sensitivity-1.96*sensitivity.se, ymax = sensitivity+1.96*sensitivity.se, 
+                                            group = tsign, color = tsign, fill = tsign)) +
     geom_point(size = 0.1)+
     geom_line(linetype='dashed')+
     geom_errorbar()+
@@ -421,7 +427,7 @@ ggsave('figures/fig2_nopredsT.png', fig2noT, width = 6, height = 6, units = 'in'
 ### Figure 3: environmental interactions ---------
 slopes2 <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds')) # turnover rates from code/pred_GLMMcov.R
 sensitivity2 <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds')) # sensitivities from code/pred_GLMMcov.R
-sensitivity2[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting
+sensitivity2[, REALM := factor(REALM, levels = c('Terrestrial', 'Marine'))] # re-order for nicer plotting
 
 # max turnover rate by realm and covariate
 slopes2[tempave==10 & abs(tempchange - 0.3) < 0.02 & (abs(human_bowler) < 0.1 | abs(human_bowler - 10) < 0.1), .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
@@ -436,10 +442,10 @@ slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 0.3) < 0.02 & ab
     slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 0.3) < 0.02 & abs(human_bowler  - 0.055) < 0.01, .(slope_human)]
 
 # plots
-ylims.microclimate <- c(-0.05, 0.18)
-ylims.human <- c(0, 0.18)
+ylims.microclimate <- c(-0.015, 0.045)
+ylims.human <- c(0, 0.045)
 
-p1 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')], 
+p1 <- ggplot(sensitivity2, 
              aes(microclim, sensitivity_microclim, 
                  ymin=sensitivity_microclim-1.96*sensitivity_microclim.se,  
                  ymax=sensitivity_microclim+1.96*sensitivity_microclim.se,
@@ -452,9 +458,9 @@ p1 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')],
          x = 'Microclimate availability',
          y = '') +
     coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.75, xmax = -0.75, ymin = 0.05, ymax = 0.05) + # note x-axis is in log10 units
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.625, xmax = -0.625, ymin = 0.05, ymax = 0.05) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.5, xmax = -0.5, ymin = 0.05, ymax = 0.05) +
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.75, xmax = -0.75, ymin = 0.015, ymax = 0.015) + # note x-axis is in log10 units
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.625, xmax = -0.625, ymin = 0.015, ymax = 0.015) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.5, xmax = -0.5, ymin = 0.015, ymax = 0.015) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -470,7 +476,7 @@ p1 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')],
     scale_fill_manual(values = c('#1b9e77', '#7570b3')) + # ColorBrewer2 Dark2 green and blue
     scale_color_manual(values = c('#1b9e77', '#7570b3'))
 
-p2 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')], 
+p2 <- ggplot(sensitivity2, 
              aes(human_bowler, sensitivity_human, 
                  ymin=sensitivity_human-1.96*sensitivity_human.se,  
                  ymax=sensitivity_human+1.96*sensitivity_human.se,
@@ -792,28 +798,14 @@ ave_by_taxon[, offset := seq(1, -1, length.out = 9)] # amount to vertically dodg
 write.csv(ave_by_taxon, file='output/ave_by_taxon.csv')
 
 # Tchange effects on turnover from downsampling: read in files
-slopes <- list.files(path = 'temp', pattern = glob2rx('slopes_modOBsdTMERtsRealmtsigninitAllJtu_boot*.rds'), full.names=TRUE) # from pred_GLMM_downsamp.R or fit_pred_turnover_GLMM_downsamp.R
-n <- length(slopes)
-n # number of downsample slopes made
-n <- min(1000, n) # take first 1000
-for(i in 1:n){
-    if(i %% 20 == 0) cat(paste0(i,','))
-    temp <- readRDS(slopes[i])
-    if(i==1){ 
-        slopespredsdT <- cbind(data.table(boot =i, type = 'downsamp'), readRDS(slopes[i])) 
-    } 
-    else{
-        slopespredsdT <- rbind(slopespredsdT, cbind(data.table(boot =i, type = 'downsamp'), 
-                                                    readRDS(slopes[i])))
-    }
-}
-slopespredsdT[, tsign := factor(sign(tempchange), levels = c('-1', '1'), labels = c('cooling', 'warming'))]
-slopespredsdT <- slopespredsdT[tempave ==15,] # no Tave effect, so trim out the various levels
-slopespredsdTfull <- readRDS(here('temp', 'slopes_modOBsdTMERtsRealmtsigninitAllJtu.rds')) # the full dataset model fit. from pred_GLMM.R
-slopespredsdTfull[, tsign := factor(sign(tempchange), levels = c('-1', '1'), labels = c('cooling', 'warming'))]
-slopespredsdTfull[, ':='(boot = NA_integer_, type = 'full')]
-slopespredsdT <- rbind(slopespredsdT, slopespredsdTfull)
-slopeave <- slopespredsdT[type=='downsamp', .(boot=1, slope = mean(slope), slope.u95 = quantile(slope, 0.975), slope.l95 = quantile(slope, 0.025)), by = .(tempchange, REALM)] # average across downsamples
+slopesdownsamp <- fread('output/downsampTchange.csv.gz')
+slopesdownsamp[, type := 'downsamp']
+slopesfull <- readRDS(here('temp', 'slopes_modOBsdTMERtsRealmtsigninitAllJtu.rds')) # the full dataset model fit. from pred_GLMM.R
+slopesfull <- slopesfull[tempave == 15, ] # all the same, so only need one level
+slopesfull[, ':='(boot = NA_integer_, type = 'full', tempave = NULL)]
+slopesdownsamp <- rbind(slopesdownsamp, slopesfull)
+slopesdownsamp[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting
+slopeave <- slopesdownsamp[type=='downsamp', .(boot=1, slope = mean(slope), slope.u95 = quantile(slope, 0.975), slope.l95 = quantile(slope, 0.025)), by = .(tempchange, REALM)] # average across downsamples
 
 
 # plot
@@ -832,6 +824,7 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = taxa_mod2, fill = taxa_mo
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
           axis.text=element_text(size=7),
           axis.title=element_text(size=7),
           plot.title=element_text(size=7)) +
@@ -840,13 +833,13 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = taxa_mod2, fill = taxa_mo
 p1 <- addSmallLegend(p1, pointSize = 0.8, spaceLegend = 0.2, textSize = 8)
 
 # b) plot of turnover rate vs. Tchange from downsampling
-p2 <- ggplot(slopespredsdT[type=='downsamp',], aes(x=tempchange, y=slope,
+p2 <- ggplot(slopesdownsamp[type=='downsamp',], aes(x=tempchange, y=slope,
                                              group = boot)) +
-    geom_ribbon(data = slopespredsdT[type=='full',], alpha = 0.2, fill = '#D55E00', aes(ymin=slope-slope.se, ymax=slope+slope.se)) +
-    geom_line(data = slopespredsdT[type=='full',], color = '#D55E00', linewidth = 1) +
+    geom_ribbon(data = slopesdownsamp[type=='full',], alpha = 0.2, fill = '#D55E00', aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se)) +
     geom_ribbon(data = slopeave, alpha = 0.25, fill = '#0072B2', aes(ymin=slope.l95, ymax=slope.u95)) +
-    geom_line(alpha = 0.15, linewidth = 0.1, color = '#0072B2') +
-    geom_line(data = slopeave, color = '#0072B2', linewidth = 1) +
+    geom_line(alpha = 0.1, linewidth = 0.1, color = '#0072B2') +
+    geom_line(data = slopesdownsamp[type=='full',], color = '#D55E00', linewidth = 1) +
+    geom_line(data = slopeave, color = 'black', linewidth = 1) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
     labs(tag = 'b)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
          color = 'Type') +

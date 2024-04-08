@@ -54,7 +54,6 @@ newdat[, ':='(human_bowler.sc = microclim.sc)]
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1
 newdat$Jtu.init <- 0.5
-newdat[, duration.log := log(duration)]
 newdat[, tempave.sc := scaleme(tempave, 'tempave.sc')]
 newdat[, tempchange_abs := abs(tempchange)]
 newdat[, tsign := signneg11(tempchange)]
@@ -94,9 +93,9 @@ print(paste('Wrote', predsfile, ':', Sys.time()))
 
 
 ### Calculate turnover rates (change in turnover per year) -----------------------------
-slopes.microclim <- newdat[, slopesamp(n, duration.log, Jtu.sc.microclim, Jtu.sc.microclim.se, colnames = c('slope_microclim', 'slope_microclim.se')), 
+slopes.microclim <- newdat[, slopesamp(n, duration, Jtu.sc.microclim, Jtu.sc.microclim.se, colnames = c('slope_microclim', 'slope_microclim.se')), 
                                   by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)]
-slopes.human <- newdat[, slopesamp(n, duration.log, Jtu.sc.human, Jtu.sc.human.se, colnames = c('slope_human', 'slope_human.se')), 
+slopes.human <- newdat[, slopesamp(n, duration, Jtu.sc.human, Jtu.sc.human.se, colnames = c('slope_human', 'slope_human.se')), 
                               by = .(tempave, tempchange, tempchange_abs, tsign, microclim, human_bowler, REALM)]
 slopes2 <- merge(slopes.microclim, slopes.human)
 
