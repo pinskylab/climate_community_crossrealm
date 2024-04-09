@@ -169,7 +169,7 @@ p3 <- addSmallLegend(p3, pointSize = 0.7, spaceLegend = 0.15, textSize = 7)
 mod <- glmmTMB(Jtu~dY, data = bt[rarefyID == '339_1085477', .(dY = year2 - year1, Jtu)], family = ordbeta(link = 'logit')) # calc trendline
 preds <- data.table(dY = 1:max(bt[rarefyID == '339_1085477', .(year2 - year1)]))
 preds[, c('Jtu', 'se') := predict(mod, preds, se.fit=TRUE, type = 'response')]
-predspoly <- preds[, .(dY = c(dY, rev(dY)), Jtu = c(Jtu+se, rev(Jtu-se)))]
+predspoly <- preds[, .(dY = c(dY, rev(dY)), Jtu = c(Jtu+1.96*se, rev(Jtu-1.96*se)))]
 p4 <- ggplot(bt[rarefyID=='339_1085477', .(dY = year2 - year1, Jtu)], aes(dY, Jtu)) +
     geom_point(alpha = 0.2, size = 0.5, shape = 16) +
     geom_polygon(data = predspoly, fill = '#a6cee355') +
@@ -190,7 +190,7 @@ conceptual[tempchange == 'Slow', tchange := 0]
 conceptual[, Jtu := 0.1 + duration*0.005 + duration*tchange/320]
 
 p5 <- ggplot(conceptual, aes(duration, Jtu, color = tempchange)) +
-    geom_line(size=1) +
+    geom_line(linewidth=1) +
     labs(tag = 'e)', x = 'Temporal distance [years]', y = 'Turnover\n[proportion species]') +
     scale_color_manual(values=c('#0072B2', '#D55E00'), name = expression(T[change])) +
     scale_y_continuous(limits = c(0, 0.5)) +
