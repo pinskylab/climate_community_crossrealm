@@ -2,8 +2,8 @@
 ## Set up to run in the background so that we can also calculate SEs
 #
 # run as
-# nohup Rscript --vanilla code/pred_GLMMcov.R > logs/pred_GLMMcov.Rout &
-# or run by hand to, for example, start after the predictions have been made (line 93). would need to read the predictions in by hand.
+# nohup Rscript --vanilla code/pred_GLMMcov.R X > logs/pred_GLMMcov_X.Rout &
+# where X is the stem of the model name (see below for modname options)
 # set to run on Annotate or Annotate2
 
 
@@ -12,9 +12,31 @@ print(Sys.time())
 
 ### set arguments -----------------
 n = 1000 # number of resamples to do for each timeseries
-micromodel <- 'modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu'
-humanmodel <- 'modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu'
-modname <- 'modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu'
+
+### read arguments ----------------
+args <- commandArgs(trailingOnly = TRUE)
+print(args)
+
+if (length(args) < 1)
+    stop("Have to specify a model type to predict", call. = FALSE)
+if (length(args) > 1)
+    stop("Have to specify only 1 model type to predict", call. = FALSE)
+modname <- args[1]
+
+MATCHMOD <- FALSE # indicator of the argument matches an accepted model name
+if(modname == 'modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu'){
+    micromodel <- 'modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu'
+    humanmodel <- 'modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu'
+    MATCHMOD <- TRUE
+}
+if(modname == 'modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu_marterr'){
+    micromodel <- 'modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu_marterr'
+    humanmodel <- 'modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu_marterr'
+    MATCHMOD <- TRUE
+}
+if(!MATCHMOD){
+    stop('Need to specify a recognized covariate model name')
+}
 
 ### load functions and data ----------------
 # needed to run this from the Annotate R console. Not needed in RStudio on Annotate. Not clear why.

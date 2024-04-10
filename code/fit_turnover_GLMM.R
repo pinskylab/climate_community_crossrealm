@@ -96,6 +96,17 @@ iGLallJtu <-
         gainlossprop
     )]
 
+iallJtumarterr <-
+    trendsall[, REALM %in% c('Terrestrial', 'Marine') & complete.cases(
+        Jtu,
+        tempchange_abs.sc,
+        REALM,
+        tempave.sc,
+        duration,
+        microclim.sc,
+        human_bowler.sc
+    )]
+
 iallJtuterr <-
     trendsall[, REALM == 'Terrestrial' & complete.cases(
         Jtu,
@@ -184,6 +195,23 @@ if (fitmod == 'modOBTInitAllHorn') { # has taxamod2 main effect
     MATCHMOD <- TRUE
 }
 
+if (fitmod == 'modOBRInitAllJtu_marterr') { # has realm main effects, fit only to marine and terrestrial
+    if (MATCHMOD) stop('Model name matched more than one model!')
+    print(paste(sum(iallJtumarterr), 'data points'))
+    print(paste(trendsall[iallJtumarterr, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtumarterr, length(unique(rarefyID))], 'time series'))
+    print(paste(trendsall[iallJtumarterr, paste(unique(REALM), collapse=',')], 'realms'))
+    mod <- glmmTMB(
+        Jtu ~ duration +
+            Jtu.init:duration +
+            REALM +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtumarterr, ],
+        family = ordbeta(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
 
 # Realm x Year models #################################
 if (fitmod == 'modOBRRealmInitAllJtu') {
@@ -450,6 +478,31 @@ if (fitmod == 'modOBrawTsdTTMERtsRealmtsigninitAllHorn') {
     MATCHMOD <- TRUE
 }
 
+if (fitmod == 'modOBrawTsdTTMERtsRealmtsigninitAllJtu_marterr') { # only marine and terrestrial
+    if (MATCHMOD)
+        stop('Model name matched more than one model!')
+    print(paste(sum(iallJtumarterr), 'data points'))
+    print(paste(trendsall[iallJtumarterr, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtumarterr, length(unique(rarefyID))], 'time series'))
+    print(paste(trendsall[iallJtumarterr, paste(unique(REALM), collapse=',')], 'realms'))
+    mod <- glmmTMB(
+        Jtu ~ duration +
+            REALM + 
+            tsign + 
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc +
+            REALM:tsign:tempave.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtumarterr, ],
+        family = ordbeta(link = 'logit'),
+        dispformula = ~ REALM
+    )
+    MATCHMOD <- TRUE
+}
+
 if (fitmod == 'modOBrawTsdTTMERtsRealmtsigninitAllJtu_terr') { # only land
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -549,6 +602,61 @@ if (fitmod == 'modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu') {
     MATCHMOD <- TRUE
 }
 
+### microclimate, only mar and terr
+if (fitmod == 'modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu_marterr') {
+    print(paste(sum(iallJtumarterr), 'data points'))
+    print(paste(trendsall[iallJtumarterr, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtumarterr, length(unique(rarefyID))], 'time series'))
+    print(paste(trendsall[iallJtumarterr, paste(unique(REALM), collapse=',')], 'realms'))
+    mod <- glmmTMB(
+        Jtu ~ duration +
+            REALM +
+            tsign +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc +
+            REALM:tsign:tempave.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+            REALM:microclim.sc +
+            REALM:microclim.sc:duration +
+            REALM:microclim.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtumarterr, ],
+        family = ordbeta(link = 'logit'),
+        dispformula = ~ REALM,
+        control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)) # to address iteration limit reached without convergence
+        )
+    MATCHMOD <- TRUE
+}
+
+### human, only mar and terr
+if (fitmod == 'modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu_marterr') {
+    print(paste(sum(iallJtumarterr), 'data points'))
+    print(paste(trendsall[iallJtumarterr, length(unique(STUDY_ID))], 'studies'))
+    print(paste(trendsall[iallJtumarterr, length(unique(rarefyID))], 'time series'))
+    print(paste(trendsall[iallJtumarterr, paste(unique(REALM), collapse=',')], 'realms'))
+    mod <- glmmTMB(
+        Jtu ~ duration +
+            REALM +
+            tsign +
+            Jtu.init:duration +
+            REALM:tsign:tempchange_abs.sc +
+            REALM:tsign:tempchange_abs.sc:duration +
+            REALM:tsign:tempave.sc +
+            REALM:tsign:tempave.sc:duration +
+            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
+            REALM:human_bowler.sc +
+            REALM:human_bowler.sc:duration +
+            REALM:human_bowler.sc:tempchange_abs.sc:duration +
+            (duration | STUDY_ID / rarefyID),
+        data = trendsall[iallJtumarterr, ],
+        family = ordbeta(link = 'logit'),
+        dispformula = ~ REALM,
+        control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)) # to address iteration limit reached without convergence
+        )
+    MATCHMOD <- TRUE
+}
 
 ### human, only land
 if (fitmod == 'modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu_terr') {
