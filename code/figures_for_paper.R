@@ -213,9 +213,9 @@ ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in')
 # files to read in
 bt <- fread('output/turnover_w_covariates.csv.gz') # from assemble_turnover_covariates.Rmd
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
-slopespredsdT <- readRDS(here('temp', 'slopes_modOBsdTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R
-slopespred <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R
-senspred <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R
+slopespredsdT <- readRDS(here('temp', 'slopes_modOBsdTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R. Tchange x Realm x Year model
+slopespred <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R, Tchange x Tave x Realm x Year model
+senspred <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R, Tchange x Tave x Realm x Year model
 
 # slopes for all timeseries
 trends <- trends[duration_group == 'All' & measure == 'Jtu',]
@@ -429,7 +429,7 @@ slopes2 <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsignCovariateIni
 sensitivity2 <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds')) # sensitivities from code/pred_GLMMcov.R
 sensitivity2[, REALM := factor(REALM, levels = c('Terrestrial', 'Marine'))] # re-order for nicer plotting
 
-# max turnover rate by realm and covariate
+# max turnover rate by realm and covariate at a given Tchange and Tave level
 slopes2[tempave==10 & abs(tempchange - 0.3) < 0.02 & (abs(human_bowler) < 0.1 | abs(human_bowler - 10) < 0.1), .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
         by = .(REALM, microclim, human_bowler, tempchange)][order(REALM, microclim, tempchange)]
 
