@@ -498,7 +498,8 @@ if (fitmod == 'modOBrawTsdTTMERtsRealmtsigninitAllJtu_marterr') { # only marine 
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtumarterr, ],
         family = ordbeta(link = 'logit'),
-        dispformula = ~ REALM
+        dispformula = ~ REALM,
+        control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)) # to address iteration limit reached without convergence
     )
     MATCHMOD <- TRUE
 }

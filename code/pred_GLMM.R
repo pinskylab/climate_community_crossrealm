@@ -52,22 +52,17 @@ scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From 
 
 
 ### Choose a model ---------------------------------
-if(predmod == 'modOBsdTMERtsRealmtsigninitAllJtu'){ # Tchange model with ordbeta and MERts main effects
-    mod <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllJtu.rds')) # From ...
-    out_preds <- 'preds_modOBsdTMERtsRealmtsigninitAllJtu.rds'
-    out_slopes <- 'slopes_modOBsdTMERtsRealmtsigninitAllJtu.rds'
-    doSensitivity <- FALSE # calculate sensitivity to Tave?
-    print('model loaded')
-} 
+mod <- readRDS(here('temp', paste0(predmod, '.rds'))) # From turnover_GLMM_fit_boot.R
+print('model loaded')
 
-if(predmod == 'modOBrawTsdTTMERtsRealmtsigninitAllJtu'){ # Tchange x Tave model with ordbeta and MERts main effects
-    mod <- readRDS(here('temp', 'modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # From ...
-    out_preds <- 'preds_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds' 
-    out_slopes <- 'slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds'
-    doSensitivity <- TRUE # calculate sensitivity to Tave?
-    out_sensitivity <- 'sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds'
-    print('model loaded')
-}
+out_preds <- paste0('preds_', predmod, '.rds')
+out_slopes <- paste0('slopes_', predmod, '.rds')
+out_sensitivity <- paste0('sensitivity_', predmod, '.rds')
+
+doSensitivity <- FALSE # default is not to calculate sensitivity to Tave
+if(grepl('rawTsdTT', predmod)){ # Tchange x Tave model
+    doSensitivity <- TRUE # calculate sensitivity to Tave if we loaded Tave model
+} 
 
 if(!exists('mod')) stop('No model loaded. Make sure argument matches one of the model names')
 
