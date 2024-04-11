@@ -795,12 +795,6 @@ ave_by_taxon <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstre
 ave_by_taxon[, offset := seq(1, -1, length.out = 9)] # amount to vertically dodge the lines in part a
 write.csv(ave_by_taxon, file='output/ave_by_taxon.csv')
 
-# Tchange effects from covariation models
-slopescov <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds'))
-slopescov <- slopescov[tempave == 13 & tempchange > 0 & microclim < 0.9,]
-slopescov[, REALM := factor(REALM, levels = c('Terrestrial', 'Marine'))] # re-order for nicer plotting
-
-
 # Tchange effects on turnover from downsampling: read in files
 slopesdownsamp <- fread('output/downsampTchange.csv.gz')
 slopesdownsamp[, type := 'downsamp']
@@ -810,6 +804,16 @@ slopesfull[, ':='(boot = NA_integer_, type = 'full', tempave = NULL)]
 slopesdownsamp <- rbind(slopesdownsamp, slopesfull)
 slopesdownsamp[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting
 slopeave <- slopesdownsamp[type=='downsamp', .(boot=1, slope = mean(slope), slope.u95 = quantile(slope, 0.975), slope.l95 = quantile(slope, 0.025)), by = .(tempchange, REALM)] # average across downsamples
+
+# Tave effects on sensitivity from downsampling: read in files
+sensdownsamp <- fread('output/downsampTave.csv.gz')
+sensdownsamp[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', 'warming'))]
+sensdownsamp[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting
+sensave <- sensdownsamp[type=='downsamp', .(boot=1, sensitivity = mean(sensitivity), sensitivity.u95 = quantile(sensitivity, 0.975), sensitivity.l95 = quantile(sensitivity, 0.025)), 
+                    by = .(tempave, tsign, REALM)] # average across the downsamples
+sensfull <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R, Tchange x Tave x Realm x Year model fit to full dataset.
+sensfull <- sensfull[tempave %in% c(0,25), ]
+sensfull[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 
 
 # plot
@@ -836,7 +840,98 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = taxa_mod2, fill = taxa_mo
     scale_color_manual(values = pal)
 p1 <- addSmallLegend(p1, pointSize = 0.8, spaceLegend = 0.2, textSize = 8)
 
-# b) plot of turnover rate vs. Tchange from covariate models
+# b) plot of turnover rate vs. Tchange from downsampling
+p2 <- ggplot(slopesdownsamp[type=='downsamp',], aes(x=tempchange, y=slope,
+                                             group = boot)) +
+    geom_ribbon(data = slopesdownsamp[type=='full',], alpha = 0.2, fill = 'black', aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se)) +
+    geom_ribbon(data = slopeave, alpha = 0.25, fill = '#009E73', aes(ymin=slope.l95, ymax=slope.u95)) +
+    geom_line(alpha = 0.1, linewidth = 0.1, color = '#009E73') +
+    geom_line(data = slopesdownsamp[type=='full',], color = 'black', linewidth = 0.5) +
+    geom_line(data = slopeave, color = '#F0E442', linewidth = 0.5) +
+    facet_grid(cols = vars(REALM), scales = 'free')  +
+    labs(tag = 'b)', x = 'Temperature change rate [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+         color = 'Type') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
+          axis.text=element_text(size=7),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
+    scale_y_continuous(trans = signedsqrttrans, 
+                       breaks = c(-1,-0.5, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.5, 1)) +
+    scale_x_continuous(trans = signedsqrttrans,
+                       breaks = c(-1, -0.5, -0.1, 0, 0.1, 0.5, 1))
+
+# c) plot of sensitivity across Tave from downsampling
+p3 <- ggplot(sensdownsamp, aes(tempave, sensitivity, group = interaction(tsign, boot), color = tsign, fill = tsign)) +
+    geom_line(alpha = 0.15, linewidth = 0.1, position = position_dodge(width=2)) + # the downsampled fits
+    geom_errorbar(alpha = 0.15, linewidth = 0.1, 
+                  aes(ymin = sensitivity-1.96*sensitivity.se, ymax = sensitivity+1.96*sensitivity.se),
+                  position = position_dodge(width=2)) +
+    geom_line(data = sensfull, alpha = 1, linewidth = 0.5, color = 'black', aes(group = tsign)) + # the fit to the full dataset
+    geom_errorbar(data = sensfull, alpha = 1, linewidth = 0.5, width = 0, color = 'black',
+                  aes(group = tsign, ymin = sensitivity-1.96*sensitivity.se, ymax = sensitivity+1.96*sensitivity.se)) +
+    geom_line(data = sensave, alpha = 1, linewidth = 1, position = position_dodge(width=3)) + # the average across downsampled fits
+    geom_errorbar(data = sensave, alpha = 1, linewidth = 1, width = 0,
+                  aes(ymin = sensitivity.l95, ymax = sensitivity.u95),
+                  position = position_dodge(width=3)) +
+    facet_grid(col = vars(REALM)) +
+    labs(tag = 'c)',
+         x = 'Ave. temp. [°C]', 
+         y = 'Sensitivity') +
+    scale_color_manual(values=c('#0072B2', '#D55E00')) +
+    scale_fill_manual(values=c('#0072B2', '#D55E00')) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          legend.position='none', # no legend
+          plot.tag=element_text(face='bold'),
+          axis.text=element_text(size=7),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
+    coord_cartesian(clip = 'off') + 
+    scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
+
+
+
+figs4 <- arrangeGrob(p1, p2, p3, ncol = 1, heights=c(2,3,3))
+
+ggsave('figures/figS4.png', figs4, width = 183, height = 200, units = 'mm')
+
+
+
+
+### Figure S5: T_change x T_ave interaction and T_change x microclimate interaction ---------
+# read in Tchange x Tave slopes
+slopesTchangeTave <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # made by pred_GLMM.R
+
+# Tchange effects from microclimate model
+slopescov <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds'))
+slopescov <- slopescov[tempave == 13 & tempchange > 0 & microclim < 0.9,]
+slopescov[, REALM := factor(REALM, levels = c('Terrestrial', 'Marine'))] # re-order for nicer plotting
+
+# plot
+p1 <- ggplot(slopesTchangeTave, aes(tempchange, tempave, z = slope)) +
+    geom_raster(aes(fill = slope)) +
+    labs(tag = 'a)', x = 'Temperature change (°C/yr)', y = 'Average Temperature (°C)') +
+    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Turnover rate') +
+    facet_grid(cols = vars(REALM)) +
+    theme(axis.text = element_text(size = 5), 
+          axis.title = element_text(size = 7),
+          strip.text = element_text(size=7),
+          plot.tag=element_text(face='bold'),
+          panel.background = element_blank(),
+          axis.line = element_line(colour = "black"),
+          legend.position = "top",
+          legend.margin = margin(c(0, 0.1, -5, 0)),
+          legend.justification = c(0.92, 0.9),
+          legend.text=element_text(size= 5),
+          legend.title=element_text(size= 7),
+          legend.title.align = 1)
+
+
+# b) plot of turnover rate vs. Tchange from microclimate model
 p2 <- ggplot(data = slopescov, aes(x=tempchange, group = factor(microclim), color = microclim)) +
     geom_line(mapping=aes(y = slope_microclim), linewidth=0.5) +
     scale_color_gradientn(colors = c("#4B0049", "#5D014F", "#700853", "#821554", "#932252",
@@ -857,63 +952,9 @@ p2 <- ggplot(data = slopescov, aes(x=tempchange, group = factor(microclim), colo
 
 p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
+figs5 <- arrangeGrob(p1, p2, ncol = 1, heights=c(2,2))
 
-# c) plot of turnover rate vs. Tchange from downsampling
-p3 <- ggplot(slopesdownsamp[type=='downsamp',], aes(x=tempchange, y=slope,
-                                             group = boot)) +
-    geom_ribbon(data = slopesdownsamp[type=='full',], alpha = 0.2, fill = '#D55E00', aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se)) +
-    geom_ribbon(data = slopeave, alpha = 0.25, fill = '#0072B2', aes(ymin=slope.l95, ymax=slope.u95)) +
-    geom_line(alpha = 0.1, linewidth = 0.1, color = '#0072B2') +
-    geom_line(data = slopesdownsamp[type=='full',], color = '#D55E00', linewidth = 1) +
-    geom_line(data = slopeave, color = 'black', linewidth = 1) +
-    facet_grid(cols = vars(REALM), scales = 'free')  +
-    labs(tag = 'c)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
-         color = 'Type') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          plot.tag=element_text(face='bold'),
-          axis.text=element_text(size=7),
-          axis.title=element_text(size=7),
-          plot.title=element_text(size=7)) +
-    scale_y_continuous(trans = signedsqrttrans, 
-                       breaks = c(-1,-0.5, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.5, 1)) +
-    scale_x_continuous(trans = signedsqrttrans,
-                       breaks = c(-1, -0.5, -0.1, 0, 0.1, 0.5, 1)) +
-    scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
-    guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
-
-figs4 <- arrangeGrob(p1, p2, p3, ncol = 1, heights=c(1,2,2))
-
-ggsave('figures/figS4.png', figs4, width = 183, height = 200, units = 'mm')
-
-
-
-
-### Figure S5: T_change x T_ave interaction ---------
-
-# read in slopes
-slopesTchangeTave <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # made by pred_GLMM.R
-
-# plot
-p1 <- ggplot(slopesTchangeTave, aes(tempchange, tempave, z = slope)) +
-    geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (°C/yr)', y = 'Average Temperature (°C)') +
-    scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Turnover rate') +
-    facet_grid(cols = vars(REALM)) +
-    theme(axis.text = element_text(size = 5), 
-          axis.title = element_text(size = 7),
-          strip.text = element_text(size=7),
-          panel.background = element_blank(),
-          axis.line = element_line(colour = "black"),
-          legend.position = "top",
-          legend.margin = margin(c(0, 0.1, -5, 0)),
-          legend.justification = c(0.92, 0.9),
-          legend.text=element_text(size= 5),
-          legend.title=element_text(size= 7),
-          legend.title.align = 1)
-
-ggsave('figures/figS5.png', p1, width = 183, height = 92, units = 'mm')
+ggsave('figures/figS5.png', figs5, width = 183, height = 184, units = 'mm')
 
 
 

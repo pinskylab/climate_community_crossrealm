@@ -68,7 +68,6 @@ ggplot(slopespredsdT[type=='downsamp',], aes(x=tempchange, y=slope,
 
 
 ### Tchange x Tave effects ---------
-senspred <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R, Tchange x Tave x Realm x Year model
 
 # downsampled files to read in
 sensfiles <- list.files(path = 'temp', pattern = glob2rx('sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu_boot*.rds'), full.names=TRUE) # from fit_pred_turnover_GLMM_downsamp.R
