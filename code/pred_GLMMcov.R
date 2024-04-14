@@ -71,7 +71,7 @@ print(humaninfile)
 
 ### Make predictions -------------------------
 # set up prediction frame
-newdat <- data.table(expand.grid(tempave = c(0, 8, 10, 13, 30), tempchange = seq(-1.5, 2, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial'), microclim.sc = seq(-2, 2, length.out=10)))
+newdat <- data.table(expand.grid(tempave = c(0, 8, 10, 13, 30), tempchange = seq(0, 2, length.out=50), duration = 1:10, REALM = c('Marine', 'Terrestrial'), microclim.sc = seq(-2, 2, length.out=10)))
 newdat[, ':='(human_bowler.sc = microclim.sc)]
 newdat$STUDY_ID <- 1
 newdat$rarefyID <- 1

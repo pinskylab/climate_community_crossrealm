@@ -428,16 +428,16 @@ sensitivity2 <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsignCo
 sensitivity2[, REALM := factor(REALM, levels = c('Terrestrial', 'Marine'))] # re-order for nicer plotting
 
 # turnover rate by realm and environmental covariate at a set Tchange and Tave level
-slopes2[tempave==10 & abs(tempchange - 0.3) < 0.02 & (abs(human_bowler) < 0.1 | abs(human_bowler - 10) < 0.1), .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
+slopes2[tempave==10 & abs(tempchange - 1) < 0.02 & (abs(human_bowler) < 0.1 | abs(human_bowler - 10) < 0.1), .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
         by = .(REALM, microclim, human_bowler, tempchange)][order(REALM, microclim, tempchange)]
 
 # ratio of homogenous vs. heterogeneous
-slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 0.3) < 0.02 & abs(microclim  - 0.02) < 0.01, .(slope_microclim)] / 
-    slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 0.3) < 0.02 & abs(microclim  - 1.14) < 0.01, .(slope_microclim)]
+slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 1) < 0.02 & abs(microclim  - 0.02) < 0.01, .(slope_microclim)] / 
+    slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 1) < 0.02 & abs(microclim  - 1.14) < 0.01, .(slope_microclim)]
 
 # ratio of human impacted vs. not
-slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 0.3) < 0.02 & abs(human_bowler  - 10) < 0.01, .(slope_human)] / 
-    slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 0.3) < 0.02 & abs(human_bowler  - 0.055) < 0.01, .(slope_human)]
+slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 1) < 0.02 & abs(human_bowler  - 10) < 0.01, .(slope_human)] / 
+    slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 1) < 0.02 & abs(human_bowler  - 0.055) < 0.01, .(slope_human)]
 
 # plots
 ylims.microclimate <- c(-0.015, 0.045)
@@ -779,7 +779,7 @@ mtext('f)', side = 3, line = -0.5, adj = -0.28, font = 2)
 dev.off()
 
 
-### Figure S4: turnover by taxon, Tchange effects from covariate models, and downsampled Tchange effects----------
+### Figure S4: turnover by taxon, downsampled Tchange and Tave effects----------
 # slopes for all timeseries
 bt <- fread('output/turnover_w_covariates.csv.gz') # covariate data from assemble_turnover_covariates.Rmd
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
