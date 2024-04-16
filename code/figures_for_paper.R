@@ -59,12 +59,13 @@ trends[duration_group == 'All' & rarefyID =='339_1085477' & measure=='Jtu',]
 # median and range of temporal turnover across studies
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends <- trends[duration_group == 'All' & rarefyID %in% bt$rarefyID & year2 - year1 >2,]
-trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend') # wide format for plotting
+trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend') # wide format
 trendsw[, STUDY_ID := vapply(strsplit(rarefyID,"_"), `[`, 1, FUN.VALUE=character(1))] # extract STUDY_ID from rarefyID
 trends_by_study <- trendsw[, .(Horn = mean(Horn, na.rm=TRUE), Jbeta = mean(Jbeta), Jtu = mean(Jtu)), by = STUDY_ID]
 trends_by_study[, median(Jtu)]
 groupwiseMedian(Jtu ~ 1, data = trends_by_study, conf = 0.95, R = 5000, percentile = TRUE, 
-                                  bca = FALSE, basic = FALSE, normal = FALSE, wilcox = FALSE, digits = 3)
+                                  bca = FALSE, basic = FALSE, normal = FALSE, wilcox = FALSE, digits = 3) # median turnover rate and 95% CIs
+trends_by_study[Jtu < 0, .N] # number of studies with negative turnover rates
 
 trends_by_study[, range(Jtu)]
 
