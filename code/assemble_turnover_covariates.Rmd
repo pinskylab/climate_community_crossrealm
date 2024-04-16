@@ -3,13 +3,13 @@ title: "Pairwise dissimilarity covariate data prep and visualization"
 output:
   github_document: default
 ---
-Trims based on data quality, separates the data points to use for 3/5/10/20 year comparisons, and adds covariate data.
+Trims based on data quality and adds covariate data.
 
 ```{r setup}
 if(Sys.info()[[4]]=='annotate.sebs.rutgers.edu'){ # for gam smoother
-library('mgcv', lib.loc = '/usr/lib64/R/library') # when running on Annotate. Need to load 1.8-26, not 1.8-33.
+    library('mgcv', lib.loc = '/usr/lib64/R/library') # when running on Annotate. Need to load 1.8-26, not 1.8-33.
 } else {
-  library(mgcv)
+    library(mgcv)
 }
 library(data.table)
 library(ggplot2)
@@ -19,6 +19,8 @@ library(grid) # to combine ggplots together
 require(scales) # for custom axis scales
 require(here)
 source(here('code', 'util.R')) # simple utility functions
+logit <- function(x) return(log(x/(1-x)))
+
 
 ```
 
@@ -127,9 +129,7 @@ btall[, ':='(tempave.sc = scale(tempave),
            microclim.sc = scale(log(microclim)),
            tempchange.sc = scale(tempchange, center = TRUE), 
            tempchange_abs.sc = scale(abs(tempchange), center = TRUE),
-           nspp.sc = scale(log(Nspp)),
-           duration.sc = scale(duration),
-           durationlog.sc = scale(log(duration)))]
+           nspp.sc = scale(log(Nspp)))]
 btall[, human_bowler.sc := scale(log(human_bowler+1)), by = REALM2] # separate scaling by realm
 
 
@@ -162,11 +162,11 @@ btall[, length(unique(rarefyID)), by = REALM]
 
 ## Write out
 ```{r write out}
-write.csv(btall[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, year1, year2, duration, 
-                   Jtu.sc, Jne.sc, Jbeta.sc, Horn.sc, 
+write.csv(btall[,.(STUDY_ID, rarefyID, rarefyID_x, rarefyID_y, REALM, Biome, taxa_mod, taxa_mod2, Nspp, year1, year2, duration, 
+                   Jtu, Jtu.sc, Horn, Horn.sc, 
                    tempave.sc, 
                    microclim.sc, tempchange, tsign, tempchange.sc, tempchange_abs.sc,
-                   duration.sc, durationlog.sc, human_bowler.sc, REALM2)], 
+                   human_bowler.sc, REALM2)], 
           gzfile(here('output', 'turnover_w_covariates.csv.gz')), row.names = FALSE)
 write.csv(scalingall, here('output','turnover_w_covariates_scaling.csv'), row.names = FALSE)
 ```
@@ -216,8 +216,7 @@ invisible(btall[, hist(Horn, main = 'Morisita-Horn', breaks = 80)])
 
 
 ```
-
-## Unscaled covariates
+## Unscaled covariate distributions
 ```{r histograms unscaled, fig.height = 9}
 # histograms to examine
 cexmain = 0.6
@@ -232,7 +231,7 @@ invisible(btaveall[, hist(Nspp, main = 'Species richness', cex.main = cexmain)])
 invisible(btaveall[, hist(human_bowler, main = 'Human impact score (Bowler)', cex.main = cexmain)])
 ```
 
-## Scaled covariates
+## Scaled covariate distributions
 ```{r histograms scaled, fig.height = 9}
 # histograms to examine
 cexmain = 0.6
@@ -245,86 +244,10 @@ invisible(btaveall[, hist(nspp.sc, main = 'log Species richness', cex.main = cex
 invisible(btaveall[, hist(human_bowler.sc, main = 'log Human impact score (Bowler)', cex.main = cexmain)])
 ```
 
-
-
-# Check correlations among variables 
+# Correlations among variables 
 Pearson's r is in the lower triangle
 ```{r pairs, fig.height=10, fig.width=10}
 pairs(formula = ~ tempave.sc + microclim.sc + tempchange.sc + tempchange_abs.sc + nspp.sc + human_bowler.sc, data = btaveall, gap = 1/10, cex = 0.2, col = '#00000022', lower.panel = panel.cor)
 
 ```
-
-
-# Compare covariates across realms
-```{r compare across realms, fig.height=12, fig.width=9}
-par(mfrow=c(5,3))
-beanplot(rarefyID_y ~ REALM, data = btaveall, what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Latitude (degN)', ll = 0.05)
-beanplot(tempave ~ REALM, data = btaveall, what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature (degC)', ll = 0.05)
-beanplot(microclim ~ REALM, data = btaveall, what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Microclimates (degC)', ll = 0.05)
-beanplot(tempchange ~ REALM, data = btaveall, what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Temperature change (degC)', ll = 0.05)
-beanplot(Nspp ~ REALM, data = btaveall, what = c(1,1,1,1), col = c("#CAB2D6", "#33A02C", "#B2DF8A"), border = "#CAB2D6", ylab = 'Number of species', ll = 0.05, log = 'y')
-
-```
-
-- Marine are in generally warmer locations (seawater doesn't freeze)
-- Marine has a lot of slow, crawling organisms, but land has plants. Land also has birds (fast).
-
-# Frequency of time differences
-```{r plot time differences}
-invisible(btall[, hist(year2 - year1, breaks = seq(0.5, max(year2 - year1)+0.5, by = 1))])
-```
-
-# Plot dissimilarity vs. time
-## Jaccard turnover
-```{r plot diss vs time, echo=FALSE, fig.height = 3, fig.width = 11}
-p1 <- ggplot(btall, aes(duration, Jtu, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Years', y = 'Jaccard turnover')
-
-p1
-```
-
-# Plot slope vs. explanatory variables
-## Each variable individually
-Lines are ggplot smoother fits
-Just Jtu for now, slope within rarefyID for btaveall
-```{r plot diss v explanatory vars, echo=FALSE, warning = FALSE, message = FALSE, fig.height = 16, fig.width = 9}
-p1 <- ggplot(btaveall, aes(REALM, Jtuslope)) +
-  geom_boxplot(na.rm = TRUE) + 
-  labs(x = 'Realm', y = 'Jaccard slope')
-
-p2 <- ggplot(btaveall, aes(tempave, Jtuslope)) +
-  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Temperature (°C)', y = 'Jaccard slope')
-
-p5 <- ggplot(btaveall, aes(microclim, Jtuslope)) +
-  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
-  scale_color_brewer(palette="Set1") + 
-  scale_x_log10() +
-  labs(x = 'Microclimate availability (°C)', y = 'Jaccard slope')
-
-p11 <- ggplot(btaveall, aes(Nspp, Jtuslope)) +
-  geom_point(aes(color = REALM), size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs"), na.rm = TRUE, color = 'black') +
-  scale_color_brewer(palette="Set1") + 
-  scale_x_log10() +
-  labs(x = 'Number of species', y = 'Jaccard slope')
-
-p15 <- ggplot(btaveall, aes(human_bowler, Jtuslope, color = REALM)) +
-  geom_point(size = 0.2, alpha = 0.5, na.rm = TRUE) + 
-  geom_smooth(method = 'gam', formula = y ~ s(x, bs = "cs", k = 5), na.rm = TRUE) +
-  scale_color_brewer(palette="Set1") + 
-  labs(x = 'Bowler human impact score', y = 'Jaccard slope')
-
-grid.arrange(p1, p2, p5, p11, p15, ncol = 2)
-```
-
-- Strong trends with temperature change, but trends are pretty symmetric around no trend in temperature, which implies warming or cooling drives similar degree of community turnover.
-
-
-
 

@@ -10,8 +10,8 @@ library(gridExtra) # to combine ggplots together
 library(grid) # to combine ggplots together
 library(RColorBrewer)
 library(scales) # for defining signed sqrt axis transformation
+library(rcompanion) # for groupwiseMedian
 library(here)
-library(rcompanion) # for CIs on median
 source(here('code', 'util.R'))
 
 
@@ -23,13 +23,33 @@ bt[, .(nyears = length(unique(c(year1, year2)))), by = rarefyID][, sum(nyears)] 
 bt[, length(unique(STUDY_ID))] # number of studies
 bt[, length(unique(rarefyID))] # number of timeseries
 bt[, length(unique(paste(rarefyID_x, rarefyID_y)))] # number of unique locations
-bt[, .(N = length(unique(rarefyID))), by = REALM] # numbers of time-series by realm
-bt[, length(unique(rarefyID)), by = taxa_mod2] # number of time-series by taxon group
 bt[, .(Nts = length(unique(rarefyID))), by = STUDY_ID][Nts >1, .N] # number of studies with >1 rarefyID
 bt[, range(duration+1)] # range of years sampled (2 to 119)
-bt[, median(duration+1)] # median time series length
-bt[unscaleme(tempave.sc, 'tempave.sc') >10 & REALM=='Marine', length(unique(rarefyID))] # number of timeseries >10degC
-bt[unscaleme(tempave.sc, 'tempave.sc') >10  & REALM=='Marine', length(unique(rarefyID))]/bt[REALM=='Marine', length(unique(rarefyID))] # proportion of timeseries >10degC
+bt[, median(duration+1)] # median time series length. add one to include the start year.
+bt[, .(N = length(unique(rarefyID))), by = REALM] # numbers of time-series by realm
+bt[, length(unique(rarefyID)), by = taxa_mod2] # number of time-series by taxon group
+
+# dataset size for Jtu models
+modInit <- readRDS(here('temp', 'modOBRInitAllJtu.rds')) # Year model. Fit by code/fit_turnover_GLMM.R
+nrow(modInit$frame) # number of pairwise dissimilarities
+nrow(ranef(modInit)$cond$`rarefyID:STUDY_ID`) # number of time series
+nrow(ranef(modInit)$cond$STUDY_ID) # number of studies
+
+# dataset size for Horn models
+modInitHorn <- readRDS(here('temp', 'modOBRInitAllHorn.rds')) # Year model. Fit by code/fit_turnover_GLMM.R
+nrow(modInitHorn$frame) # number of pairwise dissimilarities
+nrow(ranef(modInitHorn)$cond$`rarefyID:STUDY_ID`) # number of time series
+nrow(ranef(modInitHorn)$cond$STUDY_ID) # number of studies
+
+# dataset size for Gain-Loss models
+modInitGL <- readRDS(here('temp', 'modOBRInitGLAllJtu.rds')) # Year model. Fit by code/fit_turnover_GLMM.R
+nrow(modInitGL$frame) # number of pairwise dissimilarities
+length(unique(modInitGL$frame$rarefyID)) # number of pairwise dissimilarities
+nrow(ranef(modInitGL)$cond$STUDY_ID) # number of studies
+
+# dataset size for microclimate and human impact models
+modmicroclim <- readRDS(here('temp', 'modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu_marterr.rds')) # Microclimate model. Fit by code/fit_turnover_GLMM.R
+length(unique(modmicroclim$frame$rarefyID)) # number of pairwise dissimilarities
 
 # temporal turnover for Swedish birds
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
@@ -39,52 +59,59 @@ trends[duration_group == 'All' & rarefyID =='339_1085477' & measure=='Jtu',]
 # median and range of temporal turnover across studies
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends <- trends[duration_group == 'All' & rarefyID %in% bt$rarefyID & year2 - year1 >2,]
-trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend') # wide format for plotting
+trendsw <- dcast(trends, rarefyID ~ measure, value.var = 'disstrend') # wide format
 trendsw[, STUDY_ID := vapply(strsplit(rarefyID,"_"), `[`, 1, FUN.VALUE=character(1))] # extract STUDY_ID from rarefyID
 trends_by_study <- trendsw[, .(Horn = mean(Horn, na.rm=TRUE), Jbeta = mean(Jbeta), Jtu = mean(Jtu)), by = STUDY_ID]
 trends_by_study[, median(Jtu)]
 groupwiseMedian(Jtu ~ 1, data = trends_by_study, conf = 0.95, R = 5000, percentile = TRUE, 
-                                  bca = FALSE, basic = FALSE, normal = FALSE, wilcox = FALSE, digits = 3)
+                                  bca = FALSE, basic = FALSE, normal = FALSE, wilcox = FALSE, digits = 3) # median turnover rate and 95% CIs
+trends_by_study[Jtu < 0, .N] # number of studies with negative turnover rates
 
 trends_by_study[, range(Jtu)]
 
 
 
 ### Likelihood ratio tests among models ----------------
-if(!exists('modRealmInitAllJtu')) modRealmInitAllJtu <- readRDS(here('temp', 'modRealmInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
-if(!exists('modsdTRealmtsigninitAllJtu')) modsdTRealmtsigninitAllJtu <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # Tchange model Fit by code/turnover_GLMM_fit.R
-if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
-if(!exists('modrawTsdTTRealmtsignmicroclimInitAllJtu')) modrawTsdTTRealmtsignmicroclimInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimInitAllJtu.rds') # Microclimate model. Fit by code/turnover_GLMM_fit.R
-if(!exists('modrawTsdTTRealmtsignhumanInitAllJtu')) modrawTsdTTRealmtsignhumanInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanInitAllJtu.rds') # Human impact model. Fit by code/turnover_GLMM_fit.R
+modTchange <- readRDS(here('temp', 'modOBMERtsRealmtsignTchangeinitAllJtu.rds')) # Tchange x Realm model. Fit by code/fit_turnover_GLMM.R
+modTchangeYear <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Realm x Year model. Fit by code/fit_turnover_GLMM.R
+modTchangeTave <- readRDS(here('temp','modOBMERtsRealmtsignTchangeTaveinitAllJtu.rds')) # Tchange x Tave x Realm model. Fit by code/fit_turnover_GLMM.R
+modTchangeTaveYear <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave x Year x Realm model. Fit by code/fit_turnover_GLMM.R
+modTchangeTaveYearmarterr <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu_marterr.rds')) # Tchange x Tave x Year marine-terrestrial model. Fit by code/fit_turnover_GLMM.R
+modmicroclimmarterr <- readRDS('temp/modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu_marterr.rds') # marine-terrestrial Microclimates. Fit by fit_turnover_GLMM.R.
+modhumanmarterr <- readRDS('temp/modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu_marterr.rds') # Human impact marine-terrestrial model. Fit by fit_turnover_GLMM.R
 
-anova(modRealmInitAllJtu, modsdTRealmtsigninitAllJtu) # Realm vs. Tchange model
-anova(modsdTRealmtsigninitAllJtu, modrawTsdTTRealmtsigninitAllJtu) # Tchange vs. Tchange x Tave model
-anova(modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignmicroclimInitAllJtu) # Tchange x Tave model vs. microclimate
-anova(modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignhumanInitAllJtu) # Tchange x Tave model vs. human
+anova(modTchange, modTchangeYear) # Test for Tchange effect by comparing Tchange x Realm vs. Tchange x Year x Realm model
+anova(modTchangeTave, modTchangeTaveYear) # Test for Tave effect by comparing Tchange x Tave x Realm vs. Tchange x Tave x Year x Realm model
+anova(modTchangeTaveYearmarterr, modmicroclimmarterr) # Tchange x Tave x Year model vs. microclim
+anova(modTchangeTaveYearmarterr, modhumanmarterr) # Tchange x Tave x Year model vs. human
 
 
 
 ### Table 1: AICs --------------
-if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
-if(!exists('modRealmInitAllJtu')) modRealmInitAllJtu <- readRDS('temp/modRealmInitAllJtu.rds') # Realm. Fit by code/turnover_GLMM_fit.R
-if(!exists('modTaxamod2InitAllJtu')) modTaxamod2InitAllJtu <- readRDS('temp/modTaxamod2InitAllJtu.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
-if(!exists('modsdTRealmtsigninitAllJtu')) modsdTRealmtsigninitAllJtu <- readRDS(here('temp', 'modsdTRealmtsigninitAllJtu.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
-if(!exists('modabsLatsdTabsLatRealmtsignInitAllJtu')) modabsLatsdTabsLatRealmtsignInitAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitAllJtu.rds')) # Tchange x Latitude model. Fit by code/turnover_GLMM_fit.R
-if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
+
+# load models
+modInit <- readRDS(here('temp', 'modOBRInitAllJtu.rds')) # Null with duration and realm. Fit by code/fit_turnover_GLMM.R
+modRealmYear <- readRDS('temp/modOBRRealmInitAllJtu.rds') # Realm x Year. Fit by code/fit_turnover_GLMM.R
+modTaxonYear <- readRDS('temp/modOBTTaxamod2InitAllJtu.rds') # Taxon x Year. Fit by code/fit_turnover_GLMM.R
+modTchange <- readRDS(here('temp', 'modOBMERtsRealmtsignTchangeinitAllJtu.rds')) # Tchange x Realm model. Fit by code/fit_turnover_GLMM.R
+modTchangeYear <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Year x Realm model. Fit by code/fit_turnover_GLMM.R
+modTchangeTave <- readRDS(here('temp','modOBMERtsRealmtsignTchangeTaveinitAllJtu.rds')) # Tchange x Tave x Realm model. Fit by code/fit_turnover_GLMM.R
+modLatYear <- readRDS(here('temp', 'modOBabsLatsdTabsLatMERtsRealmtsignInitAllJtu.rds')) # Tchange x Lat x Year x Realm model. Fit by code/fit_turnover_GLMM.R
+modTchangeTaveYear <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave x Year x Realm model. Fit by code/fit_turnover_GLMM.R
+
 
 # compare Tchange amd Tchange x Tave models against null
-aics <- AIC(modInitAllJtu, modRealmInitAllJtu, modTaxamod2InitAllJtu, # simple models w/out Tchange
-            modsdTRealmtsigninitAllJtu, # Tchange
-            modabsLatsdTabsLatRealmtsignInitAllJtu, modrawTsdTTRealmtsigninitAllJtu) # add Tchange x Tave
+aics <- AIC(modInit, modRealmYear, modTaxonYear, # simple models w/out Tchange
+            modTchange,
+            modTchangeYear, # Tchange x Year
+            modLatYear, # latitude x Year
+            modTchangeTave,
+            modTchangeTaveYear) # add Tchange x Tave x Year
 aics$dAIC <- aics$AIC - min(aics$AIC)
-aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllJtu']
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInit']
 aics
 
 write.csv(aics, here('figures', 'table1.csv'))
-
-
-
-
 
 
 ### Figure 1: map and data --------
@@ -111,8 +138,8 @@ temptrends[, .(mean = mean(tempchange), se = sd(tempchange)/sqrt(.N), sd = sd(te
 # a) map
 world <- map_data('world')
 p1 <- ggplot(world, aes(x = long, y = lat, group = group)) +
-    geom_polygon(fill = 'lightgray', color = 'white', size = 0.1) +
-    geom_point(data = bt, aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.3, alpha = 0.4, shape = 16)  +
+    geom_polygon(fill = 'lightgray', color = 'white', linewidth = 0.1) +
+    geom_point(data = bt[!duplicated(rarefyID),], aes(rarefyID_x, rarefyID_y, group = REALM, color = REALM), size = 0.3, alpha = 0.4, shape = 16)  +
     scale_color_brewer(palette="Dark2", name = 'Realm') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -159,9 +186,14 @@ p3 <- ggplot(temptrends[REALM == 'Marine'], aes(x = tempchange, fill = type)) +
 p3 <- addSmallLegend(p3, pointSize = 0.7, spaceLegend = 0.15, textSize = 7)
 
 # d) example of Jtu trend calculation
-p4 <- ggplot(bt[rarefyID=='339_1085477', .(dY = year2 - year1, Jtu.sc)], aes(dY, Jtu.sc)) +
+mod <- glmmTMB(Jtu~dY, data = bt[rarefyID == '339_1085477', .(dY = year2 - year1, Jtu)], family = ordbeta(link = 'logit')) # calc trendline
+preds <- data.table(dY = 1:max(bt[rarefyID == '339_1085477', .(year2 - year1)]))
+preds[, c('Jtu', 'se') := predict(mod, preds, se.fit=TRUE, type = 'response')]
+predspoly <- preds[, .(dY = c(dY, rev(dY)), Jtu = c(Jtu+1.96*se, rev(Jtu-1.96*se)))]
+p4 <- ggplot(bt[rarefyID=='339_1085477', .(dY = year2 - year1, Jtu)], aes(dY, Jtu)) +
     geom_point(alpha = 0.2, size = 0.5, shape = 16) +
-    geom_smooth(method = 'glm', method.args = list(family = beta_family(link='logit')), color = '#a6cee3') + # a beta regression
+    geom_polygon(data = predspoly, fill = '#a6cee355') +
+    geom_line(data = preds, color = '#a6cee3') +
     labs(tag = 'd)', x = 'Temporal distance [years]', y = 'Turnover\n[proportion species]') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
@@ -178,7 +210,7 @@ conceptual[tempchange == 'Slow', tchange := 0]
 conceptual[, Jtu := 0.1 + duration*0.005 + duration*tchange/320]
 
 p5 <- ggplot(conceptual, aes(duration, Jtu, color = tempchange)) +
-    geom_line(size=1) +
+    geom_line(linewidth=1) +
     labs(tag = 'e)', x = 'Temporal distance [years]', y = 'Turnover\n[proportion species]') +
     scale_color_manual(values=c('#0072B2', '#D55E00'), name = expression(T[change])) +
     scale_y_continuous(limits = c(0, 0.5)) +
@@ -194,13 +226,18 @@ fig1 <- arrangeGrob(p1, p2, p3, p4, p5, ncol = 4,
                    layout_matrix = rbind(c(1,1,1,1), c(2,2,3,3), c(4,4,5,5)),
                    heights=c(unit(0.5, "npc"), unit(0.25, "npc"), unit(0.25, "npc")))
 
-ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in')
+ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in', dpi = 600)
 
 
 ### Figure 2: main effects ---------
-# slopes for all timeseries
+# files to read in
 bt <- fread('output/turnover_w_covariates.csv.gz') # from assemble_turnover_covariates.Rmd
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
+slopespredsdT <- readRDS(here('temp', 'slopes_modOBsdTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R. Tchange x Realm x Year model
+slopespred <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R, Tchange x Tave x Realm x Year model
+senspred <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R, Tchange x Tave x Realm x Year model
+
+# slopes for all timeseries
 trends <- trends[duration_group == 'All' & measure == 'Jtu',]
 trends <- merge(trends, bt[!duplicated(rarefyID),. (rarefyID, STUDY_ID, REALM, tempchange)])
 trends[, duration := year2 - year1]
@@ -215,27 +252,22 @@ ave_by_realm[, offset := c(-1, 0, 1)] # amount to vertically dodge the lines in 
 write.csv(ave_by_realm, file='output/ave_by_realm.csv')
 
 # min and max tempchange by realm, for plotting limits
-tempchange_by_realm <- trends[, .(max = quantile(tempchange, na.rm=TRUE, probs = 0.999), min = quantile(tempchange, na.rm=TRUE, probs = 0.001)), by = REALM]
+tempchange_by_realm <- trends[, .(max = max(tempchange, na.rm=TRUE), min = min(tempchange, na.rm=TRUE)), by = REALM]
 
 # predicted slopes from the Tchange model
-slopespredsdT <- readRDS(here('temp', 'slopes_modsdTRealmtsigninitAllJtu.rds')) # from pred_GLMMmodrawXAllJtu.R
 slopespredsdT <- merge(slopespredsdT, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
 slopespredsdT <- slopespredsdT[tempchange > min & tempchange < max & !duplicated(cbind(tempchange, REALM)), ] # trim to min & max by realm
 slopespredsdT[, tsign := factor(sign(tempchange), levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 
 # predicted turnover and sensitivity of turnover rate to temperature change from the Tchange x Tave model
-slopespred <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsigninit.rds')) # from pred_GLMMmodrawXAllJtu.R
-senspred <- readRDS(here('temp', 'sensitivity_rawTsdTTRealmtsigninit.rds')) # from pred_GLMMmodrawXAllJtu.R
 senspred <- senspred[tempave %in% c(0,25), ]
 senspred[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 
-# fastest turnover at highest observed rate of temperature change
-slopespredsdT[, .SD[which.max(slope), .(tempchange, slope)], by = REALM] # just looking at tempchange
-slopespred[, .SD[which.max(slope), .(tempave, tempchange, slope)], by = REALM] # also considering tempave
+# fastest turnover predicted from Tchange model
+slopespredsdT[, .SD[which.max(slope), .(tempchange, slope, slope.se)], by = REALM]
 
-# predicted turnover at moderate rates of temperature change
-slopespredsdT[, .SD[which.min(abs(tempchange - 0.5)), .(tempchange, slope)], by = REALM] # just looking at tempchange
-slopespred[, .SD[which.max(slope), .(tempave, tempchange, slope)], by = REALM] # also considering tempave
+# predicted turnover at moderate rates of temperature change (0.5 degC/yr)
+slopespredsdT[, .SD[which.min(abs(tempchange - 0.5)), .(tempchange, slope, slope.se)], by = REALM]
 
 
 # a) across realms
@@ -245,15 +277,15 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = REALM, fill = REALM)) +
     scale_y_sqrt(breaks = c(0.1, 1, 2, 6)) +
     scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.2, 0.4)) +
     geom_segment(data = ave_by_realm, aes(x=disstrend - 1.96*se, xend = disstrend + 1.96*se, y= ht+offset, yend = ht+offset, color = REALM), alpha = 1) +
-    geom_segment(data = ave_by_realm, aes(x = disstrend, y = 0, xend = disstrend, yend = ht+offset, color = REALM), size=0.5, linetype = 'dashed') +
+    geom_segment(data = ave_by_realm, aes(x = disstrend, y = 0, xend = disstrend, yend = ht+offset, color = REALM), linewidth=0.5, linetype = 'dashed') +
     labs(tag = 'a)', x = expression('Turnover rate ['~Delta~'Turnover/year]'), y = 'Density', title = '') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           plot.tag=element_text(face='bold'),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
+          axis.text=element_text(size=7),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
     scale_fill_brewer(palette = 'Dark2') +
     scale_color_brewer(palette = 'Dark2')
 p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
@@ -263,11 +295,11 @@ p2 <- ggplot() +
     geom_point(data = trends[!is.na(tempchange)], mapping = aes(abs(tempchange), disstrend, size = duration, color = as.factor(tsign)), 
              color='#AAAAAA', alpha = 0.1, stroke = 0) +
     #geom_hline(yintercept = 0, linetype = 'dotted') +
-    geom_line(data = slopespredsdT, mapping=aes(abs(tempchange), slope, color = tsign, group = tsign), size=0.5) +
+    geom_line(data = slopespredsdT, mapping=aes(abs(tempchange), slope, color = tsign, group = tsign), linewidth=0.5) +
     geom_ribbon(data = slopespredsdT, alpha = 0.2, color = NA, 
                 aes(abs(tempchange), slope,
-                    ymin=slope - slope.se, 
-                    ymax=slope + slope.se,
+                    ymin=slope - 1.96*slope.se, 
+                    ymax=slope + 1.96*slope.se,
                     fill = tsign,
                     group = tsign)) +
     scale_color_manual(values=c('#0072B2', '#D55E00')) +
@@ -294,8 +326,10 @@ p2 <- ggplot() +
 p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
 # c) in three parts
-p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
-    geom_point()+
+p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, 
+                                                 ymin = sensitivity-1.96*sensitivity.se, ymax = sensitivity+1.96*sensitivity.se, 
+                                                 group = tsign, color = tsign, fill = tsign)) +
+    geom_point(size = 0.1)+
     geom_line(linetype='dashed')+
     geom_errorbar()+
     facet_grid(col = vars(REALM))+
@@ -309,23 +343,25 @@ p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, ymin = se
           legend.key=element_blank(),
           plot.tag=element_text(face='bold'),
           legend.position='none', # no legend
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
+          axis.text=element_text(size=7),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
     coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -40, xmax = -40, ymin = 0.01, ymax = 0.01) +
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -35, xmax = -35, ymin = 0.01, ymax = 0.01) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -30, xmax = -30, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6)), xmin = -43, xmax = -43, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6)), xmin = -38, xmax = -38, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6)), xmin = -33, xmax = -33, ymin = 0.01, ymax = 0.01) +
     scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
 
-p4 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
-    geom_point()+
+p4 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, 
+                                                ymin = sensitivity-1.96*sensitivity.se, ymax = sensitivity+1.96*sensitivity.se, 
+                                                group = tsign, color = tsign, fill = tsign)) +
+    geom_point(size = 0.1)+
     geom_line(linetype='dashed')+
     geom_errorbar()+
     facet_grid(col = vars(REALM))+
     labs(tag = '',
-         x = 'Ave. temperature [°C]', 
+         x = 'Ave. temp. [°C]', 
          y = '') +
     scale_color_manual(values=c('#0072B2', '#D55E00')) +
     scale_fill_manual(values=c('#0072B2', '#D55E00')) +
@@ -333,14 +369,16 @@ p4 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, ymin = sen
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           legend.position='none', # no legend
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
+          axis.text=element_text(size=7),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
     coord_cartesian(clip = 'off') + 
     scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
-p5 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, ymin = sensitivity-sensitivity.se, ymax = sensitivity+sensitivity.se, group = tsign, color = tsign, fill = tsign)) +
-    geom_point()+
+p5 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, 
+                                            ymin = sensitivity-1.96*sensitivity.se, ymax = sensitivity+1.96*sensitivity.se, 
+                                            group = tsign, color = tsign, fill = tsign)) +
+    geom_point(size = 0.1)+
     geom_line(linetype='dashed')+
     geom_errorbar()+
     facet_grid(col = vars(REALM))+
@@ -353,17 +391,17 @@ p5 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, ymin = sensiti
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
+          axis.text=element_text(size=7),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
     scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
 p5 <- addSmallLegend(p5, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
 fig2 <- arrangeGrob(p1, p2, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix = matrix(c(1,1,1,2,2,2,3,4,5), nrow=3, byrow=TRUE), 
-                    heights = c(1,2,1), widths = c(3,3,4))
+                    heights = c(1,2.5,1), widths = c(3,3,4))
 
-ggsave('figures/fig2.png', fig2, width = 6, height = 6, units = 'in')
+ggsave('figures/fig2.png', fig2, width = 5, height = 6, units = 'in')
 
 
 # w/out model predictions
@@ -371,53 +409,13 @@ p2noT <- ggplot() +
     geom_point(data = trends[!is.na(tempchange)], mapping = aes(abs(tempchange), disstrend, size = duration, color = as.factor(tsign)), 
                color='#AAAAAA', alpha = 0.1, stroke = 0) +
     #geom_hline(yintercept = 0, linetype = 'dotted') +
-    #geom_line(data = slopespredsdT, mapping=aes(abs(tempchange), slope, color = tsign, group = tsign), size=0.5) +
-    #geom_ribbon(data = slopespredsdT, alpha = 0.2, color = NA, 
-    #            aes(abs(tempchange), slope,
-    #                ymin=slope - slope.se, 
-    #                ymax=slope + slope.se,
-    #                fill = tsign,
-    #                group = tsign)) +
-    scale_color_brewer(palette = 'Dark2') +
-    scale_fill_brewer(palette = 'Dark2') +
-    facet_grid(cols = vars(REALM), scales = 'free')  +
-    labs(tag = 'b)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
-         fill = 'Direction', 
-         color = 'Direction',
-         size = 'Duration [years]') +
-    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
-          panel.background = element_blank(), axis.line = element_line(colour = "black"),
-          legend.key=element_blank(),
-          plot.tag=element_text(face='bold'),
-          axis.text=element_text(size=8),
-          axis.title=element_text(size=8),
-          plot.title=element_text(size=8)) +
-    scale_y_continuous(trans = signedsqrttrans, 
-                       breaks = c(-1,-0.3, -0.1, -0.03, -0.01, 0, 0.01, 0.03, 0.1, 0.3, 1)) +
-    scale_x_continuous(trans = signedsqrttrans,
-                       breaks = c(-1, -0.5, -0.1, 0, 0.1, 0.5, 1)) +
-    scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
-    guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
-p2noT <- addSmallLegend(p2noT, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
-
-fig2noT <- arrangeGrob(p1, p2noT, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix = matrix(c(1,1,1,2,2,2,3,4,5), nrow=3, byrow=TRUE), 
-                    heights = c(1,2,1), widths = c(3,3,4))
-ggsave('figures/fig2_nopredsT.png', fig2noT, width = 6, height = 6, units = 'in')
-
-
-# points colored by warming vs. cooling
-# b) plot of change vs. dT
-p2colorpoints <- ggplot() +
-    geom_point(data = trends[!is.na(tempchange)], mapping = aes(abs(tempchange), disstrend, size = duration, color = as.factor(tsign)), 
-               alpha = 0.1, stroke = 0) +
-    #geom_hline(yintercept = 0, linetype = 'dotted') +
-    geom_line(data = slopespredsdT, mapping=aes(abs(tempchange), slope, color = tsign, group = tsign), size=0.5) +
-    geom_ribbon(data = slopespredsdT, alpha = 0.2, color = NA, 
-                aes(abs(tempchange), slope,
-                    ymin=slope - slope.se, 
-                    ymax=slope + slope.se,
-                    fill = tsign,
-                    group = tsign)) +
+    # geom_line(data = slopespredsdT, mapping=aes(abs(tempchange), slope, color = tsign, group = tsign), linewidth=0.5) +
+    # geom_ribbon(data = slopespredsdT, alpha = 0.2, color = NA, 
+    #             aes(abs(tempchange), slope,
+    #                 ymin=slope - 1.96*slope.se, 
+    #                 ymax=slope + 1.96*slope.se,
+    #                 fill = tsign,
+    #                 group = tsign)) +
     scale_color_manual(values=c('#0072B2', '#D55E00')) +
     scale_fill_manual(values=c('#0072B2', '#D55E00')) +
     facet_grid(cols = vars(REALM), scales = 'free')  +
@@ -433,33 +431,42 @@ p2colorpoints <- ggplot() +
           axis.title=element_text(size=8),
           plot.title=element_text(size=8)) +
     scale_y_continuous(trans = signedsqrttrans, 
-                       breaks = c(-1,-0.3, -0.1, -0.03, -0.01, 0, 0.01, 0.03, 0.1, 0.3, 1)) +
+                       breaks = c(-1,-0.5, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.5, 1)) +
     scale_x_continuous(trans = signedsqrttrans,
                        breaks = c(-1, -0.5, -0.1, 0, 0.1, 0.5, 1)) +
     scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
     guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
 
-p2colorpoints <- addSmallLegend(p2colorpoints, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
-fig2colorpoints <- arrangeGrob(p1, p2colorpoints, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix = matrix(c(1,1,1,2,2,2,3,4,5), nrow=3, byrow=TRUE), 
-                       heights = c(1,2,1), widths = c(3,3,4))
-ggsave('figures/fig2_colorpoints.png', fig2colorpoints, width = 6, height = 6, units = 'in')
+p2noT <- addSmallLegend(p2noT, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
+
+fig2noT <- arrangeGrob(p1, p2noT, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix = matrix(c(1,1,1,2,2,2,3,4,5), nrow=3, byrow=TRUE), 
+                    heights = c(1,2.5,1), widths = c(3,3,4))
+ggsave('figures/fig2_nopredsT.png', fig2noT, width = 5, height = 6, units = 'in')
 
 
 
 ### Figure 3: environmental interactions ---------
-slopes2 <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsignCovariateInit.rds')) # turnover rates from code/pred_GLMMmodrawCovariate.R
-sensitivity2 <- readRDS(here('temp', 'sensitivity_rawTsdTTRealmtsignCovariateInit.rds')) # sensitivities from code/pred_GLMMmodrawCovariate.R
-sensitivity2[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting
+slopes2 <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu_marterr.rds')) # turnover rates from code/pred_GLMMcov.R
+sensitivity2 <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu_marterr.rds')) # sensitivities from code/pred_GLMMcov.R
+sensitivity2[, REALM := factor(REALM, levels = c('Terrestrial', 'Marine'))] # re-order for nicer plotting
 
-# max turnover rate by realm and covariate
-slopes2[tempave==10 & tempchange == 2 & human_bowler %in% c(0,10), .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
+# turnover rate by realm and environmental covariate at a set Tchange and Tave level
+slopes2[tempave==10 & abs(tempchange - 1) < 0.02 & (abs(human_bowler) < 0.1 | abs(human_bowler - 10) < 0.1), .(slope_microclim, slope_microclim.se, slope_human, slope_human.se), 
         by = .(REALM, microclim, human_bowler, tempchange)][order(REALM, microclim, tempchange)]
 
-# plots
-ylims.microclimate <- c(-0.02, 0.035)
-ylims.human <- c(-0.02, 0.035)
+# ratio of homogenous vs. heterogeneous
+slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 1) < 0.02 & abs(microclim  - 0.02) < 0.01, .(slope_microclim)] / 
+    slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 1) < 0.02 & abs(microclim  - 1.14) < 0.01, .(slope_microclim)]
 
-p1 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')], 
+# ratio of human impacted vs. not
+slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 1) < 0.02 & abs(human_bowler  - 10) < 0.01, .(slope_human)] / 
+    slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 1) < 0.02 & abs(human_bowler  - 0.055) < 0.01, .(slope_human)]
+
+# plots
+ylims.microclimate <- c(-0.015, 0.045)
+ylims.human <- c(0, 0.045)
+
+p1 <- ggplot(sensitivity2, 
              aes(microclim, sensitivity_microclim, 
                  ymin=sensitivity_microclim-1.96*sensitivity_microclim.se,  
                  ymax=sensitivity_microclim+1.96*sensitivity_microclim.se,
@@ -472,9 +479,9 @@ p1 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')],
          x = 'Microclimate availability',
          y = '') +
     coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.65, xmax = -2.65, ymin = 0.005, ymax = 0.005) + # note x-axis is in log10 units
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.45, xmax = -2.45, ymin = 0.005, ymax = 0.005) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -2.25, xmax = -2.25, ymin = 0.005, ymax = 0.005) +
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.74, xmax = -0.74, ymin = 0.015, ymax = 0.015) + # note x-axis is in log10 units
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.615, xmax = -0.615, ymin = 0.015, ymax = 0.015) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.49, xmax = -0.49, ymin = 0.015, ymax = 0.015) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -485,12 +492,12 @@ p1 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')],
           axis.title.y=element_text(vjust = 6),
           plot.title=element_text(size=8),
           plot.margin = unit(c(0.05, 0.07, 0.05, 0.05), 'in')) +
-    scale_x_log10(limits = c(0.03, 1)) +
+    #scale_x_log10(limits = c(0.03, 1)) +
     lims(y = ylims.microclimate) +
     scale_fill_manual(values = c('#1b9e77', '#7570b3')) + # ColorBrewer2 Dark2 green and blue
     scale_color_manual(values = c('#1b9e77', '#7570b3'))
 
-p2 <- ggplot(sensitivity2[REALM %in% c('Marine', 'Terrestrial')], 
+p2 <- ggplot(sensitivity2, 
              aes(human_bowler, sensitivity_human, 
                  ymin=sensitivity_human-1.96*sensitivity_human.se,  
                  ymax=sensitivity_human+1.96*sensitivity_human.se,
@@ -525,17 +532,17 @@ ggsave('figures/fig3.png', fig3, width = 4, height = 2, units = 'in')
 
 
 ### Table S1: random effects for main model --------------
-if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # Tchange x Tave model Fit by code/turnover_GLMM_fit.R
-if(!exists('sum_modrawTsdTTRealmtsigninitAllJtu')) sum_modrawTsdTTRealmtsigninitAllJtu <- summary(modrawTsdTTRealmtsigninitAllJtu)
-sum_modrawTsdTTRealmtsigninitAllJtu$varcor
-capture.output(print(sum_modrawTsdTTRealmtsigninitAllJtu$varcor), file = 'figures/tableS1.txt')
+modTchangeTave <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave x Realm x Year model. Fit by code/fit_turnover_GLMM.R
+if(!exists('sum_modTchangeTave')) sum_modTchangeTave <- summary(modTchangeTave)
+sum_modTchangeTave$varcor
+capture.output(print(sum_modTchangeTave$varcor), file = 'figures/tableS1.txt')
 
 
 
-### Table S2: fixed effects for Tchange x Tave x Realm x Year model --------------
-if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
-if(!exists('sum_modrawTsdTTRealmtsigninitAllJtu')) sum_modrawTsdTTRealmtsigninitAllJtu <- summary(modrawTsdTTRealmtsigninitAllJtu) # slow
-out <- as.data.frame(sum_modrawTsdTTRealmtsigninitAllJtu$coefficients$cond)
+### Table S2: fixed effects for Tchange x Tave model --------------
+modTchangeTave <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Tave x Realm x Year model. Fit by code/fit_turnover_GLMM.R
+if(!exists('sum_modTchangeTave')) sum_modTchangeTave <- summary(modTchangeTave)
+out <- as.data.frame(sum_modTchangeTave$coefficients$cond)
 
 # get term names
 out$term <- gsub('Terrestrial|Marine|Freshwater|1|-1', '', rownames(out))
@@ -576,18 +583,22 @@ write.csv(format(out, digits=2), file = 'figures/tableS2.csv', row.names=FALSE)
 
 
 ### Table S3: Horn AICs --------------
-modInitAllHorn <- readRDS(here('temp', 'modInitAllHorn.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
-modRealmInitAllHorn <- readRDS('temp/modRealmInitAllHorn.rds') # Realm. Fit by code/turnover_GLMM_fit.R
-modTaxamod2InitAllHorn <- readRDS('temp/modTaxamod2InitAllHorn.rds') # Taxon. Fit by code/turnover_GLMM_fit.R
-modsdTRealmtsigninitAllHorn <- readRDS(here('temp', 'modsdTRealmtsigninitAllHorn.rds')) # Tchange model. Fit by code/turnover_GLMM_fit.R
-modrawTsdTTRealmtsigninitAllHorn <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllHorn.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
+modInitHorn <- readRDS(here('temp', 'modOBRInitAllHorn.rds')) # Null with only duration. Fit by code/fit_turnover_GLMM.R
+modRealmHorn <- readRDS('temp/modOBRRealmInitAllHorn.rds') # Realm. Fit by code/fit_turnover_GLMM.R
+modTaxamod2Horn <- readRDS('temp/modOBTTaxamod2InitAllHorn.rds') # Taxon. Fit by code/fit_turnover_GLMM.R
+modTchangeHorn <- readRDS(here('temp', 'modOBMERtsRealmtsignTchangeinitAllHorn.rds')) # Tchange x Realm model. Fit by code/fit_turnover_GLMM.R
+modTchangeYearHorn <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllHorn.rds')) # Tchange x Year model. Fit by code/fit_turnover_GLMM.R
+modTchangeTaveHorn <- readRDS(here('temp','modOBMERtsRealmtsignTchangeTaveinitAllHorn.rds')) # Tchange x Tave model. Fit by code/fit_turnover_GLMM.R
+modTchangeTaveYearHorn <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllHorn.rds')) # Tchange x Tave x Year model. Fit by code/fit_turnover_GLMM.R
 
 # compare Tchange amd Tchange x Tave models against null
-aics <- AIC(modInitAllHorn, modRealmInitAllHorn, modTaxamod2InitAllHorn, # simple models w/out Tchange
-            modsdTRealmtsigninitAllHorn, # Tchange
-            modrawTsdTTRealmtsigninitAllHorn) # Tchange x Tave
+aics <- AIC(modInitHorn, modRealmHorn, modTaxamod2Horn, # simple models w/out Tchange
+            modTchangeHorn, # Tchange
+            modTchangeYearHorn, # Tchange x Year
+            modTchangeTaveHorn, # Tchange x Tave
+            modTchangeTaveYearHorn) # Tchange x Tave x Year
 aics$dAIC <- aics$AIC - min(aics$AIC)
-aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllHorn']
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitHorn']
 aics
 
 write.csv(aics, here('figures', 'tableS3.csv'))
@@ -595,16 +606,18 @@ write.csv(aics, here('figures', 'tableS3.csv'))
 
 ### Table S4: covariate AICs --------------
 # load models for AICs
-if(!exists('modInitAllJtu')) modInitAllJtu <- readRDS(here('temp', 'modInitAllJtu.rds')) # Null with only duration. Fit by code/turnover_GLMM_fit.R
-if(!exists('modrawTsdTTRealmtsigninitAllJtu')) modrawTsdTTRealmtsigninitAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsigninitAllJtu.rds')) # Tchange x Tave model. Fit by code/turnover_GLMM_fit.R
-if(!exists('modrawTsdTTRealmtsignmicroclimInitAllJtu')) modrawTsdTTRealmtsignmicroclimInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignmicroclimInitAllJtu.rds') # Microclimates. Fit by turnover_GLMM_fit.R.
-if(!exists('modrawTsdTTRealmtsignhumanInitAllJtu')) modrawTsdTTRealmtsignhumanInitAllJtu <- readRDS('temp/modrawTsdTTRealmtsignhumanInitAllJtu.rds') # Human impact. Fit by turnover_GLMM_fit.R
-
+modInit <- readRDS(here('temp', 'modOBRInitAllJtu_marterr.rds')) # Null with duration and realm. Fit by code/fit_turnover_GLMM.R
+modTchange <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu_marterr.rds')) # Tchange x Tave model. Fit by code/fit_turnover_GLMM.R
+modmicroclim <- readRDS('temp/modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu_marterr.rds') # Microclimates. Fit by code/fit_turnover_GLMM.R
+modhuman <- readRDS('temp/modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu_marterr.rds') # Human impact. Fit by code/fit_turnover_GLMM.R
+ 
 # compare covariate models against null
-aics <- AIC(modInitAllJtu, modrawTsdTTRealmtsigninitAllJtu, modrawTsdTTRealmtsignmicroclimInitAllJtu,
-            modrawTsdTTRealmtsignhumanInitAllJtu) 
-aics$dAICtemp <- aics$AIC - aics$AIC[rownames(aics)=='modrawTsdTTRealmtsigninitAllJtu']
-aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitAllJtu']
+aics <- AIC(modInit, 
+            modTchange, 
+            modmicroclim,
+            modhuman) 
+aics$dAICtemp <- aics$AIC - aics$AIC[rownames(aics)=='modTchange']
+aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInit']
 aics
 
 write.csv(aics, here('figures', 'tableS4.csv'))
@@ -614,22 +627,20 @@ write.csv(aics, here('figures', 'tableS4.csv'))
 
 
 ### Table S5: AICs for initgainloss models ------------------
-# with Jtu.init:gainlossprop for Table 1. All fit by code/turnover_GLMMgainloss_fit.R
-if(!exists('modInitGainLossAllJtu')) modInitGainLossAllJtu <- readRDS(here('temp', 'modInitGainLossAllJtu.rds')) # Null
-if(!exists('modRealmInitGainLossAllJtu')) modRealmInitGainLossAllJtu <- readRDS('temp/modRealmInitGainLossAllJtu.rds') # Realm. 
-if(!exists('modTaxamod2InitGainLossAllJtu')) modTaxamod2InitGainLossAllJtu <- readRDS('temp/modTaxamod2InitGainLossAllJtu.rds') # Taxon. 
-if(!exists('modsdTRealmtsignInitGainLossAllJtu')) modsdTRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'modsdTRealmtsignInitGainLossAllJtu.rds')) # Tchange model
-if(!exists('modabsLatsdTabsLatRealmtsignInitGainLossAllJtu')) modabsLatsdTabsLatRealmtsignInitGainLossAllJtu <- readRDS(here('temp', 'modabsLatsdTabsLatRealmtsignInitGainLossAllJtu.rds')) # Tchange x Latitude model
-if(!exists('modrawTsdTTRealmtsignInitGainLossAllJtu')) modrawTsdTTRealmtsignInitGainLossAllJtu <- readRDS(here('temp','modrawTsdTTRealmtsignInitGainLossAllJtu.rds')) # Tchange x Tave model
+# with Jtu.init:gainlossprop for Table 1. All fit by code/turnover_GLMM_fit.R
+modInitGL <- readRDS(here('temp', 'modOBRInitGLAllJtu.rds')) # Null. 
+modRealmGL <- readRDS('temp/modOBRRealmInitGLAllJtu.rds') # Realm.
+modTaxaGL <- readRDS('temp/modOBTTaxamod2InitGLAllJtu.rds') # Taxon. 
+modTchangeGL <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitGLAllJtu.rds')) # Tchange x Year x Realm model
+modTchangeTaveGL <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitGLAllJtu.rds')) # Tchange x Tave x Year x Realm model
 
-aicsIGL <- AIC(modInitGainLossAllJtu, 
-            modRealmInitGainLossAllJtu, 
-            modTaxamod2InitGainLossAllJtu, # simple models w/out Tchange
-            modsdTRealmtsignInitGainLossAllJtu, # Tchange model
-            modabsLatsdTabsLatRealmtsignInitGainLossAllJtu,
-            modrawTsdTTRealmtsignInitGainLossAllJtu) # Tchange x Tave model
+aicsIGL <- AIC(modInitGL, 
+            modRealmGL, 
+            modTaxaGL, 
+            modTchangeGL, 
+            modTchangeTaveGL) 
 aicsIGL$dAIC <- aicsIGL$AIC - min(aicsIGL$AIC)
-aicsIGL$dAICnull <- aicsIGL$AIC - aicsIGL$AIC[rownames(aicsIGL)=='modInitGainLossAllJtu']
+aicsIGL$dAICnull <- aicsIGL$AIC - aicsIGL$AIC[rownames(aicsIGL)=='modInitGL']
 aicsIGL
 
 write.csv(aicsIGL, here('figures', 'tableS5.csv'))
@@ -671,7 +682,7 @@ dev.off()
 
 ### Figure S2: duration problem ----------
 # load raw BioTime
-load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians, which has all pairwise dissimilarities
+load(here::here('data', 'biotime_blowes', 'all_pairs_beta.Rdata')) # load rarefied_beta_medians, which has all pairwise dissimilarities. From 03_collate_resamps_cluster.R
 bt <- data.table(rarefied_beta_medians); rm(rarefied_beta_medians)
 bt[, year1 := as.numeric(year1)] # not sure why it gets read in as character
 bt[, year2 := as.numeric(year2)]
@@ -702,7 +713,7 @@ set.seed(10)
 trends[, gauss.slope := calcslopeGauss(duration), by = rarefyID]
 
 # make mean predictions of turnover rate and temperature change rate
-modloess <- trends[, loess(disstrend~duration)] # loess fit
+modloess <- trends[, loess(disstrend~duration)] # loess fit (slow)
 predsloess <- data.table(duration = 2:118)
 predsloess[, c('disstrend', 'se') := predict(modloess, newdata = predsloess, se.fit = TRUE)]
 
@@ -781,7 +792,7 @@ mtext('e)', side = 3, line = -0.5, adj = -0.28, font = 2)
 # part f: an example negative slope
 bt[rarefyID == '213_435199', plot(dY, Jtu, xlab = 'Temporal difference (years)', ylab = 'Turnover [proportion of species]', col = '#00000044', bty = 'l', 
                                   ylim = c(0,1))]
-mod <- glmmTMB(I(transform01(Jtu))~dY, data = bt[rarefyID == '213_435199',], family = beta_family(link = 'logit')) # calc trendline
+mod <- glmmTMB(Jtu~dY, data = bt[rarefyID == '213_435199',], family = ordbeta(link = 'logit')) # calc trendline
 preds <- data.table(dY = 1:35)
 preds[, c('Jtu', 'se') := predict(mod, preds, se.fit=TRUE, type = 'response')]
 preds[, polygon(x = c(dY, rev(dY)), y= c(Jtu+se, rev(Jtu-se)), col = '#88888855', border = NA)]
@@ -791,9 +802,9 @@ mtext('f)', side = 3, line = -0.5, adj = -0.28, font = 2)
 dev.off()
 
 
-### Figure S4: turnover by taxon ----------
+### Figure S4: turnover by taxon, downsampled Tchange and Tave effects----------
 # slopes for all timeseries
-bt <- fread('output/turnover_w_covariates.csv.gz') # covariate data
+bt <- fread('output/turnover_w_covariates.csv.gz') # covariate data from assemble_turnover_covariates.Rmd
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
 trends <- trends[duration_group == 'All' & measure == 'Jtu',] # trim to those we use
 trends[, duration := year2 - year1]
@@ -807,8 +818,29 @@ ave_by_taxon <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstre
 ave_by_taxon[, offset := seq(1, -1, length.out = 9)] # amount to vertically dodge the lines in part a
 write.csv(ave_by_taxon, file='output/ave_by_taxon.csv')
 
+# Tchange effects on turnover from downsampling: read in files
+slopesdownsamp <- fread('output/downsampTchange.csv.gz')
+slopesdownsamp[, type := 'downsamp']
+slopesfull <- readRDS(here('temp', 'slopes_modOBsdTMERtsRealmtsigninitAllJtu.rds')) # the full dataset model fit. from pred_GLMM.R
+slopesfull <- slopesfull[tempave == 15, ] # all the same, so only need one level
+slopesfull[, ':='(boot = NA_integer_, type = 'full', tempave = NULL)]
+slopesdownsamp <- rbind(slopesdownsamp, slopesfull)
+slopesdownsamp[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting
+slopeave <- slopesdownsamp[type=='downsamp', .(boot=1, slope = mean(slope), slope.u95 = quantile(slope, 0.975), slope.l95 = quantile(slope, 0.025)), by = .(tempchange, REALM)] # average across downsamples
+
+# Tave effects on sensitivity from downsampling: read in files
+sensdownsamp <- fread('output/downsampTave.csv.gz')
+sensdownsamp[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', 'warming'))]
+sensdownsamp[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting
+sensave <- sensdownsamp[type=='downsamp', .(boot=1, sensitivity = mean(sensitivity), sensitivity.u95 = quantile(sensitivity, 0.975), sensitivity.l95 = quantile(sensitivity, 0.025)), 
+                    by = .(tempave, tsign, REALM)] # average across the downsamples
+sensfull <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R, Tchange x Tave x Realm x Year model fit to full dataset.
+sensfull <- sensfull[tempave %in% c(0,25), ]
+sensfull[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', 'warming'))]
+
 
 # plot
+# a) turnover by taxon
 ht <- 6
 pal <- c("#000000","#004949","#009292","#ff6db6","#ffb6db",
          "#490092","#006ddb","#b66dff","#6db6ff","#b6dbff",
@@ -818,36 +850,101 @@ p1 <- ggplot(trends_by_study, aes(x=disstrend, group = taxa_mod2, fill = taxa_mo
     scale_y_sqrt(limits = c(0,7)) +
     scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.1, -0.05, 0, 0.05, 0.1, 0.2, 0.4)) +
     geom_segment(data = ave_by_taxon, aes(x=disstrend - 1.96*se, xend = disstrend + 1.96*se, y= ht+offset, yend = ht+offset, color = taxa_mod2), alpha = 1) +
-    geom_segment(data = ave_by_taxon, aes(x = disstrend, y = 0, xend = disstrend, yend = ht+offset, color = taxa_mod2), size=0.5, linetype = 'dashed') +
-    labs(x = expression('Turnover rate ['~Delta~'Turnover/year]'), y = 'Density', title = '', fill = 'Taxon', color = 'Taxon') +
+    geom_segment(data = ave_by_taxon, aes(x = disstrend, y = 0, xend = disstrend, yend = ht+offset, color = taxa_mod2), linewidth=0.5, linetype = 'dashed') +
+    labs(tag = 'a)', x = expression('Turnover rate ['~Delta~'Turnover/year]'), y = 'Density', title = '', fill = 'Taxon', color = 'Taxon') +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
           axis.text=element_text(size=7),
           axis.title=element_text(size=7),
           plot.title=element_text(size=7)) +
     scale_fill_manual(values = pal) +
     scale_color_manual(values = pal)
 p1 <- addSmallLegend(p1, pointSize = 0.8, spaceLegend = 0.2, textSize = 8)
-ggsave('figures/figS4.png', p1, width = 183, height = 122, units = 'mm')
+
+# b) plot of turnover rate vs. Tchange from downsampling
+p2 <- ggplot(slopesdownsamp[type=='downsamp',], aes(x=tempchange, y=slope,
+                                             group = boot)) +
+    geom_ribbon(data = slopesdownsamp[type=='full',], alpha = 0.2, fill = 'black', aes(ymin=slope-1.96*slope.se, ymax=slope+1.96*slope.se)) +
+    geom_ribbon(data = slopeave, alpha = 0.25, fill = '#009E73', aes(ymin=slope.l95, ymax=slope.u95)) +
+    geom_line(alpha = 0.1, linewidth = 0.1, color = '#009E73') +
+    geom_line(data = slopesdownsamp[type=='full',], color = 'black', linewidth = 0.5) +
+    geom_line(data = slopeave, color = '#F0E442', linewidth = 0.5) +
+    facet_grid(cols = vars(REALM), scales = 'free')  +
+    labs(tag = 'b)', x = 'Temperature change rate [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+         color = 'Type') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
+          axis.text=element_text(size=7),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
+    scale_y_continuous(trans = signedsqrttrans, 
+                       breaks = c(-1,-0.5, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.5, 1)) +
+    scale_x_continuous(trans = signedsqrttrans,
+                       breaks = c(-1, -0.5, -0.1, 0, 0.1, 0.5, 1))
+
+# c) plot of sensitivity across Tave from downsampling
+p3 <- ggplot(sensdownsamp, aes(tempave, sensitivity, group = interaction(tsign, boot), color = tsign, fill = tsign)) +
+    geom_line(alpha = 0.15, linewidth = 0.1, position = position_dodge(width=2)) + # the downsampled fits
+    geom_errorbar(alpha = 0.15, linewidth = 0.1, 
+                  aes(ymin = sensitivity-1.96*sensitivity.se, ymax = sensitivity+1.96*sensitivity.se),
+                  position = position_dodge(width=2)) +
+    geom_line(data = sensfull, alpha = 1, linewidth = 0.5, color = 'black', aes(group = tsign)) + # the fit to the full dataset
+    geom_errorbar(data = sensfull, alpha = 1, linewidth = 0.5, width = 0, color = 'black',
+                  aes(group = tsign, ymin = sensitivity-1.96*sensitivity.se, ymax = sensitivity+1.96*sensitivity.se)) +
+    geom_line(data = sensave, alpha = 1, linewidth = 1, position = position_dodge(width=3)) + # the average across downsampled fits
+    geom_errorbar(data = sensave, alpha = 1, linewidth = 1, width = 0,
+                  aes(ymin = sensitivity.l95, ymax = sensitivity.u95),
+                  position = position_dodge(width=3)) +
+    facet_grid(col = vars(REALM)) +
+    labs(tag = 'c)',
+         x = 'Ave. temp. [°C]', 
+         y = 'Sensitivity') +
+    scale_color_manual(values=c('#0072B2', '#D55E00')) +
+    scale_fill_manual(values=c('#0072B2', '#D55E00')) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          legend.position='none', # no legend
+          plot.tag=element_text(face='bold'),
+          axis.text=element_text(size=7),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
+    coord_cartesian(clip = 'off') + 
+    scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
+
+
+
+figs4 <- arrangeGrob(p1, p2, p3, ncol = 1, heights=c(2,3,3))
+
+ggsave('figures/figS4.png', figs4, width = 183, height = 200, units = 'mm')
 
 
 
 
-### Figure S5: T_change x T_ave interaction ---------
+### Figure S5: T_change x T_ave interaction and T_change x microclimate interaction ---------
+# read in Tchange x Tave slopes
+slopesTchangeTave <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # made by pred_GLMM.R
+slopesTchangeTave[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting in part A
 
-# read in slopes
-slopesTsdTTRealmtsigninit <- readRDS(here('temp', 'slopes_rawTsdTTRealmtsigninit.rds')) # made by pred_modrawXAllJtu.R
+# Tchange effects from microclimate model
+slopescov <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu_marterr.rds'))
+slopescov <- slopescov[tempave == 13 & tempchange > 0 & microclim < 0.9,]
+slopescov[, REALM := factor(REALM, levels = c('Terrestrial', 'Marine'))] # re-order for nicer plotting
 
 # plot
-p1 <- ggplot(slopesTsdTTRealmtsigninit, aes(tempchange, tempave, z = slope)) +
+p1 <- ggplot(slopesTchangeTave, aes(tempchange, tempave, z = slope)) +
     geom_raster(aes(fill = slope)) +
-    labs(x = 'Temperature change (°C/yr)', y = 'Average Temperature (°C)') +
+    labs(tag = 'a)', x = 'Temperature change (°C/yr)', y = 'Average Temperature (°C)') +
     scale_fill_gradient2(high= "#B2182B", mid = "white", low= "#2166AC", midpoint = 0, name = 'Turnover rate') +
     facet_grid(cols = vars(REALM)) +
     theme(axis.text = element_text(size = 5), 
           axis.title = element_text(size = 7),
           strip.text = element_text(size=7),
+          plot.tag=element_text(face='bold'),
           panel.background = element_blank(),
           axis.line = element_line(colour = "black"),
           legend.position = "top",
@@ -857,4 +954,31 @@ p1 <- ggplot(slopesTsdTTRealmtsigninit, aes(tempchange, tempave, z = slope)) +
           legend.title=element_text(size= 7),
           legend.title.align = 1)
 
-ggsave('figures/figS5.png', p1, width = 183, height = 92, units = 'mm')
+
+# b) plot of turnover rate vs. Tchange from microclimate model
+p2 <- ggplot(data = slopescov, aes(x=tempchange, group = factor(microclim), color = microclim)) +
+    geom_line(mapping=aes(y = slope_microclim), linewidth=0.5) +
+    scale_color_gradientn(colors = c("#4B0049", "#5D014F", "#700853", "#821554", "#932252",
+                                     "#963D4E", "#985350", "#95675B", "#B16D51", "#C3774D",
+                                     "#D48349", "#E48F43", "#F29C3B", "#FFAA3B", "#FFBA54")) +
+    facet_grid(cols = vars(REALM), scales = 'free')  +
+    labs(tag = 'b)', x = 'Temperature change rate [°C/year]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')),
+         color = 'Microclimate\navailability [°C]') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8)) +
+    scale_y_continuous(trans = signedsqrttrans) +
+    scale_x_continuous(trans = signedsqrttrans)
+
+p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
+
+figs5 <- arrangeGrob(p1, p2, ncol = 1, heights=c(2,2))
+
+ggsave('figures/figS5.png', figs5, width = 183, height = 184, units = 'mm')
+
+
+

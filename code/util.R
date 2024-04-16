@@ -3,84 +3,6 @@
 # require(Hmisc) # for wtd.var
 require(scales) # for trans_new
 
-# geometric mean. remove NAs and x<0
-geomean = function(x){ 
-    exp(sum(log(x[x > 0 & !is.na(x)])) / length(x[x > 0 & !is.na(x)]))
-}
-
-# geometric standard deviation
-geosd <- function(x){ 
-    exp(sd(log(x[x > 0 & !is.na(x)])))
-}
-
-# weighted mean, but returns regular mean if any w's are NA or if sum(w)==0
-meanwt <- function(x, w){ 
-    w <- w[!is.na(x)] # remove NAs
-    x <- x[!is.na(x)]
-    if(any(is.na(w))){
-        return(mean(x))  
-    } else {
-        if(sum(w) == 0){
-            return(mean(x))
-        } else {
-            return(weighted.mean(x, w))
-        }
-    }
-}
-
-# weighted sd (need Hmisc)
-# sdwt <- function(x, w){ 
-#     w <- w[!is.na(x)] # remove NAs
-#     x <- x[!is.na(x)]
-#     if(any(is.na(w))){
-#         return(sd(x))
-#     } else {
-#         if(sum(w) == 0){
-#             return(sd(x))
-#         } else {
-#             return(sqrt(wtd.var(x = x, weights = w, normwt = TRUE)))        
-#         }
-#     }
-# }
-
-
-# generate ellipse coefficients for the CI on the linear regression coefs, given a dataset with points on a line and standard error for y on the points
-# assumes dat has x in col 1, y in col 2, and SE of y in col 3
-# use the mean SE for now
-# alpha is the alpha level for the CI
-# adapted from https://stats.stackexchange.com/questions/70629/calculate-uncertainty-of-linear-regression-slope-based-on-data-uncertainty
-# return coefs are for an allipse where x is the slope and y is the intercept
-# developed 6 Jan 2022
-ellipse.coefs <- function(dat, alpha = 0.05){
-    a <- sum(dat[,1]^2)
-    b <- nrow(dat)
-    c <- 2*sum(dat[,1])
-    d <- -2*sum(dat[,1]*dat[,2])
-    e <- -2*sum(dat[,2])
-    sigma <- mean(dat[,3])
-    f <- sum(dat[,2]^2) - qchisq(alpha, nrow(dat), lower.tail = FALSE) * sigma^2
-    out <- list(a=a,b=b,c=c,d=d,e=e,f=f)
-}
-
-# make ellipse points from coefficients
-# https://stackoverflow.com/questions/41820683/how-to-plot-ellipse-given-a-general-equation-in-r
-# a*x^2 + b*y^2 + c*x*y + d*x + e*y + f = 0
-# in our application, x is the linear regression slope and y is the intercept
-# developed 6 Jan 2022 to go with ellipse.coefs
-get.ellipse <- function (a, b, c, d, e, f, n.points = 1000) {
-    ## solve for centre
-    A <- matrix(c(a, c / 2, c / 2, b), 2L)
-    B <- c(-d / 2, -e / 2)
-    mu <- solve(A, B)
-    ## generate points on circle
-    r <- sqrt(a * mu[1] ^ 2 + b * mu[2] ^ 2 + c * mu[1] * mu[2] - f)
-    theta <- seq(0, 2 * pi, length = n.points)
-    v <- rbind(r * cos(theta), r * sin(theta))
-    ## transform for points on ellipse
-    z <- backsolve(chol(A), v) + mu
-    return(list(x = z[1,], y = z[2,]))
-}
-
 
 # Modified from http://monkeysuncle.stanford.edu/?p=485
 # Upper and lower are se (or sd)
@@ -162,19 +84,13 @@ calcslopeGauss <- function(dur){
     return(coef(lm(y~x))[2])
 }
 
-# produce ggplot-style colors
-gg_color_hue <- function(n) {
-    hues = seq(15, 375, length = n + 1)
-    hcl(h = hues, l = 65, c = 100)[1:n]
-}
+
 
 # useful transformations for ggplot axes
 signedsqrt = function(x) sign(x)*sqrt(abs(x))
 signedsq = function(x) sign(x) * x^2
 signedsqrttrans <- trans_new(name = 'signedsqrt', transform = signedsqrt, inverse = signedsq)
-signedsqrt2 = function(x) sign(x)*(abs(x)^(1/4))
-signedsq2 = function(x) sign(x) * x^4
-signedsqrt2trans <- trans_new(name = 'signedsqrt2', transform = signedsqrt2, inverse = signedsq2)
+
 
 # from https://stackoverflow.com/questions/52297978/decrease-overal-legend-size-elements-and-text
 addSmallLegend <- function(myPlot, pointSize = 0.5, textSize = 3, spaceLegend = 0.1) {
@@ -191,4 +107,38 @@ addSmallLegend <- function(myPlot, pointSize = 0.5, textSize = 3, spaceLegend = 
 binomci <- function(x, n){
     out <- as.numeric(binom.test(x, n)$conf.int)
     return(list(out[1], out[2]))
+}
+
+# downsample a data.table so that there are t rows for each rarefyID, where t is the number of unique year1 and year2 values
+# (of the t*(t-1)/2 rows that currently exist for each rarefyID)
+# inds is a vector of TRUE/FALSE that indicates which rows are being kept before calling this function
+# seed is a random number seed, for reproducibility
+# returns a vector of TRUE/FALSE to indicate which rows to keep after downsampling
+downsampRarefyID <- function(dat, inds = rep(TRUE, nrow(dat)), seed=1){
+    set.seed(seed)
+    dat[, inds := inds]
+    tslen <- dat[inds == TRUE, .(t = length(unique(c(year1, year2)))), by = rarefyID] # length of each rarefyID
+    dat <- merge(dat, tslen, all.x = TRUE) # merge back. NAs for the rarefyIDs not included by inds
+    dat[inds == TRUE , inds2 := sample(c(rep(TRUE, min(.N, unique(t))), rep(FALSE, max(0,.N-unique(t))))), by = rarefyID] # sample t rows (and make sure t <= existing number of rows)
+    dat[is.na(inds2), inds2 := FALSE]
+    return(dat$inds2)
+}
+
+
+# slopes and SEs from resampling
+# n: number of resamples, other columns are the x, y, and se of y variables
+# colnames refer to the output
+slopesamp <- function(n, duration, Jtu, Jtu.se, colnames = c('slope', 'slope.se')){
+    if(length(duration) != length(Jtu)) stop('duration and Jtu are not the same length')
+    if(length(duration) != length(Jtu.se)) stop('duration and Jtu.se are not the same length')
+    if(length(Jtu) != length(Jtu.se)) stop('Jtu and Jtu.se are not the same length')
+    
+    samp <- rep(NA, n) # will hold the slopes of the sampled data
+    for(j in 1:n){
+        y <- rnorm(length(Jtu), mean = Jtu, sd = Jtu.se) # one sample
+        samp[j] <- coef(lm(y ~ duration))[2] # fit line, get slope
+    }
+    out <- c(coef(lm(Jtu ~ duration))[2], sd(samp))
+    names(out) <- colnames
+    return(as.list(out)) # coercing to list will allow the data.table aggregate used later to create 2 columns
 }
