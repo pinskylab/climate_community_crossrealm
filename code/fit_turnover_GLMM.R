@@ -553,56 +553,6 @@ if (fitmod == 'modOBabsLatsdTabsLatMERtsRealmtsignInitAllJtu') { # also REALM an
 }
 
 # Environmental covariate models #########################
-### microclimate
-if (fitmod == 'modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu') {
-    print(paste(sum(iallJtu), 'data points'))
-    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
-    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
-    mod <- glmmTMB(
-        Jtu ~ duration +
-            REALM +
-            tsign +
-            Jtu.init:duration +
-            REALM:tsign:tempchange_abs.sc +
-            REALM:tsign:tempchange_abs.sc:duration +
-            REALM:tsign:tempave.sc +
-            REALM:tsign:tempave.sc:duration +
-            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
-            REALM:microclim.sc +
-            REALM:microclim.sc:duration +
-            REALM:microclim.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = ordbeta(link = 'logit'),
-        dispformula = ~ REALM)
-    MATCHMOD <- TRUE
-}
-
-### human
-if (fitmod == 'modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu') {
-    print(paste(sum(iallJtu), 'data points'))
-    print(paste(trendsall[iallJtu, length(unique(STUDY_ID))], 'studies'))
-    print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
-    mod <- glmmTMB(
-        Jtu ~ duration +
-            REALM +
-            tsign +
-            Jtu.init:duration +
-            REALM:tsign:tempchange_abs.sc +
-            REALM:tsign:tempchange_abs.sc:duration +
-            REALM:tsign:tempave.sc +
-            REALM:tsign:tempave.sc:duration +
-            REALM:tsign:tempave.sc:tempchange_abs.sc:duration +
-            REALM:human_bowler.sc +
-            REALM:human_bowler.sc:duration +
-            REALM:human_bowler.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtu, ],
-        family = ordbeta(link = 'logit'),
-        dispformula = ~ REALM)
-    MATCHMOD <- TRUE
-}
-
 ### microclimate, only mar and terr
 if (fitmod == 'modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu_marterr') {
     print(paste(sum(iallJtumarterr), 'data points'))
@@ -659,28 +609,6 @@ if (fitmod == 'modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu_marterr') {
     MATCHMOD <- TRUE
 }
 
-### human, only land
-if (fitmod == 'modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu_terr') {
-    print(paste(sum(iallJtuterr), 'data points'))
-    print(paste(trendsall[iallJtuterr, length(unique(STUDY_ID))], 'studies'))
-    print(paste(trendsall[iallJtuterr, length(unique(rarefyID))], 'time series'))
-    mod <- glmmTMB(
-        Jtu ~ duration +
-            tsign +
-            Jtu.init:duration +
-            tsign:tempchange_abs.sc +
-            tsign:tempchange_abs.sc:duration +
-            tsign:tempave.sc +
-            tsign:tempave.sc:duration +
-            tsign:tempave.sc:tempchange_abs.sc:duration +
-            human_bowler.sc +
-            human_bowler.sc:duration +
-            human_bowler.sc:tempchange_abs.sc:duration +
-            (duration | STUDY_ID / rarefyID),
-        data = trendsall[iallJtuterr, ],
-        family = ordbeta(link = 'logit'))
-    MATCHMOD <- TRUE
-}
 
 # Gainloss models #########################
 if (fitmod == 'modOBRInitGLAllJtu') { # Years model
@@ -693,24 +621,6 @@ if (fitmod == 'modOBRInitGLAllJtu') { # Years model
             Jtu.init:duration +
             Jtu.init:gainlossprop:duration +
             REALM +
-            (duration | STUDY_ID),
-        data = trendsall[iGLallJtu, ],
-        family = ordbeta(link = 'logit'),
-        dispformula = ~ REALM
-    )
-    MATCHMOD <- TRUE
-}
-
-if (fitmod == 'modOBTInitGLAllJtu') { # Years model with taxon instead of Realm
-    if (MATCHMOD) stop('Model name matched more than one model!')
-    print(paste(sum(iGLallJtu), 'data points'))
-    print(paste(trendsall[iGLallJtu, length(unique(STUDY_ID))], 'studies'))
-    print(paste(trendsall[iGLallJtu, length(unique(rarefyID))], 'time series'))
-    mod <- glmmTMB(
-        Jtu ~ duration +
-            Jtu.init:duration +
-            Jtu.init:gainlossprop:duration +
-            taxa_mod2 +
             (duration | STUDY_ID),
         data = trendsall[iGLallJtu, ],
         family = ordbeta(link = 'logit'),
@@ -760,7 +670,6 @@ if (fitmod == 'modOBTTaxamod2InitGLAllJtu') { # Taxon x Year model
 }
 
 
-
 if (fitmod == 'modOBsdTMERtsRealmtsigninitGLAllJtu') { # Tchange x Year x Realm model
     if (MATCHMOD)
         stop('Model name matched more than one model!')
@@ -782,7 +691,6 @@ if (fitmod == 'modOBsdTMERtsRealmtsigninitGLAllJtu') { # Tchange x Year x Realm 
     )
     MATCHMOD <- TRUE
 }
-
 
 
 if (fitmod == 'modOBrawTsdTTMERtsRealmtsigninitGLAllJtu') { # Tchange x Tave x Year x Realm model
