@@ -65,7 +65,7 @@ The code is organized in six main steps. Run time for each step should be less t
 - `assemble_temp.Rmd`: calculate temperature averages and trends. Writes `output/temperature_byrarefyID.csv.gz`
 - `extract_human_impact.R`: extract human impact values for each time series. Writes `output/humanimpact_by_rarefyID.csv.gz`
 - `extract_richness.R`: extract species richness data for each time series. Writes `output/richness_by_rarefyID.csv.gz`
-- `assemble_turnover_covariates.Rmd`: put dissimilarity data together with covariates. Writes `output/turnover_w_covariates_scaling.csv`
+- `assemble_turnover_covariates.Rmd`: put dissimilarity data together with covariates. Writes `output/turnover_w_covariates.csv.gz` and `output/turnover_w_covariates_scaling.csv`, which are used by model fitting.
 - `calc_turnover.R`: calculate temporal turnover as the slope of dissimilarity vs. year. Writes `output/slope.csv.gz`
 - `sample_global_temp.Rmd`: make a representative sample of global temperature trends. Writes `output/temperature_trends_sampled.csv.gz`
 
