@@ -1,9 +1,9 @@
 # climate_community_crossrealm
-Analyses of the relationship between temporal turnover in assemablage composition and temperature change across realms.
+Analyses of the relationship between temporal turnover in species composition and temperature change across realms.
 
 Supporting data and code for:  
 *Warming and cooling catalyze widespread temporal turnover in biodiversity*  
-by Malin L. Pinsky, Helmut Hillebrand, Shane A. Blowes, Jonathan M. Chase, Laura H. Antão, Myriam R. Hirt, Ulrich Brose, Michael T. Burrows, and Benoit Gauzens
+by Malin L. Pinsky, Helmut Hillebrand, Shane A. Blowes, Jonathan M. Chase, Laura H. Antão, Myriam R. Hirt, Ulrich Brose, Michael T. Burrows, Benoit Gauzens, and Benjamin Rosenbaum
 
 
 ## Basic repo structure
