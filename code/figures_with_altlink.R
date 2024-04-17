@@ -14,12 +14,12 @@ source(here('code', 'util.R'))
 modInitlin <- readRDS(here('temp', 'modOBRInitAllJtu_lin.rds')) # Null with only duration and realm.
 modRealmlin <- readRDS('temp/modOBRRealmInitAllJtu_lin.rds') # Realm:duration. 
 modTaxamod2lin <- readRDS('temp/modOBTTaxamod2InitAllJtu_lin.rds') # Taxon:duration. 
-modTchangelin <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllJtu_lin.rds')) # Tchange model. 
-modTchangeTavelin <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu_lin.rds')) # Tchange x Tave model. 
+modTchangeYearlin <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllJtu_lin.rds')) # Tchange x Year x Realm model. 
+modTchangeTaveYearlin <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllJtu_lin.rds')) # Tchange x Tave x Year x Realm model. 
 
 aics <- AIC(modInitlin, modRealmlin, modTaxamod2lin, # simple models w/out Tchange
-            modTchangelin, # Tchange
-            modTchangeTavelin) # add Tchange x Tave
+            modTchangeYearlin, # Tchange
+            modTchangeTaveYearlin) # add Tchange x Tave
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitlin']
 aics
@@ -30,12 +30,10 @@ write.csv(aics, here('figures', 'table1_gaussian.csv'))
 
 ### Plot main effects like Fig. 2 --------------------------
 slopespredsdT <- readRDS(here('temp', 'slopes_modOBsdTMERtsRealmtsigninitAllJtu_lin.rds'))
-slopespred <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu_lin.rds'))
-senspred <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu_lin.rds'))
 bt <- fread('output/turnover_w_covariates.csv.gz') # from assemble_turnover_covariates.Rmd
 trends <- fread('output/slope.csv.gz')
 
-# process slopes from the Tchange model
+# slopes for all timeseries
 trends <- trends[duration_group == 'All' & measure == 'Jtu',]
 trends <- merge(trends, bt[!duplicated(rarefyID),. (rarefyID, STUDY_ID, REALM, tempchange)])
 trends[, duration := year2 - year1]
@@ -48,11 +46,6 @@ slopespredsdT <- merge(slopespredsdT, tempchange_by_realm, all.x = TRUE, by = "R
 slopespredsdT <- slopespredsdT[tempchange > min & tempchange < max & !duplicated(cbind(tempchange, REALM)), ] # trim to min & max by realm
 slopespredsdT[, tsign := factor(sign(tempchange), levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 
-# predicted turnover and sensitivity of turnover rate to temperature change from the Tchange x Tave model
-senspred <- senspred[tempave %in% c(0,25), ]
-senspred[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', 'warming'))]
-
-
 # plot of turnover rate vs. Tchange
 p1 <- ggplot() +
     geom_point(data = trends[!is.na(tempchange)], mapping = aes(abs(tempchange), disstrend, size = duration, color = as.factor(tsign)), 
@@ -61,8 +54,8 @@ p1 <- ggplot() +
     geom_line(data = slopespredsdT, mapping=aes(abs(tempchange), slope, color = tsign, group = tsign), linewidth=0.5) +
     geom_ribbon(data = slopespredsdT, alpha = 0.2, color = NA, 
                 aes(abs(tempchange), slope,
-                    ymin=slope - slope.se, 
-                    ymax=slope + slope.se,
+                    ymin=slope - 1.96*slope.se, 
+                    ymax=slope + 1.96*slope.se,
                     fill = tsign,
                     group = tsign)) +
     scale_color_manual(values=c('#0072B2', '#D55E00')) +

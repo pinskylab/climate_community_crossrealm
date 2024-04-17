@@ -7,12 +7,10 @@ library(glmmTMB) # for beta regression
 library(scales) # for defining signed sqrt axis transformation
 library(here)
 
-
-
-
+# Process the reshuffled model coefficient results from fit_turnover_GLMM_reshuffle.R
 
 ### Read in distribution of model coefficients from model fits ----------------
-# Only run this if needed. Takes a while.
+# Takes a while.
 # read in previous file if desired (eg, might have a subset of the reshuffles so that not all new ones need to be read in)
 # coeftable <- fread('output/coeftable_reshuffle_modOBsdTMERtsRealmtsigninitAllJtu.csv') # read in previous written version?
 
@@ -71,44 +69,3 @@ sum(duplicated(coeftable[, .(terrwarm, terrcool, marwarm, marcool, freshwarm, fr
 # write out
 write.csv(coeftable, file = 'output/coeftable_reshuffle_modOBsdTMERtsRealmtsigninitAllJtu.csv', row.names=FALSE)
 
-# Analyze distribution of model coefficients --------------------------
-# read in the pre-extracted coefficients (previous section)
-coeftable <- fread('output/coeftable_reshuffle_modOBsdTMERtsRealmtsigninitAllJtu.csv') # read in previous written version?
-nrow(coeftable) # should be >1000
-
-# plot distributions
-par(mfrow=c(2,3))
-coeftable[type == 'null', ][1:1000, hist(terrwarm, xlim = range(coeftable$terrwarm))]
-coeftable[type == 'obs', abline(v=terrwarm, col = 'red')]
-
-coeftable[type == 'null', ][1:1000, hist(terrcool, xlim = range(coeftable$terrcool))]
-coeftable[type == 'obs', abline(v=terrcool, col = 'red')]
-
-coeftable[type == 'null', ][1:1000, hist(marwarm, xlim = range(coeftable$marwarm))]
-coeftable[type == 'obs', abline(v=marwarm, col = 'red')]
-
-coeftable[type == 'null', ][1:1000, hist(marcool, xlim = range(coeftable$marcool))]
-coeftable[type == 'obs', abline(v=marcool, col = 'red')]
-
-coeftable[type == 'null', ][1:1000, hist(freshwarm, xlim = range(coeftable$freshwarm))]
-coeftable[type == 'obs', abline(v=freshwarm, col = 'red')]
-
-coeftable[type == 'null', ][1:1000, hist(freshcool, xlim = range(coeftable$freshcool))]
-coeftable[type == 'obs', abline(v=freshcool, col = 'red')]
-
-# how many reshuffles >= obs?
-coeftable[type=='null', sum(terrwarm >= coeftable[type=='obs', terrwarm])]
-coeftable[type=='null', sum(terrcool >= coeftable[type=='obs', terrcool])]
-coeftable[type=='null', sum(marwarm >= coeftable[type=='obs', marwarm])]
-coeftable[type=='null', sum(marcool >= coeftable[type=='obs', marcool])]
-coeftable[type=='null', sum(freshwarm >= coeftable[type=='obs', freshwarm])]
-coeftable[type=='null', sum(freshcool >= coeftable[type=='obs', freshcool])]
-
-# empirical p-values as (x+1)/(n+1)
-# use first 1000
-print(paste0('Terr warm p=', coeftable[type=='null',][1:1000, signif((sum(terrwarm >= coeftable[type=='obs', terrwarm])+1)/(.N+1),3)]))
-print(paste0('Terr cool p=', coeftable[type=='null',][1:1000, signif((sum(terrcool >= coeftable[type=='obs', terrcool])+1)/(.N+1),3)]))
-print(paste0('Mar warm p=', coeftable[type=='null',][1:1000, signif((sum(marwarm >= coeftable[type=='obs', marwarm])+1)/(.N+1),3)]))
-print(paste0('Mar cool p=', coeftable[type=='null',][1:1000, signif((sum(marcool >= coeftable[type=='obs', marcool])+1)/(.N+1),3)]))
-print(paste0('Fresh warm p=', coeftable[type=='null',][1:1000, signif((sum(freshwarm >= coeftable[type=='obs', freshwarm])+1)/(.N+1),3)]))
-print(paste0('Fresh cool p=', coeftable[type=='null',][1:1000, signif((sum(freshcool >= coeftable[type=='obs', freshcool])+1)/(.N+1),3)]))

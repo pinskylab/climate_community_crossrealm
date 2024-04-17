@@ -86,6 +86,23 @@ anova(modTchangeTaveYearmarterr, modmicroclimmarterr) # Tchange x Tave x Year mo
 anova(modTchangeTaveYearmarterr, modhumanmarterr) # Tchange x Tave x Year model vs. human
 
 
+### Reshuffling p-values ------------------
+coeftable <- fread('output/coeftable_reshuffle_modOBsdTMERtsRealmtsigninitAllJtu.csv') # from read_reshuffle.R
+nrow(coeftable) # should be >=1000
+
+# use first 1000 reshuffles if >1000 available
+if(nrow(coeftable)>1001) coeftable <- rbind(coeftable[type == 'null'][1:1000], coeftable[type == 'obs',])
+nrow(coeftable) # should be 1001. Includes one observed value.
+
+# empirical p-values as (x+1)/(n+1)
+print(paste0('Terr warm p=', coeftable[, signif(sum(terrwarm >= coeftable[type=='obs', terrwarm])/.N,3)]))
+print(paste0('Terr cool p=', coeftable[, signif(sum(terrcool >= coeftable[type=='obs', terrcool])/.N,3)]))
+print(paste0('Mar warm p=', coeftable[, signif(sum(marwarm >= coeftable[type=='obs', marwarm])/.N,3)]))
+print(paste0('Mar cool p=', coeftable[, signif(sum(marcool >= coeftable[type=='obs', marcool])/.N,3)]))
+print(paste0('Fresh warm p=', coeftable[, signif(sum(freshwarm >= coeftable[type=='obs', freshwarm])/.N,3)]))
+print(paste0('Fresh cool p=', coeftable[, signif(sum(freshcool >= coeftable[type=='obs', freshcool])/.N,3)]))
+
+
 
 ### Table 1: AICs --------------
 
