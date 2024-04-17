@@ -146,34 +146,3 @@ if(!file.exists(here('output', 'simulated_ts.csv.gz'))){
 }
 ```
          
-         
-# Power analysis
-Generate pairs of correlated time-series (effect 0.1, 1, or 10) with error and correlate the slopes. Time-series have a fixed length (10) or a variety of lengths from (3 to 102 steps). Do this 100 times to check for true positive rate with a one-stage mixed-effects analysis.  
-```{r, echo = FALSE}
-if(!file.exists(here('temp', 'simulated_ts_temp_pow.csv.gz')) & !file.exists(here('output', 'simulated_ts_pow.csv.gz'))){
-    stop('Need to run duration_sim_pow.R first.')
-} else {
-    #corspower <- fread(here('temp', 'simulated_ts_temp_pow.csv.gz'))
-    corspower <- fread(here('output', 'simulated_ts_pow.csv.gz'))
-    
-    corspowerl <- melt(corspower, id.vars = c('n', 'minduration', 'maxduration', 'name', 'range', 'effect'), measure.vars = c('lm.p', 'lm.m', 'glmmwgt.p', 'glmmwgt.beta', 'glmmonebeta.p', 'glmmonebeta.beta'))
-    
-    proppower <- corspowerl[variable %in% c('lm.p', 'glmmwgt.p', 'glmmonebeta.p'), 
-                  .(nsims = sum(!is.na(value)), propdetect = sum(value < 0.05, na.rm=TRUE)/sum(!is.na(value), na.rm=TRUE)), by = c("range", "n", "variable", "effect")]
-    proppower[nsims >0, c("lower", "upper") := binomci(nsims*propdetect, nsims), by = .(range, n, variable, effect)]
-    
-    dg = position_dodge(0.1)
-    ggplot(proppower, aes(effect, propdetect, group = variable, color = variable)) +
-        geom_line(position = dg) +
-        geom_point(position = dg) +
-        geom_errorbar(aes(ymin=lower, ymax=upper), width=.1, position = dg) +
-        labs(x = 'Effect size', title = 'Comparison of power', y = 'Proportion true positives') +
-        lims(y = c(0,1)) +
-        scale_x_log10() + 
-        geom_abline(intercept = 0.8, slope = 0, linetype = 'dashed', color = 'red') +
-        facet_grid(. ~ range, labeller = label_both)
-}
-```
-
-
-

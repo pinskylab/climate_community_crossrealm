@@ -266,7 +266,6 @@ trends_by_study[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater',
 # average slopes by realm
 ave_by_realm <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstrend)/sqrt(.N), duration = mean(duration), duration.se = sd(duration)/sqrt(.N)), by = REALM]
 ave_by_realm[, offset := c(-1, 0, 1)] # amount to vertically dodge the lines in part a
-write.csv(ave_by_realm, file='output/ave_by_realm.csv')
 
 # min and max tempchange by realm, for plotting limits
 tempchange_by_realm <- trends[, .(max = max(tempchange, na.rm=TRUE), min = min(tempchange, na.rm=TRUE)), by = REALM]
@@ -833,7 +832,6 @@ trends_by_study <- trends[duration>2, .(disstrend = mean(disstrend, na.rm=TRUE),
 # average slopes by taxon
 ave_by_taxon <- trends_by_study[, .(disstrend = mean(disstrend), se = sd(disstrend)/sqrt(.N), duration = mean(duration), duration.se = sd(duration)/sqrt(.N)), by = taxa_mod2][order(taxa_mod2),]
 ave_by_taxon[, offset := seq(1, -1, length.out = 9)] # amount to vertically dodge the lines in part a
-write.csv(ave_by_taxon, file='output/ave_by_taxon.csv')
 
 # Tchange effects on turnover from downsampling: read in files
 slopesdownsamp <- fread('output/downsampTchange.csv.gz')
