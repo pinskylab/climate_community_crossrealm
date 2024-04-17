@@ -18,3 +18,4 @@ by Malin L. Pinsky, Helmut Hillebrand, Shane A. Blowes, Jonathan M. Chase, Laura
 - figures/: plots produced by scripts
 - output/: files produced by scripts
 - temp/: temporary files created by scripts from data in data/ or dataDL/. Not tracked by Git
+- logs/: log files created by scripts. Not tracked by Git
