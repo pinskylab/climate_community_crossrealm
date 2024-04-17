@@ -70,22 +70,31 @@ The code is organized in six main steps. Run time for each step should be less t
 - `sample_global_temp.Rmd`: make a representative sample of global temperature trends. Writes `output/temperature_trends_sampled.csv.gz`
 
 ## 4. Fit models
-- `turnover_GLMM_fit.R`: fit one mixed effects model at a time (specified as an argument). Writes `temp/mod*.rds`
-- `turnover_GLMM_fit.sh`: bash script to initiate multiple threads, one to fit each model specified as an argument. Calls `turnover_GLMM_fit.R`
-- `turnover_GLMMaltlink_fit.R`: fit models with Gaussian errors and linear link. Writes `temp/mod*_lin.rds`
-- `turnover_GLMMaltlink_fit.sh`: bash script to initiate multiple threads, one to fit each model specified as an argument. Calls `turnover_GLMMaltlink_fit.R`
-- `turnover_GLMMlong_fit.R`: fit mixed effects models to time series >= 7 years long. Writes `temp/mod*LongJtu.rds`
+- `fit_turnover_GLMM.R`: fit one mixed effects model at a time (specified as an argument). Writes `temp/mod*.rds`
+- `fit_turnover_GLMM.sh`: bash script to initiate multiple threads, one to fit each model specified as an argument. Calls `fit_turnover_GLMM.R`
+- `fit_turnover_GLMMaltlink.R`: fit models with Gaussian errors and linear link. Writes `temp/mod*_lin.rds`
+- `fit_turnover_GLMMaltlink.sh`: bash script to initiate multiple threads, one to fit each model specified as an argument. Calls `fit_turnover_GLMMaltlink.R`
+- `fit_turnover_GLMMlong.R`: fit mixed effects models to time series >= 7 years long. Writes `temp/mod*LongJtu.rds`
 
 ## 5. Make predictions from the models
-- `pred_GLMM.R`: make predictions from the models for plotting, including turnover rates and sensitivity of turnover to temperature change. Writes `temp/preds_modOBsdTMERtsRealmtsigninitAllJtu.rds` and `preds_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds` (dissimilarity), `temp/slopes_modOBsdTMERtsRealmtsigninitAllJtu.rds` and `slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds` (turnover rate), and `sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds` (sensitivity of turnover rates to temperature change)
+- `pred_GLMM.R`: make predictions from the models for plotting, including turnover rates and sensitivity of turnover to temperature change. Takes the model name as an argument. Writes `temp/preds_modOBsdTMERtsRealmtsigninitAllJtu.rds` and `preds_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds` (dissimilarity), `temp/slopes_modOBsdTMERtsRealmtsigninitAllJtu.rds` and `temp/slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds` (turnover rate), and `temp/sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds` (sensitivity of turnover rates to temperature change)
 - `pred_GLMM.sh`: Shell script to spawn multiple instances of `pred_GLMM.R`
-- `pred_GLMMcov.R`: make predictions for the microcolimate and human impact covariate models. Writes `temp/preds_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds` (dissimilarity), `temp/slopes_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds` (turnover rates), and `temp/sensitivity_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu.rds` (sensitivity)
+- `pred_GLMMcov.R`: make predictions for the microcolimate and human impact covariate models. Writes `temp/preds_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu_marterr.rds` (dissimilarity), `temp/slopes_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu_marterr.rds` (turnover rates), and `temp/sensitivity_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu_marterr.rds` (sensitivity)
 - `pred_GLMMaltlink.R`: for predictions from models with Gaussian errors
 - `pred_GLMMaltlink.sh`: shell script to accompany R script
 - `pred_GLMMaltlinkcov.R`: for predictions from models with covariates and Gaussian errors
 - `pred_GLMMLong.R`: make predictions from the models fit to longer time series. Writes `temp/preds_*Long*.rds`, `temp/slopes_*Long*.rds` and `temp/sensitivity_*Long*.rds`
 - `make_residuals.R`: make DHARMa standardized residuals from models for checking model assumptions
 
-## 6. Make outputs
+## 6. Reshuffling and downsampling sensitivity analyses
+- `fit_pred_turnover_GLMM_downsamp.R`: fit models to downsampled data and predict from them. Set up to run with arguments to specify the model and range of random seeds. Writes `temp/'*_boot*.rds`, `preds_*_boot*.rds`, `slopes_*_boot*.rds`, and `sensitivity_*_boot*.rds`.
+- `fit_pred_turnover_GLMM_downsamp.sh`: bash script to spawn multiple instances of `fit_pred_turnover_GLMM_downsamp.R`, each with a range of random seeds. Takes arguments.
+- `read_downsamp.R`: Reads in and repackages the output from `fit_pred_turnover_GLMM_downsamp.R`. Writes `output/downsampTchange.csv.gz` and `output/downsampTave.csv.gz`.
+- `fit_turnover_GLMM_reshuffle.R`: fit the Tchange x Year x Realm model with reshuffled Tchange. Set up to be run with arguments to specify the range of random seeds.
+- `fit_turnover_GLMM_reshuffle.sh`: bash script to spawn multiple instances of `fit_turnover_GLMM_reshuffle.R`, each with a range of random seeds.
+- `read_reshuffle.R`: Reads in and repackages the output from `fit_turnover_GLMM_reshuffle.R`. Writes `output/coeftable_reshuffle_modOBsdTMERtsRealmtsigninitAllJtu.csv`.
+
+## 7. Make outputs
 - `figures_for_paper.R`: figures and tables and stats for paper
+- `figures_with_altlink.R`: make figures and tables with alternative link function
 - `examine_altlink_mods.R`: make alternative figures and tables as a sensitivity analysis with models that have linear link and Gaussian errors
