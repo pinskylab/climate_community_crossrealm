@@ -72,6 +72,10 @@ trends_by_study[, range(Jtu)]
 
 
 ### Likelihood ratio tests among models ----------------
+modInit <- readRDS(here('temp', 'modOBRInitAllJtu.rds')) # Baseline with duration and realm. Fit by code/fit_turnover_GLMM.R
+modTInit <- readRDS(here('temp', 'modOBTInitAllJtu.rds')) # Baseline with duration and taxon Fit by code/fit_turnover_GLMM.R
+modRealmYear <- readRDS('temp/modOBRRealmInitAllJtu.rds') # Realm x Year. Fit by code/fit_turnover_GLMM.R
+modTaxonYear <- readRDS('temp/modOBTTaxamod2InitAllJtu.rds') # Taxon x Year. Fit by code/fit_turnover_GLMM.R
 modTchange <- readRDS(here('temp', 'modOBMERtsRealmtsignTchangeinitAllJtu.rds')) # Tchange x Realm model. Fit by code/fit_turnover_GLMM.R
 modTchangeYear <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllJtu.rds')) # Tchange x Realm x Year model. Fit by code/fit_turnover_GLMM.R
 modTchangeTave <- readRDS(here('temp','modOBMERtsRealmtsignTchangeTaveinitAllJtu.rds')) # Tchange x Tave x Realm model. Fit by code/fit_turnover_GLMM.R
@@ -80,8 +84,10 @@ modTchangeTaveYearmarterr <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsignin
 modmicroclimmarterr <- readRDS('temp/modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu_marterr.rds') # marine-terrestrial Microclimates. Fit by fit_turnover_GLMM.R.
 modhumanmarterr <- readRDS('temp/modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu_marterr.rds') # Human impact marine-terrestrial model. Fit by fit_turnover_GLMM.R
 
+anova(modInit, modRealmYear) # compare baseline to Realm model
+anova(modTInit, modTaxonYear) # compare baseline to Taxon model
 anova(modTchange, modTchangeYear) # Test for Tchange effect by comparing Tchange x Realm vs. Tchange x Year x Realm model
-anova(modTchangeTave, modTchangeTaveYear) # Test for Tave effect by comparing Tchange x Tave x Realm vs. Tchange x Tave x Year x Realm model
+anova(modTchangeTave, modTchangeTaveYear) # Test for Tchange:Tave:Year effect by comparing Tchange x Tave x Realm vs. Tchange x Tave x Year x Realm model
 anova(modTchangeTaveYearmarterr, modmicroclimmarterr) # Tchange x Tave x Year model vs. microclim
 anova(modTchangeTaveYearmarterr, modhumanmarterr) # Tchange x Tave x Year model vs. human
 
