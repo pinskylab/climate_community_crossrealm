@@ -16,7 +16,7 @@ print(paste('This is process #', Sys.getpid()))
 print(Sys.time())
 
 ### set arguments -----------------
-n = 1000 # number of resamples to do for each timeseries
+n = 1000 # number of samples to take for calc'ing slopes and sensitivity
 
 ### read arguments ----------------
 args <- commandArgs(trailingOnly = TRUE)
@@ -52,7 +52,7 @@ scalingall <- fread(here('output', 'turnover_w_covariates_scaling.csv')) # From 
 
 
 ### Choose a model ---------------------------------
-mod <- readRDS(here('temp', paste0(predmod, '.rds'))) # From turnover_GLMM_fit_boot.R
+mod <- readRDS(here('temp', paste0(predmod, '.rds'))) # From fit_turnover_GLMM.R
 print('model loaded')
 
 out_preds <- paste0('preds_', predmod, '.rds')
@@ -60,7 +60,7 @@ out_slopes <- paste0('slopes_', predmod, '.rds')
 out_sensitivity <- paste0('sensitivity_', predmod, '.rds')
 
 doSensitivity <- FALSE # default is not to calculate sensitivity to Tave
-if(grepl('rawTsdTT', predmod)){ # Tchange x Tave model
+if(grepl('TchangexTave', predmod)){ # Tchange x Tave model
     doSensitivity <- TRUE # calculate sensitivity to Tave if we loaded Tave model
 } 
 

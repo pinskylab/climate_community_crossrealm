@@ -269,9 +269,9 @@ ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in', dpi = 600)
 # files to read in
 bt <- fread('output/turnover_w_covariates.csv.gz') # from assemble_turnover_covariates.Rmd
 trends <- fread('output/slope.csv.gz') # from calc_turnover.R
-slopespredsdT <- readRDS(here('temp', 'slopes_modOBsdTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R. Tchange x Realm x Year model
-slopespred <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R, Tchange x Tave x Realm x Year model
-senspred <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R, Tchange x Tave x Realm x Year model
+slopespredsdT <- readRDS(here('temp', 'slopes_modTchangexYearxRealmJtu.rds')) # from pred_GLMM.R. Tchange x Realm x Year model
+slopespred <- readRDS(here('temp', 'slopes_modTchangexTavexYearxRealmJtu.rds')) # from pred_GLMM.R, Tchange x Tave x Realm x Year model
+senspred <- readRDS(here('temp', 'sensitivity_modTchangexTavexYearxRealmJtu.rds')) # from pred_GLMM.R, Tchange x Tave x Realm x Year model
 
 # slopes for all timeseries
 trends <- trends[duration_group == 'All' & measure == 'Jtu',]
@@ -481,8 +481,8 @@ ggsave('figures/fig2_nopredsT.png', fig2noT, width = 5, height = 6, units = 'in'
 
 
 ### Figure 3: environmental interactions ---------
-slopes2 <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu_marterr.rds')) # turnover rates from code/pred_GLMMcov.R
-sensitivity2 <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu_marterr.rds')) # sensitivities from code/pred_GLMMcov.R
+slopes2 <- readRDS(here('temp', 'slopes_modCovariateJtu.rds')) # turnover rates from code/pred_GLMMcov.R
+sensitivity2 <- readRDS(here('temp', 'sensitivity_modCovariateJtu.rds')) # sensitivities from code/pred_GLMMcov.R
 sensitivity2[, REALM := factor(REALM, levels = c('Terrestrial', 'Marine'))] # re-order for nicer plotting
 
 # turnover rate by realm and environmental covariate at a set Tchange and Tave level
@@ -498,8 +498,8 @@ slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 1) < 0.02 & abs(
     slopes2[REALM == 'Terrestrial' & tempave==10 & abs(tempchange - 1) < 0.02 & abs(human_bowler  - 0.055) < 0.01, .(slope_human)]
 
 # plots
-ylims.microclimate <- c(-0.015, 0.045)
-ylims.human <- c(0, 0.045)
+ylims.microclimate <- c(-0.035, 0.045)
+ylims.human <- c(-0.005, 0.045)
 
 p1 <- ggplot(sensitivity2, 
              aes(microclim, sensitivity_microclim, 
@@ -686,13 +686,14 @@ write.csv(aicsIGLLong, here('figures', 'tableS3.csv'), row.names = FALSE)
 
 
 ### Table S4: Horn AICs --------------
-modInitHorn <- readRDS(here('temp', 'modOBRInitAllHorn.rds')) # Null with only duration. Fit by code/fit_turnover_GLMM.R
-modRealmHorn <- readRDS('temp/modOBRRealmInitAllHorn.rds') # Realm. Fit by code/fit_turnover_GLMM.R
-modTaxamod2Horn <- readRDS('temp/modOBTTaxamod2InitAllHorn.rds') # Taxon. Fit by code/fit_turnover_GLMM.R
-modTchangeHorn <- readRDS(here('temp', 'modOBMERtsRealmtsignTchangeinitAllHorn.rds')) # Tchange x Realm model. Fit by code/fit_turnover_GLMM.R
-modTchangeYearHorn <- readRDS(here('temp', 'modOBsdTMERtsRealmtsigninitAllHorn.rds')) # Tchange x Year model. Fit by code/fit_turnover_GLMM.R
-modTchangeTaveHorn <- readRDS(here('temp','modOBMERtsRealmtsignTchangeTaveinitAllHorn.rds')) # Tchange x Tave model. Fit by code/fit_turnover_GLMM.R
-modTchangeTaveYearHorn <- readRDS(here('temp','modOBrawTsdTTMERtsRealmtsigninitAllHorn.rds')) # Tchange x Tave x Year model. Fit by code/fit_turnover_GLMM.R
+# Fit by code/fit_turnover_GLMM.R
+modInitHorn <- readRDS(here('temp', 'modYearRealmHorn.rds')) # Null with only duration
+modRealmHorn <- readRDS('temp/modRealmxYearHorn.rds') # Realm x Year
+modTaxamod2Horn <- readRDS('temp/modTaxaxYearHorn.rds') # Taxon x Year
+modTchangeHorn <- readRDS(here('temp', 'modTchangexRealmHorn.rds')) # Tchange x Realm model
+modTchangeYearHorn <- readRDS(here('temp', 'modTchangexYearxRealmHorn.rds')) # Tchange x Year model
+modTchangeTaveHorn <- readRDS(here('temp','modTchangexTavexRealmHorn.rds')) # Tchange x Tave model
+modTchangeTaveYearHorn <- readRDS(here('temp','modTchangexTavexYearxRealmHorn.rds')) # Tchange x Tave x Year model
 
 # compare Tchange amd Tchange x Tave models against null
 aics <- AIC(modInitHorn, modRealmHorn, modTaxamod2Horn, # simple models w/out Tchange
@@ -707,7 +708,7 @@ aics
 aics$AIC <- round(aics$AIC) # nice formatting
 aics$dAIC <- round(aics$dAIC)
 aics$dAICnull <- as.character(signif(aics$dAICnull, 3))
-
+aics
 
 write.csv(aics, here('figures', 'tableS4.csv'), row.names = FALSE)
 

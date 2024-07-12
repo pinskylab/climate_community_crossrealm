@@ -1,7 +1,7 @@
 #!/bin/bash
 # Script to spawn multiple instances of nohup'ed pred_GLMM.R
 # As arguments, provide the names of models to fit, e.g.,
-# pred_GLMM.sh modsdTRealmAllJtu modrawTsdTAllJtu
+# pred_GLMM.sh modTchangexYearxRealmJtu modTchangexTavexYearxRealmJtu
 
 echo "You asked to run $# models"
 

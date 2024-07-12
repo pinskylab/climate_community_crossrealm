@@ -12,8 +12,9 @@ print(Sys.time())
 
 ### set arguments -----------------
 n = 1000 # number of resamples to do for each timeseries
-micromodel <- 'modOBrawTsdTTMERtsRealmtsignmicroclimInitAllJtu_marterr'
-humanmodel <- 'modOBrawTsdTTMERtsRealmtsignhumanInitAllJtu_marterr'
+micromodel <- 'modMicroclimJtu'
+humanmodel <- 'modHumanJtu'
+modname <- 'modCovariateJtu'
 
 ### load functions and data ----------------
 # needed to run this from the Annotate R console. Not needed in RStudio on Annotate. Not clear why.
