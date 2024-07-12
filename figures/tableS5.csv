@@ -1,6 +1,7 @@
-"","df","AIC","dAIC","dAICnull"
-"modInitGL",14,847242.311972436,12618.586150118,0
-"modRealmGL",16,847244.481719329,12620.7558970117,2.1697468936909
-"modTaxaGL",28,847268.650838109,12644.9250157914,26.3388656734023
-"modTchangeGL",27,846701.111414112,12077.3855917946,-541.200558323413
-"modTchangeTaveGL",45,834623.725822318,0,-12618.586150118
+"Model","df","AIC","dAICtemp","dAICnull"
+"Year",15,669151,"746","0"
+"Tchange ✕ Tave ✕ Year ✕ Realm",44,668404,"0","-746"
+"Micro ✕ Tchange ✕ Year ✕ Realm
++ Tchange ✕ Tave ✕ Year ✕ Realm",52,668374,"-30.8","-777"
+"Human ✕ Tchange ✕ Year ✕ Realm
++ Tchange ✕ Tave ✕ Year ✕ Realm",52,668386,"-18.1","-764"

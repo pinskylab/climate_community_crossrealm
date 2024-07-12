@@ -7,7 +7,7 @@ source(here('code', 'util.R'))
 
 
 # Read in Tchange slope files ------------
-slopefiles <- list.files(path = 'temp', pattern = glob2rx('slopes_modOBsdTMERtsRealmtsigninitAllJtu_boot*.rds'), full.names=TRUE) # from pred_GLMM_downsamp.R or fit_pred_turnover_GLMM_downsamp.R
+slopefiles <- list.files(path = 'temp', pattern = glob2rx('slopes_modTchangexYearxRealmJtu_boot*.rds'), full.names=TRUE) # from pred_GLMM_downsamp.R or fit_pred_turnover_GLMM_downsamp.R
 n <- length(slopefiles)
 n # number of downsample slopes made
 n <- min(1000, n) # take first 1000
@@ -23,14 +23,14 @@ for(i in 1:n){
     }
 }
 slopesdownsamp <- slopesdownsamp[tempave ==15,] # no Tave effect, so trim out the various levels
-slopesdownsamp[, tempave := NULL]
+slopesdownsamp[, tempave := NULL] # remove the column
 
 # Write out
 write.csv(slopesdownsamp, file = gzfile('output/downsampTchange.csv.gz'), row.names = FALSE)
 
 
 # Read in Tave sensitivity files ------------
-sensfiles <- list.files(path = 'temp', pattern = glob2rx('sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu_boot*.rds'), full.names=TRUE) # from fit_pred_turnover_GLMM_downsamp.R
+sensfiles <- list.files(path = 'temp', pattern = glob2rx('sensitivity_modTchangexTavexYearxRealmJtu_boot*.rds'), full.names=TRUE) # from fit_pred_turnover_GLMM_downsamp.R
 n <- length(sensfiles)
 n # number of downsample sensitivities made
 n <- min(1000, n) # take first 1000

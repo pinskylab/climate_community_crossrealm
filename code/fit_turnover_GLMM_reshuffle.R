@@ -4,7 +4,6 @@
 # Set up to be run on the command line for multiple reshuffles
 # Arguments are the min and max reshuffling IDs
 # nohup code/fit_turnover_GLMM_reshuffle.R 1 10 > logs/fit_turnover_GLMM_reshuffle1-10.Rout &
-# (this works if code is executable, e.g., chmod u+x code/fit_turnover_GLMM_reshuffle.R)
 # Note: this requires a newer version of glmmTMB, e.g, 1.1.8 (installed on Annotate2 but not Annotate)
 
 # Read command line arguments ############
@@ -84,12 +83,8 @@ for(i in 1:length(shuffIDs)){
     try(
         {
             mod <- glmmTMB(
-                Jtu ~ duration +
-                    REALM +
-                    tsign +
-                    Jtu.init:duration +
-                    REALM:tsign:tempchange_abs.sc +
-                    REALM:tsign:tempchange_abs.sc:duration +
+                Jtu ~ Jtu.init*duration +
+                    REALM*tsign*tempchange_abs.sc*duration +
                     (duration | STUDY_ID / rarefyID),
                 data = temp,
                 family = ordbeta(link = 'logit'),
@@ -99,7 +94,7 @@ for(i in 1:length(shuffIDs)){
             
             # print and save results
             print(summary(mod))
-            outfile <- paste0('temp/modOBsdTMERtsRealmtsigninitAllJtu_reshuff', shuffIDs[i], '.rds')
+            outfile <- paste0('temp/modTchangexYearxRealmJtu_reshuff', shuffIDs[i], '.rds')
             saveRDS(mod, file = outfile)
             print(paste0('saved ', outfile))
         })
