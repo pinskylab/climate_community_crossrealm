@@ -111,6 +111,15 @@ for(i in 1:length(bootID)){
         )
         MATCHMOD <- TRUE
     }
+    
+    doSensitivity <- FALSE # default is not to calculate sensitivity to Tave
+    if(grepl('TchangexTave|Human|Microclim', fitmod)){ # Tchange x Tave, human, or microclim model
+        doSensitivity <- TRUE # calculate sensitivity to Tave if we loaded Tave model
+    } 
+    doCovar <- FALSE
+    if(grepl('Human|Microclim', fitmod)){
+        doCovar <- TRUE # some extra steps if a covariate model
+    }
  
     # print and save results, then make predictions
     if (MATCHMOD == FALSE)
@@ -130,15 +139,6 @@ for(i in 1:length(bootID)){
         out_slopes <- paste0('slopes_', fitmod, '_boot', bootID[i], '.rds')
         out_sensitivity <- paste0('sensitivity_', fitmod, '_boot', bootID[i], '.rds')
         n = 1000 # number of resamples to do for each timeseries
-        
-        doSensitivity <- FALSE # default is not to calculate sensitivity to Tave
-        if(grepl('rawTsdTT', fitmod)){ # Tchange x Tave, human, or microclim model
-            doSensitivity <- TRUE # calculate sensitivity to Tave if we loaded Tave model
-        } 
-        doCovar <- FALSE
-        if(grepl('human|microclim', fitmod)){
-            doCovar <- TRUE # some extra steps if a covariate model
-        }
         
         # set up prediction frame
         if(!doCovar) newdat <- data.table(expand.grid(tempave = seq(-10, 36, by = 1), tempchange = seq(-1.5, 2, length.out=100), duration = 1:10, REALM = c('Marine', 'Terrestrial', 'Freshwater')))

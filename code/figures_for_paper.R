@@ -511,18 +511,18 @@ p1 <- ggplot(sensitivity2,
     geom_ribbon(alpha = 0.25, color = NA, show.legend = FALSE) +
     geom_line() +
     labs(tag = 'a)', 
-         x = 'Microclimate availability',
+         x = 'Microclimate avail.',
          y = '') +
     coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.74, xmax = -0.74, ymin = 0.015, ymax = 0.015) + # note x-axis is in log10 units
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.615, xmax = -0.615, ymin = 0.015, ymax = 0.015) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.49, xmax = -0.49, ymin = 0.015, ymax = 0.015) +
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.74, xmax = -0.74, ymin = 0.005, ymax = 0.005) + # note x-axis is in log10 units
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.615, xmax = -0.615, ymin = 0.005, ymax = 0.005) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.49, xmax = -0.49, ymin = 0.005, ymax = 0.005) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           plot.tag=element_text(face='bold'),
           legend.position='none', # no legend
-          axis.text=element_text(size=8),
+          axis.text=element_text(size=6),
           axis.title=element_text(size=7),
           axis.title.y=element_text(vjust = 6),
           plot.title=element_text(size=8),
