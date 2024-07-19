@@ -34,6 +34,7 @@ library(glmmTMB) # for ME ordbeta models
 library(here)
 source(here('code', 'util.R'))
 
+setDTthreads(threads = 1) # to avoid multithreading on data.table reading
 
 # load and prep data ############################
 

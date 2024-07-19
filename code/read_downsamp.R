@@ -40,14 +40,14 @@ for(i in 1:n){
     if(i==1){ 
         temp <- readRDS(sensfiles[i])
         temp <- temp[tempave %in% c(0,25), ]
-        senspred <- cbind(data.table(boot =i, type = 'downsamp'), temp) 
+        sensdownsamp <- cbind(data.table(boot =i, type = 'downsamp'), temp) 
     } 
     else{
         temp <- readRDS(sensfiles[i])
         temp <- temp[tempave %in% c(0,25), ]
-        senspred <- rbind(senspred, cbind(data.table(boot =i, type = 'downsamp'), temp))
+        sensdownsamp <- rbind(sensdownsamp, cbind(data.table(boot =i, type = 'downsamp'), temp))
     }
 }
 
 # Write out
-write.csv(senspred, file = gzfile('output/downsampTave.csv.gz'), row.names = FALSE)
+write.csv(sensdownsamp, file = gzfile('output/downsampTave.csv.gz'), row.names = FALSE)

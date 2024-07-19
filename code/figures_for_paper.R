@@ -678,9 +678,10 @@ aicsLong
 aicsLong$AIC <- round(aicsLong$AIC) # nice formatting
 aicsLong$dAIC <- round(aicsLong$dAIC)
 aicsLong$dAICnull <- as.character(signif(aicsLong$dAICnull, 3))
-
+aicsLong
 
 aicsIGLLong <- rbind(aicsIGL, aicsLong)
+aicsIGLLong
 
 write.csv(aicsIGLLong, here('figures', 'tableS3.csv'), row.names = FALSE)
 
@@ -808,7 +809,7 @@ cors <- fread(here('output', 'simulated_ts.csv.gz')) # created by duration_sim.R
 #cors <- fread(here('temp', 'simulated_ts_2024-01-19.csv.gz')) # created by duration_sim.R
 #cors <- fread(here('temp', 'simulated_ts_temp.csv.gz')) # created by duration_sim.R
 #cors <- fread(here('temp', 'simulated_ts_dinit_temp.csv.gz')) # created by duration_sim.R
-#cors <- fread(here('output', 'simulated_ts_dinit.csv.gz')) # created by duration_sim.R
+cors <- fread(here('output', 'simulated_ts_dinit.csv.gz')) # created by duration_sim.R
 corsl <- melt(cors, id.vars = c('n', 'minduration', 'maxduration', 'name', 'range'), measure.vars = c('cor.p', 'cor.cor', 'lm.m', 'glmmwgt.p', 'glmmwgt.beta', 'glmmonegauss.p', 'glmmonegauss.beta', 'glmmonebeta.p', 'glmmonebeta.beta'))
 prop <- corsl[variable %in% c('cor.p', 'glmmwgt.p', 'glmmonegauss.p', 'glmmonebeta.p'), 
               .(nsims = sum(!is.na(value)), prop = sum(value < 0.05, na.rm=TRUE)/sum(!is.na(value), na.rm=TRUE)), by = c("range", "n", "variable")]
@@ -926,7 +927,7 @@ ave_by_taxon[, offset := seq(1, -1, length.out = 9)] # amount to vertically dodg
 # Tchange effects on turnover from downsampling: read in files
 slopesdownsamp <- fread('output/downsampTchange.csv.gz')
 slopesdownsamp[, type := 'downsamp']
-slopesfull <- readRDS(here('temp', 'slopes_modOBsdTMERtsRealmtsigninitAllJtu.rds')) # the full dataset model fit. from pred_GLMM.R
+slopesfull <- readRDS(here('temp', 'slopes_modTchangexYearxRealmJtu.rds')) # the full dataset model fit. from pred_GLMM.R
 slopesfull <- slopesfull[tempave == 15, ] # all the same, so only need one level
 slopesfull[, ':='(boot = NA_integer_, type = 'full', tempave = NULL)]
 slopesdownsamp <- rbind(slopesdownsamp, slopesfull)
@@ -939,7 +940,7 @@ sensdownsamp[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling
 sensdownsamp[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting
 sensave <- sensdownsamp[type=='downsamp', .(boot=1, sensitivity = mean(sensitivity), sensitivity.u95 = quantile(sensitivity, 0.975), sensitivity.l95 = quantile(sensitivity, 0.025)), 
                     by = .(tempave, tsign, REALM)] # average across the downsamples
-sensfull <- readRDS(here('temp', 'sensitivity_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # from pred_GLMM.R, Tchange x Tave x Realm x Year model fit to full dataset.
+sensfull <- readRDS(here('temp', 'sensitivity_modTchangexTavexYearxRealmJtu.rds')) # from pred_GLMM.R, Tchange x Tave x Realm x Year model fit to full dataset.
 sensfull <- sensfull[tempave %in% c(0,25), ]
 sensfull[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 
