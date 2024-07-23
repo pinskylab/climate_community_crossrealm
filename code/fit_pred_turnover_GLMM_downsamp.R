@@ -6,6 +6,9 @@
 # Argument is model name to run (see below for options) and min and max downsampling ID (used as random number seed), e.g.
 # nohup code/fit_pred_turnover_GLMM_downsamp.R modOBInitAllJtu 1 20> logs/fit_pred_turnover_GLMM_downsamp_modOBInitAllJtu_1-20.Rout &
 # Note: this requires a newer version of glmmTMB, e.g, 1.1.8 (installed on Annotate2 but not Annotate)
+#
+# Beware that this script will use up to all the cpus on a machine.
+# Not clear why this happens, since code below tries to force data.table and glmmTMB to use one core
 
 # Read command line arguments ############
 
@@ -89,7 +92,8 @@ for(i in 1:length(bootID)){
                 (duration | STUDY_ID / rarefyID),
             data = trendsall[thisiallJtu, ],
             family = ordbeta(link = 'logit'),
-            dispformula = ~ REALM
+            dispformula = ~ REALM,
+            control = glmmTMBControl(parallel = 1) # prevent multithreading
         )
         MATCHMOD <- TRUE
     }
@@ -108,10 +112,13 @@ for(i in 1:length(bootID)){
             data = trendsall[thisiallJtu, ],
             family = ordbeta(link = 'logit'),
             dispformula = ~ REALM,
-            control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3)) # higher iteration limit to facilitate convergence
+            control = glmmTMBControl(optCtrl=list(iter.max=1e3,eval.max=1e3), # higher iteration limit to facilitate convergence
+                                     parallel = 1) # prevent multithreading
         )
         MATCHMOD <- TRUE
     }
+    
+    print(paste('Finished model fitting:', Sys.time()))
     
     doSensitivity <- FALSE # default is not to calculate sensitivity to Tave
     if(grepl('TchangexTave|Human|Microclim', fitmod)){ # Tchange x Tave, human, or microclim model

@@ -805,7 +805,7 @@ tempchange <- tempchange[, .(tempchange.sc = mean(tempchange.sc, na.rm=TRUE), du
 tempchange[, tempchange := tempchange.sc * scalingall[var == 'tempchange.sc', scale] + scalingall[var == 'tempchange.sc', center]]
 
 # load simulations
-cors <- fread(here('output', 'simulated_ts.csv.gz')) # created by duration_sim.R
+#cors <- fread(here('output', 'simulated_ts.csv.gz')) # created by duration_sim.R
 #cors <- fread(here('temp', 'simulated_ts_2024-01-19.csv.gz')) # created by duration_sim.R
 #cors <- fread(here('temp', 'simulated_ts_temp.csv.gz')) # created by duration_sim.R
 #cors <- fread(here('temp', 'simulated_ts_dinit_temp.csv.gz')) # created by duration_sim.R
@@ -892,7 +892,6 @@ prop[variable == 'glmmonegauss.p', error.bar(range+dg[3], prop, lower = prop-low
 prop[variable == 'glmmonebeta.p', points(range+dg[4], prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = cols[4], type = 'o')]
 prop[variable == 'glmmonebeta.p', error.bar(range+dg[4], prop, lower = prop-lower, upper = upper-prop, length = 0.02, col = cols[4])]
 legend('topleft', legend = c('Pearson correlation', 'Meta-analysis', 'One-stage Gaussian ME', 'One-stage beta ME'), col = cols, pch = 1, cex=0.8)
-abline(h = 0.05, col = 'red', lty = 2)
 mtext('e)', side = 3, line = -0.5, adj = -0.28, font = 2)
 
 

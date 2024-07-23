@@ -1,4 +1,5 @@
-# Making tables and figures with the model fits to data with reshuffled Tchange
+# Read in the model fits to data with reshuffled Tchange
+# Output a summary data table
 
 ### Functions -----------
 library(data.table) # for handling large datasets
@@ -29,17 +30,17 @@ for(i in 1:n){
         temp <- readRDS(mods[i]) # slow (~ 3 sec). faster would be to read summaries from .Rout files
         if(temp$sdr$pdHess){ # checks positive definite Hessian. skip if not true
             if(is.numeric(AIC(temp))){ # check for an AIC value. skip if not true
-            coefs <- fixef(temp)$cond
-            
-            newline <- data.table(type = 'null',
-                                  shuffID = id,
-                                  terrwarm = coefs["duration:REALMTerrestrial:tsign1:tempchange_abs.sc"],
-                                  terrcool = coefs["duration:REALMTerrestrial:tsign-1:tempchange_abs.sc"], # need to update this?
-                                  marwarm = coefs["duration:REALMMarine:tsign1:tempchange_abs.sc"],
-                                  marcool = coefs["duration:REALMMarine:tsign-1:tempchange_abs.sc"], # need to update this?
-                                  freshwarm = coefs["duration:REALMFreshwater:tsign1:tempchange_abs.sc"],
-                                  freshcool = coefs["duration:REALMFreshwater:tsign-1:tempchange_abs.sc"]) # need to update this?
-            coeftable <- rbind(coeftable, newline)
+                coefs <- fixef(temp)$cond
+                
+                newline <- data.table(type = 'null',
+                                      shuffID = id,
+                                      terrwarm =  coefs["duration:tempchange_abs.sc"] + coefs["duration:tsign1:tempchange_abs.sc"] + coefs["duration:REALMTerrestrial:tempchange_abs.sc"] + coefs["duration:REALMTerrestrial:tsign1:tempchange_abs.sc"],
+                                      terrcool =  coefs["duration:tempchange_abs.sc"] + coefs["duration:REALMTerrestrial:tempchange_abs.sc"],
+                                      marwarm =   coefs["duration:tempchange_abs.sc"] + coefs["duration:tsign1:tempchange_abs.sc"] + coefs["duration:REALMMarine:tempchange_abs.sc"] + coefs["duration:REALMMarine:tsign1:tempchange_abs.sc"],
+                                      marcool =   coefs["duration:tempchange_abs.sc"] + coefs["duration:REALMMarine:tempchange_abs.sc"],
+                                      freshwarm = coefs["duration:tempchange_abs.sc"] + coefs["duration:tsign1:tempchange_abs.sc"],
+                                      freshcool = coefs["duration:tempchange_abs.sc"])
+                coeftable <- rbind(coeftable, newline)
             } else {
                 print(paste('No AIC for shuffID', id))
             }
@@ -53,12 +54,12 @@ if(!('obs' %in% coeftable$type)){ # only read in observed model file if not alre
     mod_obs <- readRDS('temp/modTchangexYearxRealmJtu.rds')
     coefs_obs <- fixef(mod_obs)$cond
     coeftable <- rbind(coeftable, data.table(type = 'obs', shuffID = NA_integer_,
-                                             terrwarm = coefs_obs["duration:REALMTerrestrial:tsign1:tempchange_abs.sc"],
-                                             terrcool = coefs_obs["duration:REALMTerrestrial:tsign-1:tempchange_abs.sc"], # need to update this?
-                                             marwarm = coefs_obs["duration:REALMMarine:tsign1:tempchange_abs.sc"],
-                                             marcool = coefs_obs["duration:REALMMarine:tsign-1:tempchange_abs.sc"], # need to update this?
-                                             freshwarm = coefs_obs["duration:REALMFreshwater:tsign1:tempchange_abs.sc"], # need to update this?
-                                             freshcool = coefs_obs["duration:REALMFreshwater:tsign-1:tempchange_abs.sc"])) # need to update this?
+                                             terrwarm =  coefs_obs["duration:tempchange_abs.sc"] + coefs_obs["duration:tsign1:tempchange_abs.sc"] + coefs_obs["duration:REALMTerrestrial:tempchange_abs.sc"] + coefs_obs["duration:REALMTerrestrial:tsign1:tempchange_abs.sc"],
+                                             terrcool =  coefs_obs["duration:tempchange_abs.sc"] + coefs_obs["duration:REALMTerrestrial:tempchange_abs.sc"],
+                                             marwarm =   coefs_obs["duration:tempchange_abs.sc"] + coefs_obs["duration:tsign1:tempchange_abs.sc"] + coefs_obs["duration:REALMMarine:tempchange_abs.sc"] + coefs_obs["duration:REALMMarine:tsign1:tempchange_abs.sc"],
+                                             marcool =   coefs_obs["duration:tempchange_abs.sc"] + coefs_obs["duration:REALMMarine:tempchange_abs.sc"],
+                                             freshwarm = coefs_obs["duration:tempchange_abs.sc"] + coefs_obs["duration:tsign1:tempchange_abs.sc"],
+                                             freshcool = coefs_obs["duration:tempchange_abs.sc"]))
 }
 
 coeftable <- coeftable[order(type, shuffID), ] # nice order

@@ -69,37 +69,49 @@ trendsalltrim[, ':='(tempchange_abs.sc = NULL, tsign = NULL)]
 for(i in 1:length(shuffIDs)){
     print(paste('Starting shuffle ID', shuffIDs[i]))
     print(Sys.time())
+
+    # check memory available before continuing    
+    memavail <- as.numeric(system("awk '/MemAvailable/ {print $2}' /proc/meminfo", intern=TRUE))
+    memtotal <- as.numeric(system("awk '/MemTotal/ {print $2}' /proc/meminfo", intern=TRUE))
+    percmem <- memavail/memtotal
     
-    # reshuffle Tchange across rarefyIDs
-    set.seed(shuffIDs[i])
-    tchange_shuff <- data.table(rarefyID = sample(tchange$rarefyID), tempchange_abs.sc = tchange$tempchange_abs.sc, tsign = tchange$tsign) # reshuffle rarefyIDs
-    temp <- merge(trendsalltrim, tchange_shuff, all = TRUE, by = 'rarefyID') # add Tchange variables back onto data frame with reshuffled rarefyIDs
-    
-    # fit Tchange x Year x Realm model
-    print(paste(nrow(temp), 'data points'))
-    print(paste(temp[, length(unique(STUDY_ID))], 'studies'))
-    print(paste(temp[, length(unique(rarefyID))], 'time series'))
-    
-    try(
-        {
-            mod <- glmmTMB(
-                Jtu ~ Jtu.init*duration +
-                    REALM*tsign*tempchange_abs.sc*duration +
-                    (duration | STUDY_ID / rarefyID),
-                data = temp,
-                family = ordbeta(link = 'logit'),
-                dispformula = ~ REALM
-            )
-            print('finished fitting')
-            
-            # print and save results
-            print(summary(mod))
-            outfile <- paste0('temp/modTchangexYearxRealmJtu_reshuff', shuffIDs[i], '.rds')
-            saveRDS(mod, file = outfile)
-            print(paste0('saved ', outfile))
-        })
-    print(Sys.time())
-    print(warnings())
+    if(percmem < 0.2){
+        print(paste0('memory at ', signif(percmem,3)*100, '%. skipping this iteration'))
+    } else {
+        print(paste0('memory at ', signif(percmem,3)*100, '%. ok to continue'))
+        
+        
+        # reshuffle Tchange across rarefyIDs
+        set.seed(shuffIDs[i])
+        tchange_shuff <- data.table(rarefyID = sample(tchange$rarefyID), tempchange_abs.sc = tchange$tempchange_abs.sc, tsign = tchange$tsign) # reshuffle rarefyIDs
+        temp <- merge(trendsalltrim, tchange_shuff, all = TRUE, by = 'rarefyID') # add Tchange variables back onto data frame with reshuffled rarefyIDs
+        
+        # fit Tchange x Year x Realm model
+        print(paste(nrow(temp), 'data points'))
+        print(paste(temp[, length(unique(STUDY_ID))], 'studies'))
+        print(paste(temp[, length(unique(rarefyID))], 'time series'))
+        
+        try(
+            {
+                mod <- glmmTMB(
+                    Jtu ~ Jtu.init*duration +
+                        REALM*tsign*tempchange_abs.sc*duration +
+                        (duration | STUDY_ID / rarefyID),
+                    data = temp,
+                    family = ordbeta(link = 'logit'),
+                    dispformula = ~ REALM
+                )
+                print('finished fitting')
+                
+                # print and save results
+                print(summary(mod))
+                outfile <- paste0('temp/modTchangexYearxRealmJtu_reshuff', shuffIDs[i], '.rds')
+                saveRDS(mod, file = outfile)
+                print(paste0('saved ', outfile))
+            })
+        print(Sys.time())
+        print(warnings())
+    }
 }   
 
 
