@@ -258,6 +258,7 @@ if (fitmod == 'modTchangexRealmJtu') {
     print(paste(trendsall[iallJtu, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Jtu ~ Jtu.init*duration +
+            REALM*duration+
             REALM*tsign*tempchange_abs.sc +
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
@@ -275,6 +276,7 @@ if (fitmod == 'modTchangexRealmHorn') {
     print(paste(trendsall[iallHorn, length(unique(rarefyID))], 'time series'))
     mod <- glmmTMB(
         Horn ~ Jtu.init*duration +
+            REALM*duration+
             REALM*tsign*tempchange_abs.sc +
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallHorn, ],
@@ -332,7 +334,7 @@ if (fitmod == 'modTchangexTavexRealmJtu') {
     mod <- glmmTMB(
         Jtu ~ Jtu.init*duration +
             REALM*tsign*tempchange_abs.sc*duration +
-            REALM*tsign*tempave.sc*duration +
+            REALM*tempave.sc*duration +
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallJtu, ],
         family = ordbeta(link = 'logit'),
@@ -352,7 +354,7 @@ if (fitmod == 'modTchangexTavexRealmHorn') {
     mod <- glmmTMB(
         Horn ~ Jtu.init*duration +
             REALM*tsign*tempchange_abs.sc*duration +
-            REALM*tsign*tempave.sc*duration +
+            REALM*tempave.sc*duration +
             (duration | STUDY_ID / rarefyID),
         data = trendsall[iallHorn, ],
         family = ordbeta(link = 'logit'),

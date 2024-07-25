@@ -93,7 +93,7 @@ anova(modTchangeTaveYearmarterr, modhumanmarterr) # Tchange x Tave x Year model 
 
 
 ### Reshuffling p-values ------------------
-coeftable <- fread('output/coeftable_reshuffle_modOBsdTMERtsRealmtsigninitAllJtu.csv') # from read_reshuffle.R
+coeftable <- fread('output/coeftable_reshuffle_modTchangexYearxRealmJtu.csv') # from read_reshuffle.R
 nrow(coeftable) # should be >=1000
 
 # use first 1000 reshuffles if >1000 available
@@ -142,7 +142,7 @@ aics$Model <- c('Year',
                 'Tchange ✕ Realm',
                 'Tchange ✕ Year ✕ Realm',
                 'Tchange ✕ |Lat| ✕ Year ✕ Realm',
-                'Tchange ✕ Tave ✕ Realm',
+                '(Tchange + Tave) ✕ Year ✕ Realm',
                 'Tchange ✕ Tave ✕ Year ✕ Realm')
 aics <- aics[, c('Model', 'df', 'AIC', 'dAIC', 'dAICnull')]
 aics
@@ -652,6 +652,12 @@ aicsIGL <- AIC(modInitGL,
 aicsIGL$dAIC <- aicsIGL$AIC - min(aicsIGL$AIC)
 aicsIGL$dAICnull <- aicsIGL$AIC - aicsIGL$AIC[rownames(aicsIGL)=='modInitGL']
 aicsIGL$type <- "Gainloss"
+aicsIGL$Model <- c('Year',
+                'Realm ✕ Year',
+                'Taxon ✕ Year',
+                'Tchange ✕ Year ✕ Realm',
+                'Tchange ✕ Tave ✕ Year ✕ Realm')
+aicsIGL <- aicsIGL[, c('type', 'Model', 'df', 'AIC', 'dAIC', 'dAICnull')]
 aicsIGL
 
 aicsIGL$AIC <- round(aicsIGL$AIC) # nice formatting
@@ -673,6 +679,12 @@ aicsLong <- AIC(modInitLong,
 aicsLong$dAIC <- aicsLong$AIC - min(aicsLong$AIC)
 aicsLong$dAICnull <- aicsLong$AIC - aicsLong$AIC[rownames(aicsLong)=='modInitLong']
 aicsLong$type <- ">=7 years"
+aicsLong$Model <- c('Year',
+                   'Realm ✕ Year',
+                   'Taxon ✕ Year',
+                   'Tchange ✕ Year ✕ Realm',
+                   'Tchange ✕ Tave ✕ Year ✕ Realm')
+aicsLong <- aicsLong[, c('type', 'Model', 'df', 'AIC', 'dAIC', 'dAICnull')]
 aicsLong
 
 aicsLong$AIC <- round(aicsLong$AIC) # nice formatting
@@ -805,10 +817,6 @@ tempchange <- tempchange[, .(tempchange.sc = mean(tempchange.sc, na.rm=TRUE), du
 tempchange[, tempchange := tempchange.sc * scalingall[var == 'tempchange.sc', scale] + scalingall[var == 'tempchange.sc', center]]
 
 # load simulations
-#cors <- fread(here('output', 'simulated_ts.csv.gz')) # created by duration_sim.R
-#cors <- fread(here('temp', 'simulated_ts_2024-01-19.csv.gz')) # created by duration_sim.R
-#cors <- fread(here('temp', 'simulated_ts_temp.csv.gz')) # created by duration_sim.R
-#cors <- fread(here('temp', 'simulated_ts_dinit_temp.csv.gz')) # created by duration_sim.R
 cors <- fread(here('output', 'simulated_ts_dinit.csv.gz')) # created by duration_sim.R
 corsl <- melt(cors, id.vars = c('n', 'minduration', 'maxduration', 'name', 'range'), measure.vars = c('cor.p', 'cor.cor', 'lm.m', 'glmmwgt.p', 'glmmwgt.beta', 'glmmonegauss.p', 'glmmonegauss.beta', 'glmmonebeta.p', 'glmmonebeta.beta'))
 prop <- corsl[variable %in% c('cor.p', 'glmmwgt.p', 'glmmonegauss.p', 'glmmonebeta.p'), 
@@ -1032,12 +1040,12 @@ ggsave('figures/figS4.png', figs4, width = 183, height = 200, units = 'mm')
 
 ### Figure S5: T_change x T_ave interaction and T_change x microclimate interaction ---------
 # read in Tchange x Tave slopes
-slopesTchangeTave <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsigninitAllJtu.rds')) # made by pred_GLMM.R
+slopesTchangeTave <- readRDS(here('temp', 'slopes_modTchangexTavexYearxRealmJtu.rds')) # made by pred_GLMM.R
 slopesTchangeTave[, REALM := factor(REALM, levels = c('Terrestrial', 'Freshwater', 'Marine'))] # re-order for nicer plotting in part A
 
 # Tchange effects from microclimate model
-slopescov <- readRDS(here('temp', 'slopes_modOBrawTsdTTMERtsRealmtsignCovariateInitAllJtu_marterr.rds'))
-slopescov <- slopescov[tempave == 13 & tempchange > 0 & microclim < 0.9,]
+slopescov <- readRDS(here('temp', 'slopes_modCovariateJtu.rds'))
+slopescov <- slopescov[tempave == 13 & tempchange > 0 & microclim < 0.3,]
 slopescov[, REALM := factor(REALM, levels = c('Terrestrial', 'Marine'))] # re-order for nicer plotting
 
 # plot

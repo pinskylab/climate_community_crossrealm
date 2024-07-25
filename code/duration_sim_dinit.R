@@ -31,7 +31,7 @@ slopese <- function(x){
 
 # Simulations #############
 set.seed(5)
-nreps <- 500 # number of datasets at each duration range
+nreps <- 600 # number of datasets at each duration range
 ndata <- 1000 # number timeseries per dataset
 nstudy <- 50 # number of studies per dataset. timeseries are nested within studies.
 studytable <- data.table(tsid = 1:ndata, studyid = rep(1:nstudy, ceiling(ndata/nstudy))[1:ndata]) # table to match study IDs to timeseries IDs
