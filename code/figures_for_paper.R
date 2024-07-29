@@ -823,22 +823,11 @@ prop <- corsl[variable %in% c('cor.p', 'glmmwgt.p', 'glmmonegauss.p', 'glmmonebe
               .(nsims = sum(!is.na(value)), prop = sum(value < 0.05, na.rm=TRUE)/sum(!is.na(value), na.rm=TRUE)), by = c("range", "n", "variable")]
 prop[nsims>0, c("lower", "upper") := binomci(nsims*prop, nsims), by = .(range, n, variable)]
 
-# make slopes of Gaussian white noise timeseries
-set.seed(10)
-trends[, gauss.slope := calcslopeGauss(duration), by = rarefyID]
+# load slopes of Gaussian white noise timeseries
+gausstrends <- fread('output/gaussian_slopes.csv.gz') # from calc_slopes_by_duration.R
 
-# make mean predictions of turnover rate and temperature change rate
-modloess <- trends[, loess(disstrend~duration)] # loess fit (slow)
-predsloess <- data.table(duration = 2:118)
-predsloess[, c('disstrend', 'se') := predict(modloess, newdata = predsloess, se.fit = TRUE)]
-
-modloessgauss <- trends[, loess(gauss.slope~duration)] # loess fit
-predsloess[, c('gauss.slope', 'gauss.se') := predict(modloessgauss, newdata = predsloess, se.fit = TRUE)]
-
-
-modloesstemp <- tempchange[, loess(tempchange~duration)] # loess fit
-predsloesstemp <- data.table(duration = 2:118)
-predsloesstemp[, c('tempchange', 'se') := predict(modloesstemp, newdata = predsloesstemp, se.fit = TRUE)]
+# load mean predictions of turnover rate, temperature change rate, and gaussian noise slopes
+predsloess <- fread('output/slopes_vs_duration.csv.gz') # from calc_slopes_by_duration.R
 
 
 # make plots of dissimilarity vs. duration with different durations plotted
@@ -877,12 +866,12 @@ mtext('b)', side = 3, line = -0.5, adj = -0.28, font = 2)
 # part c: tempchange by duration
 tempchange[, plot(duration, tempchange, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Temperature change [°C/yr]', bty = 'l')]
 abline(h = 0, lty = 2)
-predsloesstemp[, lines(duration, tempchange, col = 'red')]
+predsloess[, lines(duration, tempchange, col = 'red')]
 mtext('c)', side = 3, line = -0.5, adj = -0.28, font = 2)
 
 
 # part d: Gaussian white noise slope by duration
-trends[, plot(duration, gauss.slope, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Slope of Gaussian white noise', bty = 'l')]
+gausstrends[, plot(duration, gauss.slope, cex=0.1, col = '#0000000F', xlab = 'Duration', ylab = 'Slope of Gaussian white noise', bty = 'l')]
 abline(h = 0, lty = 2)
 predsloess[, lines(duration, gauss.slope, col = 'red')]
 mtext('d)', side = 3, line = -0.5, adj = -0.28, font = 2)
