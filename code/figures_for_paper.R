@@ -115,20 +115,20 @@ print(paste0('Fresh cool p=', coeftable[, signif(sum(freshcool >= coeftable[type
 modInit <- readRDS(here('temp', 'modYearRealmJtu.rds')) # Null with duration and realm. Fit by code/fit_turnover_GLMM.R
 modRealmYear <- readRDS('temp/modRealmxYearJtu.rds') # Realm x Year. Fit by code/fit_turnover_GLMM.R
 modTaxonYear <- readRDS('temp/modTaxaxYearJtu.rds') # Taxon x Year. Fit by code/fit_turnover_GLMM.R
-modTchange <- readRDS(here('temp', 'modTchangexRealmJtu.rds')) # Tchange x Realm model. Fit by code/fit_turnover_GLMM.R
+modTchange <- readRDS(here('temp', 'modTchangexRealmJtu.rds')) # (Tchange + Year) x Realm model. Fit by code/fit_turnover_GLMM.R
 modTchangeYear <- readRDS(here('temp', 'modTchangexYearxRealmJtu.rds')) # Tchange x Year x Realm model. Fit by code/fit_turnover_GLMM.R
-modTchangeTave <- readRDS(here('temp','modTchangexTavexRealmJtu.rds')) # Tchange x Tave x Realm model. Fit by code/fit_turnover_GLMM.R
+modTchangeTave <- readRDS(here('temp','modTchangexTavexRealmJtu.rds')) # (Tchange + Tave) x Year x Realm model. Fit by code/fit_turnover_GLMM.R
 modLatYear <- readRDS(here('temp', 'modTchangexLatxYearxRealmJtu.rds')) # Tchange x Lat x Year x Realm model. Fit by code/fit_turnover_GLMM.R
 modTchangeTaveYear <- readRDS(here('temp','modTchangexTavexYearxRealmJtu.rds')) # Tchange x Tave x Year x Realm model. Fit by code/fit_turnover_GLMM.R
 
 
 # compare Tchange amd Tchange x Tave models against null
-aics <- AIC(modInit, modRealmYear, modTaxonYear, # simple models w/out Tchange
-            modTchange,
-            modTchangeYear, # Tchange x Year
-            modLatYear, # latitude x Year
+aics <- AIC(modInit, modRealmYear, modTaxonYear, 
+            modTchange, 
+            modTchangeYear,
+            modLatYear,
             modTchangeTave,
-            modTchangeTaveYear) # add Tchange x Tave x Year
+            modTchangeTaveYear)
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInit']
 aics
@@ -139,7 +139,7 @@ aics$dAICnull <- as.character(signif(aics$dAICnull, 3))
 aics$Model <- c('Year',
                 'Realm ✕ Year',
                 'Taxon ✕ Year',
-                'Tchange ✕ Realm',
+                '(Tchange + Year) ✕ Realm',
                 'Tchange ✕ Year ✕ Realm',
                 'Tchange ✕ |Lat| ✕ Year ✕ Realm',
                 '(Tchange + Tave) ✕ Year ✕ Realm',
@@ -289,16 +289,16 @@ ave_by_realm[, offset := c(-1, 0, 1)] # amount to vertically dodge the lines in 
 # min and max tempchange by realm, for plotting limits
 tempchange_by_realm <- trends[, .(max = max(tempchange, na.rm=TRUE), min = min(tempchange, na.rm=TRUE)), by = REALM]
 
-# predicted slopes from the Tchange model
+# predicted slopes from the Tchange x Year x Realm model
 slopespredsdT <- merge(slopespredsdT, tempchange_by_realm, all.x = TRUE, by = "REALM") # add min and max by realm
 slopespredsdT <- slopespredsdT[tempchange > min & tempchange < max & !duplicated(cbind(tempchange, REALM)), ] # trim to min & max by realm
 slopespredsdT[, tsign := factor(sign(tempchange), levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 
-# predicted turnover and sensitivity of turnover rate to temperature change from the Tchange x Tave model
+# predicted turnover and sensitivity of turnover rate to temperature change from the Tchange x Tave x Year x Realm model
 senspred <- senspred[tempave %in% c(0,25), ]
 senspred[, tsign := factor(tsign, levels = c('-1', '1'), labels = c('cooling', 'warming'))]
 
-# fastest turnover predicted from Tchange model
+# fastest turnover predicted from Tchange x Year x Realm model
 slopespredsdT[, .SD[which.max(slope), .(tempchange, slope, slope.se)], by = REALM]
 
 # predicted turnover at moderate rates of temperature change (0.5 degC/yr)
@@ -574,8 +574,8 @@ capture.output(print(sum_modTchangeTave$varcor), file = 'figures/tableS1.txt')
 
 
 
-### Table S2: fixed effects for Tchange x Tave model --------------
-modTchangeTave <- readRDS(here('temp','modTchangexTavexYearxRealmJtu.rds')) # Tchange x Tave x Realm x Year model. Fit by code/fit_turnover_GLMM.R
+### Table S2: fixed effects for Tchange x Tave x Year x Realm model --------------
+modTchangeTave <- readRDS(here('temp','modTchangexTavexYearxRealmJtu.rds')) # Fit by code/fit_turnover_GLMM.R
 if(!exists('sum_modTchangeTave')) sum_modTchangeTave <- summary(modTchangeTave)
 out <- as.data.frame(sum_modTchangeTave$coefficients$cond)
 
@@ -703,17 +703,17 @@ write.csv(aicsIGLLong, here('figures', 'tableS3.csv'), row.names = FALSE)
 modInitHorn <- readRDS(here('temp', 'modYearRealmHorn.rds')) # Null with only duration
 modRealmHorn <- readRDS('temp/modRealmxYearHorn.rds') # Realm x Year
 modTaxamod2Horn <- readRDS('temp/modTaxaxYearHorn.rds') # Taxon x Year
-modTchangeHorn <- readRDS(here('temp', 'modTchangexRealmHorn.rds')) # Tchange x Realm model
+modTchangeHorn <- readRDS(here('temp', 'modTchangexRealmHorn.rds')) # (Tchange + Year) x Realm model
 modTchangeYearHorn <- readRDS(here('temp', 'modTchangexYearxRealmHorn.rds')) # Tchange x Year model
-modTchangeTaveHorn <- readRDS(here('temp','modTchangexTavexRealmHorn.rds')) # Tchange x Tave model
+modTchangeTaveHorn <- readRDS(here('temp','modTchangexTavexRealmHorn.rds')) # (Tchange + Tave) x Year x Realm model
 modTchangeTaveYearHorn <- readRDS(here('temp','modTchangexTavexYearxRealmHorn.rds')) # Tchange x Tave x Year model
 
 # compare Tchange amd Tchange x Tave models against null
 aics <- AIC(modInitHorn, modRealmHorn, modTaxamod2Horn, # simple models w/out Tchange
-            modTchangeHorn, # Tchange
-            modTchangeYearHorn, # Tchange x Year
-            modTchangeTaveHorn, # Tchange x Tave
-            modTchangeTaveYearHorn) # Tchange x Tave x Year
+            modTchangeHorn, 
+            modTchangeYearHorn, 
+            modTchangeTaveHorn, 
+            modTchangeTaveYearHorn) 
 aics$dAIC <- aics$AIC - min(aics$AIC)
 aics$dAICnull <- aics$AIC - aics$AIC[rownames(aics)=='modInitHorn']
 aics
@@ -721,6 +721,14 @@ aics
 aics$AIC <- round(aics$AIC) # nice formatting
 aics$dAIC <- round(aics$dAIC)
 aics$dAICnull <- as.character(signif(aics$dAICnull, 3))
+aics$Model <- c('Year',
+                'Realm ✕ Year',
+                'Taxon ✕ Year',
+                '(Tchange + Year) ✕ Realm',
+                'Tchange ✕ Year ✕ Realm',
+                '(Tchange + Tave) ✕ Year ✕ Realm',
+                'Tchange ✕ Tave ✕ Year ✕ Realm')
+aics <- aics[, c('Model', 'df', 'AIC', 'dAIC', 'dAICnull')]
 aics
 
 write.csv(aics, here('figures', 'tableS4.csv'), row.names = FALSE)
@@ -729,7 +737,7 @@ write.csv(aics, here('figures', 'tableS4.csv'), row.names = FALSE)
 ### Table S5: covariate AICs --------------
 # load models for AICs. Fit by code/fit_turnover_GLMM.R
 modInit <- readRDS(here('temp', 'modYearRealmJtu_marterr.rds')) # Null with duration and realm. 
-modTchangeTave <- readRDS(here('temp','modTchangexTavexYearxRealmJtu_marterr.rds')) # Tchange x Tave model. 
+modTchangeTave <- readRDS(here('temp','modTchangexTavexYearxRealmJtu_marterr.rds')) # Tchange x Tave x Year x Realm model. 
 modmicroclim <- readRDS('temp/modMicroclimJtu.rds') # Microclimates. 
 modhuman <- readRDS('temp/modHumanJtu.rds') # Human impact.
  

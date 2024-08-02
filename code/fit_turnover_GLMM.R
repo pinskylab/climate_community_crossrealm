@@ -248,7 +248,7 @@ if (fitmod == 'modTaxaxYearHorn') {
 }
 
 
-# Tchange x Realm models #########################
+# (Tchange + Year) x Realm models #########################
 # no interaction of Tchange x Year
 if (fitmod == 'modTchangexRealmJtu') {
     if (MATCHMOD)
@@ -323,7 +323,7 @@ if (fitmod == 'modTchangexYearxRealmHorn') {
     MATCHMOD <- TRUE
 }
 
-# Tchange x Tave x Realm models #########################
+# (Tchange + Tave) x Year x Realm models #########################
 # does not have Tchange x Tave x Realm x Year
 if (fitmod == 'modTchangexTavexRealmJtu') {
     if (MATCHMOD)
