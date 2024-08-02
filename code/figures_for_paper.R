@@ -378,13 +378,13 @@ p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity,
           legend.key=element_blank(),
           plot.tag=element_text(face='bold'),
           legend.position='none', # no legend
-          axis.text=element_text(size=7),
+          axis.text=element_text(size=6),
           axis.title=element_text(size=7),
           plot.title=element_text(size=7)) +
     coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6)), xmin = -43, xmax = -43, ymin = 0.01, ymax = 0.01) +
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6)), xmin = -38, xmax = -38, ymin = 0.01, ymax = 0.01) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6)), xmin = -33, xmax = -33, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=5)), xmin = -43, xmax = -43, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=5)), xmin = -38, xmax = -38, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=5)), xmin = -33, xmax = -33, ymin = 0.01, ymax = 0.01) +
     scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
 
 
@@ -404,7 +404,7 @@ p4 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity,
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
           legend.position='none', # no legend
-          axis.text=element_text(size=7),
+          axis.text=element_text(size=6),
           axis.title=element_text(size=7),
           plot.title=element_text(size=7)) +
     coord_cartesian(clip = 'off') + 
@@ -426,7 +426,7 @@ p5 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity,
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
-          axis.text=element_text(size=7),
+          axis.text=element_text(size=6),
           axis.title=element_text(size=7),
           plot.title=element_text(size=7)) +
     scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
