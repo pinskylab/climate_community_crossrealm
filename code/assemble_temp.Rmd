@@ -9,6 +9,7 @@ require(data.table)
 require(ncdf4)
 require(ggplot2)
 require(here)
+source(here('code', 'util.R')) # simple utility functions
 
 knitr::opts_knit$set(root.dir = rprojroot::find_rstudio_root_file()) # tell RStudio to use project root directory as the root for this notebook. Needed since we are storing code in a separate directory.
 ```
@@ -231,6 +232,17 @@ out
 out[!duplicated(rarefyID) & is.na(tempave), .N]
 out[!duplicated(rarefyID) & is.na(tempchange), .N]
 
+```
+
+# Compare starting temperature to change
+Set up data
+```{r}
+tempsum <- out[, .(tempchange = median(tempchange/(year2 - year1)), tempstart = pickfirst(year1, year2, tempave)), by = rarefyID]
+```
+
+Plot
+```{r}
+plot(tempsum$tempstart, tempsum$tempchange, col = '#00000055', xlab = 'Starting temperature (°C)', ylab = 'Temperature change (°C/yr)')
 ```
 
 # Write out 

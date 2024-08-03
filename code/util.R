@@ -21,6 +21,17 @@ picklongest <- function(year1, year2, y){
     return(y[keep])
 }
 
+# for vector y in which each entry is associated with start and end years (year1 and year2)
+# pick the value of y that has the earliest start and end
+pickfirst <- function(year1, year2, y){
+    keep1 <- which.min(year1)
+    keep2 <- which.min(year2)
+    keep <- intersect(keep1, keep2)
+    if(length(keep)==1){
+        return(y[keep])
+    }
+}
+
 # sign of temperature change
 signneg11 <- function(x){ # assign 0 a sign of 1 so that there are only 2 levels
     out <- sign(x)

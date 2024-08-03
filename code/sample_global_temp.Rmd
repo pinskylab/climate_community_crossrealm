@@ -171,7 +171,7 @@ tempchange[, .(mean = mean(tempchange), se = sd(tempchange)/sqrt(.N)), by = REAL
 trends[!is.na(tempchange), .(mean = mean(tempchange), se = sd(tempchange)/sqrt(.N)), by = REALM2]
 ```
 
-# Plot
+# Density plots of rates of temperature change
 ```{r plot, fig.width=8, fig.height=3}
 p1 <- ggplot(tempchange, aes(x = tempchange, fill = REALM)) +
     geom_density(alpha = 0.25) +

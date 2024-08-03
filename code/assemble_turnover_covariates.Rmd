@@ -90,7 +90,7 @@ cat('number of timeseries'); bt[, length(unique(rarefyID))]
 ### Choose the appropriate temperature value for each study and duration
 Average temperature for the full duration. Thiel-Sen temperature slope.
 ```{r}
-btall <- bt # legacy from when we divided dataset into different ts durations (3, 5, 10, 20 years)
+btall <- bt
 btall[, tempave := picklongest(year1, year2, tempave), by = rarefyID]
 btall[, tempchange := median(tempchange/(year2 - year1)), by = rarefyID] # Thiel-Sen estimator of the slope: median of all pairwise differences
 
