@@ -153,3 +153,12 @@ slopesamp <- function(n, duration, Jtu, Jtu.se, colnames = c('slope', 'slope.se'
     names(out) <- colnames
     return(as.list(out)) # coercing to list will allow the data.table aggregate used later to create 2 columns
 }
+
+# round to significant digits but don't touch digits left of the decimal
+my_signif = function(x, digits){
+    out <- vector(mode='numeric', length=length(x))
+    int_indices <- (x >= 10^digits) | (x <= -10^digits)
+    out[int_indices] <- round(x[int_indices], digits=0)
+    out[!int_indices] <- signif(x[!int_indices], digits=digits)
+    return(out)
+}
