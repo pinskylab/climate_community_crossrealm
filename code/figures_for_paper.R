@@ -726,7 +726,7 @@ aics
 
 aics$AIC <- round(aics$AIC) # nice formatting
 aics$dAIC <- round(aics$dAIC)
-aics$dAICnull <- as.character(signif(aics$dAICnull, 3))
+aics$dAICnull <- as.character(my_signif(aics$dAICnull, 3))
 aics$Model <- c('Year',
                 'Realm ✕ Year',
                 'Taxon ✕ Year',
