@@ -268,7 +268,7 @@ fig1 <- arrangeGrob(p1, p2, p3, p4, p5, ncol = 4,
                    layout_matrix = rbind(c(1,1,1,1), c(2,2,3,3), c(4,4,5,5)),
                    heights=c(unit(0.5, "npc"), unit(0.25, "npc"), unit(0.25, "npc")))
 
-ggsave('figures/fig1.png', fig1, width = 6, height = 6, units = 'in', dpi = 600)
+ggsave('figures/fig1.pdf', fig1, width = 6, height = 6, units = 'in', dpi = 600)
 
 
 ### Figure 2: main effects ---------
@@ -442,7 +442,7 @@ p5 <- addSmallLegend(p5, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 fig2 <- arrangeGrob(p1, p2, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix = matrix(c(1,1,1,2,2,2,3,4,5), nrow=3, byrow=TRUE), 
                     heights = c(1,2.5,1), widths = c(3,3,4))
 
-ggsave('figures/fig2.png', fig2, width = 5, height = 6, units = 'in')
+ggsave('figures/fig2.pdf', fig2, width = 5, height = 6, units = 'in')
 
 
 # w/out model predictions
@@ -482,7 +482,7 @@ p2noT <- addSmallLegend(p2noT, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
 fig2noT <- arrangeGrob(p1, p2noT, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix = matrix(c(1,1,1,2,2,2,3,4,5), nrow=3, byrow=TRUE), 
                     heights = c(1,2.5,1), widths = c(3,3,4))
-ggsave('figures/fig2_nopredsT.png', fig2noT, width = 5, height = 6, units = 'in')
+ggsave('figures/fig2_nopredsT.pdf', fig2noT, width = 5, height = 6, units = 'in')
 
 
 
@@ -520,9 +520,9 @@ p1 <- ggplot(sensitivity2,
          x = 'Microclimate avail.',
          y = '') +
     coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
-    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.74, xmax = -0.74, ymin = 0.005, ymax = 0.005) + # note x-axis is in log10 units
-    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.615, xmax = -0.615, ymin = 0.005, ymax = 0.005) +
-    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.49, xmax = -0.49, ymin = 0.005, ymax = 0.005) +
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.71, xmax = -0.71, ymin = 0.005, ymax = 0.005) + # note x-axis is in log10 units
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.59, xmax = -0.59, ymin = 0.005, ymax = 0.005) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=6.5)), xmin = -0.47, xmax = -0.47, ymin = 0.005, ymax = 0.005) +
     theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank(), axis.line = element_line(colour = "black"),
           legend.key=element_blank(),
@@ -567,7 +567,7 @@ p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
 
 fig3 <- arrangeGrob(p1, p2, ncol = 2, widths = c(3,4))
 
-ggsave('figures/fig3.png', fig3, width = 4, height = 2, units = 'in')
+ggsave('figures/fig3.pdf', fig3, width = 4, height = 2, units = 'in')
 
 
 
@@ -783,26 +783,26 @@ btts <- bt[, .(year1 = min(year1), year2 = max(year2), nsamp = length(unique(c(y
 labpos <- -0.2 # horizontal position for the subfigure label
 
 png(file = 'figures/figS1.png', width = 183, height = 183, units = 'mm', res = 300, pointsize=7)
-par(mfrow=c(2,2), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(2.5, 0.5, 0), tcl = -0.2, cex.axis = 0.8)
+par(mfrow=c(2,2), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(2.9, 0.5, 0), tcl = -0.2, cex.axis = 1.1)
 
 # part a: start dates
 btts[, hist(year1, main = '', xlab = '', col = 'grey')]
-mtext('Start year', side = 1, line = 1.5, cex=0.8)
+mtext('Start year', side = 1, line = 2, cex=0.8)
 mtext('a)', side = 3, line = -0.5, adj = labpos, font = 2)
 
 # part b: end dates
 btts[, hist(year2, main = '', xlab = '', col = 'grey')]
-mtext('End year', side = 1, line = 1.5, cex=0.8)
+mtext('End year', side = 1, line = 2, cex=0.8)
 mtext('b)', side = 3, line = -0.5, adj = labpos, font = 2)
 
 # part c: durations
 btts[, hist(year2-year1+1, main = '', xlab = '', col = 'grey')]
-mtext('Number of years', side = 1, line = 1.5, cex=0.8)
+mtext('Number of years', side = 1, line = 2, cex=0.8)
 mtext('c)', side = 3, line = -0.5, adj = labpos, font = 2)
 
 # part d: number of samples
 btts[, hist(nsamp, main = '', xlab = '', col = 'grey')]
-mtext('Number of samples', side = 1, line = 1.5, cex=0.8)
+mtext('Number of samples', side = 1, line = 2, cex=0.8)
 mtext('d)', side = 3, line = -0.5, adj = labpos, font = 2)
 
 dev.off()
@@ -845,8 +845,8 @@ predsloess <- fread('output/slopes_vs_duration.csv.gz') # from calc_slopes_by_du
 
 
 # make plots of dissimilarity vs. duration with different durations plotted
-png(file = 'figures/figS2.png', width = 183, height = 141, units = 'mm', res = 300, pointsize=7)
-par(mfrow=c(2,3), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(1.9, 0.5, 0), tcl = -0.2, cex.axis = 0.8)
+png(file = 'figures/figS2.png', width = 183, height = 141, units = 'mm', res = 300, pointsize=7) # 183 x 141 mm in inches
+par(mfrow=c(2,3), mai = c(0.7, 0.7, 0.1, 0.1), las = 1, mgp = c(2.8, 0.5, 0), tcl = -0.2, cex.axis = 1.5, cex.lab = 1.5)
 
 # part a
 bt[rarefyID == '339_1085477', plot(dY, Jtu, xlab = 'Temporal difference (years)', ylab = 'Turnover [proportion of species]', col = '#00000044', bty = 'l', ylim = c(0,1))]
@@ -859,7 +859,7 @@ mtext('a)', side = 3, line = -0.5, adj = -0.28, font = 2)
 
 # part a inset
 oldpar <- par(no.readonly=TRUE)
-par(fig = c(0.05,0.3, 0.8, 1), new = T, mgp = c(1, 0.2, 0), cex.lab = 0.8, cex.axis = 0.8, tcl = -0.1)
+par(fig = c(0.05,0.3, 0.8, 1), new = T, mgp = c(2, 0.4, 0), cex.lab = 1.5, cex.axis = 1.5, tcl = -0.1)
 plot(-1, -1, xlim=c(0,20), ylim=c(0,1), xlab = 'Temporal difference', ylab = 'Tturnover', bty = 'l')
 abline(h = 1, lty= 2)
 segments(0,0,5,1, col = '#b2df8a', lwd = 3)
@@ -902,7 +902,7 @@ prop[variable == 'glmmonegauss.p', points(range+dg[3], prop, xlab = 'Range of du
 prop[variable == 'glmmonegauss.p', error.bar(range+dg[3], prop, lower = prop-lower, upper = upper-prop, length = 0.02, col = cols[3])]
 prop[variable == 'glmmonebeta.p', points(range+dg[4], prop, xlab = 'Range of durations', ylab = 'Proportion false positive', ylim = c(0,1), col = cols[4], type = 'o')]
 prop[variable == 'glmmonebeta.p', error.bar(range+dg[4], prop, lower = prop-lower, upper = upper-prop, length = 0.02, col = cols[4])]
-legend('topleft', legend = c('Pearson correlation', 'Meta-analysis', 'One-stage Gaussian ME', 'One-stage beta ME'), col = cols, pch = 1, cex=0.8)
+legend('topleft', legend = c('Pearson correlation', 'Meta-analysis', 'One-stage Gaussian ME', 'One-stage beta ME'), col = cols, pch = 1, cex=1.4)
 mtext('e)', side = 3, line = -0.5, adj = -0.28, font = 2)
 
 
