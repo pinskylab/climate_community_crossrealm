@@ -3,7 +3,7 @@
 "Gainloss","Realm ✕ Year",20,770213,7523,"-1.62"
 "Gainloss","Taxon ✕ Year",32,770236,7545,"21"
 "Gainloss","Tchange ✕ Year ✕ Realm",38,769527,6837,"-688"
-"Gainloss","Tchange ✕ Tave ✕ Year ✕ Realm",62,762690,0,"-7520"
+"Gainloss","Tchange ✕ Tave ✕ Year ✕ Realm",62,762690,0,"-7524"
 ">=7 years","Year",17,645558,637,"0"
 ">=7 years","Realm ✕ Year",19,645550,629,"-8.05"
 ">=7 years","Taxon ✕ Year",31,645565,643,"6.52"

@@ -48,7 +48,7 @@ In addition, we use custom functions in `util.R`.
 
 We expect install time will take a couple hours on a standard desktop computer, with the slowest part being package installation.
 
-The code is organized in six main steps. Run time for each step should be less than an hour, except for steps 2 and 4. Each model in step 4 takes up to 48 hrs to fit on a single core of a scientific workstation.
+The code is organized in six main steps. Run time for each step should be less than an hour, except for steps 2, 4, and 6. Each model in step 4 takes up to 48 hrs to fit on a single core of a scientific workstation. Step 6 takes a couple weeks on 100 cores.
 
 ## 1. Examine alternative statistical approaches
 - `duration_sim.R`: simulate data and fit models. Writes `output/simulated_ts.csv.gz`

@@ -668,7 +668,7 @@ aicsIGL
 
 aicsIGL$AIC <- round(aicsIGL$AIC) # nice formatting
 aicsIGL$dAIC <- round(aicsIGL$dAIC)
-aicsIGL$dAICnull <- as.character(signif(aicsIGL$dAICnull, 3))
+aicsIGL$dAICnull <- as.character(my_signif(aicsIGL$dAICnull, 3))
     
 # Only time series >= 7 years. Fit by code/fit_turnover_GLMMlong.R
 modInitLong <- readRDS(here('temp', 'modYearRealmLongJtu.rds')) # Null. 
@@ -695,7 +695,7 @@ aicsLong
 
 aicsLong$AIC <- round(aicsLong$AIC) # nice formatting
 aicsLong$dAIC <- round(aicsLong$dAIC)
-aicsLong$dAICnull <- as.character(signif(aicsLong$dAICnull, 3))
+aicsLong$dAICnull <- as.character(my_signif(aicsLong$dAICnull, 3))
 aicsLong
 
 aicsIGLLong <- rbind(aicsIGL, aicsLong)
@@ -726,7 +726,7 @@ aics
 
 aics$AIC <- round(aics$AIC) # nice formatting
 aics$dAIC <- round(aics$dAIC)
-aics$dAICnull <- as.character(signif(aics$dAICnull, 3))
+aics$dAICnull <- as.character(my_signif(aics$dAICnull, 3))
 aics$Model <- c('Year',
                 'Realm ✕ Year',
                 'Taxon ✕ Year',
