@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13905417.svg)](https://doi.org/10.5281/zenodo.13905417)
+
 # climate_community_crossrealm
 Analyses of the relationship between temporal turnover in species composition and temperature change across realms.
 
