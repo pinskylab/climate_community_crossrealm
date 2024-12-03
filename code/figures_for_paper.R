@@ -445,7 +445,8 @@ fig2 <- arrangeGrob(p1, p2, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix = matr
 ggsave('figures/fig2.pdf', fig2, width = 5, height = 6, units = 'in')
 
 
-# w/out model predictions
+### Figure 2 w/out model predictions ----------
+# make sure to first load the data and do the calcs at the top of the Fig. 2 section
 p2noT <- ggplot() +
     geom_point(data = trends[!is.na(tempchange)], mapping = aes(abs(tempchange), disstrend, size = duration, color = as.factor(tsign)), 
                color='#AAAAAA', alpha = 0.1, stroke = 0) +
@@ -484,6 +485,138 @@ fig2noT <- arrangeGrob(p1, p2noT, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix 
                     heights = c(1,2.5,1), widths = c(3,3,4))
 ggsave('figures/fig2_nopredsT.pdf', fig2noT, width = 5, height = 6, units = 'in')
 
+
+### Figure 2 w/out data ----------
+# make sure to first load the data and do the calcs at the top of the Fig. 2 section
+# a) across realms
+ht <- 6.3
+p1 <- ggplot(trends_by_study, aes(x=disstrend, group = REALM, fill = REALM)) +
+    geom_density(color = NA, alpha = 0.4) +
+    scale_y_sqrt(breaks = c(0.1, 1, 2, 6)) +
+    scale_x_continuous(trans = signedsqrttrans, breaks = c(-0.2, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.2, 0.4)) +
+    geom_segment(data = ave_by_realm, aes(x=disstrend - 1.96*se, xend = disstrend + 1.96*se, y= ht+offset, yend = ht+offset, color = REALM), alpha = 1) +
+    geom_segment(data = ave_by_realm, aes(x = disstrend, y = 0, xend = disstrend, yend = ht+offset, color = REALM), linewidth=0.5, linetype = 'dashed') +
+    labs(tag = 'a)', x = expression('Turnover rate ['~Delta~'Turnover/year]'), y = 'Density', title = '') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
+          axis.text=element_text(size=7),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
+    scale_fill_brewer(palette = 'Dark2') +
+    scale_color_brewer(palette = 'Dark2')
+p1 <- addSmallLegend(p1, pointSize = 0.5, spaceLegend = 0.1, textSize = 6)
+
+# b) plot of turnover rate vs. Tchange
+p2 <- ggplot() +
+    geom_line(data = slopespredsdT, mapping=aes(abs(tempchange), slope, color = tsign, group = tsign), linewidth=0.5) +
+    geom_ribbon(data = slopespredsdT, alpha = 0.2, color = NA, 
+                aes(abs(tempchange), slope,
+                    ymin=slope - 1.96*slope.se, 
+                    ymax=slope + 1.96*slope.se,
+                    fill = tsign,
+                    group = tsign)) +
+    scale_color_manual(values=c('#0072B2', '#D55E00')) +
+    scale_fill_manual(values=c('#0072B2', '#D55E00')) +
+    facet_grid(cols = vars(REALM), scales = 'free')  +
+    labs(tag = 'b)', x = 'Temperature change rate [|°C/year|]', y = expression(atop('Turnover rate','['~Delta~'Turnover/year]')), 
+         fill = 'Direction', 
+         color = 'Direction',
+         size = 'Duration [years]') +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
+          axis.text=element_text(size=8),
+          axis.title=element_text(size=8),
+          plot.title=element_text(size=8)) +
+    scale_y_continuous(trans = signedsqrttrans, 
+                       breaks = c(-1,-0.5, -0.1, -0.05, -0.01, 0, 0.01, 0.05, 0.1, 0.5, 1)) +
+    scale_x_continuous(trans = signedsqrttrans,
+                       breaks = c(-1, -0.5, -0.1, 0, 0.1, 0.5, 1)) +
+    scale_size(trans='log', range = c(0.8,3), breaks = c(2, 5, 20, 50)) +
+    guides(size = guide_legend(override.aes = list(alpha=1))) # set alpha to 1 for points in the legend
+
+p2 <- addSmallLegend(p2, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
+
+# c) in three parts
+p3 <- ggplot(senspred[REALM=='Terrestrial'], aes(tempave, sensitivity, 
+                                                 ymin = sensitivity-1.96*sensitivity.se, ymax = sensitivity+1.96*sensitivity.se, 
+                                                 group = tsign, color = tsign, fill = tsign)) +
+    geom_point(size = 0.1)+
+    geom_line(linetype='dashed')+
+    geom_errorbar()+
+    facet_grid(col = vars(REALM))+
+    labs(tag='c)',
+         x = '', 
+         y = '') +
+    scale_color_manual(values=c('#0072B2', '#D55E00')) +
+    scale_fill_manual(values=c('#0072B2', '#D55E00')) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          plot.tag=element_text(face='bold'),
+          legend.position='none', # no legend
+          axis.text=element_text(size=6),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
+    coord_cartesian(clip = 'off') + # solution for multi-line y-axis from https://stackoverflow.com/questions/13223846/ggplot2-two-line-label-with-expression
+    annotation_custom(textGrob(expression("Sensitivity of turnover rate"), rot = 90, gp = gpar(fontsize=5)), xmin = -43, xmax = -43, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression("to temperature change"), rot = 90, gp = gpar(fontsize=5)), xmin = -38, xmax = -38, ymin = 0.01, ymax = 0.01) +
+    annotation_custom(textGrob(expression('[('~Delta~'Turnover rate)/'~Delta~'°C/year)]'), rot = 90, gp = gpar(fontsize=5)), xmin = -33, xmax = -33, ymin = 0.01, ymax = 0.01) +
+    scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
+
+
+p4 <- ggplot(senspred[REALM=='Freshwater'], aes(tempave, sensitivity, 
+                                                ymin = sensitivity-1.96*sensitivity.se, ymax = sensitivity+1.96*sensitivity.se, 
+                                                group = tsign, color = tsign, fill = tsign)) +
+    geom_point(size = 0.1)+
+    geom_line(linetype='dashed')+
+    geom_errorbar()+
+    facet_grid(col = vars(REALM))+
+    labs(tag = '',
+         x = 'Ave. temp. [°C]', 
+         y = '') +
+    scale_color_manual(values=c('#0072B2', '#D55E00')) +
+    scale_fill_manual(values=c('#0072B2', '#D55E00')) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          legend.position='none', # no legend
+          axis.text=element_text(size=6),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
+    coord_cartesian(clip = 'off') + 
+    scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
+
+p5 <- ggplot(senspred[REALM=='Marine'], aes(tempave, sensitivity, 
+                                            ymin = sensitivity-1.96*sensitivity.se, ymax = sensitivity+1.96*sensitivity.se, 
+                                            group = tsign, color = tsign, fill = tsign)) +
+    geom_point(size = 0.1)+
+    geom_line(linetype='dashed')+
+    geom_errorbar()+
+    facet_grid(col = vars(REALM))+
+    labs(tag = '', x = '', 
+         y = '',
+         fill = 'Direction',
+         color = 'Direction') +
+    scale_color_manual(values=c('#0072B2', '#D55E00')) +
+    scale_fill_manual(values=c('#0072B2', '#D55E00')) +
+    theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank(), axis.line = element_line(colour = "black"),
+          legend.key=element_blank(),
+          axis.text=element_text(size=6),
+          axis.title=element_text(size=7),
+          plot.title=element_text(size=7)) +
+    scale_x_continuous(breaks=c(0,25), labels=c(0,25), limits=c(-10,35))
+
+p5 <- addSmallLegend(p5, pointSize = 0.8, spaceLegend = 0.1, textSize = 6)
+
+fig2nodat <- arrangeGrob(p1, p2, p3, p4, p5, nrow = 3, ncol = 3, layout_matrix = matrix(c(1,1,1,2,2,2,3,4,5), nrow=3, byrow=TRUE), 
+                    heights = c(1,1.5,1), widths = c(3,3,4))
+
+ggsave('figures/fig2_nodata.pdf', fig2nodat, width = 5, height = 6, units = 'in')
 
 
 ### Figure 3: environmental interactions ---------
